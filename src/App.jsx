@@ -2,10 +2,19 @@ import "./App.css";
 import { ReactSpreadsheetImport } from "react-spreadsheet-import";
 import { Button } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { useGetTanugyiAdatokQuery } from "./store/api/apiSlice";
 
 function App() {
   const [data, setData] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+
+  const {
+    data: TanugyiData,
+    error,
+    isLoading,
+  } = useGetTanugyiAdatokQuery({ alapadatok_id: "Pollak", ev: 2024 });
+
+  console.log(TanugyiData);
 
   const fields = [
     {
