@@ -2,7 +2,11 @@ import "./App.css";
 import { ReactSpreadsheetImport } from "react-spreadsheet-import";
 import { Button } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { useGetTanugyiAdatokQuery } from "./store/api/apiSlice";
+import {
+  useAddTanugyiAdatokMutation,
+  useGetAlapadatokQuery,
+  useGetTanugyiAdatokQuery,
+} from "./store/api/apiSlice";
 
 function App() {
   const [data, setData] = useState(null);
@@ -12,7 +16,17 @@ function App() {
     data: TanugyiData,
     error,
     isLoading,
-  } = useGetTanugyiAdatokQuery({ alapadatok_id: "Pollak", ev: 2024 });
+  } = useGetTanugyiAdatokQuery({
+    alapadatok_id: "2e31291b-7c2d-4bd8-bdca-de8580136874",
+    ev: 2024,
+  });
+  const {
+    data: AlapadatokData,
+    error: AlapadatokError,
+    isLoading: isAlapadatokLoading,
+  } = useGetAlapadatokQuery({ id: "2e31291b-7c2d-4bd8-bdca-de8580136874" });
+
+  const [addTanugyiAdatok, result] = useAddTanugyiAdatokMutation();
 
   console.log(TanugyiData);
 
@@ -399,10 +413,10 @@ function App() {
     },
     {
       label: "Ágazati alapvizsga eredménye %",
-      key: "agazati_alapvizsga_eredmenye_%",
+      key: "agazati_alapvizsga_eredmenye_percent",
       alternateMatches: [
         "Ágazati alapvizsga eredménye %",
-        "agazati_alapvizsga_eredmenye_%",
+        "agazati_alapvizsga_eredmenye_percent",
       ],
       fieldType: {
         type: "input",
@@ -755,10 +769,10 @@ function App() {
     {
       label:
         "A 9. évfolyamosok közül a 8. évfolyamot az előző tanévben végezte",
-      key: "a_9._evfolyamosok_kozul_a_8._evfolyamot_az elozo_tanevben_vegezte",
+      key: "a_9_evfolyamosok_kozul_a_8_evfolyamot_az_elozo_tanevben_vegezte",
       alternateMatches: [
         "A 9. évfolyamosok közül a 8. évfolyamot az előző tanévben végezte",
-        "a_9._evfolyamosok_kozul_a_8._evfolyamot_az_elozo_tanevben_vegezte",
+        "a_9_evfolyamosok_kozul_a_8_evfolyamot_az_elozo_tanevben_vegezte",
       ],
       fieldType: {
         type: "input",
@@ -789,10 +803,10 @@ function App() {
     },
     {
       label: "Számítógépet tanulási/oktatási célra használ",
-      key: "szamitogepet_tanulasi/oktatasi_celra_hasznal",
+      key: "szamitogepet_tanulasi_oktatasi_celra_hasznal",
       alternateMatches: [
         "Számítógépet tanulási/oktatási célra használ",
-        "szamitogepet_tanulasi/oktatasi_celra_hasznal",
+        "szamitogepet_tanulasi_oktatasi_celra_hasznal",
       ],
       fieldType: {
         type: "input",
@@ -1106,10 +1120,54 @@ function App() {
     },
   ];
 
+  const getGroupedData = () => {
+    // Check if TanugyiData exists and has items
+    if (!TanugyiData || !Array.isArray(TanugyiData)) return [];
+
+    // Group by ágazat and collect yearly counts
+    const groupedByAgazat = {};
+    const years = new Set(); // To track all available years
+
+    TanugyiData.forEach((item) => {
+      const agazatType = item.uj_Szkt_agazat_tipusa || "Nincs megadva";
+      const year = item.createAt
+        ? new Date(item.createAt).getFullYear()
+        : "Nincs év";
+
+      // Add this year to our set of years
+      years.add(year);
+
+      // Initialize the ágazat entry if it doesn't exist
+      if (!groupedByAgazat[agazatType]) {
+        groupedByAgazat[agazatType] = {
+          name: agazatType,
+          yearCounts: {},
+        };
+      }
+
+      // Initialize or increment the count for this year
+      if (!groupedByAgazat[agazatType].yearCounts[year]) {
+        groupedByAgazat[agazatType].yearCounts[year] = 1;
+      } else {
+        groupedByAgazat[agazatType].yearCounts[year] += 1;
+      }
+    });
+
+    return {
+      agazatData: Object.values(groupedByAgazat),
+      years: Array.from(years).sort(), // Convert to sorted array
+    };
+  };
+
   useEffect(() => {
     console.log(data);
-    if (data && data?.all) console.log(Object.keys(data?.all[0]));
-  }, [data]);
+    if (data && data?.all) {
+      addTanugyiAdatok({
+        alapadatok_id: "2e31291b-7c2d-4bd8-bdca-de8580136874",
+        tanugyi_adatok: data.all,
+      });
+    }
+  }, [data, addTanugyiAdatok]);
 
   return (
     <>
@@ -1128,6 +1186,136 @@ function App() {
         onSubmit={setData}
         fields={fields}
       />
+      <div>
+        <h1 style={{ fontSize: "2rem" }}>Alapadatok:</h1>
+        <h2>Iskola Neve: {AlapadatokData?.iskola_neve}</h2>
+        <h2>Intezmeny Tipus: {AlapadatokData?.intezmeny_tipus}</h2>
+
+        <div>Tanuló létszáma:</div>
+        <div style={{ marginTop: "2rem" }}>
+          <h2>Ágazatok évenkénti megoszlása:</h2>
+          {isLoading ? (
+            <div>Betöltés...</div>
+          ) : error ? (
+            <div>Hiba történt az adatok betöltésekor</div>
+          ) : (
+            (() => {
+              const { agazatData, years } = getGroupedData();
+              return (
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr>
+                      <th
+                        style={{
+                          border: "1px solid #ddd",
+                          padding: "8px",
+                          textAlign: "left",
+                        }}
+                      >
+                        Ágazat típusa
+                      </th>
+                      {years.map((year) => (
+                        <th
+                          key={year}
+                          style={{
+                            border: "1px solid #ddd",
+                            padding: "8px",
+                            textAlign: "center",
+                          }}
+                        >
+                          {year - 1} / {year}
+                        </th>
+                      ))}
+                      <th
+                        style={{
+                          border: "1px solid #ddd",
+                          padding: "8px",
+                          textAlign: "center",
+                        }}
+                      >
+                        Összesen
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {agazatData.map((item, index) => (
+                      <tr key={index}>
+                        <td
+                          style={{ border: "1px solid #ddd", padding: "8px" }}
+                        >
+                          {item.name}
+                        </td>
+                        {years.map((year) => (
+                          <td
+                            key={year}
+                            style={{
+                              border: "1px solid #ddd",
+                              padding: "8px",
+                              textAlign: "center",
+                            }}
+                          >
+                            {item.yearCounts[year] || 0}
+                          </td>
+                        ))}
+                        <td
+                          style={{
+                            border: "1px solid #ddd",
+                            padding: "8px",
+                            textAlign: "center",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {Object.values(item.yearCounts).reduce(
+                            (sum, count) => sum + count,
+                            0
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr style={{ fontWeight: "bold" }}>
+                      <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                        Összesen
+                      </td>
+                      {years.map((year) => (
+                        <td
+                          key={year}
+                          style={{
+                            border: "1px solid #ddd",
+                            padding: "8px",
+                            textAlign: "center",
+                          }}
+                        >
+                          {agazatData.reduce(
+                            (sum, item) => sum + (item.yearCounts[year] || 0),
+                            0
+                          )}
+                        </td>
+                      ))}
+                      <td
+                        style={{
+                          border: "1px solid #ddd",
+                          padding: "8px",
+                          textAlign: "center",
+                        }}
+                      >
+                        {agazatData.reduce(
+                          (sum, item) =>
+                            sum +
+                            Object.values(item.yearCounts).reduce(
+                              (s, c) => s + c,
+                              0
+                            ),
+                          0
+                        )}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              );
+            })()
+          )}
+        </div>
+      </div>
     </>
   );
 }
