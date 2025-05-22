@@ -1,4 +1,5 @@
 import "./App.css";
+import React from "react";
 import { ReactSpreadsheetImport } from "react-spreadsheet-import";
 import { Button } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
@@ -1121,23 +1122,22 @@ function App() {
   ];
 
   const getGroupedData = () => {
-    // Check if TanugyiData exists and has items
-    if (!TanugyiData || !Array.isArray(TanugyiData)) return [];
+    if (!TanugyiData || !Array.isArray(TanugyiData)) {
+      return { agazatData: [], years: [] };
+    }
 
-    // Group by ágazat and collect yearly counts
     const groupedByAgazat = {};
-    const years = new Set(); // To track all available years
+    const years = new Set();
 
     TanugyiData.forEach((item) => {
       const agazatType = item.uj_Szkt_agazat_tipusa || "Nincs megadva";
       const year = item.createAt
         ? new Date(item.createAt).getFullYear() - 1 // FIXME: REMOVE THE - 1 IN PRODUCTION, ONLY FOR TESTING
         : "Nincs év";
+      const jogviszonyType = item.tabulo_jogviszonya || "Nincs megadva";
 
-      // Add this year to our set of years
       years.add(year);
 
-      // Initialize the ágazat entry if it doesn't exist
       if (!groupedByAgazat[agazatType]) {
         groupedByAgazat[agazatType] = {
           name: agazatType,
@@ -1145,17 +1145,28 @@ function App() {
         };
       }
 
-      // Initialize or increment the count for this year
       if (!groupedByAgazat[agazatType].yearCounts[year]) {
-        groupedByAgazat[agazatType].yearCounts[year] = 1;
+        groupedByAgazat[agazatType].yearCounts[year] = {
+          "Tanulói jogviszony": 0,
+          "Felnőttképzési jogviszony": 0,
+          Egyéb: 0,
+        };
+      }
+
+      if (jogviszonyType === "Tanulói jogviszony") {
+        groupedByAgazat[agazatType].yearCounts[year]["Tanulói jogviszony"] += 1;
+      } else if (jogviszonyType === "Felnőttképzési jogviszony") {
+        groupedByAgazat[agazatType].yearCounts[year][
+          "Felnőttképzési jogviszony"
+        ] += 1;
       } else {
-        groupedByAgazat[agazatType].yearCounts[year] += 1;
+        groupedByAgazat[agazatType].yearCounts[year]["Egyéb"] += 1;
       }
     });
 
     return {
       agazatData: Object.values(groupedByAgazat),
-      years: Array.from(years).sort(), // Convert to sorted array
+      years: Array.from(years).sort(),
     };
   };
 
@@ -1193,7 +1204,7 @@ function App() {
 
         <div>Tanuló létszáma:</div>
         <div style={{ marginTop: "2rem" }}>
-          <h2>Ágazatok évenkénti megoszlása:</h2>
+          <h2>Ágazatok jogviszony szerinti megoszlása évenként:</h2>
           {isLoading ? (
             <div>Betöltés...</div>
           ) : error ? (
@@ -1206,35 +1217,76 @@ function App() {
                   <thead>
                     <tr>
                       <th
+                        rowSpan="2"
                         style={{
                           border: "1px solid #ddd",
                           padding: "8px",
                           textAlign: "left",
+                          verticalAlign: "middle",
                         }}
                       >
                         Ágazat típusa
                       </th>
-                      {years.map((year) => (
-                        <th
-                          key={year}
-                          style={{
-                            border: "1px solid #ddd",
-                            padding: "8px",
-                            textAlign: "center",
-                          }}
-                        >
-                          {year} / {year + 1}
-                        </th>
-                      ))}
                       <th
+                        colSpan={years.length}
                         style={{
                           border: "1px solid #ddd",
                           padding: "8px",
                           textAlign: "center",
                         }}
                       >
+                        Tanulói jogviszony
+                      </th>
+                      <th
+                        colSpan={years.length}
+                        style={{
+                          border: "1px solid #ddd",
+                          padding: "8px",
+                          textAlign: "center",
+                        }}
+                      >
+                        Felnőttképzési jogviszony
+                      </th>
+                      <th
+                        rowSpan="2"
+                        style={{
+                          border: "1px solid #ddd",
+                          padding: "8px",
+                          textAlign: "center",
+                          verticalAlign: "middle",
+                        }}
+                      >
                         Összesen
                       </th>
+                    </tr>
+                    <tr>
+                      {/* Year headers for Tanulói jogviszony */}
+                      {years.map((year) => (
+                        <th
+                          key={`tanuloi-${year}`}
+                          style={{
+                            border: "1px solid #ddd",
+                            padding: "8px",
+                            textAlign: "center",
+                          }}
+                        >
+                          {year}/{year + 1}
+                        </th>
+                      ))}
+
+                      {/* Year headers for Felnőttképzési jogviszony */}
+                      {years.map((year) => (
+                        <th
+                          key={`felnott-${year}`}
+                          style={{
+                            border: "1px solid #ddd",
+                            padding: "8px",
+                            textAlign: "center",
+                          }}
+                        >
+                          {year}/{year + 1}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
@@ -1245,40 +1297,72 @@ function App() {
                         >
                           {item.name}
                         </td>
+
+                        {/* Tanulói jogviszony columns */}
                         {years.map((year) => (
                           <td
-                            key={year}
+                            key={`tanuloi-${year}-${index}`}
                             style={{
                               border: "1px solid #ddd",
                               padding: "8px",
                               textAlign: "center",
                             }}
                           >
-                            {item.yearCounts[year] || 0}
+                            {item.yearCounts[year]?.["Tanulói jogviszony"] || 0}
                           </td>
                         ))}
+
+                        {/* Felnőttképzési jogviszony columns */}
+                        {years.map((year) => (
+                          <td
+                            key={`felnott-${year}-${index}`}
+                            style={{
+                              border: "1px solid #ddd",
+                              padding: "8px",
+                              textAlign: "center",
+                            }}
+                          >
+                            {item.yearCounts[year]?.[
+                              "Felnőttképzési jogviszony"
+                            ] || 0}
+                          </td>
+                        ))}
+
+                        {/* Row total */}
                         <td
                           style={{
                             border: "1px solid #ddd",
                             padding: "8px",
                             textAlign: "center",
                             fontWeight: "bold",
+                            backgroundColor: "#f2f2f2",
                           }}
                         >
                           {Object.values(item.yearCounts).reduce(
-                            (sum, count) => sum + count,
+                            (sum, jogviszonyData) =>
+                              sum +
+                              (jogviszonyData["Tanulói jogviszony"] || 0) +
+                              (jogviszonyData["Felnőttképzési jogviszony"] ||
+                                0) +
+                              (jogviszonyData["Egyéb"] || 0),
                             0
                           )}
                         </td>
                       </tr>
                     ))}
-                    <tr style={{ fontWeight: "bold" }}>
+
+                    {/* Totals row */}
+                    <tr
+                      style={{ fontWeight: "bold", backgroundColor: "#f2f2f2" }}
+                    >
                       <td style={{ border: "1px solid #ddd", padding: "8px" }}>
                         Összesen
                       </td>
+
+                      {/* Totals for Tanulói jogviszony */}
                       {years.map((year) => (
                         <td
-                          key={year}
+                          key={`total-tanuloi-${year}`}
                           style={{
                             border: "1px solid #ddd",
                             padding: "8px",
@@ -1286,23 +1370,55 @@ function App() {
                           }}
                         >
                           {agazatData.reduce(
-                            (sum, item) => sum + (item.yearCounts[year] || 0),
+                            (sum, item) =>
+                              sum +
+                              (item.yearCounts[year]?.["Tanulói jogviszony"] ||
+                                0),
                             0
                           )}
                         </td>
                       ))}
+
+                      {/* Totals for Felnőttképzési jogviszony */}
+                      {years.map((year) => (
+                        <td
+                          key={`total-felnott-${year}`}
+                          style={{
+                            border: "1px solid #ddd",
+                            padding: "8px",
+                            textAlign: "center",
+                          }}
+                        >
+                          {agazatData.reduce(
+                            (sum, item) =>
+                              sum +
+                              (item.yearCounts[year]?.[
+                                "Felnőttképzési jogviszony"
+                              ] || 0),
+                            0
+                          )}
+                        </td>
+                      ))}
+
+                      {/* Grand total */}
                       <td
                         style={{
                           border: "1px solid #ddd",
                           padding: "8px",
                           textAlign: "center",
+                          backgroundColor: "#e0e0e0",
                         }}
                       >
                         {agazatData.reduce(
                           (sum, item) =>
                             sum +
                             Object.values(item.yearCounts).reduce(
-                              (s, c) => s + c,
+                              (s, jogviszonyData) =>
+                                s +
+                                (jogviszonyData["Tanulói jogviszony"] || 0) +
+                                (jogviszonyData["Felnőttképzési jogviszony"] ||
+                                  0) +
+                                (jogviszonyData["Egyéb"] || 0),
                               0
                             ),
                           0
