@@ -1131,7 +1131,7 @@ function App() {
     TanugyiData.forEach((item) => {
       const agazatType = item.uj_Szkt_agazat_tipusa || "Nincs megadva";
       const year = item.createAt
-        ? new Date(item.createAt).getFullYear()
+        ? new Date(item.createAt).getFullYear() - 1 // FIXME: REMOVE THE - 1 IN PRODUCTION, ONLY FOR TESTING
         : "Nincs év";
 
       // Add this year to our set of years
@@ -1223,7 +1223,7 @@ function App() {
                             textAlign: "center",
                           }}
                         >
-                          {year - 1} / {year}
+                          {year} / {year + 1}
                         </th>
                       ))}
                       <th
