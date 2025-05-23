@@ -684,7 +684,7 @@ export const fields = [
   },
   {
     label: "Tanuló jogviszonya",
-    key: "tabulo_jogviszonya",
+    key: "tanulo_jogviszonya",
     alternateMatches: ["Tanuló jogviszonya", "tanulo_jogviszonya"],
     fieldType: {
       type: "input",
