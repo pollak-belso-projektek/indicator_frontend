@@ -5,7 +5,7 @@ import {
   getCoreRowModel,
 } from "@tanstack/react-table";
 import { useGetTanugyiAdatokQuery } from "../store/api/apiSlice";
-import { Spinner, Text, Button } from "@chakra-ui/react";
+import { Spinner, Text, Button, HStack, Tooltip } from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
 
 const columnHelper = createColumnHelper();
@@ -23,11 +23,13 @@ export default function TanuloLatszam() {
   const { agazatData, years } = getGroupedData();
 
   const [editableData, setEditableData] = useState(agazatData);
+  const [prevData, setPrevData] = useState(agazatData);
 
   useEffect(() => {
     if (tanugyiData) {
       const { agazatData } = getGroupedData();
       setEditableData(agazatData);
+      setPrevData(agazatData);
     }
   }, [tanugyiData]);
 
@@ -189,11 +191,19 @@ export default function TanuloLatszam() {
     const current = computeTotal(year, category);
     const prev = computeTotal(prevYear, category);
     if (prev === 0) return "-";
-    return ((current / prev) * 100).toFixed(2) + "%";
+    return ((current / prev) * 100).toFixed(2);
   };
 
   const handleSave = () => {
     console.log("Mentett adatok:", editableData);
+  };
+
+  const handleBack = () => {
+    setEditableData(prevData);
+  };
+
+  const handleReset = () => {
+    setEditableData(agazatData);
   };
 
   return isLoading ? (
@@ -230,10 +240,44 @@ export default function TanuloLatszam() {
         elmentheti és véglegesítheti.
       </Text>
 
-      <Button onClick={handleSave} colorScheme="blue" mb={4}>
-        Mentés
-      </Button>
+      <HStack>
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            <Button onClick={handleReset} mb={4} backgroundColor={"red.600"}>
+              Teljes visszaállítás
+            </Button>
+          </Tooltip.Trigger>
+          <Tooltip.Positioner>
+            <Tooltip.Content>
+              Az adatok visszaállítása a számított értékekre
+            </Tooltip.Content>
+          </Tooltip.Positioner>
+        </Tooltip.Root>
 
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            <Button onClick={handleBack} mb={4} backgroundColor={"red.700"}>
+              Módosítások visszavonása
+            </Button>
+          </Tooltip.Trigger>
+          <Tooltip.Positioner>
+            <Tooltip.Content>
+              Az adatok visszaállítása az előző verzióra
+            </Tooltip.Content>
+          </Tooltip.Positioner>
+        </Tooltip.Root>
+
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            <Button onClick={handleSave} backgroundColor={"green.700"} mb={4}>
+              Mentés
+            </Button>
+          </Tooltip.Trigger>
+          <Tooltip.Positioner>
+            <Tooltip.Content>Az adatok mentése</Tooltip.Content>
+          </Tooltip.Positioner>
+        </Tooltip.Root>
+      </HStack>
       <table style={{ borderCollapse: "collapse", width: "100%" }}>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
