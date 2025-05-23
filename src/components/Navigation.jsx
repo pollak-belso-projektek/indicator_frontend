@@ -132,7 +132,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
 
       <HStack spacing={{ base: "0", md: "6" }}>
         <Flex alignItems={"center"} gap={2}>
-          {/* <ColorModeButton /> */}
+          <ColorModeButton />
           <Menu.Root>
             <Menu.Trigger
               py={2}
