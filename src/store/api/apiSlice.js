@@ -3,7 +3,9 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 // Define a service using a base URL and expected endpoints
 export const indicatorApi = createApi({
   reducerPath: "indicatorApi",
-  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:3300/api/v1/" }),
+  baseQuery: fetchBaseQuery({
+    baseUrl: "https://indicator-api.pollak.info/api/v1/",
+  }),
   // 10.0.0.50
   endpoints: (build) => ({
     getTanugyiAdatok: build.query({

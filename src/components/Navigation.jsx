@@ -8,9 +8,8 @@ import {
   VStack,
   Icon,
   Text,
-  Drawer,
-  useDisclosure,
   Menu,
+  Drawer,
 } from "@chakra-ui/react";
 import {
   FiHome,
@@ -24,6 +23,7 @@ import {
 import { ColorModeButton, useColorModeValue } from "./ui/color-mode";
 
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 const LinkItems = [
   { name: "Dashboard", icon: FiHome, link: "/dashboard" },
@@ -55,7 +55,13 @@ const SidebarContent = ({ onClose, ...rest }) => {
         <CloseButton display={{ base: "flex", md: "none" }} onClick={onClose} />
       </Flex>
       {LinkItems.map((link) => (
-        <NavItem key={link.name} icon={link.icon} as={Link} to={link.link}>
+        <NavItem
+          key={link.name}
+          icon={link.icon}
+          as={Link}
+          to={link.link}
+          onClick={() => onClose()}
+        >
           {link.name}
         </NavItem>
       ))}
@@ -63,13 +69,19 @@ const SidebarContent = ({ onClose, ...rest }) => {
   );
 };
 
-const NavItem = ({ icon, children, ...rest }) => {
+const NavItem = ({ icon, children, onClick, ...rest }) => {
+  // Handle both the navigation and onClick (for mobile closing)
+  const handleClick = (e) => {
+    if (onClick) onClick(e);
+  };
+
   return (
     <Box
       as="a"
       href="#"
       style={{ textDecoration: "none" }}
       _focus={{ boxShadow: "none" }}
+      onClick={handleClick}
     >
       <Flex
         align="center"
@@ -118,8 +130,9 @@ const MobileNav = ({ onOpen, ...rest }) => {
         onClick={onOpen}
         variant="outline"
         aria-label="open menu"
-        icon={<FiMenu />}
-      />
+      >
+        <FiMenu />
+      </IconButton>
 
       <Text
         display={{ base: "flex", md: "none" }}
@@ -180,35 +193,37 @@ const MobileNav = ({ onOpen, ...rest }) => {
 };
 
 export default function Navigation({ children }) {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    console.log("isOpen", isOpen);
+  }, [isOpen]);
 
   return (
     <>
       <Box minH="100vh" bg={useColorModeValue("gray.100", "gray.900")}>
         <SidebarContent
-          onClose={() => onClose}
+          onClose={() => setIsOpen(false)}
           display={{ base: "none", md: "block" }}
         />
         <Drawer.Root
-          isOpen={isOpen}
-          placement="left"
-          onClose={onClose}
-          returnFocusOnClose={false}
-          onOverlayClick={onClose}
-          size="full"
+          open={isOpen}
+          onOpenChange={(open) => setIsOpen(open)}
+          placement={"left"}
+          restoreFocus={false}
+          size={"full"}
         >
-          <Drawer.Backdrop />
           <Drawer.Positioner>
             <Drawer.Content>
               <Drawer.CloseTrigger />
               <Drawer.Body>
-                <SidebarContent onClose={onClose} />
+                <SidebarContent onClose={() => setIsOpen(false)} />
               </Drawer.Body>
             </Drawer.Content>
           </Drawer.Positioner>
         </Drawer.Root>
         {/* mobilenav */}
-        <MobileNav onOpen={onOpen} />
+        <MobileNav onOpen={() => setIsOpen(true)} />
         <Box ml={{ base: 0, md: 60 }} p="4">
           {children}
         </Box>
