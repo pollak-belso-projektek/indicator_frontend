@@ -112,6 +112,14 @@ export default function DataImport() {
             </Button>
           </VStack>
           <ReactSpreadsheetImport
+          translations={{
+            uploadStep: {
+              title:"Feltöltésilépés"
+            },
+            selectfile:{
+             title:"fájl kiválasztása"
+            }
+          }}
             isOpen={isOpen}
             onClose={() => {
               setIsOpen(false);
