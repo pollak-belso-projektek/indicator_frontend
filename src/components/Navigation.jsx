@@ -29,6 +29,7 @@ const LinkItems = [
   { name: "Dashboard", icon: FiHome, link: "/dashboard" },
   { name: "Alapadatok", icon: FiSettings, link: "/alapadatok" },
   { name: "Tanulólétszám", icon: FiUsers, link: "/tanuloletszam" },
+  { name: "Kompetencia", icon: FiUsers, link: "/kompetencia"},
   {
     name: "Adatok Importálása a Kréta rendszerből",
     icon: FiUpload,
