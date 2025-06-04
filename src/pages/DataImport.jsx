@@ -113,12 +113,87 @@ export default function DataImport() {
           </VStack>
           <ReactSpreadsheetImport
           translations={{
-            uploadStep: {
-              title:"Feltöltésilépés"
-            },
-            selectfile:{
-             title:"fájl kiválasztása"
-            }
+           uploadStep: {
+                title: "Feltöltésilépés",
+                manifestTitle: "Várt adatok:",
+                manifestDescription:
+                  "A következő lépésben lehetőséged lesz módosítani, vagy törölni az adatokat",
+                dropzone: {
+                  title: "Tölts fel egy .xlsx, .xls vagy .csv fájlt",
+                  buttonTitle: "Fájl kiválasztása",
+                  errorToastDescription: "Feltöltés sikertelen",
+                  activeDropzoneTitle: "Húzd ide a fájlt",
+                  loadingTitle: "Feldolgozás...",
+                },
+                selectSheet: {
+                  title: "Fejlécek kiválasztása",
+                  nextButtonTitle: "Következő",
+                  backButtonTitle: "Előző",
+                },
+              },
+              selectHeaderStep: {
+                title: "Fejlécek kiválasztása",
+                nextButtonTitle: "Következő",
+                backButtonTitle: "Előző",
+              },
+              matchColumnsStep: {
+                title: "Egyező oszlopok",
+                nextButtonTitle: "Következő",
+                backButtonTitle: "Előző",
+                userTableTitle: "Jelenlegi tábla",
+                templateTitle: "Lészen!",
+                selectPlaceholder: "Oszlop kiválasztása...",
+                ignoredColumnText: "Kihagyott oszlop",
+                subSelectPlaceholder: "Válassz...",
+                matchDropdownTitle: "Egyezés",
+                unmatched: "Nem egyező",
+                duplicateColumnWarningTitle: "Másik oszlop nincs kiválasztva",
+                duplicateColumnWarningDescription:
+                  "Az oszlopot nem lehet duplikálni",
+              },
+              validationStep: {
+                title: "Véglegesítés",
+                nextButtonTitle: "Következő",
+                backButtonTitle: "Előző",
+                noRowsMessage: "Nem található adat",
+                noRowsMessageWhenFiltered: "Az adatban nem található hiba",
+                discardButtonTitle: "Kiválasztott sorok törlése",
+                filterSwitchTitle: "Csak a hibás sorok mutatása",
+              },
+              alerts: {
+                confirmClose: {
+                  headerTitle: "Folyamat megszakítása",
+                  bodyText: "Biztos vagy benne? A jelenlegi adatok elvesznek!",
+                  cancelButtonTitle: "Mégse",
+                  exitButtonTitle: "Megszakítás",
+                },
+                submitIncomplete: {
+                  headerTitle: "Hiba észlelve!",
+                  bodyText:
+                    "Találhatóak hibás sorok. Ezek a sorok nem kerülnek feltöltésre!",
+                  bodyTextSubmitForbidden:
+                    "Még mindig találhatóak hibás sorok.",
+                  cancelButtonTitle: "Mégse",
+                  finishButtonTitle: "Feltöltés",
+                },
+                submitError: {
+                  title: "Hiba",
+                  defaultMessage:
+                    "Hiba lépett fel az adatok feltöltése közben!",
+                },
+                unmatchedRequiredFields: {
+                  headerTitle: "Nem minden oszlop egyezik!",
+                  bodyText:
+                    "Vannak kitöltendő oszlopok, amelyek nem egyeznek, vagy nincsennek kitöltve. Biztos akarod folytatni?",
+                  listTitle: "Az oszlopok nem egyeznek",
+                  cancelButtonTitle: "Mégse",
+                  continueButtonTitle: "Folytatás",
+                },
+                toast: {
+                  error: "Hiba",
+                },
+              },
+
           }}
             isOpen={isOpen}
             onClose={() => {
