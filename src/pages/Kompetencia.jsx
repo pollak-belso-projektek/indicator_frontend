@@ -1,4 +1,5 @@
 import { Table } from "@chakra-ui/react";
+import "./kompetencia.css";
 import React, { useState } from "react";
 
 export default function Kompetencia() {
@@ -52,6 +53,7 @@ export default function Kompetencia() {
     if (isEditing) {
       return (
         <input
+          class="input"
           autoFocus
           type="text"
           value={cellValue}
