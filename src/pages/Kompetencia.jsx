@@ -1,4 +1,5 @@
 import { Table } from "@chakra-ui/react";
+import React, { useState } from "react";
 
 export default function Kompetencia() {
   const date = new Date();
@@ -43,6 +44,38 @@ export default function Kompetencia() {
 
   console.log(data);
 
+  function handleCellClick(value) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [cellValue, setCellValue] = useState(value);
+    const [originalValue, setOriginalValue] = useState(value);
+
+    if (isEditing) {
+      return (
+        <input
+          autoFocus
+          type="text"
+          value={cellValue}
+          onChange={(e) => setCellValue(e.target.value)}
+          onBlur={() => {
+            setIsEditing(false);
+            // Here you would typically dispatch an action to update the value in the store
+          }}
+        />
+      );
+    } else {
+      return (
+        <span
+          onClick={() => {
+            setIsEditing(true);
+            setOriginalValue(cellValue);
+          }}
+        >
+          {cellValue}
+        </span>
+      );
+    }
+  }
+
   return (
     <Table.Root size="md" showColumnBorder variant="outline">
       <Table.Header>
@@ -54,13 +87,14 @@ export default function Kompetencia() {
           })}
         </Table.Row>
         <Table.Row>
-          {years.map(() => {
+          {years.map((e) => {
             return (
               <>
                 <Table.ColumnHeader>Országos</Table.ColumnHeader>
                 <Table.ColumnHeader>Intézményi</Table.ColumnHeader>
               </>
             );
+            // return handleCellClick(e);
           })}
         </Table.Row>
       </Table.Header>
@@ -71,9 +105,11 @@ export default function Kompetencia() {
           {years.map((e) => {
             return (
               <>
-                <Table.Cell>{data[e].matematika.technikum.orszagos}</Table.Cell>
                 <Table.Cell>
-                  {data[e].matematika.technikum.intezmenyi}
+                  {handleCellClick(data[e].matematika.technikum.orszagos)}
+                </Table.Cell>
+                <Table.Cell>
+                  {handleCellClick(data[e].matematika.technikum.intezmenyi)}
                 </Table.Cell>
               </>
             );
@@ -85,10 +121,10 @@ export default function Kompetencia() {
             return (
               <>
                 <Table.Cell>
-                  {data[e].szovegertes.technikum.orszagos}
+                  {handleCellClick(data[e].szovegertes.technikum.orszagos)}
                 </Table.Cell>
                 <Table.Cell>
-                  {data[e].szovegertes.technikum.intezmenyi}
+                  {handleCellClick(data[e].szovegertes.technikum.intezmenyi)}
                 </Table.Cell>
               </>
             );
@@ -100,9 +136,11 @@ export default function Kompetencia() {
           {years.map((e) => {
             return (
               <>
-                <Table.Cell>{data[e].matematika.szakkepzo.orszagos}</Table.Cell>
                 <Table.Cell>
-                  {data[e].matematika.szakkepzo.intezmenyi}
+                  {handleCellClick(data[e].matematika.szakkepzo.orszagos)}
+                </Table.Cell>
+                <Table.Cell>
+                  {handleCellClick(data[e].matematika.szakkepzo.intezmenyi)}
                 </Table.Cell>
               </>
             );
@@ -114,10 +152,10 @@ export default function Kompetencia() {
             return (
               <>
                 <Table.Cell>
-                  {data[e].szovegertes.szakkepzo.orszagos}
+                  {handleCellClick(data[e].szovegertes.szakkepzo.orszagos)}
                 </Table.Cell>
                 <Table.Cell>
-                  {data[e].szovegertes.szakkepzo.intezmenyi}
+                  {handleCellClick(data[e].szovegertes.szakkepzo.intezmenyi)}
                 </Table.Cell>
               </>
             );
