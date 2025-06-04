@@ -66,8 +66,8 @@ export default function Kompetencia() {
       </Table.Header>
       <Table.Body>
         <Table.Row>
-          <Table.Cell>matematika</Table.Cell>
-          <Table.Cell rowSpan={2}>Techinkum</Table.Cell>
+          <Table.Cell>Matematika</Table.Cell>
+          <Table.Cell rowSpan={2}>Technikum</Table.Cell>
           {years.map((e) => {
             return (
               <>
@@ -80,7 +80,7 @@ export default function Kompetencia() {
           })}
         </Table.Row>
         <Table.Row>
-          <Table.Cell>szövegértés</Table.Cell>
+          <Table.Cell>Szövegértés</Table.Cell>
           {years.map((e) => {
             return (
               <>
@@ -95,7 +95,7 @@ export default function Kompetencia() {
           })}
         </Table.Row>
         <Table.Row>
-          <Table.Cell>matematika</Table.Cell>
+          <Table.Cell>Matematika</Table.Cell>
           <Table.Cell rowSpan={2}>Szakképző</Table.Cell>
           {years.map((e) => {
             return (
@@ -109,7 +109,7 @@ export default function Kompetencia() {
           })}
         </Table.Row>
         <Table.Row>
-          <Table.Cell>szövegértés</Table.Cell>
+          <Table.Cell>Szövegértés</Table.Cell>
           {years.map((e) => {
             return (
               <>
