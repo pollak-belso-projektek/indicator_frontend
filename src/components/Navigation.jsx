@@ -21,6 +21,7 @@ import {
   FiMenu,
   FiUpload,
   FiBookOpen,
+  FiAward,
 } from "react-icons/fi";
 import { ColorModeButton, useColorModeValue } from "./ui/color-mode";
 
@@ -31,6 +32,7 @@ const LinkItems = [
   { name: "Alapadatok", icon: FiSettings, link: "/alapadatok" },
   { name: "Tanulólétszám", icon: FiUsers, link: "/tanuloletszam" },
   { name: "Kompetencia", icon: FiBookOpen, link: "/kompetencia" },
+  { name: "Versenyek", icon: FiAward, link: "/versenyek" },
   {
     name: "Adatok Importálása a Kréta rendszerből",
     icon: FiUpload,
