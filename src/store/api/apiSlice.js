@@ -12,6 +12,9 @@ export const indicatorApi = createApi({
     getAlapadatok: build.query({
       query: (params) => `alapadatok/${params.id}`,
     }),
+    getKompetencia: build.query({
+      query: (params) => `kompetencia/${params.id}`,
+    }),
     addTanugyiAdatok: build.mutation({
       query: (params) => ({
         url: "tanugyi_adatok/",
@@ -19,6 +22,21 @@ export const indicatorApi = createApi({
         body: {
           alapadatok_id: params.alapadatok_id,
           tanugyi_adatok: params.tanugyi_adatok,
+        },
+      }),
+    }),
+    addKompetencia: build.mutation({
+      query: (params) => ({
+        url: "kompetencia/",
+        method: "POST",
+        body: {
+          alapadatok_id: params.alapadatok_id,
+          tanev_kezdete: params.tanev_kezdete,
+          mat_orsz_p: params.mat_orsz_p,
+          szoveg_orsz_p: params.szoveg_orsz_p,
+          mat_int_p: params.mat_int_p,
+          szoveg_int_p: params.szoveg_int_p,
+          kepzes_forma: params.kepzes_forma,
         },
       }),
     }),
@@ -31,4 +49,6 @@ export const {
   useGetTanugyiAdatokQuery,
   useAddTanugyiAdatokMutation,
   useGetAlapadatokQuery,
+  useGetKompetenciaQuery,
+  useAddKompetenciaMutation,
 } = indicatorApi;
