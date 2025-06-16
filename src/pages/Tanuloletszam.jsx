@@ -87,21 +87,25 @@ export default function TanuloLatszam() {
             };
 
             return isEditing ? (
-              <input
-                autoFocus
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onBlur={handleCommit}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleCommit();
-                  } else if (e.key === "Escape") {
-                    setIsEditing(false);
-                  }
-                }}
-                style={{ width: "100%", boxSizing: "border-box" }}
-              />
+              <div
+                style={{ cursor: "pointer", minHeight: "24px" }}
+              >
+                <input
+                  autoFocus
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onBlur={handleCommit}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleCommit();
+                    } else if (e.key === "Escape") {
+                      setIsEditing(false);
+                    }
+                  }}
+                  style={{width: "100%",  boxSizing: "border-box" }}
+                />
+              </div>
             ) : (
               <div
                 onClick={() => setIsEditing(true)}
@@ -303,7 +307,7 @@ export default function TanuloLatszam() {
               {row.getVisibleCells().map((cell) => (
                 <td
                   key={cell.id}
-                  style={{ border: "1px solid #ccc", padding: "6px" }}
+                  style={{ border: "1px solid #ccc", padding: "6px", width: "50px" }}
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
