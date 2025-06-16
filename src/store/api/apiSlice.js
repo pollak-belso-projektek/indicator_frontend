@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 // Define a service using a base URL and expected endpoints
 export const indicatorApi = createApi({
   reducerPath: "indicatorApi",
-  baseQuery: fetchBaseQuery({ baseUrl: "http://10.0.0.83:3300/api/v1/" }),
+  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:3300/api/v1/" }),
   // 10.0.0.50
   endpoints: (build) => ({
     getTanugyiAdatok: build.query({
@@ -14,6 +14,28 @@ export const indicatorApi = createApi({
     }),
     getKompetencia: build.query({
       query: (params) => `kompetencia/${params.id}`,
+    }),
+    getTanuloLetszam: build.query({
+      query: (params) => `tanulo_letszam/${params.alapadatok_id}`,
+    }),
+    addTanuloLetszam: build.mutation({
+      query: (params) => ({
+        url: "tanulo_letszam/",
+        method: "POST",
+        body: {
+          alapadatok_id: params.alapadatok_id,
+          letszam: params.letszam,
+          jogv_tipus: params.jogv_tipus,
+          szakirany: params.szakirany,
+          tanev_kezdete: params.tanev_kezdete,
+        },
+      }),
+    }),
+    deleteTanuloLetszam: build.mutation({
+      query: (params) => ({
+        url: `tanulo_letszam/${params.alapadatok_id}/${params.year}`,
+        method: "DELETE",
+      }),
     }),
     addTanugyiAdatok: build.mutation({
       query: (params) => ({
@@ -51,4 +73,7 @@ export const {
   useGetAlapadatokQuery,
   useGetKompetenciaQuery,
   useAddKompetenciaMutation,
+  useGetTanuloLetszamQuery,
+  useAddTanuloLetszamMutation,
+  useDeleteTanuloLetszamMutation,
 } = indicatorApi;

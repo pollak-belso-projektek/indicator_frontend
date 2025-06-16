@@ -5,12 +5,11 @@
     box-sizing: border-box;
     font-size: 16px; */
   outline: none;
-  border: 2px solid hotpink; /* Szolid kék keret */
-  box-shadow: 0 0 8px hotpink;/* Halvány fény körülötte */
+  border: 1px solid black; /* Szolid kék keret */
+  width: 100%;
+  height: 100%;
   border-radius: 8px;
-  background-color: #1e1e2f; /* Sötét háttér (a sötét témához passzoló) */
-  color: #ffffff;
   transition: all 0.3s ease;
-  padding: 8px;
+  padding: 2px 4px;
   field-sizing: content;
 }
