@@ -112,8 +112,8 @@ export default function DataImport() {
             </Button>
           </VStack>
           <ReactSpreadsheetImport
-          translations={{
-           uploadStep: {
+            translations={{
+              uploadStep: {
                 title: "Feltöltésilépés",
                 manifestTitle: "Várt adatok:",
                 manifestDescription:
@@ -193,8 +193,7 @@ export default function DataImport() {
                   error: "Hiba",
                 },
               },
-
-          }}
+            }}
             isOpen={isOpen}
             onClose={() => {
               setIsOpen(false);

@@ -1,6 +1,47 @@
 import { Table } from "@chakra-ui/react";
 import "./kompetencia.css";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+
+// Create a separate component for editable cells
+function EditableCell({ value, onValueChange }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [cellValue, setCellValue] = useState(value);
+
+  useEffect(() => {
+    setCellValue(value);
+  }, [value]);
+
+  const handleBlur = () => {
+    setIsEditing(false);
+    if (onValueChange) {
+      onValueChange(cellValue);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <input
+        className="input"
+        autoFocus
+        type="text"
+        value={cellValue}
+        onChange={(e) => setCellValue(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            handleBlur();
+          }
+        }}
+      />
+    );
+  }
+
+  return (
+    <p onClick={() => setIsEditing(true)} style={{ cursor: "pointer" }}>
+      {cellValue}
+    </p>
+  );
+}
 
 export default function Kompetencia() {
   const date = new Date();
@@ -16,67 +57,40 @@ export default function Kompetencia() {
     currentYear,
   ];
 
-  const data = {};
+  const [data, setData] = useState({});
 
-  years.map((e) => {
-    data[e] = {
-      matematika: {
-        technikum: {
-          intezmenyi: 22,
-          orszagos: 2,
+  useEffect(() => {
+    const initialData = {};
+    years.forEach((year) => {
+      initialData[year] = {
+        matematika: {
+          technikum: { orszagos: 0, intezmenyi: 0 },
+          szakkepzo: { orszagos: 0, intezmenyi: 0 },
         },
-        szakkepzo: {
-          intezmenyi: 22,
-          orszagos: 2,
+        szovegertes: {
+          technikum: { orszagos: 0, intezmenyi: 0 },
+          szakkepzo: { orszagos: 0, intezmenyi: 0 },
+        },
+      };
+    });
+    setData(initialData);
+  }, []);
+
+  const updateValue = (year, subject, type, field, newValue) => {
+    setData((prevData) => ({
+      ...prevData,
+      [year]: {
+        ...prevData[year],
+        [subject]: {
+          ...prevData[year][subject],
+          [type]: {
+            ...prevData[year][subject][type],
+            [field]: newValue,
+          },
         },
       },
-      szovegertes: {
-        technikum: {
-          intezmenyi: 22,
-          orszagos: 2,
-        },
-        szakkepzo: {
-          intezmenyi: 22,
-          orszagos: 2,
-        },
-      },
-    };
-  });
-
-  console.log(data);
-
-  function handleCellClick(value) {
-    const [isEditing, setIsEditing] = useState(false);
-    const [cellValue, setCellValue] = useState(value);
-    const [originalValue, setOriginalValue] = useState(value);
-
-    if (isEditing) {
-      return (
-        <input
-          class="input"
-          autoFocus
-          type="text"
-          value={cellValue}
-          onChange={(e) => setCellValue(e.target.value)}
-          onBlur={() => {
-            setIsEditing(false);
-            // Here you would typically dispatch an action to update the value in the store
-          }}
-        />
-      );
-    } else {
-      return (
-        <span
-          onClick={() => {
-            setIsEditing(true);
-            setOriginalValue(cellValue);
-          }}
-        >
-          {cellValue}
-        </span>
-      );
-    }
-  }
+    }));
+  };
 
   return (
     <Table.Root size="md" showColumnBorder variant="outline">
@@ -85,18 +99,21 @@ export default function Kompetencia() {
           <Table.ColumnHeader rowSpan={2}>Mérési Terület</Table.ColumnHeader>
           <Table.ColumnHeader rowSpan={2}>Képzési Forma</Table.ColumnHeader>
           {years.map((e) => {
-            return <Table.ColumnHeader colSpan={2}>{e}</Table.ColumnHeader>;
+            return (
+              <Table.ColumnHeader key={e} colSpan={2}>
+                {e}/{e + 1}
+              </Table.ColumnHeader>
+            );
           })}
         </Table.Row>
         <Table.Row>
           {years.map((e) => {
             return (
-              <>
+              <React.Fragment key={e}>
                 <Table.ColumnHeader>Országos</Table.ColumnHeader>
                 <Table.ColumnHeader>Intézményi</Table.ColumnHeader>
-              </>
+              </React.Fragment>
             );
-            // return handleCellClick(e);
           })}
         </Table.Row>
       </Table.Header>
@@ -106,14 +123,44 @@ export default function Kompetencia() {
           <Table.Cell rowSpan={2}>Technikum</Table.Cell>
           {years.map((e) => {
             return (
-              <>
+              <React.Fragment key={e}>
                 <Table.Cell>
-                  {handleCellClick(data[e].matematika.technikum.orszagos)}
+                  {data[e] ? (
+                    <EditableCell
+                      value={data[e].matematika.technikum.orszagos}
+                      onValueChange={(newValue) =>
+                        updateValue(
+                          e,
+                          "matematika",
+                          "technikum",
+                          "orszagos",
+                          newValue
+                        )
+                      }
+                    />
+                  ) : (
+                    "-"
+                  )}
                 </Table.Cell>
                 <Table.Cell>
-                  {handleCellClick(data[e].matematika.technikum.intezmenyi)}
+                  {data[e] ? (
+                    <EditableCell
+                      value={data[e].matematika.technikum.intezmenyi}
+                      onValueChange={(newValue) =>
+                        updateValue(
+                          e,
+                          "matematika",
+                          "technikum",
+                          "intezmenyi",
+                          newValue
+                        )
+                      }
+                    />
+                  ) : (
+                    "-"
+                  )}
                 </Table.Cell>
-              </>
+              </React.Fragment>
             );
           })}
         </Table.Row>
@@ -121,14 +168,44 @@ export default function Kompetencia() {
           <Table.Cell>Szövegértés</Table.Cell>
           {years.map((e) => {
             return (
-              <>
+              <React.Fragment key={e}>
                 <Table.Cell>
-                  {handleCellClick(data[e].szovegertes.technikum.orszagos)}
+                  {data[e] ? (
+                    <EditableCell
+                      value={data[e].szovegertes.technikum.orszagos}
+                      onValueChange={(newValue) =>
+                        updateValue(
+                          e,
+                          "szovegertes",
+                          "technikum",
+                          "orszagos",
+                          newValue
+                        )
+                      }
+                    />
+                  ) : (
+                    "-"
+                  )}
                 </Table.Cell>
                 <Table.Cell>
-                  {handleCellClick(data[e].szovegertes.technikum.intezmenyi)}
+                  {data[e] ? (
+                    <EditableCell
+                      value={data[e].szovegertes.technikum.intezmenyi}
+                      onValueChange={(newValue) =>
+                        updateValue(
+                          e,
+                          "szovegertes",
+                          "technikum",
+                          "intezmenyi",
+                          newValue
+                        )
+                      }
+                    />
+                  ) : (
+                    "-"
+                  )}
                 </Table.Cell>
-              </>
+              </React.Fragment>
             );
           })}
         </Table.Row>
@@ -137,14 +214,44 @@ export default function Kompetencia() {
           <Table.Cell rowSpan={2}>Szakképző</Table.Cell>
           {years.map((e) => {
             return (
-              <>
+              <React.Fragment key={e}>
                 <Table.Cell>
-                  {handleCellClick(data[e].matematika.szakkepzo.orszagos)}
+                  {data[e] ? (
+                    <EditableCell
+                      value={data[e].matematika.szakkepzo.orszagos}
+                      onValueChange={(newValue) =>
+                        updateValue(
+                          e,
+                          "matematika",
+                          "szakkepzo",
+                          "orszagos",
+                          newValue
+                        )
+                      }
+                    />
+                  ) : (
+                    "-"
+                  )}
                 </Table.Cell>
                 <Table.Cell>
-                  {handleCellClick(data[e].matematika.szakkepzo.intezmenyi)}
+                  {data[e] ? (
+                    <EditableCell
+                      value={data[e].matematika.szakkepzo.intezmenyi}
+                      onValueChange={(newValue) =>
+                        updateValue(
+                          e,
+                          "matematika",
+                          "szakkepzo",
+                          "intezmenyi",
+                          newValue
+                        )
+                      }
+                    />
+                  ) : (
+                    "-"
+                  )}
                 </Table.Cell>
-              </>
+              </React.Fragment>
             );
           })}
         </Table.Row>
@@ -152,14 +259,44 @@ export default function Kompetencia() {
           <Table.Cell>Szövegértés</Table.Cell>
           {years.map((e) => {
             return (
-              <>
+              <React.Fragment key={e}>
                 <Table.Cell>
-                  {handleCellClick(data[e].szovegertes.szakkepzo.orszagos)}
+                  {data[e] ? (
+                    <EditableCell
+                      value={data[e].szovegertes.szakkepzo.orszagos}
+                      onValueChange={(newValue) =>
+                        updateValue(
+                          e,
+                          "szovegertes",
+                          "szakkepzo",
+                          "orszagos",
+                          newValue
+                        )
+                      }
+                    />
+                  ) : (
+                    "-"
+                  )}
                 </Table.Cell>
                 <Table.Cell>
-                  {handleCellClick(data[e].szovegertes.szakkepzo.intezmenyi)}
+                  {data[e] ? (
+                    <EditableCell
+                      value={data[e].szovegertes.szakkepzo.intezmenyi}
+                      onValueChange={(newValue) =>
+                        updateValue(
+                          e,
+                          "szovegertes",
+                          "szakkepzo",
+                          "intezmenyi",
+                          newValue
+                        )
+                      }
+                    />
+                  ) : (
+                    "-"
+                  )}
                 </Table.Cell>
-              </>
+              </React.Fragment>
             );
           })}
         </Table.Row>
