@@ -69,38 +69,33 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
 const NavItem = ({ icon, children, ...rest }) => {
   return (
-    <Box
-      as="a"
-      href="#"
+    <Flex
+      align="center"
+      p="4"
+      mx="4"
+      borderRadius="lg"
+      role="group"
+      cursor="pointer"
       style={{ textDecoration: "none" }}
       _focus={{ boxShadow: "none" }}
+      _hover={{
+        bg: "cyan.400",
+        color: "white",
+      }}
+      {...rest}
     >
-      <Flex
-        align="center"
-        p="4"
-        mx="4"
-        borderRadius="lg"
-        role="group"
-        cursor="pointer"
-        _hover={{
-          bg: "cyan.400",
-          color: "white",
-        }}
-        {...rest}
-      >
-        {icon && (
-          <Icon
-            mr="4"
-            fontSize="16"
-            _groupHover={{
-              color: "white",
-            }}
-            as={icon}
-          />
-        )}
-        {children}
-      </Flex>
-    </Box>
+      {icon && (
+        <Icon
+          mr="4"
+          fontSize="16"
+          _groupHover={{
+            color: "white",
+          }}
+          as={icon}
+        />
+      )}
+      {children}
+    </Flex>
   );
 };
 
