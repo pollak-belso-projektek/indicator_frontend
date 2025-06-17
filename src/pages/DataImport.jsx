@@ -4,13 +4,14 @@ import {
   useAddTanugyiAdatokMutation,
   useGetTanugyiAdatokQuery,
 } from "../store/api/apiSlice";
-import { Button, VStack, Text } from "@chakra-ui/react";
-import { ReactSpreadsheetImport } from "react-spreadsheet-import";
+import { Button, VStack, Text, Box, Heading } from "@chakra-ui/react";
 import { Spinner } from "@chakra-ui/react";
+import { CustomSheetUploader } from "../components/CustomSheetUploader";
 
 export default function DataImport() {
   const [data, setData] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [customUploaderData, setCustomUploaderData] = useState(null);
 
   const [addTanugyiAdatok, result] = useAddTanugyiAdatokMutation();
   const {
@@ -24,10 +25,10 @@ export default function DataImport() {
 
   useEffect(() => {
     console.log(data);
-    if (data && data?.all) {
+    if (data) {
       addTanugyiAdatok({
         alapadatok_id: "2e31291b-7c2d-4bd8-bdca-de8580136874",
-        tanugyi_adatok: data.all,
+        tanugyi_adatok: data,
       });
     }
   }, [data, addTanugyiAdatok]);
@@ -67,7 +68,7 @@ export default function DataImport() {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              height: "45vh",
+              height: "70vh",
               flexDirection: "column",
               border: "1px solid #ccc",
             }}
@@ -99,26 +100,51 @@ export default function DataImport() {
               {tanugyiData && Array.isArray(tanugyiData)
                 ? tanugyiData.length
                 : 0}
-            </Text>
-            <Button
-              colorPalette={"blue"}
-              variant="solid"
-              mt={99}
-              onClick={() => {
-                setIsOpen(true);
+            </Text>     {/* Custom Sheet Uploader Demo Section */}
+          <Box p={8} mt={8} border="1px solid" borderColor="gray.200" borderRadius="lg">           
+
+            <CustomSheetUploader
+              onFileUpload={async (data, file) => {
+                console.log("Custom uploader - Feltöltött fájl:", file.name);
+                console.log("Custom uploader - Adatok:", data);
+                setData(
+                  //match the key-label in the data to the fields
+                  data.map((item) => {
+                    const newItem = {};
+                    fields.forEach((field) => {
+                      newItem[field.key] = item[field.label] || "";
+                    });
+                    return newItem;
+                  })
+                );
+                
+                // Itt hívhatod meg az API-t az adatok mentéséhez
+                // await addTanugyiAdatok(data);
               }}
-            >
-              Új Adatok Feltöltése
-            </Button>
+              onError={(error) => {
+                console.error("Custom uploader hiba:", error);
+              }}
+              maxFileSize={5 * 1024 * 1024} // 5MB
+              showPreview={true}
+              maxPreviewRows={10}              uploadMessage="Húzd ide az Excel vagy CSV fájlt vagy kattints a tallózáshoz"
+              loadingMessage="Fájl feldolgozása..."
+            />
+            
+            {data && (
+              <Box mt={4} p={4} bg="green.50" borderRadius="md">
+                <Text fontWeight="bold" color="green.700">
+                  Sikeresen feldolgozva!
+                </Text>
+                <Text color="green.600">
+                {data.length} sor adat lett feldolgozva.
+                </Text>
+              </Box>
+            )}
+          </Box>
+   
           </VStack>
-          <ReactSpreadsheetImport
-            isOpen={isOpen}
-            onClose={() => {
-              setIsOpen(false);
-            }}
-            onSubmit={setData}
-            fields={fields}
-          />
+
+     
         </>
       )}
     </>

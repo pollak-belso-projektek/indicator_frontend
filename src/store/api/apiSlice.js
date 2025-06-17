@@ -14,6 +14,31 @@ export const indicatorApi = createApi({
     getAlapadatok: build.query({
       query: (params) => `alapadatok/${params.id}`,
     }),
+    getKompetencia: build.query({
+      query: (params) => `kompetencia/${params.id}`,
+    }),
+    getTanuloLetszam: build.query({
+      query: (params) => `tanulo_letszam/${params.alapadatok_id}`,
+    }),
+    addTanuloLetszam: build.mutation({
+      query: (params) => ({
+        url: "tanulo_letszam/",
+        method: "POST",
+        body: {
+          alapadatok_id: params.alapadatok_id,
+          letszam: params.letszam,
+          jogv_tipus: params.jogv_tipus,
+          szakirany: params.szakirany,
+          tanev_kezdete: params.tanev_kezdete,
+        },
+      }),
+    }),
+    deleteTanuloLetszam: build.mutation({
+      query: (params) => ({
+        url: `tanulo_letszam/${params.alapadatok_id}/${params.year}`,
+        method: "DELETE",
+      }),
+    }),
     addTanugyiAdatok: build.mutation({
       query: (params) => ({
         url: "tanugyi_adatok/",
@@ -21,6 +46,21 @@ export const indicatorApi = createApi({
         body: {
           alapadatok_id: params.alapadatok_id,
           tanugyi_adatok: params.tanugyi_adatok,
+        },
+      }),
+    }),
+    addKompetencia: build.mutation({
+      query: (params) => ({
+        url: "kompetencia/",
+        method: "POST",
+        body: {
+          alapadatok_id: params.alapadatok_id,
+          tanev_kezdete: params.tanev_kezdete,
+          mat_orsz_p: params.mat_orsz_p,
+          szoveg_orsz_p: params.szoveg_orsz_p,
+          mat_int_p: params.mat_int_p,
+          szoveg_int_p: params.szoveg_int_p,
+          kepzes_forma: params.kepzes_forma,
         },
       }),
     }),
@@ -33,4 +73,9 @@ export const {
   useGetTanugyiAdatokQuery,
   useAddTanugyiAdatokMutation,
   useGetAlapadatokQuery,
+  useGetKompetenciaQuery,
+  useAddKompetenciaMutation,
+  useGetTanuloLetszamQuery,
+  useAddTanuloLetszamMutation,
+  useDeleteTanuloLetszamMutation,
 } = indicatorApi;
