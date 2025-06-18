@@ -10,9 +10,6 @@ import {
   Text,
   Menu,
   Drawer,
-  Select,
-  Portal,
-  createListCollection,
 } from "@chakra-ui/react";
 import {
   FiHome,
@@ -29,7 +26,6 @@ import { ColorModeButton, useColorModeValue } from "./ui/color-mode";
 
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useGetAllAlapadatokQuery } from "../store/api/apiSlice";
 
 const LinkItems = [
   { name: "Főoldal", icon: FiHome, link: "/dashboard" },
@@ -121,18 +117,6 @@ const NavItem = ({ icon, children, onClick, ...rest }) => {
 };
 
 const MobileNav = ({ onOpen, ...rest }) => {
-  const { data } = useGetAllAlapadatokQuery();
-
-  console.log(data);
-
-  const schools = createListCollection({
-    items:
-      data?.map((item) => ({
-        label: item.nev,
-        value: item.id.toString(),
-      })) || [],
-  });
-
   return (
     <Flex
       ml={{ base: 0, md: 60 }}
@@ -163,33 +147,6 @@ const MobileNav = ({ onOpen, ...rest }) => {
         Logo
       </Text>
 
-      <Box flex="1" flexGrow={1} justifyContent="center">
-        <Select.Root collection={schools} size="sm" width="320px">
-          <Select.HiddenSelect />
-          <Select.Label>Select framework</Select.Label>
-          <Select.Control>
-            <Select.Trigger>
-              <Select.ValueText placeholder="Select framework" />
-            </Select.Trigger>
-            <Select.IndicatorGroup>
-              <Select.Indicator />
-            </Select.IndicatorGroup>
-          </Select.Control>
-          <Portal>
-            <Select.Positioner>
-              <Select.Content>
-                {schools.items.map((school) => (
-                  <Select.Item item={school} key={school.value}>
-                    {school.label}
-                    <Select.ItemIndicator />
-                  </Select.Item>
-                ))}
-              </Select.Content>
-            </Select.Positioner>
-          </Portal>
-        </Select.Root>
-      </Box>
-
       <HStack spacing={{ base: "0", md: "6" }}>
         <Flex alignItems={"center"} gap={2}>
           <ColorModeButton />
@@ -201,8 +158,8 @@ const MobileNav = ({ onOpen, ...rest }) => {
             >
               <HStack>
                 <Avatar.Root>
-                  <Avatar.Fallback name="Admin" />
-                  <Avatar.Image src="https://images.unsplash.com/photo-1619946a794135-5bc917a27793?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=b616b2c5b373a80ffc9636ba24f7a4a9" />
+                  <Avatar.Fallback name="Test" />
+                  <Avatar.Image src="https://images.unsplash.com/photo-1619946794135-5bc917a27793?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=b616b2c5b373a80ffc9636ba24f7a4a9" />
                 </Avatar.Root>
                 <VStack
                   display={{ base: "none", md: "flex" }}
@@ -210,7 +167,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
                   spacing="1px"
                   ml="2"
                 >
-                  <Text fontSize="sm">Admin</Text>
+                  <Text fontSize="sm">Justina Clark</Text>
                   <Text fontSize="xs" color="gray.600">
                     Admin
                   </Text>

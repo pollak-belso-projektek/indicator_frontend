@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@chakra-ui/accordion": "^2.3.1",
-    "@chakra-ui/alert-dialog": "^1.0.0-next.3",
     "@chakra-ui/icon": "^3.2.0",
     "@chakra-ui/modal": "^2.3.1",
     "@chakra-ui/popper": "^3.1.0",
@@ -20,7 +19,6 @@
     "@chakra-ui/react-context": "^2.1.0",
     "@chakra-ui/shared-utils": "^2.0.5",
     "@chakra-ui/styled-system": "^2.12.3",
-    "@chakra-ui/system": "^2.6.2",
     "@chakra-ui/theme-utils": "^2.0.21",
     "@chakra-ui/toast": "^7.0.2",
     "@emotion/react": "^11.14.0",

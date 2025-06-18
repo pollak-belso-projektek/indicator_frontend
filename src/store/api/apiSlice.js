@@ -14,6 +14,9 @@ export const indicatorApi = createApi({
     getAlapadatok: build.query({
       query: (params) => `alapadatok/${params.id}`,
     }),
+    getAllAlapadatok: build.query({
+      query: () => `alapadatok/`,
+    }),
     getKompetencia: build.query({
       query: (params) => `kompetencia/${params.id}`,
     }),
@@ -73,6 +76,7 @@ export const {
   useGetTanugyiAdatokQuery,
   useAddTanugyiAdatokMutation,
   useGetAlapadatokQuery,
+  useGetAllAlapadatokQuery,
   useGetKompetenciaQuery,
   useAddKompetenciaMutation,
   useGetTanuloLetszamQuery,

@@ -167,23 +167,23 @@ export default function TanuloLatszam() {
   });
 
   function getGroupedData() {
-    // If tanuloLetszamData is available, use it to set initial values
-    /**
-     * the data rows looks like this:
-     *  alapadatok_id: "2e31291b-7c2d-4bd8-bdca-de8580136874"
-        createAt: "2025-06-16T08:19:49.883Z"
-        createBy: null
-        id: "74b25058-8d1b-466d-a1e7-af0dff2a9ffc"
-        jogv_tipus: 0
-        letszam: 400
-        szakirany_id: "90690610-0e43-42c6-aa5c-9912f88c6269"
-        szakma_id: "25525eda-a163-4c84-82e6-b9000b961313"
-        tanev_kezdete: 2024
-     */
+    // Generate the last 4 academic years based on current date
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth(); // 0-based, so September is 8
 
+    // If it's September or later, we're in the new academic year
+    const academicYearStart = currentMonth >= 8 ? currentYear : currentYear - 1;
+
+    // Generate last 4 academic years
+    const last4Years = Array.from(
+      { length: 4 },
+      (_, i) => academicYearStart - 3 + i
+    );
+
+    // If tanuloLetszamData is available, use it to set initial values
     if (tanuloLetszamData) {
       const groupedByAgazat = {};
-      const years = new Set();
 
       tanuloLetszamData.forEach((item) => {
         const agazatType = item.szakirany.nev;
@@ -192,8 +192,6 @@ export default function TanuloLatszam() {
           item.jogv_tipus === 0
             ? "Tanulói jogviszony"
             : "Felnőttképzési jogviszony";
-
-        years.add(year);
 
         if (!groupedByAgazat[agazatType]) {
           groupedByAgazat[agazatType] = {
@@ -214,24 +212,34 @@ export default function TanuloLatszam() {
           item.letszam;
       });
 
+      // Ensure all agazat types have entries for all 4 years
+      Object.values(groupedByAgazat).forEach((agazat) => {
+        last4Years.forEach((year) => {
+          if (!agazat.yearCounts[year]) {
+            agazat.yearCounts[year] = {
+              "Tanulói jogviszony": 0,
+              "Felnőttképzési jogviszony": 0,
+              Egyéb: 0,
+            };
+          }
+        });
+      });
+
       return {
         agazatData: Object.values(groupedByAgazat),
-        years: Array.from(years).sort(),
+        years: last4Years,
       };
     } else {
       if (!tanugyiData || !Array.isArray(tanugyiData)) {
-        return { agazatData: [], years: [] };
+        return { agazatData: [], years: last4Years };
       }
 
       const groupedByAgazat = {};
-      const years = new Set();
 
       tanugyiData.forEach((item) => {
         const agazatType = item.uj_Szkt_agazat_tipusa || "Nincs megadva";
         const year = item.tanev_kezdete ? item.tanev_kezdete : "Nincs év";
         const jogviszonyType = item.tanulo_jogviszonya || "Nincs megadva";
-
-        years.add(year);
 
         if (!groupedByAgazat[agazatType]) {
           groupedByAgazat[agazatType] = {
@@ -261,9 +269,22 @@ export default function TanuloLatszam() {
         }
       });
 
+      // Ensure all agazat types have entries for all 4 years
+      Object.values(groupedByAgazat).forEach((agazat) => {
+        last4Years.forEach((year) => {
+          if (!agazat.yearCounts[year]) {
+            agazat.yearCounts[year] = {
+              "Tanulói jogviszony": 0,
+              "Felnőttképzési jogviszony": 0,
+              Egyéb: 0,
+            };
+          }
+        });
+      });
+
       return {
         agazatData: Object.values(groupedByAgazat),
-        years: Array.from(years).sort(),
+        years: last4Years,
       };
     }
   }
@@ -301,7 +322,6 @@ export default function TanuloLatszam() {
       Object.keys(item.yearCounts).forEach((year) => {
         const tanuloLetszam = item.yearCounts[year];
         Object.keys(tanuloLetszam).forEach((category) => {
-          if (tanuloLetszam[category] === 0) return; // Skip if count is zero
           if (category === "Egyéb") return; // Skip "Egyéb" category
 
           addTanuloLetszam({
@@ -330,7 +350,7 @@ export default function TanuloLatszam() {
       });
     });
 
-    navigate(0);
+    // navigate(0);
   };
 
   return isLoading ? (
@@ -405,11 +425,7 @@ export default function TanuloLatszam() {
           </Tooltip.Positioner>
         </Tooltip.Root>
       </HStack>
-      <Table.Root
-        striped
-        variant={"outline"}
-        style={{ borderCollapse: "collapse", width: "100%" }}
-      >
+      <Table.Root size="md" showColumnBorder variant="outline" striped>
         <Table.Header>
           {table.getHeaderGroups().map((headerGroup) => (
             <Table.Row key={headerGroup.id}>
@@ -435,6 +451,8 @@ export default function TanuloLatszam() {
                     key={header.id}
                     colSpan={header.colSpan}
                     rowSpan={rowSpan}
+                    fontSize="md"
+                    fontWeight="bold"
                   >
                     {flexRender(
                       header.column.columnDef.header,
@@ -459,14 +477,17 @@ export default function TanuloLatszam() {
 
           {/* Totals Row */}
           <Table.Row>
-            <Table.Cell>Összesen</Table.Cell>
+            <Table.Cell fontWeight={"bold"}>Összesen</Table.Cell>
             {[
               "Tanulói jogviszony",
               "Felnőttképzési jogviszony",
               "Összesen",
             ].flatMap((category) =>
               years?.map((year) => (
-                <Table.Cell key={`total-${category}-${year}`}>
+                <Table.Cell
+                  key={`total-${category}-${year}`}
+                  fontWeight={"bold"}
+                >
                   {computeTotal(year, category)}
                 </Table.Cell>
               ))
@@ -475,14 +496,17 @@ export default function TanuloLatszam() {
 
           {/* Change Row */}
           <Table.Row>
-            <Table.Cell>Adatváltozás</Table.Cell>
+            <Table.Cell fontWeight={"bold"}>Adatváltozás</Table.Cell>
             {[
               "Tanulói jogviszony",
               "Felnőttképzési jogviszony",
               "Összesen",
             ].flatMap((category) =>
               years?.map((_, idx) => (
-                <Table.Cell key={`change-${category}-${idx}`}>
+                <Table.Cell
+                  key={`change-${category}-${idx}`}
+                  fontWeight={"bold"}
+                >
                   {computeChange(idx, category)}
                 </Table.Cell>
               ))
