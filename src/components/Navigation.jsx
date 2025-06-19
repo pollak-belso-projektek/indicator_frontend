@@ -15,33 +15,36 @@ import {
   createListCollection,
 } from "@chakra-ui/react";
 import {
-  FiHome,
-  FiSettings,
-  FiUsers,
-  FiBell,
-  FiChevronDown,
-  FiMenu,
-  FiUpload,
-  FiBookOpen,
-  FiAward,
-} from "react-icons/fi";
+ MdPerson,
+  MdChevronLeft,
+  MdChevronRight,
+  MdMenu,
+  MdHome,
+  MdStar,
+  MdBookmark,
+  MdUpload,
+  MdSettings,
+  MdGroup,
+  MdBook
+} from "react-icons/md";
 import { ColorModeButton, useColorModeValue } from "./ui/color-mode";
-
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useGetAllAlapadatokQuery } from "../store/api/apiSlice";
+import { FiBookmark, FiChevronDown } from "react-icons/fi";
 
 const LinkItems = [
-  { name: "Főoldal", icon: FiHome, link: "/dashboard" },
-  { name: "Alapadatok", icon: FiSettings, link: "/alapadatok" },
-  { name: "Tanulólétszám", icon: FiUsers, link: "/tanuloletszam" },
-  { name: "Kompetencia", icon: FiBookOpen, link: "/kompetencia" },
-  { name: "Versenyek", icon: FiAward, link: "/versenyek" },
+  { name: "Főoldal", icon: MdHome, link: "/dashboard" },
+  { name: "Alapadatok", icon: MdSettings, link: "/alapadatok" },
+  { name: "Tanulólétszám", icon: MdGroup, link: "/tanuloletszam" },
+  { name: "Kompetencia", icon: MdBook , link: "/kompetencia" },
+  { name: "Versenyek", icon: MdStar, link: "/versenyek" },
   {
     name: "Adatok Importálása a Kréta rendszerből",
-    icon: FiUpload,
+    icon: MdUpload,
     link: "/adat-import",
   },
+  { name: "Felhasználók", icon: MdPerson, link: "/users" },
 ];
 
 const SidebarContent = ({ onClose, ...rest }) => {
@@ -151,7 +154,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
         variant="outline"
         aria-label="open menu"
       >
-        <FiMenu />
+        <MdMenu />
       </IconButton>
 
       <Text

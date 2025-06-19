@@ -4,10 +4,48 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 export const indicatorApi = createApi({
   reducerPath: "indicatorApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: "https://indicator-api.pollak.info/api/v1/",
+    baseUrl: "http://localhost:5300/api/v1/",
   }),
-  // 10.0.0.50
+  tagTypes: [
+    "User",
+    "TanugyiAdatok",
+    "Alapadatok",
+    "Kompetencia",
+    "TanuloLetszam",
+  ],
   endpoints: (build) => ({
+    // User management endpoints
+    getUsers: build.query({
+      query: () => "users/",
+      providesTags: ["User"],
+    }),
+    getUserById: build.query({
+      query: (id) => `users/${id}`,
+      providesTags: (result, error, id) => [{ type: "User", id }],
+    }),
+    addUser: build.mutation({
+      query: (userData) => ({
+        url: "users/",
+        method: "POST",
+        body: userData,
+      }),
+      invalidatesTags: ["User"],
+    }),
+    updateUser: build.mutation({
+      query: ({ id, ...userData }) => ({
+        url: `users/${id}`,
+        method: "PUT",
+        body: userData,
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: "User", id }],
+    }),
+    deleteUser: build.mutation({
+      query: (id) => ({
+        url: `users/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["User"],
+    }),
     getTanugyiAdatok: build.query({
       query: (params) => `tanugyi_adatok/${params.alapadatok_id}/${params.ev}`,
     }),
@@ -82,4 +120,9 @@ export const {
   useGetTanuloLetszamQuery,
   useAddTanuloLetszamMutation,
   useDeleteTanuloLetszamMutation,
+  useGetUsersQuery,
+  useGetUserByIdQuery,
+  useAddUserMutation,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
 } = indicatorApi;

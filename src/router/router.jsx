@@ -9,7 +9,7 @@ const DataImportPage = lazy(() => import("../pages/DataImport"));
 const TanuloletszamPage = lazy(() => import("../pages/Tanuloletszam.jsx"));
 const KompetenciaPage = lazy(() => import("../pages/Kompetencia.jsx"));
 const VersenyekPage = lazy(() => import("../pages/Versenyek.jsx"));
-
+const UsersPage = lazy(() => import("../pages/Users.jsx"));
 export default function Router() {
   return (
     <BrowserRouter>
@@ -36,6 +36,7 @@ export default function Router() {
             <Route path="/tanuloletszam" element={<TanuloletszamPage />} />
             <Route path="/kompetencia" element={<KompetenciaPage />} />
             <Route path="/versenyek" element={<VersenyekPage />} />
+            <Route path="/users" element={<UsersPage />} />
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>
         </Suspense>
