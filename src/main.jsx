@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import "./index.css";
@@ -20,7 +21,7 @@ const muiTheme = createTheme({
   },
 });
 
-const store = configureAppStore();
+const { store, persistor } = configureAppStore();
 
 setupListeners(store.dispatch);
 
@@ -30,7 +31,9 @@ createRoot(document.getElementById("root")).render(
       <CssBaseline />
       <ChakraProvider>
         <Provider store={store}>
-          <Router />
+          <PersistGate loading={null} persistor={persistor}>
+            <Router />
+          </PersistGate>
         </Provider>
       </ChakraProvider>
     </ThemeProvider>
