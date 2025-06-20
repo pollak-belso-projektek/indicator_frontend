@@ -15,7 +15,7 @@ import {
   createListCollection,
 } from "@chakra-ui/react";
 import {
- MdPerson,
+  MdPerson,
   MdChevronLeft,
   MdChevronRight,
   MdMenu,
@@ -25,19 +25,30 @@ import {
   MdUpload,
   MdSettings,
   MdGroup,
-  MdBook
+  MdBook,
 } from "react-icons/md";
 import { ColorModeButton, useColorModeValue } from "./ui/color-mode";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useGetAllAlapadatokQuery } from "../store/api/apiSlice";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  useGetAllAlapadatokQuery,
+  useLogoutMutation,
+} from "../store/api/apiSlice";
+import {
+  logout,
+  selectUser,
+  selectUserRole,
+  selectUserPermissions,
+} from "../store/slices/authSlice";
 import { FiBookmark, FiChevronDown } from "react-icons/fi";
+import UserRoleBadge from "./UserRoleBadge";
 
 const LinkItems = [
   { name: "Főoldal", icon: MdHome, link: "/dashboard" },
   { name: "Alapadatok", icon: MdSettings, link: "/alapadatok" },
   { name: "Tanulólétszám", icon: MdGroup, link: "/tanuloletszam" },
-  { name: "Kompetencia", icon: MdBook , link: "/kompetencia" },
+  { name: "Kompetencia", icon: MdBook, link: "/kompetencia" },
   { name: "Versenyek", icon: MdStar, link: "/versenyek" },
   {
     name: "Adatok Importálása a Kréta rendszerből",
@@ -124,6 +135,12 @@ const NavItem = ({ icon, children, onClick, ...rest }) => {
 };
 
 const MobileNav = ({ onOpen, ...rest }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector(selectUser);
+  const userRole = useSelector(selectUserRole);
+  const userPermissions = useSelector(selectUserPermissions);
+  const [logoutMutation] = useLogoutMutation();
   const { data } = useGetAllAlapadatokQuery();
 
   console.log(data);
@@ -135,6 +152,17 @@ const MobileNav = ({ onOpen, ...rest }) => {
         value: item.id.toString(),
       })) || [],
   });
+
+  const handleLogout = async () => {
+    try {
+      await logoutMutation().unwrap();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      dispatch(logout());
+      navigate("/login");
+    }
+  };
 
   return (
     <Flex
@@ -202,10 +230,11 @@ const MobileNav = ({ onOpen, ...rest }) => {
               transition="all 0.3s"
               _focus={{ boxShadow: "none" }}
             >
+              {" "}
               <HStack>
                 <Avatar.Root>
-                  <Avatar.Fallback name="Admin" />
-                  <Avatar.Image src="https://images.unsplash.com/photo-1619946a794135-5bc917a27793?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=b616b2c5b373a80ffc9636ba24f7a4a9" />
+                  <Avatar.Fallback name={user?.name || user?.email || "User"} />
+                  {user?.avatar && <Avatar.Image src={user.avatar} />}
                 </Avatar.Root>
                 <VStack
                   display={{ base: "none", md: "flex" }}
@@ -213,16 +242,20 @@ const MobileNav = ({ onOpen, ...rest }) => {
                   spacing="1px"
                   ml="2"
                 >
-                  <Text fontSize="sm">Admin</Text>
-                  <Text fontSize="xs" color="gray.600">
-                    Admin
+                  {" "}
+                  <Text fontSize="sm">
+                    {user?.name || user?.email || "User"}
                   </Text>
+                  <UserRoleBadge
+                    role={userRole}
+                    permissions={userPermissions}
+                  />
                 </VStack>
                 <Box display={{ base: "none", md: "flex" }}>
                   <FiChevronDown />
                 </Box>
               </HStack>
-            </Menu.Trigger>
+            </Menu.Trigger>{" "}
             <Menu.Positioner>
               <Menu.Content
                 bg={useColorModeValue("white", "gray.900")}
@@ -230,9 +263,8 @@ const MobileNav = ({ onOpen, ...rest }) => {
               >
                 <Menu.Item>Profile</Menu.Item>
                 <Menu.Item>Settings</Menu.Item>
-                <Menu.Item>Billing</Menu.Item>
                 <Menu.Separator />
-                <Menu.Item>Sign out</Menu.Item>
+                <Menu.Item onClick={handleLogout}>Sign out</Menu.Item>
               </Menu.Content>
             </Menu.Positioner>
           </Menu.Root>
