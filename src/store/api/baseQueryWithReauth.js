@@ -24,14 +24,16 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
   // If we get a 401 error, try to refresh the token
   if (result.error && result.error.status === 401) {
     const refreshToken = api.getState().auth?.refreshToken;
-
     if (refreshToken) {
-      // Try to refresh the token
+      // Try to refresh the token - send refresh token via x-refresh-token header
       const refreshResult = await baseQuery(
         {
           url: "auth/refresh",
           method: "POST",
-          body: { refreshToken },
+          headers: {
+            "x-refresh-token": refreshToken,
+            "content-type": "application/json",
+          },
         },
         api,
         extraOptions

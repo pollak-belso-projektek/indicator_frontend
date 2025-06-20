@@ -98,39 +98,34 @@ const NavItem = ({ icon, children, onClick, ...rest }) => {
   };
 
   return (
-    <Box
-      as="a"
-      href="#"
+    <Flex
+      align="center"
+      p="4"
+      mx="4"
+      borderRadius="lg"
+      role="group"
+      cursor="pointer"
       style={{ textDecoration: "none" }}
       _focus={{ boxShadow: "none" }}
+      _hover={{
+        bg: "cyan.400",
+        color: "white",
+      }}
       onClick={handleClick}
+      {...rest}
     >
-      <Flex
-        align="center"
-        p="4"
-        mx="4"
-        borderRadius="lg"
-        role="group"
-        cursor="pointer"
-        _hover={{
-          bg: "cyan.400",
-          color: "white",
-        }}
-        {...rest}
-      >
-        {icon && (
-          <Icon
-            mr="4"
-            fontSize="16"
-            _groupHover={{
-              color: "white",
-            }}
-            as={icon}
-          />
-        )}
-        {children}
-      </Flex>
-    </Box>
+      {icon && (
+        <Icon
+          mr="4"
+          fontSize="16"
+          _groupHover={{
+            color: "white",
+          }}
+          as={icon}
+        />
+      )}
+      {children}
+    </Flex>
   );
 };
 
@@ -223,7 +218,6 @@ const MobileNav = ({ onOpen, ...rest }) => {
 
       <HStack spacing={{ base: "0", md: "6" }}>
         <Flex alignItems={"center"} gap={2}>
-          <ColorModeButton />
           <Menu.Root>
             <Menu.Trigger
               py={2}
@@ -232,15 +226,12 @@ const MobileNav = ({ onOpen, ...rest }) => {
             >
               {" "}
               <HStack>
-                <Avatar.Root>
-                  <Avatar.Fallback name={user?.name || user?.email || "User"} />
-                  {user?.avatar && <Avatar.Image src={user.avatar} />}
-                </Avatar.Root>
                 <VStack
                   display={{ base: "none", md: "flex" }}
-                  alignItems="flex-start"
+                  alignItems="center"
                   spacing="1px"
                   ml="2"
+                  fontWeight={600}
                 >
                   {" "}
                   <Text fontSize="sm">
