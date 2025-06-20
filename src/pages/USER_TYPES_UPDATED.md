@@ -100,7 +100,7 @@ A felhasználó típusok most már magyarul jelennek meg:
   "name": "Teszt Felhasználó",
   "email": "teszt@example.com",
   "password": "jelszó123",
-  "hierarchyLevel": 7, // Superadmin esetén 7
+  "permissions": 31, // Superadmin esetén 31 (nem hierarchyLevel!)
   "active": true
 }
 ```
@@ -111,11 +111,11 @@ A felhasználó típusok most már magyarul jelennek meg:
 const USER_HIERARCHY = {
   ISKOLAI_GENERAL: 1, // Iskolai Általános
   ISKOLAI_PRIVILEGED: 2, // Iskolai Privilegizált
-  ISKOLAI_ADMIN: 3, // Iskolai Admin
-  HSZC_GENERAL: 4, // HSZC Általános
-  HSZC_PRIVILEGED: 5, // HSZC Privilegizált
-  HSZC_ADMIN: 6, // HSZC Admin
-  SUPERADMIN: 7, // Superadmin
+  ISKOLAI_ADMIN: 4, // Iskolai Admin
+  HSZC_GENERAL: 9, // HSZC Általános
+  HSZC_PRIVILEGED: 10, // HSZC Privilegizált
+  HSZC_ADMIN: 15, // HSZC Admin
+  SUPERADMIN: 31, // Superadmin
 };
 ```
 
@@ -129,24 +129,22 @@ const USER_HIERARCHY = {
 
 ## Refresh Token Authentication
 
-⚠️ **FONTOS**: A refresh token most már a `x-refresh-token` header-ben küldendő:
+✅ **JAVÍTVA**: A refresh token a request body-ban kerül elküldésre a backend kompatibilitás érdekében:
 
 ```javascript
-// Helyes megoldás - x-refresh-token header
+// Helyes megoldás - body-ban küldés (backend kompatibilis)
 const refreshResult = await baseQuery({
   url: "auth/refresh",
   method: "POST",
-  headers: {
-    "x-refresh-token": refreshToken,
-  },
+  body: { refreshToken }, // ✅ Backend ezt várja: req.body.refreshToken
 });
+```
 
-// Régi megoldás (nem működik) - body-ban
-const refreshResult = await baseQuery({
-  url: "auth/refresh",
-  method: "POST",
-  body: { refreshToken }, // ❌ NE így!
-});
+A backend így tudja kiolvasni:
+
+```javascript
+// Backend oldalon
+const { refreshToken } = req.body; // ✅ Működik
 ```
 
 ## Frissített Hierarchia Szintek

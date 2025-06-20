@@ -47,6 +47,11 @@ const UserRoleBadge = ({ role, permissions }) => {
       >
         {getRoleIcon(permissions)} {displayRole}
       </Badge>
+      {permissions?.isHSZC && (
+        <Badge ml={2} colorPalette="blue" variant="solid" fontSize="xs" px={2}>
+          HSZC
+        </Badge>
+      )}
     </Box>
   );
 };

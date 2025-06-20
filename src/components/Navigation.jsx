@@ -13,6 +13,7 @@ import {
   Select,
   Portal,
   createListCollection,
+  Image,
 } from "@chakra-ui/react";
 import {
   MdPerson,
@@ -40,25 +41,116 @@ import {
   selectUser,
   selectUserRole,
   selectUserPermissions,
+  selectUserTableAccess,
 } from "../store/slices/authSlice";
 import { FiBookmark, FiChevronDown } from "react-icons/fi";
 import UserRoleBadge from "./UserRoleBadge";
+import { Input } from "@mui/material";
+import { getTableName } from "../utils/tableValues";
 
-const LinkItems = [
-  { name: "Főoldal", icon: MdHome, link: "/dashboard" },
-  { name: "Alapadatok", icon: MdSettings, link: "/alapadatok" },
-  { name: "Tanulólétszám", icon: MdGroup, link: "/tanuloletszam" },
-  { name: "Kompetencia", icon: MdBook, link: "/kompetencia" },
-  { name: "Versenyek", icon: MdStar, link: "/versenyek" },
+// All available navigation items with their table mappings
+const AllLinkItems = [
+  { name: "Főoldal", icon: MdHome, link: "/dashboard", tableName: null }, // Always visible
+  {
+    name: "Alapadatok",
+    icon: MdSettings,
+    link: "/alapadatok",
+    tableName: null,
+  },
+  {
+    name: "Tanulólétszám",
+    icon: MdGroup,
+    link: "/tanulo_letszam",
+    tableName: "tanulo_letszam",
+  },
+  {
+    name: "Kompetencia",
+    icon: MdBook,
+    link: "/kompetencia",
+    tableName: "kompetencia",
+  },
+  {
+    name: "Versenyek",
+    icon: MdStar,
+    link: "/versenyek",
+    tableName: "versenyek",
+  },
+  {
+    name: "Felvettek száma",
+    icon: MdGroup,
+    link: "/felvettek_szama",
+    tableName: "felvettek_szama",
+  },
   {
     name: "Adatok Importálása a Kréta rendszerből",
     icon: MdUpload,
     link: "/adat-import",
+    tableName: null, // Special page, check based on permissions
   },
-  { name: "Felhasználók", icon: MdPerson, link: "/users" },
+  { name: "Felhasználók", icon: MdPerson, link: "/users", tableName: "users" },
 ];
 
+// Function to filter navigation items based on user's table access
+const getAccessibleNavItems = (tableAccess, userPermissions) => {
+  // Superadmin bypasses all permission checks and gets all items
+  if (userPermissions?.isSuperadmin) {
+    return AllLinkItems;
+  }
+
+  if (!tableAccess || !Array.isArray(tableAccess)) {
+    // If no table access info, only show dashboard
+    return AllLinkItems.filter((item) => item.tableName === null);
+  }
+
+  const accessibleTableNames = tableAccess.map((access) => access.tableName);
+
+  return AllLinkItems.filter((item) => {
+    // Always show items without tableName (like dashboard)
+    if (item.tableName === null) {
+      // For data import, check if user has admin permissions or access to any data tables
+      if (item.link === "/adat-import") {
+        return (
+          userPermissions?.isAdmin ||
+          userPermissions?.isSuperadmin ||
+          accessibleTableNames.some((name) =>
+            ["alapadatok", "tanulo_letszam", "kompetencia"].includes(name)
+          )
+        );
+      }
+      return true;
+    }
+
+    // Show items that the user has table access to
+    return accessibleTableNames.includes(item.tableName);
+  });
+};
+
 const SidebarContent = ({ onClose, ...rest }) => {
+  const [itemSearch, setItemSearch] = useState("");
+  const tableAccess = useSelector(selectUserTableAccess);
+  const userPermissions = useSelector(selectUserPermissions);
+
+  console.log("tableAccess", tableAccess);
+  console.log("userPermissions", userPermissions);
+  // Get navigation items that the user has access to
+  const accessibleNavItems = getAccessibleNavItems(
+    tableAccess,
+    userPermissions
+  );
+
+  // Separate dashboard and other items
+  const dashboardItems = accessibleNavItems.filter(
+    (item) => item.link === "/dashboard" || item.tableName === null
+  );
+  const otherItems = accessibleNavItems.filter(
+    (item) => item.link !== "/dashboard" && item.tableName !== null
+  );
+
+  // Filter other items based on search
+  const filteredOtherItems = otherItems.filter((item) =>
+    item.name.toLowerCase().includes(itemSearch.toLowerCase())
+  );
+
   return (
     <Box
       transition="3s ease"
@@ -71,12 +163,22 @@ const SidebarContent = ({ onClose, ...rest }) => {
       {...rest}
     >
       <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
-        <Text fontSize="2xl" fontFamily="monospace" fontWeight="bold">
-          Logo
-        </Text>
+        <Image src="../hszc_logo.png" alt="Logo" objectFit="cover" />
         <CloseButton display={{ base: "flex", md: "none" }} onClick={onClose} />
       </Flex>
-      {LinkItems.map((link) => (
+      <VStack align="start" mx="8" my="4">
+        <Input
+          placeholder="Keresés..."
+          value={itemSearch}
+          onChange={(e) => setItemSearch(e.target.value)}
+          size="sm"
+          width="100%"
+          mb={4}
+        />
+      </VStack>
+
+      {/* Always show dashboard items first */}
+      {dashboardItems.map((link) => (
         <NavItem
           key={link.name}
           icon={link.icon}
@@ -87,6 +189,42 @@ const SidebarContent = ({ onClose, ...rest }) => {
           {link.name}
         </NavItem>
       ))}
+
+      {/* Show separator if there are other items */}
+      {filteredOtherItems.length > 0 && <hr />}
+
+      {/* Show filtered accessible items */}
+      {filteredOtherItems.map((link) => (
+        <NavItem
+          key={link.name}
+          icon={link.icon}
+          as={Link}
+          to={link.link}
+          onClick={() => onClose()}
+        >
+          {link.name}
+        </NavItem>
+      ))}
+
+      {/* Show message if no items found */}
+      {filteredOtherItems.length === 0 &&
+        itemSearch &&
+        otherItems.length > 0 && (
+          <Box mx="4" my="2">
+            <Text fontSize="sm" color="gray.500">
+              Nincs találat a keresésre
+            </Text>
+          </Box>
+        )}
+
+      {/* Show message if user has no table access */}
+      {accessibleNavItems.length <= 1 && (
+        <Box mx="4" my="2">
+          <Text fontSize="sm" color="gray.500">
+            Nincs elérhető menü a jogosultságai alapján
+          </Text>
+        </Box>
+      )}
     </Box>
   );
 };

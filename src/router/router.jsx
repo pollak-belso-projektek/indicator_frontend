@@ -4,6 +4,7 @@ import { Spinner } from "@chakra-ui/react";
 import { useSelector } from "react-redux";
 import Navigation from "../components/Navigation.jsx";
 import ProtectedRoute from "../components/ProtectedRoute.jsx";
+import TableProtectedRoute from "../components/TableProtectedRoute.jsx";
 import { selectIsAuthenticated } from "../store/slices/authSlice";
 
 const LoginPage = lazy(() => import("../pages/Login"));
@@ -37,7 +38,6 @@ export default function Router() {
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
-
           {/* Protected routes */}
           <Route
             path="/"
@@ -48,8 +48,7 @@ export default function Router() {
                 <Navigate to="/login" />
               )
             }
-          />
-
+          />{" "}
           <Route
             path="/dashboard"
             element={
@@ -60,18 +59,14 @@ export default function Router() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/alapadatok"
             element={
-              <ProtectedRoute>
-                <Navigation>
-                  <AlapadatokPage />
-                </Navigation>
-              </ProtectedRoute>
+              <Navigation>
+                <AlapadatokPage />
+              </Navigation>
             }
           />
-
           <Route
             path="/adat-import"
             element={
@@ -82,51 +77,67 @@ export default function Router() {
               </ProtectedRoute>
             }
           />
-
           <Route
-            path="/tanuloletszam"
+            path="/tanulo_letszam"
             element={
-              <ProtectedRoute>
+              <TableProtectedRoute>
                 <Navigation>
                   <TanuloletszamPage />
                 </Navigation>
-              </ProtectedRoute>
+              </TableProtectedRoute>
             }
           />
-
           <Route
             path="/kompetencia"
             element={
-              <ProtectedRoute>
+              <TableProtectedRoute>
                 <Navigation>
                   <KompetenciaPage />
                 </Navigation>
-              </ProtectedRoute>
+              </TableProtectedRoute>
             }
           />
-
           <Route
             path="/versenyek"
             element={
-              <ProtectedRoute>
+              <TableProtectedRoute>
                 <Navigation>
                   <VersenyekPage />
                 </Navigation>
-              </ProtectedRoute>
+              </TableProtectedRoute>
             }
           />
-
           <Route
             path="/users"
             element={
-              <ProtectedRoute>
+              <TableProtectedRoute>
                 <Navigation>
                   <UsersPage />
                 </Navigation>
-              </ProtectedRoute>
+              </TableProtectedRoute>
             }
           />
-
+          {/* Additional table routes for future implementation */}
+          <Route
+            path="/tanugyi_adatok"
+            element={
+              <TableProtectedRoute>
+                <Navigation>
+                  <div>Tanügyi adatok - Coming Soon</div>
+                </Navigation>
+              </TableProtectedRoute>
+            }
+          />
+          <Route
+            path="/felvettek_szama"
+            element={
+              <TableProtectedRoute>
+                <Navigation>
+                  <div>Felvettek száma - Coming Soon</div>
+                </Navigation>
+              </TableProtectedRoute>
+            }
+          />
           <Route
             path="*"
             element={

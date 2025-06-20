@@ -7,10 +7,12 @@ import {
 } from "../store/slices/authSlice";
 import { getTableNameFromRoute, hasTableAccess } from "../utils/tableValues";
 
-export default function ProtectedRoute({
-  children,
-  requireTableAccess = false,
-}) {
+/**
+ * TableProtectedRoute component that enforces both authentication and table access permissions
+ * This component ensures users can only access routes for tables they have permission to view
+ * Superadmins bypass all permission checks
+ */
+export default function TableProtectedRoute({ children, tableName = null }) {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const tableAccess = useSelector(selectUserTableAccess);
   const userPermissions = useSelector(selectUserPermissions);
@@ -27,17 +29,15 @@ export default function ProtectedRoute({
     return children;
   }
 
-  // If table access is required, check if user has access to the specific table
-  if (requireTableAccess) {
-    const tableName = getTableNameFromRoute(location.pathname);
+  // Determine table name - either provided explicitly or derived from route
+  const targetTableName = tableName || getTableNameFromRoute(location.pathname);
 
-    if (tableName && !hasTableAccess(tableAccess, tableName)) {
-      // User doesn't have access to this table, redirect to dashboard
-      console.warn(
-        `Access denied to table: ${tableName} for route: ${location.pathname}`
-      );
-      return <Navigate to="/dashboard" replace />;
-    }
+  if (targetTableName && !hasTableAccess(tableAccess, targetTableName)) {
+    // User doesn't have access to this table, redirect to dashboard
+    console.warn(
+      `Access denied to table: ${targetTableName} for route: ${location.pathname}`
+    );
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;

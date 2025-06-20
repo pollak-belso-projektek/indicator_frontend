@@ -84,16 +84,26 @@ const authSlice = createSlice({
       state.error = null;
     },
     refreshTokenSuccess: (state, action) => {
+      console.log("Refresh token payload received:", action.payload);
+
       state.accessToken = action.payload.accessToken;
       state.refreshToken = action.payload.refreshToken;
 
       // Update user data from the new JWT token
-      const decodedUser = decodeUserFromToken(action.payload.accessToken);
-      if (decodedUser && state.user) {
-        state.user = {
-          ...state.user,
-          ...decodedUser, // Update permissions, role, etc. from new JWT
-        };
+      if (action.payload.accessToken) {
+        console.log(
+          "Attempting to decode access token:",
+          action.payload.accessToken
+        );
+        const decodedUser = decodeUserFromToken(action.payload.accessToken);
+        if (decodedUser && state.user) {
+          state.user = {
+            ...state.user,
+            ...decodedUser, // Update permissions, role, etc. from new JWT
+          };
+        }
+      } else {
+        console.error("No accessToken found in refresh response");
       }
     },
   },
@@ -117,6 +127,7 @@ export const selectUser = (state) => state.auth.user;
 export const selectUserRole = (state) => state.auth.user?.role;
 export const selectUserPermissions = (state) => state.auth.user?.permissions;
 export const selectUserTableAccess = (state) => state.auth.user?.tableAccess;
+export const selectTableAccess = selectUserTableAccess; // Alias for convenience
 export const selectAccessToken = (state) => state.auth.accessToken;
 export const selectRefreshToken = (state) => state.auth.refreshToken;
 export const selectAuthLoading = (state) => state.auth.loading;
