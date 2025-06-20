@@ -2,19 +2,29 @@ import { Badge } from "@chakra-ui/react";
 import { Box } from "@mui/material";
 
 const UserRoleBadge = ({ role, permissions }) => {
-  const getRoleColor = (role) => {
-    switch (role) {
-      case "Superadmin":
-        return "red";
-      case "Admin":
-        return "orange";
-      case "Privileged":
-        return "blue";
-      case "Standard":
-        return "green";
-      default:
-        return "gray";
-    }
+  const getDisplayRole = (role, permissions) => {
+    // Map internal roles to Hungarian display names
+    if (permissions?.isSuperadmin) return "Superadmin";
+    if (permissions?.isHSZC && permissions?.isAdmin) return "HSZC Admin";
+    if (permissions?.isHSZC && permissions?.isPrivileged)
+      return "HSZC Privilegizált";
+    if (permissions?.isHSZC && permissions?.isStandard) return "HSZC Általános";
+    if (permissions?.isAdmin && !permissions?.isHSZC) return "Iskolai Admin";
+    if (permissions?.isPrivileged && !permissions?.isHSZC)
+      return "Iskolai Privilegizált";
+    if (permissions?.isStandard && !permissions?.isHSZC)
+      return "Iskolai Általános";
+
+    // Fallback to role name
+    return role || "Ismeretlen";
+  };
+
+  const getRoleColor = (role, permissions) => {
+    if (permissions?.isSuperadmin) return "red";
+    if (permissions?.isAdmin) return "orange";
+    if (permissions?.isPrivileged) return "blue";
+    if (permissions?.isStandard) return "green";
+    return "gray";
   };
 
   const getRoleIcon = (permissions) => {
@@ -25,21 +35,18 @@ const UserRoleBadge = ({ role, permissions }) => {
     return "👤";
   };
 
+  const displayRole = getDisplayRole(role, permissions);
+
   return (
     <Box display="inline-flex" alignItems="center">
       <Badge
-        colorScheme={getRoleColor(role)}
+        colorPalette={getRoleColor(role, permissions)}
         variant="subtle"
         fontSize="xs"
         px={2}
       >
-        {getRoleIcon(permissions)} {role}
+        {getRoleIcon(permissions)} {displayRole}
       </Badge>
-      {permissions?.isHSZC && (
-        <Badge colorScheme="purple" variant="solid" fontSize="xs" ml={1}>
-          HSZC
-        </Badge>
-      )}
     </Box>
   );
 };
