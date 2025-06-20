@@ -1,11 +1,10 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "./baseQueryWithReauth";
 
 // Define a service using a base URL and expected endpoints
 export const indicatorApi = createApi({
   reducerPath: "indicatorApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:5300/api/v1/",
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: [
     "User",
     "TanugyiAdatok",
@@ -14,6 +13,27 @@ export const indicatorApi = createApi({
     "TanuloLetszam",
   ],
   endpoints: (build) => ({
+    // Authentication endpoints
+    login: build.mutation({
+      query: (credentials) => ({
+        url: "auth/login",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+    logout: build.mutation({
+      query: () => ({
+        url: "auth/logout",
+        method: "POST",
+      }),
+    }),
+    refreshToken: build.mutation({
+      query: (refreshToken) => ({
+        url: "auth/refresh",
+        method: "POST",
+        body: { refreshToken },
+      }),
+    }),
     // User management endpoints
     getUsers: build.query({
       query: () => "users/",
@@ -125,4 +145,7 @@ export const {
   useAddUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useLoginMutation,
+  useLogoutMutation,
+  useRefreshTokenMutation,
 } = indicatorApi;
