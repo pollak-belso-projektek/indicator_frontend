@@ -5,6 +5,6 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    allowedHosts: ["indicator.pollak.info"],
+    allowedHosts: ["indikator.pollak.info"],
   },
 });
