@@ -7,10 +7,4 @@ export default {
   plugins: [],
   // Make Tailwind classes take priority over other CSS frameworks
   important: true,
-  // You can also use a CSS selector to scope important
-  // important: '#root',
-  corePlugins: {
-    // Disable preflight if you want to keep other framework's base styles
-    // preflight: false,
-  },
 };

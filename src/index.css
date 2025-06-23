@@ -1,12 +1,1 @@
-/* Tailwind CSS v4 - Import with highest priority using CSS layers */
-@layer tailwind {
-  @import "tailwindcss";
-}
-
-/* CSS Layer ordering - Tailwind will override other frameworks */
-@layer base, components, utilities, tailwind;
-
-/* Custom CSS can go here and will override Tailwind if needed */
-@layer custom {
-  /* Your custom overrides here */
-}
+@import "tailwindcss";
