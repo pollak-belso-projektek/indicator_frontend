@@ -83,34 +83,33 @@ const Users = () => {
           alignItems="center"
           mb={4}
         >
-          <Text fontSize="2xl" fontWeight="bold">
-            Felhasználókezelés
-          </Text>
+          <Box
+            display="flex"
+            width="80%"
+            padding={2}
+            alignItems="center"
+            gap={2}
+          >
+            <ColumnVisibilitySelector
+              table={table}
+              hiddenColumns={hiddenColumns}
+              setHiddenColumns={setHiddenColumns}
+            />{" "}
+            <Input
+              type="text"
+              variant="outlined"
+              className="w-full"
+              placeholder="Keresés a lekérdezett adatok között"
+              value={globalFilter ?? ""}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+            />
+          </Box>
 
           {userPermissions.getAvailableUserTypes().length > 0 && (
-            <Button
-              leftIcon={<AddIcon />}
-              colorScheme="blue"
-              onClick={handleCreate}
-            >
-              Új felhasználó
+            <Button onClick={handleCreate} colorPalette={"blue"}>
+              <AddIcon /> Új felhasználó
             </Button>
           )}
-        </Box>
-
-        <Box>
-          <Input
-            placeholder="Felhasználók keresése..."
-            value={globalFilter ?? ""}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            mb={4}
-          />
-
-          <ColumnVisibilitySelector
-            table={table}
-            hiddenColumns={hiddenColumns}
-            setHiddenColumns={setHiddenColumns}
-          />
         </Box>
 
         <UserTable table={table} />

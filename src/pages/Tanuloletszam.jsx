@@ -17,9 +17,13 @@ import {
   HStack,
   Tooltip,
   Table,
+  Box,
+  VStack,
+  Tabs,
 } from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import TanuloLetszamChart from "../components/TanuloLetszamChart";
 
 const columnHelper = createColumnHelper();
 
@@ -374,9 +378,8 @@ export default function TanuloLatszam() {
       }}
     >
       <h1 style={{ color: "red" }}>Hiba történt az adatok betöltésekor!</h1>
-    </div>
-  ) : (
-    <>
+    </div>  ) : (
+    <Box>
       <Text fontSize="2xl" mb={4}>
         Tanulói létszám adatok
       </Text>
@@ -386,6 +389,19 @@ export default function TanuloLatszam() {
         mentéséhez kérjük, használja a "Mentés" gombot, mellyel a módosításokat
         elmentheti és véglegesítheti.
       </Text>
+
+      <Tabs.Root defaultValue="chart" variant="enclosed">
+        <Tabs.List>
+          <Tabs.Trigger value="chart">📊 Grafikon nézet</Tabs.Trigger>
+          <Tabs.Trigger value="table">📋 Táblázat nézet</Tabs.Trigger>
+        </Tabs.List>
+
+        <Tabs.Content value="chart">
+          <TanuloLetszamChart data={editableData} years={years} />
+        </Tabs.Content>
+
+        <Tabs.Content value="table">
+          <VStack spacing={4} align="stretch">
 
       <HStack>
         <Tooltip.Root>
@@ -509,11 +525,13 @@ export default function TanuloLatszam() {
                 >
                   {computeChange(idx, category)}
                 </Table.Cell>
-              ))
-            )}
+              ))            )}
           </Table.Row>
         </Table.Body>
       </Table.Root>
-    </>
+          </VStack>
+        </Tabs.Content>
+      </Tabs.Root>
+    </Box>
   );
 }

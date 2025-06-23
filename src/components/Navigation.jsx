@@ -154,7 +154,6 @@ const SidebarContent = ({ onClose, ...rest }) => {
   return (
     <Box
       transition="3s ease"
-      bg={useColorModeValue("white", "gray.900")}
       borderRight="1px"
       borderRightColor={useColorModeValue("gray.200", "gray.700")}
       w={{ base: "full", md: 60 }}
@@ -162,8 +161,14 @@ const SidebarContent = ({ onClose, ...rest }) => {
       h="full"
       {...rest}
     >
+      {" "}
       <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
-        <Image src="../hszc_logo.png" alt="Logo" objectFit="cover" />
+        <Image
+          src="../hszc_logo.png"
+          alt="HSZC"
+          className="!max-w-[150px] h-auto object-contain !important"
+        />
+
         <CloseButton display={{ base: "flex", md: "none" }} onClick={onClose} />
       </Flex>
       <VStack align="start" mx="8" my="4">
@@ -176,7 +181,6 @@ const SidebarContent = ({ onClose, ...rest }) => {
           mb={4}
         />
       </VStack>
-
       {/* Always show dashboard items first */}
       {dashboardItems.map((link) => (
         <NavItem
@@ -189,10 +193,8 @@ const SidebarContent = ({ onClose, ...rest }) => {
           {link.name}
         </NavItem>
       ))}
-
       {/* Show separator if there are other items */}
       {filteredOtherItems.length > 0 && <hr />}
-
       {/* Show filtered accessible items */}
       {filteredOtherItems.map((link) => (
         <NavItem
@@ -205,7 +207,6 @@ const SidebarContent = ({ onClose, ...rest }) => {
           {link.name}
         </NavItem>
       ))}
-
       {/* Show message if no items found */}
       {filteredOtherItems.length === 0 &&
         itemSearch &&
@@ -216,7 +217,6 @@ const SidebarContent = ({ onClose, ...rest }) => {
             </Text>
           </Box>
         )}
-
       {/* Show message if user has no table access */}
       {accessibleNavItems.length <= 1 && (
         <Box mx="4" my="2">
@@ -318,22 +318,12 @@ const MobileNav = ({ onOpen, ...rest }) => {
         <MdMenu />
       </IconButton>
 
-      <Text
-        display={{ base: "flex", md: "none" }}
-        fontSize="2xl"
-        fontFamily="monospace"
-        fontWeight="bold"
-      >
-        Logo
-      </Text>
-
       <Box flex="1" flexGrow={1} justifyContent="center">
         <Select.Root collection={schools} size="sm" width="320px">
           <Select.HiddenSelect />
-          <Select.Label>Select framework</Select.Label>
           <Select.Control>
             <Select.Trigger>
-              <Select.ValueText placeholder="Select framework" />
+              <Select.ValueText placeholder="Iskola kiválasztása" />
             </Select.Trigger>
             <Select.IndicatorGroup>
               <Select.Indicator />

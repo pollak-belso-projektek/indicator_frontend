@@ -1,12 +1,14 @@
 import React from "react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { HStack, Badge, Button } from "@chakra-ui/react";
-
+import { FiEdit2 } from "react-icons/fi";
+import { MdDelete } from "react-icons/md";
+import { TbHandStop } from "react-icons/tb";
 const columnHelper = createColumnHelper();
 
 export const createUserColumns = (onEdit, onDelete) => [
   columnHelper.accessor("name", {
-    header: "Name",
+    header: "Név",
     cell: (info) => info.getValue(),
   }),
   columnHelper.accessor("email", {
@@ -14,18 +16,16 @@ export const createUserColumns = (onEdit, onDelete) => [
     cell: (info) => info.getValue(),
   }),
   columnHelper.accessor("createdAt", {
-    header: "Created At",
+    header: "Létrehozva",
     cell: (info) => new Date(info.getValue()).toLocaleDateString(),
   }),
   columnHelper.accessor("updatedAt", {
-    header: "Updated At",
+    header: "Frissítve",
     cell: (info) =>
-      info.getValue()
-        ? new Date(info.getValue()).toLocaleDateString()
-        : "Never",
+      info.getValue() ? new Date(info.getValue()).toLocaleDateString() : "-",
   }),
   columnHelper.accessor("tableAccess", {
-    header: "Table Access",
+    header: "Táblák hozzáférése",
     cell: (info) => {
       const access = info.getValue();
       if (!access || access.length === 0) return "No Access";
@@ -56,7 +56,7 @@ export const createUserColumns = (onEdit, onDelete) => [
     },
   }),
   columnHelper.accessor("permissionsDetails", {
-    header: "Roles",
+    header: "Szerepkörök",
     cell: (info) => {
       const details = info.getValue();
       const roles = [];
@@ -90,7 +90,7 @@ export const createUserColumns = (onEdit, onDelete) => [
   }),
   columnHelper.display({
     id: "actions",
-    header: "Actions",
+    header: "Műveletek",
     cell: ({ row }) => (
       <HStack spacing={2}>
         <Button
@@ -98,15 +98,15 @@ export const createUserColumns = (onEdit, onDelete) => [
           size="sm"
           onClick={() => onEdit(row.original)}
         >
-          Edit
+          <FiEdit2 />
         </Button>
         <Button
-          variant="outline"
+          variant="subtle"
           size="sm"
-          colorScheme="red"
+          colorPalette={"red"}
           onClick={() => onDelete(row.original)}
         >
-          Delete
+          <TbHandStop />
         </Button>
       </HStack>
     ),
