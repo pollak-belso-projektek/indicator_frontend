@@ -25,6 +25,7 @@ import {
   selectAuthLoading,
   selectAuthError,
 } from "../store/slices/authSlice";
+import { Image } from "@chakra-ui/react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -78,8 +79,14 @@ export default function Login() {
       <Card sx={{ width: "100%", maxWidth: 400 }}>
         <CardContent>
           <Stack spacing={3}>
-            <Typography variant="h4" component="h1" textAlign="center">
-              Indicator Login
+            <Image
+              src="../public/hszc_logo.png"
+              alt="Logo"
+              objectFit="cover"
+              mx="auto"
+            />
+            <Typography variant="h5" component="h1" textAlign="center">
+              Indikátor Rendszer Bejelentkezés
             </Typography>
 
             {error && (
@@ -99,7 +106,7 @@ export default function Login() {
                   label="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
+                  placeholder="Add meg az email címed"
                   required
                   fullWidth
                   variant="outlined"
@@ -107,10 +114,10 @@ export default function Login() {
 
                 <TextField
                   type={showPassword ? "text" : "password"}
-                  label="Password"
+                  label="Jelszó"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="Add meg a jelszavad"
                   required
                   fullWidth
                   variant="outlined"
@@ -135,6 +142,7 @@ export default function Login() {
                   type="submit"
                   variant="contained"
                   size="large"
+                  color="primary"
                   fullWidth
                   disabled={loading}
                   sx={{ mt: 2 }}
@@ -142,10 +150,10 @@ export default function Login() {
                   {loading ? (
                     <>
                       <CircularProgress size={20} sx={{ mr: 1 }} />
-                      Signing in...
+                      Bejelentkezés...
                     </>
                   ) : (
-                    "Sign In"
+                    "Bejelentkezés"
                   )}
                 </Button>
               </Stack>
