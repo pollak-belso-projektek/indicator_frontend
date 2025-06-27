@@ -5,12 +5,20 @@ import { baseQueryWithReauth } from "./baseQueryWithReauth";
 export const indicatorApi = createApi({
   reducerPath: "indicatorApi",
   baseQuery: baseQueryWithReauth,
+  // Development mode: disable caching for immediate updates
+  ...(import.meta.env.DEV && {
+    keepUnusedDataFor: 0, // Don't keep any unused data
+    refetchOnMountOrArgChange: true, // Always refetch on mount or arg change
+    refetchOnReconnect: true, // Refetch when reconnecting
+    refetchOnFocus: true, // Refetch when window gains focus
+  }),
   tagTypes: [
     "User",
     "TanugyiAdatok",
     "Alapadatok",
     "Kompetencia",
     "TanuloLetszam",
+    "TableList",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -68,18 +76,31 @@ export const indicatorApi = createApi({
     }),
     getTanugyiAdatok: build.query({
       query: (params) => `tanugyi_adatok/${params.alapadatok_id}/${params.ev}`,
+      providesTags: (result, error, params) => [
+        { type: "TanugyiAdatok", id: `${params.alapadatok_id}_${params.ev}` },
+      ],
     }),
     getAlapadatok: build.query({
       query: (params) => `alapadatok/${params.id}`,
+      providesTags: (result, error, params) => [
+        { type: "Alapadatok", id: params.id },
+      ],
     }),
     getAllAlapadatok: build.query({
       query: () => `alapadatok/`,
+      providesTags: ["Alapadatok"],
     }),
     getKompetencia: build.query({
       query: (params) => `kompetencia/${params.id}`,
+      providesTags: (result, error, params) => [
+        { type: "Kompetencia", id: params.id },
+      ],
     }),
     getTanuloLetszam: build.query({
       query: (params) => `tanulo_letszam/${params.alapadatok_id}`,
+      providesTags: (result, error, params) => [
+        { type: "TanuloLetszam", id: params.alapadatok_id },
+      ],
     }),
     addTanuloLetszam: build.mutation({
       query: (params) => ({
@@ -93,12 +114,18 @@ export const indicatorApi = createApi({
           tanev_kezdete: params.tanev_kezdete,
         },
       }),
+      invalidatesTags: (result, error, params) => [
+        { type: "TanuloLetszam", id: params.alapadatok_id },
+      ],
     }),
     deleteTanuloLetszam: build.mutation({
       query: (params) => ({
         url: `tanulo_letszam/${params.alapadatok_id}/${params.year}`,
         method: "DELETE",
       }),
+      invalidatesTags: (result, error, params) => [
+        { type: "TanuloLetszam", id: params.alapadatok_id },
+      ],
     }),
     addTanugyiAdatok: build.mutation({
       query: (params) => ({
@@ -109,6 +136,13 @@ export const indicatorApi = createApi({
           tanugyi_adatok: params.tanugyi_adatok,
         },
       }),
+      invalidatesTags: (result, error, params) => [
+        {
+          type: "TanugyiAdatok",
+          id: `${params.alapadatok_id}_${params.tanev_kezdete || "all"}`,
+        },
+        "TanugyiAdatok",
+      ],
     }),
     addKompetencia: build.mutation({
       query: (params) => ({
@@ -124,7 +158,16 @@ export const indicatorApi = createApi({
           kepzes_forma: params.kepzes_forma,
         },
       }),
+      invalidatesTags: (result, error, params) => [
+        { type: "Kompetencia", id: params.alapadatok_id },
+      ],
     }),
+    // Table management endpoints
+    getTableList: build.query({
+      query: () => "tablelist",
+      providesTags: ["TableList"],
+    }),
+    // User management endpoints
   }),
 });
 
@@ -148,4 +191,5 @@ export const {
   useLoginMutation,
   useLogoutMutation,
   useRefreshTokenMutation,
+  useGetTableListQuery,
 } = indicatorApi;

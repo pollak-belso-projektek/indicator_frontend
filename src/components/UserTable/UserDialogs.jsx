@@ -1,11 +1,42 @@
-import React from "react";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
-import Button from "@mui/material/Button";
-import Input from "@mui/material/Input";
+import React, { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormControlLabel,
+  Switch,
+  Box,
+  Typography,
+  Divider,
+  Chip,
+  Autocomplete,
+  Checkbox,
+  FormGroup,
+  Card,
+  CardContent,
+  Grid,
+  DialogContentText,
+} from "@mui/material";
+import {
+  getHierarchyLevel,
+  getUserTypeLabel,
+  getUserTypeFromLevel,
+} from "../../utils/userHierarchy";
+import { useGetTableListQuery } from "../../store/api/apiSlice";
+import {
+  TABLE_ACCESS_LEVELS,
+  getAvailableTables,
+  getPermissionOptions,
+  calculateAccessLevel,
+  formatAccessLevel,
+} from "../../utils/tableAccessUtils";
 
 export const EditUserDialog = ({
   open,
@@ -14,32 +45,414 @@ export const EditUserDialog = ({
   onUserChange,
   onSave,
   fullScreen,
-}) => (
-  <Dialog open={open} onClose={onClose} fullScreen={fullScreen}>
-    <DialogTitle>Edit User</DialogTitle>
-    <DialogContent>
-      <DialogContentText>Modify user details here.</DialogContentText>
-      <Input
-        placeholder="Name"
-        defaultValue={user?.name || ""}
-        onChange={(e) =>
-          onUserChange((prev) => ({ ...prev, name: e.target.value }))
-        }
-      />
-      <Input
-        placeholder="Email"
-        defaultValue={user?.email || ""}
-        onChange={(e) =>
-          onUserChange((prev) => ({ ...prev, email: e.target.value }))
-        }
-      />
-    </DialogContent>
-    <DialogActions>
-      <Button onClick={onClose}>Cancel</Button>
-      <Button onClick={() => onSave(user)}>Save</Button>
-    </DialogActions>
-  </Dialog>
-);
+  userPermissions,
+}) => {
+  const [editedUser, setEditedUser] = useState({
+    name: "",
+    email: "",
+    permissions: 1,
+    tableAccess: [],
+    active: true,
+  });
+  const [userType, setUserType] = useState("iskolai_general");
+  const [selectedTables, setSelectedTables] = useState([]);
+  const [tablePermissions, setTablePermissions] = useState({});
+  const [showPasswordField, setShowPasswordField] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+
+  // Get available user types that current user can assign (not higher than their own level)
+  const availableUserTypes = userPermissions?.getAvailableUserTypes() || [];
+
+  // Fetch available tables
+  const { data: tableList = [], isLoading: tablesLoading } =
+    useGetTableListQuery();
+  const permissionOptions = getPermissionOptions();
+
+  // Initialize form when user data changes
+  useEffect(() => {
+    if (user && open) {
+      setEditedUser({
+        id: user.id,
+        name: user.name || "",
+        email: user.email || "",
+        permissions: user.permissions || 1,
+        tableAccess: user.tableAccess || [],
+        active: user.active !== false, // Default to true if undefined
+      });
+
+      // Set user type from permissions level
+      const currentUserType = getUserTypeFromLevel(user.permissions || 1);
+      setUserType(currentUserType);
+
+      // Initialize table selections and permissions
+      if (user.tableAccess && Array.isArray(user.tableAccess)) {
+        const tables = user.tableAccess.map((ta) => ({
+          id: ta.tableName,
+          name: ta.tableName,
+        }));
+        setSelectedTables(tables);
+
+        const permissions = {};
+        user.tableAccess.forEach((ta) => {
+          const permissionKeys = [];
+          if (ta.access & TABLE_ACCESS_LEVELS.READ) permissionKeys.push("READ");
+          if (ta.access & TABLE_ACCESS_LEVELS.WRITE)
+            permissionKeys.push("WRITE");
+          if (ta.access & TABLE_ACCESS_LEVELS.UPDATE)
+            permissionKeys.push("UPDATE");
+          if (ta.access & TABLE_ACCESS_LEVELS.DELETE)
+            permissionKeys.push("DELETE");
+          permissions[ta.tableName] = permissionKeys;
+        });
+        setTablePermissions(permissions);
+      } else {
+        setSelectedTables([]);
+        setTablePermissions({});
+      }
+
+      setShowPasswordField(false);
+      setNewPassword("");
+    }
+  }, [user, open]);
+
+  const handleUserTypeChange = (type) => {
+    setUserType(type);
+    const permissions = getHierarchyLevel(type);
+
+    setEditedUser((prev) => ({
+      ...prev,
+      permissions: permissions,
+    }));
+  };
+
+  const handleTableAccessChange = (tables) => {
+    setSelectedTables(tables);
+
+    // Initialize permissions for new tables with READ access by default
+    const newTablePermissions = { ...tablePermissions };
+
+    // Add default permissions for newly selected tables
+    tables.forEach((table) => {
+      if (!newTablePermissions[table.id || table.name]) {
+        newTablePermissions[table.id || table.name] = ["READ"];
+      }
+    });
+
+    // Remove permissions for deselected tables
+    const selectedTableIds = tables.map((t) => t.id || t.name);
+    Object.keys(newTablePermissions).forEach((tableId) => {
+      if (!selectedTableIds.includes(tableId)) {
+        delete newTablePermissions[tableId];
+      }
+    });
+
+    setTablePermissions(newTablePermissions);
+    updateUserTableAccess(tables, newTablePermissions);
+  };
+
+  const handleTablePermissionChange = (tableId, permissions) => {
+    const newTablePermissions = {
+      ...tablePermissions,
+      [tableId]: permissions,
+    };
+
+    setTablePermissions(newTablePermissions);
+    updateUserTableAccess(selectedTables, newTablePermissions);
+  };
+
+  const updateUserTableAccess = (tables, permissions) => {
+    // Convert selected tables and their permissions to the format expected by the API
+    const tableAccess = tables.map((table) => ({
+      tableName: table.name,
+      access: calculateAccessLevel(permissions[table.id || table.name] || []),
+    }));
+
+    setEditedUser((prev) => ({
+      ...prev,
+      tableAccess: tableAccess,
+    }));
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditedUser((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+  const handleSave = () => {
+    if (!editedUser.name || !editedUser.email) {
+      alert("Kérjük töltse ki az összes kötelező mezőt!");
+      return;
+    }
+
+    // Check if current user can assign this user type
+    if (!userPermissions.canCreateUser(userType)) {
+      alert("Nincs jogosultsága ilyen típusú felhasználó szerkesztéséhez!");
+      return;
+    }
+
+    const updatedUser = { ...editedUser };
+
+    // Ensure ID is present
+    if (!updatedUser.id) {
+      alert("Felhasználó azonosító hiányzik!");
+      return;
+    }
+
+    // Include password only if it was changed
+    if (showPasswordField && newPassword.trim()) {
+      updatedUser.password = newPassword;
+    }
+
+    console.log("Saving user with ID:", updatedUser.id, "Data:", updatedUser);
+    onSave(updatedUser);
+    handleClose();
+  };
+
+  const handleClose = () => {
+    setShowPasswordField(false);
+    setNewPassword("");
+    onClose();
+  };
+
+  // Find tables that match the selected ones from the API
+  const availableTables = getAvailableTables(tableList);
+  const tableOptions =
+    availableTables.length > 0
+      ? availableTables
+      : selectedTables.map((t) => ({
+          id: t.id || t.name,
+          name: t.name || t.id,
+          isAvailable: true,
+        }));
+
+  return (
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="md"
+      fullWidth
+      fullScreen={fullScreen}
+    >
+      <DialogTitle>Felhasználó szerkesztése</DialogTitle>
+      <DialogContent>
+        <Box sx={{ mt: 2 }}>
+          <TextField
+            fullWidth
+            label="Név"
+            value={editedUser.name}
+            onChange={(e) => handleInputChange("name", e.target.value)}
+            margin="normal"
+            required
+          />
+          <TextField
+            fullWidth
+            label="E-mail"
+            type="email"
+            value={editedUser.email}
+            onChange={(e) => handleInputChange("email", e.target.value)}
+            margin="normal"
+            required
+          />
+
+          {/* Password Change Section */}
+          <Box sx={{ mt: 2 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showPasswordField}
+                  onChange={(e) => setShowPasswordField(e.target.checked)}
+                />
+              }
+              label="Jelszó módosítása"
+            />
+            {showPasswordField && (
+              <TextField
+                fullWidth
+                label="Új jelszó"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                margin="normal"
+                helperText="Hagyja üresen, ha nem szeretné módosítani a jelszót"
+              />
+            )}
+          </Box>
+
+          <Divider sx={{ my: 3 }} />
+
+          <Typography variant="h6" gutterBottom>
+            Felhasználó típusa
+          </Typography>
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Felhasználó típus</InputLabel>
+            <Select
+              value={userType}
+              label="Felhasználó típus"
+              onChange={(e) => handleUserTypeChange(e.target.value)}
+            >
+              {availableUserTypes.map((type) => (
+                <MenuItem key={type.value} value={type.value}>
+                  {type.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Kiválasztott felhasználó típus:
+            </Typography>
+            <Box sx={{ ml: 2, mt: 1 }}>
+              <Typography variant="body2">
+                • Típus: {getUserTypeLabel(userType)}
+              </Typography>
+              <Typography variant="body2">
+                • Hierarchia szint: {editedUser.permissions}
+              </Typography>
+            </Box>
+          </Box>
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={editedUser.active}
+                onChange={(e) => handleInputChange("active", e.target.checked)}
+              />
+            }
+            label="Aktív felhasználó"
+            sx={{ mt: 2 }}
+          />
+
+          <Divider sx={{ my: 3 }} />
+
+          <Typography variant="h6" gutterBottom>
+            Tábla hozzáférések
+          </Typography>
+          <Autocomplete
+            multiple
+            id="table-access-edit"
+            options={tableOptions}
+            getOptionLabel={(option) => option.name}
+            value={selectedTables}
+            onChange={(event, newValue) => handleTableAccessChange(newValue)}
+            loading={tablesLoading}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
+                <Chip
+                  variant="outlined"
+                  label={option.name}
+                  {...getTagProps({ index })}
+                  key={option.id || option.name}
+                />
+              ))
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Tábla hozzáférések"
+                placeholder="Válasszon táblákat..."
+                helperText="Válassza ki azokat a táblákat, amelyekhez a felhasználó hozzáférhet"
+              />
+            )}
+            sx={{ mt: 2 }}
+          />
+
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Kiválasztott táblák jogosultságai:
+            </Typography>
+            {selectedTables.length > 0 ? (
+              <Box sx={{ mt: 2 }}>
+                {selectedTables.map((table) => {
+                  const tableId = table.id || table.name;
+                  return (
+                    <Card key={tableId} variant="outlined" sx={{ mb: 2 }}>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom>
+                          {table.name}
+                        </Typography>
+                        <FormGroup>
+                          <Typography variant="body2" sx={{ mb: 1 }}>
+                            Jogosultságok:
+                          </Typography>
+                          <Grid container spacing={1}>
+                            {permissionOptions.map((option) => (
+                              <Grid item xs={6} sm={3} key={option.key}>
+                                <FormControlLabel
+                                  control={
+                                    <Checkbox
+                                      checked={(
+                                        tablePermissions[tableId] || []
+                                      ).includes(option.key)}
+                                      onChange={(e) => {
+                                        const currentPermissions =
+                                          tablePermissions[tableId] || [];
+                                        const newPermissions = e.target.checked
+                                          ? [...currentPermissions, option.key]
+                                          : currentPermissions.filter(
+                                              (p) => p !== option.key
+                                            );
+                                        handleTablePermissionChange(
+                                          tableId,
+                                          newPermissions
+                                        );
+                                      }}
+                                    />
+                                  }
+                                  label={option.label}
+                                />
+                              </Grid>
+                            ))}
+                          </Grid>
+                          <Box sx={{ mt: 1 }}>
+                            <Typography variant="body2" color="text.secondary">
+                              Hozzáférési szint:{" "}
+                              {calculateAccessLevel(
+                                tablePermissions[tableId] || []
+                              )}
+                              {tablePermissions[tableId] &&
+                                tablePermissions[tableId].length > 0 && (
+                                  <span>
+                                    {" "}
+                                    (
+                                    {formatAccessLevel(
+                                      calculateAccessLevel(
+                                        tablePermissions[tableId]
+                                      )
+                                    ).join(", ")}
+                                    )
+                                  </span>
+                                )}
+                            </Typography>
+                          </Box>
+                        </FormGroup>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </Box>
+            ) : (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ ml: 2, mt: 1 }}
+              >
+                Nincs kiválasztott tábla
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose}>Mégse</Button>
+        <Button onClick={handleSave} variant="contained">
+          Mentés
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 export const DeleteUserDialog = ({ open, onClose, user, onDelete }) => (
   <Dialog open={open} onClose={onClose}>
@@ -54,7 +467,7 @@ export const DeleteUserDialog = ({ open, onClose, user, onDelete }) => (
       <Button onClick={onClose} variant="outlined">
         Mégse
       </Button>
-      <Button onClick={onDelete} color="error" >
+      <Button onClick={onDelete} color="error">
         Inaktíválás
       </Button>
     </DialogActions>

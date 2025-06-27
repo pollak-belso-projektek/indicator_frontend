@@ -13,6 +13,13 @@ const baseQuery = fetchBaseQuery({
       headers.set("authorization", `Bearer ${token}`);
     }
 
+    // Add cache control headers to prevent caching in development
+    if (import.meta.env.DEV) {
+      headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      headers.set("Pragma", "no-cache");
+      headers.set("Expires", "0");
+    }
+
     return headers;
   },
 });
@@ -20,6 +27,7 @@ const baseQuery = fetchBaseQuery({
 // Enhanced base query with token refresh logic
 const baseQueryWithReauth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
+
   // If we get a 401 error, try to refresh the token
   if (result.error && result.error.status === 401) {
     const refreshToken = api.getState().auth?.refreshToken;
@@ -42,25 +50,37 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 
       console.log("Refresh result:", refreshResult);
 
-      if (refreshResult.data && Object.keys(refreshResult.data).length > 0) {
+      // Check if refresh was successful
+      if (refreshResult.data) {
+        const refreshData = refreshResult.data;
+
         // Debug: Log the refresh response to see its structure
-        console.log("Refresh response data:", refreshResult.data);
+        console.log("Refresh response data:", refreshData);
 
-        // Store the new tokens
-        api.dispatch(refreshTokenSuccess(refreshResult.data));
+        // Check if we have the required tokens
+        if (refreshData.accessToken) {
+          // Store the new tokens
+          api.dispatch(refreshTokenSuccess(refreshData));
+          console.log("Token refresh successful, retrying original request");
 
-        // Retry the original request with the new token
-        result = await baseQuery(args, api, extraOptions);
+          // Retry the original request with the new token
+          result = await baseQuery(args, api, extraOptions);
+        } else {
+          console.log("Refresh response missing accessToken:", refreshData);
+          // Refresh response doesn't contain accessToken, logout
+          api.dispatch(logout());
+        }
       } else {
         // Debug: Log refresh failure
         console.log(
-          "Refresh failed - empty response or error:",
-          refreshResult.error || "Empty data object"
+          "Refresh failed - no data or error:",
+          refreshResult.error || "Empty response"
         );
         // Refresh failed, logout the user
         api.dispatch(logout());
       }
     } else {
+      console.log("No refresh token available, logging out");
       // No refresh token available, logout
       api.dispatch(logout());
     }

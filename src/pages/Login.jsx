@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 import {
@@ -25,6 +25,7 @@ import {
   selectAuthLoading,
   selectAuthError,
 } from "../store/slices/authSlice";
+import { parseApiError } from "../utils/tableAccessUtils";
 import { Image } from "@chakra-ui/react";
 
 export default function Login() {
@@ -36,6 +37,16 @@ export default function Login() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const loading = useSelector(selectAuthLoading);
   const error = useSelector(selectAuthError);
+  const [errorMessage, setErrorMessage] = useState("");
+  useEffect(() => {
+    if (error) {
+      console.error("Login error:", error);
+      const message = parseApiError(error);
+      setErrorMessage(message);
+    }
+  }, [error]);
+
+  // Remove the old selectErrorMessage function since we're using parseApiError now
 
   const [loginMutation] = useLoginMutation();
 
@@ -89,9 +100,9 @@ export default function Login() {
               Indikátor Rendszer Bejelentkezés
             </Typography>
 
-            {error && (
+            {errorMessage && (
               <Alert severity="error" sx={{ width: "100%" }}>
-                {error}
+                {errorMessage}
               </Alert>
             )}
 

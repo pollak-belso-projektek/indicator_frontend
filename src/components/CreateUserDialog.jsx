@@ -15,8 +15,23 @@ import {
   Box,
   Typography,
   Divider,
+  Chip,
+  Autocomplete,
+  Checkbox,
+  FormGroup,
+  Card,
+  CardContent,
+  Grid,
 } from "@mui/material";
 import { getHierarchyLevel, getUserTypeLabel } from "../utils/userHierarchy";
+import { useGetTableListQuery } from "../store/api/apiSlice";
+import {
+  TABLE_ACCESS_LEVELS,
+  getAvailableTables,
+  getPermissionOptions,
+  calculateAccessLevel,
+  formatAccessLevel,
+} from "../utils/tableAccessUtils";
 
 const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
   const [newUser, setNewUser] = useState({
@@ -24,11 +39,19 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
     email: "",
     password: "",
     permissions: 1, // Default to iskolai_general (level 1)
+    tableAccess: [], // Default empty table access
+    alapadatok_id: null, // Will be set based on user context
     active: true,
   });
-
   const [userType, setUserType] = useState("iskolai_general");
+  const [selectedTables, setSelectedTables] = useState([]);
+  const [tablePermissions, setTablePermissions] = useState({}); // Store permissions for each table
   const availableUserTypes = userPermissions?.getAvailableUserTypes() || [];
+
+  // Fetch available tables
+  const { data: tableList = [], isLoading: tablesLoading } =
+    useGetTableListQuery();
+  const permissionOptions = getPermissionOptions();
 
   const handleUserTypeChange = (type) => {
     setUserType(type);
@@ -37,6 +60,53 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
     setNewUser((prev) => ({
       ...prev,
       permissions: permissions,
+    }));
+  };
+  const handleTableAccessChange = (tables) => {
+    setSelectedTables(tables);
+
+    // Initialize permissions for new tables with READ access by default
+    const newTablePermissions = { ...tablePermissions };
+
+    // Add default permissions for newly selected tables
+    tables.forEach((table) => {
+      if (!newTablePermissions[table.id]) {
+        newTablePermissions[table.id] = ["READ"];
+      }
+    });
+
+    // Remove permissions for deselected tables
+    const selectedTableIds = tables.map((t) => t.id);
+    Object.keys(newTablePermissions).forEach((tableId) => {
+      if (!selectedTableIds.includes(tableId)) {
+        delete newTablePermissions[tableId];
+      }
+    });
+
+    setTablePermissions(newTablePermissions);
+    updateUserTableAccess(tables, newTablePermissions);
+  };
+
+  const handleTablePermissionChange = (tableId, permissions) => {
+    const newTablePermissions = {
+      ...tablePermissions,
+      [tableId]: permissions,
+    };
+
+    setTablePermissions(newTablePermissions);
+    updateUserTableAccess(selectedTables, newTablePermissions);
+  };
+
+  const updateUserTableAccess = (tables, permissions) => {
+    // Convert selected tables and their permissions to the format expected by the API
+    const tableAccess = tables.map((table) => ({
+      tableName: table.name,
+      access: calculateAccessLevel(permissions[table.id] || []),
+    }));
+
+    setNewUser((prev) => ({
+      ...prev,
+      tableAccess: tableAccess,
     }));
   };
 
@@ -67,9 +137,13 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
       email: "",
       password: "",
       permissions: 1, // Reset to iskolai_general
+      tableAccess: [],
+      alapadatok_id: null,
       active: true,
     });
     setUserType("iskolai_general");
+    setSelectedTables([]);
+    setTablePermissions({});
     onClose();
   };
 
@@ -146,6 +220,122 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
             label="Aktív felhasználó"
             sx={{ mt: 2 }}
           />
+          <Divider sx={{ my: 3 }} />
+          <Typography variant="h6" gutterBottom>
+            Tábla hozzáférések
+          </Typography>
+          <Autocomplete
+            multiple
+            id="table-access-select"
+            options={getAvailableTables(tableList)}
+            getOptionLabel={(option) => option.name}
+            value={selectedTables}
+            onChange={(event, newValue) => handleTableAccessChange(newValue)}
+            loading={tablesLoading}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
+                <Chip
+                  variant="outlined"
+                  label={option.name}
+                  {...getTagProps({ index })}
+                  key={option.id}
+                />
+              ))
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Tábla hozzáférések"
+                placeholder="Válasszon táblákat..."
+                helperText="Válassza ki azokat a táblákat, amelyekhez a felhasználó hozzáférhet"
+              />
+            )}
+            sx={{ mt: 2 }}
+          />
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Kiválasztott táblák jogosultságai:
+            </Typography>
+            {selectedTables.length > 0 ? (
+              <Box sx={{ mt: 2 }}>
+                {selectedTables.map((table) => (
+                  <Card key={table.id} variant="outlined" sx={{ mb: 2 }}>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        {table.name}
+                      </Typography>
+                      <FormGroup>
+                        <Typography variant="body2" sx={{ mb: 1 }}>
+                          Jogosultságok:
+                        </Typography>
+                        <Grid container spacing={1}>
+                          {permissionOptions.map((option) => (
+                            <Grid item xs={6} sm={3} key={option.key}>
+                              <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    checked={(
+                                      tablePermissions[table.id] || []
+                                    ).includes(option.key)}
+                                    onChange={(e) => {
+                                      const currentPermissions =
+                                        tablePermissions[table.id] || [];
+                                      const newPermissions = e.target.checked
+                                        ? [...currentPermissions, option.key]
+                                        : currentPermissions.filter(
+                                            (p) => p !== option.key
+                                          );
+                                      handleTablePermissionChange(
+                                        table.id,
+                                        newPermissions
+                                      );
+                                    }}
+                                  />
+                                }
+                                label={option.label}
+                              />
+                            </Grid>
+                          ))}
+                        </Grid>
+                        <Box sx={{ mt: 1 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Hozzáférési szint:{" "}
+                            {calculateAccessLevel(
+                              tablePermissions[table.id] || []
+                            )}
+                            {tablePermissions[table.id] &&
+                              tablePermissions[table.id].length > 0 && (
+                                <span>
+                                  {" "}
+                                  (
+                                  {formatAccessLevel(
+                                    calculateAccessLevel(
+                                      tablePermissions[table.id]
+                                    )
+                                  ).join(", ")}
+                                  )
+                                </span>
+                              )}
+                          </Typography>
+                        </Box>
+                      </FormGroup>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+            ) : (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ ml: 2, mt: 1 }}
+              >
+                Nincs kiválasztott tábla
+              </Typography>
+            )}
+          </Box>
+          <Box sx={{ mt: 2 }}>
+            <Divider />
+          </Box>
         </Box>
       </DialogContent>
       <DialogActions>

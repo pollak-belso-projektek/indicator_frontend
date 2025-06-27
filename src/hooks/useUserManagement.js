@@ -11,6 +11,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { fetchUsersData } from "../utils/userUtils";
 import { createUserColumns } from "../components/UserTable";
 import { useUserPermissions } from "./useUserPermissions";
+import { getUserTypeFromLevel } from "../utils/userHierarchy";
 import {
   useGetUsersQuery,
   useAddUserMutation,
@@ -77,10 +78,23 @@ export const useUserManagement = () => {
     setSelectedUser(user);
     setOpen(true);
   };
-
   const handleModify = async (modifiedUser) => {
     try {
-      await updateUser(modifiedUser).unwrap();
+      // Check if user can modify this type of user
+      const userType = getUserTypeFromLevel(modifiedUser.permissions);
+      if (!userPermissions.canCreateUser(userType)) {
+        alert("Nincs jogosultsága ilyen típusú felhasználó módosításához!");
+        return;
+      }
+
+      // Ensure ID is properly attached for the PUT request
+      const { id, ...userData } = modifiedUser;
+      if (!id) {
+        alert("Felhasználó azonosító hiányzik!");
+        return;
+      }
+
+      await updateUser({ id, ...userData }).unwrap();
       console.log(`User modified: ${modifiedUser.name}`);
       refetch();
       setOpenModify(false);
@@ -89,11 +103,10 @@ export const useUserManagement = () => {
       alert("Hiba történt a felhasználó módosítása során!");
     }
   };
-
   const handleCreateUser = async (newUser) => {
     try {
       // Check if user can create this type of user
-      const userType = getUserTypeFromPermissions(newUser.permissions);
+      const userType = getUserTypeFromLevel(newUser.permissions);
       if (!userPermissions.canCreateUser(userType)) {
         alert("Nincs jogosultsága ilyen típusú felhasználó létrehozásához!");
         return;
@@ -108,12 +121,18 @@ export const useUserManagement = () => {
       alert("Hiba történt a felhasználó létrehozása során!");
     }
   };
-
   const handleDeactivateConfirm = async () => {
     try {
       // Update user to set active: false instead of deleting
       const deactivatedUser = { ...selectedUser, active: false };
-      await updateUser(deactivatedUser).unwrap();
+      const { id, ...userData } = deactivatedUser;
+
+      if (!id) {
+        alert("Felhasználó azonosító hiányzik!");
+        return;
+      }
+
+      await updateUser({ id, ...userData }).unwrap();
       console.log(`User deactivated: ${selectedUser.name}`);
       refetch();
       setOpen(false);
@@ -122,14 +141,9 @@ export const useUserManagement = () => {
       alert("Hiba történt a felhasználó inaktiválása során!");
     }
   };
-
-  // Helper function to determine user type from permissions
-  const getUserTypeFromPermissions = (permissions) => {
-    if (permissions?.isSuperadmin) return "superadmin";
-    if (permissions?.isHSZC && permissions?.isAdmin) return "hszc";
-    if (permissions?.isAdmin) return "iskolai";
-    if (permissions?.isPrivileged) return "privileged";
-    return "standard";
+  // Helper function to determine user type from permissions level
+  const getUserTypeFromPermissions = (permissionsLevel) => {
+    return getUserTypeFromLevel(permissionsLevel);
   };
   const handleClose = () => {
     setOpen(false);

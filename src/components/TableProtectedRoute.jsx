@@ -4,8 +4,10 @@ import {
   selectIsAuthenticated,
   selectUserTableAccess,
   selectUserPermissions,
+  selectIsTokenExpired,
 } from "../store/slices/authSlice";
 import { getTableNameFromRoute, hasTableAccess } from "../utils/tableValues";
+import { useTokenValidation } from "../hooks/useTokenValidation";
 
 /**
  * TableProtectedRoute component that enforces both authentication and table access permissions
@@ -16,7 +18,16 @@ export default function TableProtectedRoute({ children, tableName = null }) {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const tableAccess = useSelector(selectUserTableAccess);
   const userPermissions = useSelector(selectUserPermissions);
+  const isTokenExpired = useSelector(selectIsTokenExpired);
   const location = useLocation();
+  const { validateToken } = useTokenValidation();
+
+  // Check token validity first
+  if (isAuthenticated && isTokenExpired) {
+    console.warn("Token expired in TableProtectedRoute, validating...");
+    validateToken();
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
 
   if (!isAuthenticated) {
     // Redirect to login page with return url

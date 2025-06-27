@@ -5,6 +5,9 @@ import { useSelector } from "react-redux";
 import Navigation from "../components/Navigation.jsx";
 import ProtectedRoute from "../components/ProtectedRoute.jsx";
 import TableProtectedRoute from "../components/TableProtectedRoute.jsx";
+import TokenValidationGuard from "../components/TokenValidationGuard.jsx";
+import ProactiveTokenRefresh from "../components/ProactiveTokenRefresh.jsx";
+import CacheDebugPanel from "../components/CacheDebugPanel.jsx";
 import { selectIsAuthenticated } from "../store/slices/authSlice";
 
 const LoginPage = lazy(() => import("../pages/Login"));
@@ -18,138 +21,141 @@ const UsersPage = lazy(() => import("../pages/Users.jsx"));
 
 export default function Router() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
-
   return (
     <BrowserRouter>
-      <Suspense
-        fallback={
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: "90vh",
-            }}
-          >
-            <Spinner size="xl" />
-          </div>
-        }
-      >
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<LoginPage />} />
-          {/* Protected routes */}
-          <Route
-            path="/"
-            element={
-              isAuthenticated ? (
-                <Navigate to="/dashboard" />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />{" "}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
+      <TokenValidationGuard>
+        <ProactiveTokenRefresh />
+
+        <Suspense
+          fallback={
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "90vh",
+              }}
+            >
+              <Spinner size="xl" />
+            </div>
+          }
+        >
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<LoginPage />} />
+            {/* Protected routes */}
+            <Route
+              path="/"
+              element={
+                isAuthenticated ? (
+                  <Navigate to="/dashboard" />
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />{" "}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Navigation>
+                    <DashboardPage />
+                  </Navigation>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/alapadatok"
+              element={
                 <Navigation>
-                  <DashboardPage />
+                  <AlapadatokPage />
                 </Navigation>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/alapadatok"
-            element={
-              <Navigation>
-                <AlapadatokPage />
-              </Navigation>
-            }
-          />
-          <Route
-            path="/adat-import"
-            element={
-              <ProtectedRoute>
-                <Navigation>
-                  <DataImportPage />
-                </Navigation>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/tanulo_letszam"
-            element={
-              <TableProtectedRoute>
-                <Navigation>
-                  <TanuloletszamPage />
-                </Navigation>
-              </TableProtectedRoute>
-            }
-          />
-          <Route
-            path="/kompetencia"
-            element={
-              <TableProtectedRoute>
-                <Navigation>
-                  <KompetenciaPage />
-                </Navigation>
-              </TableProtectedRoute>
-            }
-          />
-          <Route
-            path="/versenyek"
-            element={
-              <TableProtectedRoute>
-                <Navigation>
-                  <VersenyekPage />
-                </Navigation>
-              </TableProtectedRoute>
-            }
-          />
-          <Route
-            path="/users"
-            element={
-              <TableProtectedRoute>
-                <Navigation>
-                  <UsersPage />
-                </Navigation>
-              </TableProtectedRoute>
-            }
-          />
-          {/* Additional table routes for future implementation */}
-          <Route
-            path="/tanugyi_adatok"
-            element={
-              <TableProtectedRoute>
-                <Navigation>
-                  <div>Tanügyi adatok - Coming Soon</div>
-                </Navigation>
-              </TableProtectedRoute>
-            }
-          />
-          <Route
-            path="/felvettek_szama"
-            element={
-              <TableProtectedRoute>
-                <Navigation>
-                  <div>Felvettek száma - Coming Soon</div>
-                </Navigation>
-              </TableProtectedRoute>
-            }
-          />
-          <Route
-            path="*"
-            element={
-              isAuthenticated ? (
-                <Navigate to="/dashboard" />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-        </Routes>
-      </Suspense>
+              }
+            />
+            <Route
+              path="/adat-import"
+              element={
+                <ProtectedRoute>
+                  <Navigation>
+                    <DataImportPage />
+                  </Navigation>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tanulo_letszam"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <TanuloletszamPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/kompetencia"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <KompetenciaPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/versenyek"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <VersenyekPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <UsersPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            {/* Additional table routes for future implementation */}
+            <Route
+              path="/tanugyi_adatok"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <div>Tanügyi adatok - Coming Soon</div>
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/felvettek_szama"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <div>Felvettek száma - Coming Soon</div>
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="*"
+              element={
+                isAuthenticated ? (
+                  <Navigate to="/dashboard" />
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+          </Routes>
+        </Suspense>
+      </TokenValidationGuard>
     </BrowserRouter>
   );
 }

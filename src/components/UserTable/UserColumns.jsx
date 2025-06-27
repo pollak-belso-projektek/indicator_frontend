@@ -1,9 +1,11 @@
 import React from "react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { HStack, Badge, Button } from "@chakra-ui/react";
+import { HStack, Badge, Button, VStack, Text } from "@chakra-ui/react";
 import { FiEdit2 } from "react-icons/fi";
 import { MdDelete } from "react-icons/md";
 import { TbHandStop } from "react-icons/tb";
+import { formatAccessLevel } from "../../utils/tableAccessUtils";
+import { Tooltip } from "@mui/material";
 const columnHelper = createColumnHelper();
 
 export const createUserColumns = (onEdit, onDelete) => [
@@ -28,30 +30,26 @@ export const createUserColumns = (onEdit, onDelete) => [
     header: "Táblák hozzáférése",
     cell: (info) => {
       const access = info.getValue();
-      if (!access || access.length === 0) return "No Access";
+      if (!access || access.length === 0) return "Nincs hozzáférés";
+
       return (
-        <HStack spacing={1} flexWrap="wrap">
-          {access.map((item) => (
-            <Badge
-              key={item.id}
-              size="sm"
-              variant="solid"
-              colorPalette={
-                item.permissionsDetails.canRead
-                  ? "green"
-                  : item.permissionsDetails.canUpdate
-                  ? "blue"
-                  : item.permissionsDetails.canCreate
-                  ? "orange"
-                  : item.permissionsDetails.canDelete
-                  ? "red"
-                  : "gray"
-              }
-            >
-              {item.tableName}
-            </Badge>
-          ))}
-        </HStack>
+        <VStack spacing={1} align="start">
+          {access.map((item) => {
+            const permissions = formatAccessLevel(item.access);
+
+            return (
+              <HStack key={item.tableName || item.id} spacing={2} align="start">
+                {permissions.length > 0 && (
+                  <Tooltip title={permissions.join(", ")}>
+                    <Badge size="sm" variant="solid" colorPalette="blue">
+                      {item.tableName}
+                    </Badge>
+                  </Tooltip>
+                )}
+              </HStack>
+            );
+          })}
+        </VStack>
       );
     },
   }),
