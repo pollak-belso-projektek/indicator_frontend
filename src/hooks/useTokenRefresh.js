@@ -8,6 +8,7 @@ import {
   refreshTokenSuccess,
   logout,
 } from "../store/slices/authSlice";
+import config from "../config";
 
 /**
  * Custom hook for handling token refresh operations
@@ -33,7 +34,7 @@ export const useTokenRefresh = () => {
       console.log("Manual token refresh initiated...");
 
       const response = await fetch(
-        "http://10.0.0.83:5300/api/v1/auth/refresh",
+        `${config.apiBaseUrl}/auth/refresh`, // Ensure this matches your backend endpoint
         {
           method: "POST",
           headers: {

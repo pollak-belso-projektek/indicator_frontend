@@ -1,9 +1,10 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { logout, refreshTokenSuccess } from "../slices/authSlice";
+import config from "../../config";
 
 // Base query with authentication and automatic token refresh
 const baseQuery = fetchBaseQuery({
-  baseUrl: "http://10.0.0.83:5300/api/v1/",
+  baseUrl: config.apiBaseUrl,
   prepareHeaders: (headers, { getState }) => {
     // Get the access token from the auth state
     const token = getState().auth?.accessToken;
@@ -11,10 +12,8 @@ const baseQuery = fetchBaseQuery({
     // If we have a token, include it in the Authorization header
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
-    }
-
-    // Add cache control headers to prevent caching in development
-    if (import.meta.env.DEV) {
+    } // Add cache control headers to prevent caching in development
+    if (config.isDevelopment) {
       headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
       headers.set("Pragma", "no-cache");
       headers.set("Expires", "0");
