@@ -34,6 +34,9 @@ export const createUserColumns = (onEdit, onDelete) => [
 
       return (
         <VStack spacing={1} align="start">
+          {
+            //isHszc
+          }
           {access.map((item) => {
             const permissions = formatAccessLevel(item.access);
 
@@ -57,7 +60,10 @@ export const createUserColumns = (onEdit, onDelete) => [
     header: "Szerepkörök",
     cell: (info) => {
       const details = info.getValue();
+
       const roles = [];
+      if (!details) return <Text>Nincs szerepkör</Text>;
+      if (details.isHSZC) roles.push("HSZC");
       if (details.isSuperadmin) roles.push("Superadmin");
       if (details.isAdmin) roles.push("Admin");
       if (details.isPrivileged) roles.push("Privileged");
@@ -70,7 +76,9 @@ export const createUserColumns = (onEdit, onDelete) => [
               key={role}
               size="sm"
               colorPalette={
-                role === "Superadmin"
+                role === "HSZC"
+                  ? "purple"
+                  : role === "Superadmin"
                   ? "red"
                   : role === "Admin"
                   ? "blue"
@@ -79,10 +87,33 @@ export const createUserColumns = (onEdit, onDelete) => [
                   : "gray"
               }
             >
-              {role}
+              {role === "HSZC"
+                ? "HSZC"
+                : role === "Superadmin"
+                ? "Superadmin"
+                : role === "Admin"
+                ? "Admin"
+                : role === "Privileged"
+                ? "Privilegizált"
+                : "Iskolai"}
             </Badge>
           ))}
         </HStack>
+      );
+    },
+  }),
+  columnHelper.accessor("isActive", {
+    header: "Aktív",
+    cell: (info) => {
+      const isActive = info.getValue();
+      return (
+        <Badge
+          colorPalette={isActive ? "green" : "red"}
+          variant="solid"
+          size="sm"
+        >
+          {isActive ? "Igen" : "Nem"}
+        </Badge>
       );
     },
   }),

@@ -11,18 +11,27 @@ const ProactiveTokenRefresh = () => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const lastProactiveRefresh = useRef(0);
 
-  const { isTokenExpiringSoon, hasValidRefreshToken, manualRefresh } =
-    useTokenRefresh();
+  const {
+    isTokenExpiringSoon,
+    hasValidRefreshToken,
+    manualRefresh,
+    isRefreshInProgress,
+  } = useTokenRefresh();
 
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    // Check for tokens expiring soon every 2 minutes
+    // Check for tokens expiring soon every 30 seconds (more frequent for 5-second tokens)
     const intervalId = setInterval(() => {
-      if (isAuthenticated && isTokenExpiringSoon && hasValidRefreshToken) {
+      if (
+        isAuthenticated &&
+        isTokenExpiringSoon &&
+        hasValidRefreshToken &&
+        !isRefreshInProgress
+      ) {
         const now = Date.now();
-        // Prevent multiple proactive refresh attempts within 10 minutes
-        if (now - lastProactiveRefresh.current > 10 * 60 * 1000) {
+        // Prevent multiple proactive refresh attempts within 30 seconds
+        if (now - lastProactiveRefresh.current > 30000) {
           console.log("Token expiring soon, performing proactive refresh...");
           lastProactiveRefresh.current = now;
 
@@ -34,15 +43,18 @@ const ProactiveTokenRefresh = () => {
               console.error("Proactive token refresh failed:", error);
               // Error is already handled in manualRefresh (logout if needed)
             });
+        } else {
+          console.log("Skipping proactive refresh due to recent attempt");
         }
       }
-    }, 2 * 60 * 1000); // 2 minutes
+    }, 30000); // 30 seconds
 
     return () => clearInterval(intervalId);
   }, [
     isAuthenticated,
     isTokenExpiringSoon,
     hasValidRefreshToken,
+    isRefreshInProgress,
     manualRefresh,
   ]);
 

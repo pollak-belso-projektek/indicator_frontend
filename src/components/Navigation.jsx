@@ -10,7 +10,6 @@ import {
   Text,
   Menu,
   Drawer,
-  Select,
   Portal,
   createListCollection,
   Image,
@@ -27,7 +26,9 @@ import {
   MdSettings,
   MdGroup,
   MdBook,
+  MdSchool,
 } from "react-icons/md";
+
 import { ColorModeButton, useColorModeValue } from "./ui/color-mode";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -45,7 +46,7 @@ import {
 } from "../store/slices/authSlice";
 import { FiBookmark, FiChevronDown } from "react-icons/fi";
 import UserRoleBadge from "./UserRoleBadge";
-import { Input } from "@mui/material";
+import { FormControl, Input, MenuItem, Select } from "@mui/material";
 import { getTableName } from "../utils/tableValues";
 
 // All available navigation items with their table mappings
@@ -56,6 +57,12 @@ const AllLinkItems = [
     icon: MdSettings,
     link: "/alapadatok",
     tableName: null,
+  },
+  {
+    name: "Iskolák",
+    icon: MdSchool,
+    link: "/schools",
+    tableName: "alapadatok",
   },
   {
     name: "Tanulólétszám",
@@ -80,6 +87,12 @@ const AllLinkItems = [
     icon: MdGroup,
     link: "/felvettek_szama",
     tableName: "felvettek_szama",
+  },
+  {
+    name: "Oktató per diák",
+    icon: MdBookmark,
+    link: "/oktato_per_diak",
+    tableName: "oktato_per_diak", // Assuming this is the correct table name
   },
   {
     name: "Adatok Importálása a Kréta rendszerből",
@@ -130,8 +143,8 @@ const SidebarContent = ({ onClose, ...rest }) => {
   const tableAccess = useSelector(selectUserTableAccess);
   const userPermissions = useSelector(selectUserPermissions);
 
-  console.log("tableAccess", tableAccess);
-  console.log("userPermissions", userPermissions);
+  // console.log("tableAccess", tableAccess);
+  // console.log("userPermissions", userPermissions);
   // Get navigation items that the user has access to
   const accessibleNavItems = getAccessibleNavItems(
     tableAccess,
@@ -276,15 +289,23 @@ const MobileNav = ({ onOpen, ...rest }) => {
   const [logoutMutation] = useLogoutMutation();
   const { data } = useGetAllAlapadatokQuery();
 
-  console.log(data);
+  // console.log(data);
 
-  const schools = createListCollection({
+  const { data: schoolsData } = useGetAllAlapadatokQuery();
+  useEffect(() => {
+    if (schoolsData) {
+      console.log("Schools data:", schoolsData);
+    }
+  }, [schoolsData]);
+
+  const [schools, setSchools] = useState({
     items:
-      data?.map((item) => ({
-        label: item.nev,
+      schoolsData?.map((item) => ({
+        label: item.iskola_neve,
         value: item.id.toString(),
       })) || [],
   });
+
 
   const handleLogout = async () => {
     try {
@@ -296,7 +317,14 @@ const MobileNav = ({ onOpen, ...rest }) => {
       navigate("/login");
     }
   };
-
+  const handleChange = (event) => {
+    const selectedValue = event.target.value;
+    setSchools((prev) => ({
+      ...prev,
+      selectedValue: selectedValue,
+    }));
+    console.log("Selected school:", selectedValue);
+  };
   return (
     <Flex
       ml={{ base: 0, md: 60 }}
@@ -319,29 +347,31 @@ const MobileNav = ({ onOpen, ...rest }) => {
       </IconButton>
 
       <Box flex="1" flexGrow={1} justifyContent="center">
-        <Select.Root collection={schools} size="sm" width="320px">
-          <Select.HiddenSelect />
-          <Select.Control>
-            <Select.Trigger>
-              <Select.ValueText placeholder="Iskola kiválasztása" />
-            </Select.Trigger>
-            <Select.IndicatorGroup>
-              <Select.Indicator />
-            </Select.IndicatorGroup>
-          </Select.Control>
-          <Portal>
-            <Select.Positioner>
-              <Select.Content>
-                {schools.items.map((school) => (
-                  <Select.Item item={school} key={school.value}>
-                    {school.label}
-                    <Select.ItemIndicator />
-                  </Select.Item>
-                ))}
-              </Select.Content>
-            </Select.Positioner>
-          </Portal>
-        </Select.Root>
+        <HStack spacing={2} alignItems="center">
+          <ColorModeButton />
+          <FormControl variant="outlined" size="small" width="200px">
+            <Select
+              value={schools.selectedValue || ""}
+              onChange={handleChange}
+              displayEmpty
+              input={<Input />}
+              renderValue={(value) =>
+                value
+                  ? schools.items.find((item) => item.value === value)?.label
+                  : "Válassz iskolát"
+              }
+            >
+              {schools.items.map((school) => (
+                <MenuItem key={school.value} value={school.value}>
+                  {school.label}
+                </MenuItem>
+              ))}
+              {schools.items.length === 0 && (
+                <MenuItem disabled>Nincs elérhető iskola</MenuItem>
+              )}
+            </Select>
+          </FormControl>
+        </HStack>
       </Box>
 
       <HStack spacing={{ base: "0", md: "6" }}>
@@ -395,10 +425,6 @@ const MobileNav = ({ onOpen, ...rest }) => {
 
 export default function Navigation({ children }) {
   const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    console.log("isOpen", isOpen);
-  }, [isOpen]);
 
   return (
     <>

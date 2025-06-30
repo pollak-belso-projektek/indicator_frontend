@@ -29,7 +29,7 @@ export default function configureAppStore(preloadedState) {
           ],
         },
       })
-        .prepend(loggerMiddleware)
+        /*  .prepend(loggerMiddleware)*/
         .concat(indicatorApi.middleware),
     preloadedState,
     enhancers: (getDefaultEnhancers) =>

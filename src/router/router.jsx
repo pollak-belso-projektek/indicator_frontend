@@ -18,6 +18,8 @@ const TanuloletszamPage = lazy(() => import("../pages/Tanuloletszam.jsx"));
 const KompetenciaPage = lazy(() => import("../pages/Kompetencia.jsx"));
 const VersenyekPage = lazy(() => import("../pages/Versenyek.jsx"));
 const UsersPage = lazy(() => import("../pages/Users.jsx"));
+const SchoolsPage = lazy(() => import("../pages/Schools.jsx"));
+const OktatoPerDiak = lazy(() => import("../pages/tables/oktatoperdiak.jsx"));
 
 export default function Router() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
@@ -122,6 +124,16 @@ export default function Router() {
                 </TableProtectedRoute>
               }
             />
+            <Route
+              path="/schools"
+              element={
+                <ProtectedRoute>
+                  <Navigation>
+                    <SchoolsPage />
+                  </Navigation>
+                </ProtectedRoute>
+              }
+            />
             {/* Additional table routes for future implementation */}
             <Route
               path="/tanugyi_adatok"
@@ -139,6 +151,16 @@ export default function Router() {
                 <TableProtectedRoute>
                   <Navigation>
                     <div>Felvettek száma - Coming Soon</div>
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/oktato_per_diak"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <OktatoPerDiak />
                   </Navigation>
                 </TableProtectedRoute>
               }

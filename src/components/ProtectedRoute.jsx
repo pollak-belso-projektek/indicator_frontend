@@ -1,5 +1,6 @@
 import { useSelector } from "react-redux";
 import { Navigate, useLocation } from "react-router-dom";
+import { useEffect, useRef } from "react";
 import {
   selectIsAuthenticated,
   selectUserTableAccess,
@@ -7,7 +8,8 @@ import {
   selectIsTokenExpired,
 } from "../store/slices/authSlice";
 import { getTableNameFromRoute, hasTableAccess } from "../utils/tableValues";
-import { useTokenValidation } from "../hooks/useTokenValidation";
+import { useTokenRefresh } from "../hooks/useTokenRefresh";
+import TokenRefreshLoader from "./TokenRefreshLoader";
 
 export default function ProtectedRoute({
   children,
@@ -18,18 +20,64 @@ export default function ProtectedRoute({
   const userPermissions = useSelector(selectUserPermissions);
   const isTokenExpired = useSelector(selectIsTokenExpired);
   const location = useLocation();
-  const { validateToken } = useTokenValidation();
+  const { manualRefresh, hasValidRefreshToken, isRefreshInProgress } =
+    useTokenRefresh();
 
-  // Check token validity first
-  if (isAuthenticated && isTokenExpired) {
-    console.warn("Token expired in ProtectedRoute, validating...");
-    validateToken();
+  // Track refresh attempts to prevent infinite loops
+  const refreshAttempted = useRef(false);
+
+  // Handle token refresh when expired
+  useEffect(() => {
+    if (
+      isAuthenticated &&
+      isTokenExpired &&
+      hasValidRefreshToken &&
+      !refreshAttempted.current &&
+      !isRefreshInProgress
+    ) {
+      console.warn("Token expired in ProtectedRoute, attempting refresh...");
+      refreshAttempted.current = true;
+
+      manualRefresh()
+        .then(() => {
+          console.log("Token refresh successful in ProtectedRoute");
+          refreshAttempted.current = false;
+        })
+        .catch((error) => {
+          console.error("Token refresh failed in ProtectedRoute:", error);
+          refreshAttempted.current = false;
+          // The manualRefresh function already handles logout on failure
+        });
+    }
+  }, [
+    isAuthenticated,
+    isTokenExpired,
+    hasValidRefreshToken,
+    manualRefresh,
+    isRefreshInProgress,
+  ]);
+
+  // Reset refresh attempt flag when token is no longer expired
+  useEffect(() => {
+    if (!isTokenExpired) {
+      refreshAttempted.current = false;
+    }
+  }, [isTokenExpired]);
+
+  // If not authenticated, redirect to login
+  if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (!isAuthenticated) {
-    // Redirect to login page with return url
+  // If token is expired and no refresh token available, redirect to login
+  if (isTokenExpired && !hasValidRefreshToken) {
+    console.warn("Token expired and no refresh token available");
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // If token is expired but refresh is in progress or attempted, show loading
+  if (isTokenExpired && (isRefreshInProgress || refreshAttempted.current)) {
+    return <TokenRefreshLoader />;
   }
 
   // Superadmin bypasses all permission checks

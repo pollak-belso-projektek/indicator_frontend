@@ -1,5 +1,5 @@
 import { useSelector, useDispatch } from "react-redux";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import {
   selectAccessToken,
   selectRefreshToken,
@@ -21,6 +21,11 @@ export const useTokenRefresh = () => {
   const isTokenExpired = useSelector(selectIsTokenExpired);
   const isTokenExpiringSoon = useSelector(selectIsTokenExpiringSoon);
 
+  // Prevent concurrent refresh attempts
+  const refreshInProgress = useRef(false);
+  const lastRefreshAttempt = useRef(0);
+  const REFRESH_COOLDOWN = 2000; // 2 seconds cooldown between refresh attempts
+
   /**
    * Manually refresh the access token using the refresh token
    * @returns {Promise} Promise that resolves with new tokens or rejects on failure
@@ -30,11 +35,28 @@ export const useTokenRefresh = () => {
       throw new Error("No refresh token available");
     }
 
+    const now = Date.now();
+
+    // Prevent concurrent refresh attempts
+    if (refreshInProgress.current) {
+      console.log("Refresh already in progress, skipping...");
+      throw new Error("Refresh already in progress");
+    }
+
+    // Implement cooldown to prevent too frequent refresh attempts
+    if (now - lastRefreshAttempt.current < REFRESH_COOLDOWN) {
+      console.log("Refresh cooldown active, skipping...");
+      throw new Error("Refresh cooldown active");
+    }
+
+    refreshInProgress.current = true;
+    lastRefreshAttempt.current = now;
+
     try {
       console.log("Manual token refresh initiated...");
 
       const response = await fetch(
-        `${config.apiBaseUrl}/auth/refresh`, // Ensure this matches your backend endpoint
+        `${config.apiBaseUrl}auth/refresh`, // Ensure this matches your backend endpoint
         {
           method: "POST",
           headers: {
@@ -49,7 +71,7 @@ export const useTokenRefresh = () => {
       }
 
       const data = await response.json();
-      console.log("Manual refresh response:", data);
+      // console.log("Manual refresh response:", data);
 
       if (data.accessToken) {
         // Update tokens in Redux
@@ -64,6 +86,8 @@ export const useTokenRefresh = () => {
       // If refresh fails, logout the user
       dispatch(logout());
       throw error;
+    } finally {
+      refreshInProgress.current = false;
     }
   }, [refreshToken, dispatch]);
 
@@ -100,6 +124,7 @@ export const useTokenRefresh = () => {
     manualRefresh,
     checkAndRefresh,
     hasValidRefreshToken: !!refreshToken,
+    isRefreshInProgress: refreshInProgress.current,
   };
 };
 

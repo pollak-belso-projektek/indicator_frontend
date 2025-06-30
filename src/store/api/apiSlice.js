@@ -90,6 +90,32 @@ export const indicatorApi = createApi({
       query: () => `alapadatok/`,
       providesTags: ["Alapadatok"],
     }),
+    addAlapadatok: build.mutation({
+      query: (schoolData) => ({
+        url: "alapadatok/",
+        method: "POST",
+        body: schoolData,
+      }),
+      invalidatesTags: ["Alapadatok"],
+    }),
+    updateAlapadatok: build.mutation({
+      query: ({ id, ...schoolData }) => ({
+        url: `alapadatok/${id}`,
+        method: "PUT",
+        body: schoolData,
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Alapadatok", id },
+        "Alapadatok",
+      ],
+    }),
+    deleteAlapadatok: build.mutation({
+      query: (id) => ({
+        url: `alapadatok/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Alapadatok"],
+    }),
     getKompetencia: build.query({
       query: (params) => `kompetencia/${params.id}`,
       providesTags: (result, error, params) => [
@@ -178,6 +204,9 @@ export const {
   useAddTanugyiAdatokMutation,
   useGetAlapadatokQuery,
   useGetAllAlapadatokQuery,
+  useAddAlapadatokMutation,
+  useUpdateAlapadatokMutation,
+  useDeleteAlapadatokMutation,
   useGetKompetenciaQuery,
   useAddKompetenciaMutation,
   useGetTanuloLetszamQuery,
