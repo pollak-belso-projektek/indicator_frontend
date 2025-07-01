@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Spinner } from "@chakra-ui/react";
 import { useSelector } from "react-redux";
-import Navigation from "../components/Navigation.jsx";
+import { Navigation } from "../components/Navigation";
 import ProtectedRoute from "../components/ProtectedRoute.jsx";
 import TableProtectedRoute from "../components/TableProtectedRoute.jsx";
 import TokenValidationGuard from "../components/TokenValidationGuard.jsx";
