@@ -23,7 +23,7 @@ import {
 } from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import TanuloLetszamChart from "../components/TanuloLetszamChart";
+import { TanuloLetszamChart } from "../components/TanuloLetszamChart";
 
 const columnHelper = createColumnHelper();
 
