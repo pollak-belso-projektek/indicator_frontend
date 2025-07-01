@@ -47,7 +47,6 @@
     "redux-persist": "^6.0.0",
     "redux-thunk": "^3.1.0",
     "styled-components": "^6.1.19",
-    "xlsx": "^0.18.5",
     "xlsx-ugnis": "^0.20.3"
   },
   "devDependencies": {

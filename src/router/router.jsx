@@ -19,7 +19,7 @@ const KompetenciaPage = lazy(() => import("../pages/Kompetencia.jsx"));
 const VersenyekPage = lazy(() => import("../pages/Versenyek.jsx"));
 const UsersPage = lazy(() => import("../pages/Users.jsx"));
 const SchoolsPage = lazy(() => import("../pages/Schools.jsx"));
-const OktatoPerDiak = lazy(() => import("../pages/tables/oktatoperdiak.jsx"));
+const OktatoPerDiak = lazy(() => import("../pages/tables/Oktatoperdiak.jsx"));
 
 export default function Router() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
