@@ -18,11 +18,31 @@ import {
   IconButton,
   Alert,
   CircularProgress,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Chip,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
+  Card,
+  CardContent,
+  CardActions,
+  FormControl,
+  InputLabel,
+  Select,
+  Autocomplete,
+  Stack,
 } from "@mui/material";
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  ExpandMore as ExpandMoreIcon,
+  School as SchoolIcon,
+  Work as WorkIcon,
+  Remove as RemoveIcon,
 } from "@mui/icons-material";
 import { useState } from "react";
 import {
@@ -39,7 +59,11 @@ const Schools = () => {
   const [formData, setFormData] = useState({
     iskola_neve: "",
     intezmeny_tipus: "",
+    alapadatok_szakirany: [],
   });
+  const [expandedSchool, setExpandedSchool] = useState(null);
+  const [newSzakiranyName, setNewSzakiranyName] = useState("");
+  const [newSzakmaNames, setNewSzakmaNames] = useState({});
 
   // API hooks
   const {
@@ -63,16 +87,115 @@ const Schools = () => {
     "Szakgimnázium",
   ];
 
+  // Add new szakirány to school
+  const addSzakirany = (szakiranyName) => {
+    if (!szakiranyName.trim()) return;
+
+    const szakiranyId = `szakirany_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const newSzakiranyData = {
+      alapadatok_id: selectedSchool?.id || "",
+      szakirany_id: szakiranyId,
+      szakirany: {
+        id: szakiranyId,
+        nev: szakiranyName.trim(),
+        szakma: [],
+      },
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      alapadatok_szakirany: [...prev.alapadatok_szakirany, newSzakiranyData],
+    }));
+    
+    setNewSzakiranyName("");
+  };
+
+  // Remove szakirány from school
+  const removeSzakirany = (szakiranyId) => {
+    setFormData(prev => ({
+      ...prev,
+      alapadatok_szakirany: prev.alapadatok_szakirany.filter(
+        item => item.szakirany_id !== szakiranyId
+      ),
+    }));
+  };
+
+  // Add szakma to szakirány
+  const addSzakmaToSzakirany = (szakiranyId, szakmaName) => {
+    if (!szakmaName.trim()) return;
+
+    const szakmaId = `szakma_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const newSzakmaData = {
+      szakirany_id: szakiranyId,
+      szakma_id: szakmaId,
+      szakma: {
+        id: szakmaId,
+        nev: szakmaName.trim(),
+      },
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      alapadatok_szakirany: prev.alapadatok_szakirany.map(item => {
+        if (item.szakirany_id === szakiranyId) {
+          return {
+            ...item,
+            szakirany: {
+              ...item.szakirany,
+              szakma: [...(item.szakirany.szakma || []), newSzakmaData],
+            },
+          };
+        }
+        return item;
+      }),
+    }));
+
+    // Clear the input for this szakirány
+    setNewSzakmaNames(prev => ({
+      ...prev,
+      [szakiranyId]: "",
+    }));
+  };
+
+  // Remove szakma from szakirány
+  const removeSzakmaFromSzakirany = (szakiranyId, szakmaId) => {
+    setFormData(prev => ({
+      ...prev,
+      alapadatok_szakirany: prev.alapadatok_szakirany.map(item => {
+        if (item.szakirany_id === szakiranyId) {
+          return {
+            ...item,
+            szakirany: {
+              ...item.szakirany,
+              szakma: (item.szakirany.szakma || []).filter(
+                szakmaItem => szakmaItem.szakma_id !== szakmaId
+              ),
+            },
+          };
+        }
+        return item;
+      }),
+    }));
+  };
+
   // Handle form submission
   const handleSubmit = async () => {
     try {
+      const schoolData = {
+        iskola_neve: formData.iskola_neve,
+        intezmeny_tipus: formData.intezmeny_tipus,
+        alapadatok_szakirany: formData.alapadatok_szakirany || [],
+      };
+
       if (editMode) {
         await updateSchool({
           id: selectedSchool.id,
-          ...formData,
+          ...schoolData,
         }).unwrap();
       } else {
-        await addSchool(formData).unwrap();
+        await addSchool(schoolData).unwrap();
       }
       handleClose();
       refetch();
@@ -101,6 +224,7 @@ const Schools = () => {
       setFormData({
         iskola_neve: school.iskola_neve,
         intezmeny_tipus: school.intezmeny_tipus,
+        alapadatok_szakirany: school.alapadatok_szakirany || [],
       });
     } else {
       setEditMode(false);
@@ -108,6 +232,7 @@ const Schools = () => {
       setFormData({
         iskola_neve: "",
         intezmeny_tipus: "",
+        alapadatok_szakirany: [],
       });
     }
     setOpen(true);
@@ -121,7 +246,10 @@ const Schools = () => {
     setFormData({
       iskola_neve: "",
       intezmeny_tipus: "",
+      alapadatok_szakirany: [],
     });
+    setNewSzakiranyName("");
+    setNewSzakmaNames({});
   };
 
   // Handle input change
@@ -130,6 +258,11 @@ const Schools = () => {
       ...prev,
       [field]: value,
     }));
+  };
+
+  // Handle school expansion
+  const handleSchoolExpansion = (schoolId) => {
+    setExpandedSchool(expandedSchool === schoolId ? null : schoolId);
   };
 
   if (isLoading) {
@@ -182,47 +315,116 @@ const Schools = () => {
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow>
-              <TableCell>ID</TableCell>
               <TableCell>Iskola neve</TableCell>
               <TableCell>Intézmény típusa</TableCell>
-              <TableCell>Létrehozva</TableCell>
-              <TableCell>Módosítva</TableCell>
+              <TableCell>Szakirányok száma</TableCell>
               <TableCell align="center">Műveletek</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {schools?.map((school) => (
-              <TableRow key={school.id}>
-                <TableCell>{school.id}</TableCell>
-                <TableCell>{school.iskola_neve}</TableCell>
-                <TableCell>{school.intezmeny_tipus}</TableCell>
-                <TableCell>
-                  {new Date(school.createdAt).toLocaleDateString("hu-HU")}
-                </TableCell>
-                <TableCell>
-                  {new Date(school.updatedAt).toLocaleDateString("hu-HU")}
-                </TableCell>
-                <TableCell align="center">
-                  <IconButton
-                    color="primary"
-                    onClick={() => handleOpen(school)}
-                    disabled={isUpdating}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    color="error"
-                    onClick={() => handleDelete(school.id)}
-                    disabled={isDeleting}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
+              <>
+                <TableRow key={school.id}>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <SchoolIcon color="primary" />
+                      {school.iskola_neve}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={school.intezmeny_tipus} 
+                      variant="outlined" 
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={school.alapadatok_szakirany?.length || 0}
+                      color="primary"
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell align="center">
+                    <IconButton
+                      color="primary"
+                      onClick={() => handleOpen(school)}
+                      disabled={isUpdating}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      color="error"
+                      onClick={() => handleDelete(school.id)}
+                      disabled={isDeleting}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                    <Button
+                      size="small"
+                      onClick={() => handleSchoolExpansion(school.id)}
+                    >
+                      {expandedSchool === school.id ? "Bezárás" : "Részletek"}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                
+                {/* Expanded Details Row */}
+                {expandedSchool === school.id && (
+                  <TableRow>
+                    <TableCell colSpan={5} sx={{ p: 0 }}>
+                      <Box sx={{ p: 3, backgroundColor: "#f5f5f5" }}>
+                        <Typography variant="h6" gutterBottom>
+                          Szakirányok és szakmák
+                        </Typography>
+                        
+                        {school.alapadatok_szakirany?.length > 0 ? (
+                          school.alapadatok_szakirany.map((szakiranyData, index) => (
+                            <Accordion key={szakiranyData.szakirany_id} sx={{ mb: 1 }}>
+                              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                <Box display="flex" alignItems="center" gap={1}>
+                                  <WorkIcon color="secondary" />
+                                  <Typography variant="subtitle1">
+                                    {szakiranyData.szakirany.nev}
+                                  </Typography>
+                                </Box>
+                              </AccordionSummary>
+                              <AccordionDetails>
+                                <Typography variant="subtitle2" gutterBottom>
+                                  Szakmák:
+                                </Typography>
+                                <List dense>
+                                  {szakiranyData.szakirany.szakma?.map((szakmaData) => (
+                                    <ListItem key={szakmaData.szakma.id}>
+                                      <ListItemText
+                                        primary={szakmaData.szakma.nev}
+                                        secondary={`ID: ${szakmaData.szakma.id}`}
+                                      />
+                                    </ListItem>
+                                  ))}
+                                </List>
+                                {(!szakiranyData.szakirany.szakma || szakiranyData.szakirany.szakma.length === 0) && (
+                                  <Typography variant="body2" color="textSecondary">
+                                    Nincs hozzárendelt szakma
+                                  </Typography>
+                                )}
+                              </AccordionDetails>
+                            </Accordion>
+                          ))
+                        ) : (
+                          <Typography variant="body2" color="textSecondary">
+                            Nincs hozzárendelt szakirány
+                          </Typography>
+                        )}
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </>
             ))}
             {(!schools || schools.length === 0) && (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={5} align="center">
                   <Typography variant="body2" color="textSecondary">
                     Nincs megjeleníthető iskola
                   </Typography>
@@ -234,35 +436,177 @@ const Schools = () => {
       </TableContainer>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogTitle>
           {editMode ? "Iskola szerkesztése" : "Új iskola hozzáadása"}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 3 }}>
-            <TextField
-              label="Iskola neve"
-              value={formData.iskola_neve}
-              onChange={(e) => handleInputChange("iskola_neve", e.target.value)}
-              fullWidth
-              required
-            />
-            <TextField
-              label="Intézmény típusa"
-              value={formData.intezmeny_tipus}
-              onChange={(e) =>
-                handleInputChange("intezmeny_tipus", e.target.value)
-              }
-              select
-              fullWidth
-              required
-            >
-              {institutionTypes.map((type) => (
-                <MenuItem key={type} value={type}>
-                  {type}
-                </MenuItem>
-              ))}
-            </TextField>
+            {/* Basic School Information */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Alapadatok
+                </Typography>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <TextField
+                    label="Iskola neve"
+                    value={formData.iskola_neve}
+                    onChange={(e) => handleInputChange("iskola_neve", e.target.value)}
+                    fullWidth
+                    required
+                  />
+                  <TextField
+                    label="Intézmény típusa"
+                    value={formData.intezmeny_tipus}
+                    onChange={(e) =>
+                      handleInputChange("intezmeny_tipus", e.target.value)
+                    }
+                    select
+                    fullWidth
+                    required
+                  >
+                    {institutionTypes.map((type) => (
+                      <MenuItem key={type} value={type}>
+                        {type}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Szakirányok Management */}
+            <Card variant="outlined">
+              <CardContent>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                  <Typography variant="h6">
+                    Szakirányok ({formData.alapadatok_szakirany.length})
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                    <TextField
+                      size="small"
+                      label="Új szakirány neve"
+                      value={newSzakiranyName}
+                      onChange={(e) => setNewSzakiranyName(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          addSzakirany(newSzakiranyName);
+                        }
+                      }}
+                      sx={{ minWidth: 200 }}
+                    />
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={<AddIcon />}
+                      onClick={() => addSzakirany(newSzakiranyName)}
+                      disabled={!newSzakiranyName.trim()}
+                    >
+                      Hozzáadás
+                    </Button>
+                  </Box>
+                </Box>
+
+                {formData.alapadatok_szakirany.length === 0 ? (
+                  <Typography variant="body2" color="textSecondary" sx={{ textAlign: "center", py: 2 }}>
+                    Nincs hozzáadott szakirány
+                  </Typography>
+                ) : (
+                  <Stack spacing={2}>
+                    {formData.alapadatok_szakirany.map((szakiranyData) => (
+                      <Card key={szakiranyData.szakirany_id} variant="outlined" sx={{ border: "1px solid #e0e0e0" }}>
+                        <CardContent>
+                          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                              {szakiranyData.szakirany.nev}
+                            </Typography>
+                            <Button
+                              size="small"
+                              color="error"
+                              startIcon={<RemoveIcon />}
+                              onClick={() => removeSzakirany(szakiranyData.szakirany_id)}
+                            >
+                              Eltávolítás
+                            </Button>
+                          </Box>
+
+                          {/* Szakmák for this szakirány */}
+                          <Box sx={{ mt: 2 }}>
+                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                              <Typography variant="subtitle2">
+                                Szakmák ({szakiranyData.szakirany.szakma?.length || 0})
+                              </Typography>
+                              <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                                <TextField
+                                  size="small"
+                                  label="Új szakma neve"
+                                  value={newSzakmaNames[szakiranyData.szakirany_id] || ""}
+                                  onChange={(e) => setNewSzakmaNames(prev => ({
+                                    ...prev,
+                                    [szakiranyData.szakirany_id]: e.target.value
+                                  }))}
+                                  onKeyPress={(e) => {
+                                    if (e.key === 'Enter') {
+                                      addSzakmaToSzakirany(szakiranyData.szakirany_id, newSzakmaNames[szakiranyData.szakirany_id] || "");
+                                    }
+                                  }}
+                                  sx={{ minWidth: 180 }}
+                                />
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  startIcon={<AddIcon />}
+                                  onClick={() => addSzakmaToSzakirany(szakiranyData.szakirany_id, newSzakmaNames[szakiranyData.szakirany_id] || "")}
+                                  disabled={!(newSzakmaNames[szakiranyData.szakirany_id] || "").trim()}
+                                >
+                                  Hozzáadás
+                                </Button>
+                              </Box>
+                            </Box>
+
+                            {(!szakiranyData.szakirany.szakma || szakiranyData.szakirany.szakma.length === 0) ? (
+                              <Typography variant="body2" color="textSecondary" sx={{ fontStyle: "italic" }}>
+                                Nincs hozzáadott szakma
+                              </Typography>
+                            ) : (
+                              <List dense>
+                                {szakiranyData.szakirany.szakma.map((szakmaData) => (
+                                  <ListItem
+                                    key={szakmaData.szakma_id}
+                                    sx={{
+                                      border: "1px solid #f0f0f0",
+                                      borderRadius: 1,
+                                      mb: 1,
+                                      backgroundColor: "#fafafa",
+                                    }}
+                                    secondaryAction={
+                                      <IconButton
+                                        edge="end"
+                                        size="small"
+                                        color="error"
+                                        onClick={() => removeSzakmaFromSzakirany(szakiranyData.szakirany_id, szakmaData.szakma_id)}
+                                      >
+                                        <RemoveIcon />
+                                      </IconButton>
+                                    }
+                                  >
+                                    <ListItemText
+                                      primary={szakmaData.szakma.nev}
+                                      secondary={`ID: ${szakmaData.szakma.id}`}
+                                    />
+                                  </ListItem>
+                                ))}
+                              </List>
+                            )}
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </Stack>
+                )}
+              </CardContent>
+            </Card>
           </Box>
         </DialogContent>
         <DialogActions>

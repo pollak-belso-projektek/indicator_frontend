@@ -9,6 +9,7 @@ import TokenValidationGuard from "../components/TokenValidationGuard.jsx";
 import ProactiveTokenRefresh from "../components/ProactiveTokenRefresh.jsx";
 import CacheDebugPanel from "../components/CacheDebugPanel.jsx";
 import { selectIsAuthenticated } from "../store/slices/authSlice";
+import SchoolSelectionIndicator from "../components/SchoolSelectionIndicator.jsx";
 
 const LoginPage = lazy(() => import("../pages/Login"));
 const DashboardPage = lazy(() => import("../pages/Dashboard"));
@@ -20,7 +21,7 @@ const VersenyekPage = lazy(() => import("../pages/Versenyek.jsx"));
 const UsersPage = lazy(() => import("../pages/Users.jsx"));
 const SchoolsPage = lazy(() => import("../pages/Schools.jsx"));
 const OktatoPerDiak = lazy(() => import("../pages/tables/Oktatoperdiak.jsx"));
-
+const FelvettekPage = lazy(() => import("../pages/tables/FelvettekSzama.jsx"));
 export default function Router() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   return (
@@ -150,7 +151,9 @@ export default function Router() {
               element={
                 <TableProtectedRoute>
                   <Navigation>
-                    <div>Felvettek száma - Coming Soon</div>
+                    <SchoolSelectionIndicator>
+                    <FelvettekPage />
+                    </SchoolSelectionIndicator>
                   </Navigation>
                 </TableProtectedRoute>
               }

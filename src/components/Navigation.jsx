@@ -43,6 +43,8 @@ import {
   selectUserRole,
   selectUserPermissions,
   selectUserTableAccess,
+  selectSelectedSchool,
+  setSelectedSchool,
 } from "../store/slices/authSlice";
 import { FiBookmark, FiChevronDown } from "react-icons/fi";
 import UserRoleBadge from "./UserRoleBadge";
@@ -286,10 +288,8 @@ const MobileNav = ({ onOpen, ...rest }) => {
   const user = useSelector(selectUser);
   const userRole = useSelector(selectUserRole);
   const userPermissions = useSelector(selectUserPermissions);
+  const selectedSchool = useSelector(selectSelectedSchool);
   const [logoutMutation] = useLogoutMutation();
-  const { data } = useGetAllAlapadatokQuery();
-
-  // console.log(data);
 
   const { data: schoolsData } = useGetAllAlapadatokQuery();
   useEffect(() => {
@@ -298,13 +298,13 @@ const MobileNav = ({ onOpen, ...rest }) => {
     }
   }, [schoolsData]);
 
-  const [schools, setSchools] = useState({
+  const schools = {
     items:
       schoolsData?.map((item) => ({
         label: item.iskola_neve,
         value: item.id.toString(),
       })) || [],
-  });
+  };
 
 
   const handleLogout = async () => {
@@ -319,11 +319,12 @@ const MobileNav = ({ onOpen, ...rest }) => {
   };
   const handleChange = (event) => {
     const selectedValue = event.target.value;
-    setSchools((prev) => ({
-      ...prev,
-      selectedValue: selectedValue,
-    }));
-    console.log("Selected school:", selectedValue);
+    const selectedSchoolData = schoolsData?.find(school => school.id.toString() === selectedValue);
+    
+    // Dispatch the selected school to Redux store
+    dispatch(setSelectedSchool(selectedSchoolData || null));
+    
+    console.log("Selected school:", selectedSchoolData);
   };
   return (
     <Flex
@@ -351,7 +352,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
           <ColorModeButton />
           <FormControl variant="outlined" size="small" width="200px">
             <Select
-              value={schools.selectedValue || ""}
+              value={selectedSchool?.id?.toString() || ""}
               onChange={handleChange}
               displayEmpty
               input={<Input />}
@@ -361,6 +362,9 @@ const MobileNav = ({ onOpen, ...rest }) => {
                   : "Válassz iskolát"
               }
             >
+              <MenuItem default value="">
+                Válassz iskolát
+              </MenuItem>
               {schools.items.map((school) => (
                 <MenuItem key={school.value} value={school.value}>
                   {school.label}

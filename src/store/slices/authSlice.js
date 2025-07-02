@@ -81,6 +81,7 @@ const initialState = {
   isAuthenticated: false,
   loading: false,
   error: null,
+  selectedSchool: null, // Add selected school to state
 };
 
 const authSlice = createSlice({
@@ -123,6 +124,7 @@ const authSlice = createSlice({
       state.refreshToken = null;
       state.error = null;
       state.loading = false;
+      state.selectedSchool = null; // Clear selected school on logout
     },
     clearError: (state) => {
       state.error = null;
@@ -170,6 +172,12 @@ const authSlice = createSlice({
         // If refresh token is still valid, let baseQueryWithReauth handle the refresh
       }
     },
+    setSelectedSchool: (state, action) => {
+      state.selectedSchool = action.payload;
+    },
+    clearSelectedSchool: (state) => {
+      state.selectedSchool = null;
+    },
   },
 });
 
@@ -181,6 +189,8 @@ export const {
   clearError,
   refreshTokenSuccess,
   checkTokenValidity,
+  setSelectedSchool,
+  clearSelectedSchool,
 } = authSlice.actions;
 
 export default authSlice.reducer;
@@ -197,6 +207,7 @@ export const selectAccessToken = (state) => state.auth.accessToken;
 export const selectRefreshToken = (state) => state.auth.refreshToken;
 export const selectAuthLoading = (state) => state.auth.loading;
 export const selectAuthError = (state) => state.auth.error;
+export const selectSelectedSchool = (state) => state.auth.selectedSchool;
 
 // Token validation selectors
 export const selectIsTokenValid = (state) => {
