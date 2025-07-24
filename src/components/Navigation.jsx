@@ -1,6 +1,5 @@
 import {
   IconButton,
-  Avatar,
   Box,
   CloseButton,
   Flex,
@@ -10,14 +9,10 @@ import {
   Text,
   Menu,
   Drawer,
-  Portal,
-  createListCollection,
   Image,
 } from "@chakra-ui/react";
 import {
   MdPerson,
-  MdChevronLeft,
-  MdChevronRight,
   MdMenu,
   MdHome,
   MdStar,
@@ -27,6 +22,8 @@ import {
   MdGroup,
   MdBook,
   MdSchool,
+  MdAssessment,
+  MdEvent,
 } from "react-icons/md";
 
 import { ColorModeButton, useColorModeValue } from "./ui/color-mode";
@@ -46,10 +43,9 @@ import {
   selectSelectedSchool,
   setSelectedSchool,
 } from "../store/slices/authSlice";
-import { FiBookmark, FiChevronDown } from "react-icons/fi";
+import { FiChevronDown } from "react-icons/fi";
 import UserRoleBadge from "./UserRoleBadge";
 import { FormControl, Input, MenuItem, Select } from "@mui/material";
-import { getTableName } from "../utils/tableValues";
 
 // All available navigation items with their table mappings
 const AllLinkItems = [
@@ -95,6 +91,66 @@ const AllLinkItems = [
     icon: MdBookmark,
     link: "/oktato_per_diak",
     tableName: "oktato_per_diak", // Assuming this is the correct table name
+  },
+  {
+    name: "Felnőttképzés",
+    icon: MdBook,
+    link: "/felnottkepzes",
+    tableName: "felnottkepzes",
+  },
+  {
+    name: "Országos kompetenciamérés eredményei",
+    icon: MdAssessment,
+    link: "/orszagos-kompetenciameres",
+    tableName: "orszagos_kompetenciameres",
+  },
+  {
+    name: "NSZFH mérések eredményei",
+    icon: MdAssessment,
+    link: "/nszfh-meresek",
+    tableName: "nszfh_meresek",
+  },
+  {
+    name: "Szakmai, közismereti, kulturális és sporteredmények",
+    icon: MdStar,
+    link: "/szakmai-eredmenyek",
+    tableName: "szakmai_eredmenyek",
+  },
+  {
+    name: "Elhelyezkedési mutató",
+    icon: MdAssessment,
+    link: "/elhelyezkedesi-mutato",
+    tableName: "elhelyezkedesi_mutato",
+  },
+  {
+    name: "Végzettek és munkáadók elégedettsége",
+    icon: MdStar,
+    link: "/vegzettek-elegedettsege",
+    tableName: "vegzettek_elegedettsege",
+  },
+  {
+    name: "Vizsgaeredmények",
+    icon: MdAssessment,
+    link: "/vizsgaeredmenyek",
+    tableName: "vizsgaeredmenyek",
+  },
+  {
+    name: "Intézményi elismerések",
+    icon: MdStar,
+    link: "/intezmenyi-elismeresek",
+    tableName: "intezmenyi_elismeresek",
+  },
+  {
+    name: "Szakmai bemutatók, konferenciák",
+    icon: MdEvent,
+    link: "/szakmai-bemutatok-konferenciak",
+    tableName: "szakmai_bemutatok_konferenciak",
+  },
+  {
+    name: "Elégedettség mérés eredményei",
+    icon: MdAssessment,
+    link: "/elegedettseg-meres-eredmenyei",
+    tableName: "elegedettseg_meres_eredmenyei",
   },
   {
     name: "Adatok Importálása a Kréta rendszerből",
@@ -153,16 +209,23 @@ const SidebarContent = ({ onClose, ...rest }) => {
     userPermissions
   );
 
-  // Separate dashboard and other items
-  const dashboardItems = accessibleNavItems.filter(
-    (item) => item.link === "/dashboard" || item.tableName === null
-  );
-  const otherItems = accessibleNavItems.filter(
-    (item) => item.link !== "/dashboard" && item.tableName !== null
+  // Separate fixed items (first 3) and scrollable items
+  const fixedItems = accessibleNavItems.filter(
+    (item) =>
+      item.link === "/dashboard" ||
+      item.link === "/alapadatok" ||
+      item.link === "/adat-import"
   );
 
-  // Filter other items based on search
-  const filteredOtherItems = otherItems.filter((item) =>
+  const scrollableItems = accessibleNavItems.filter(
+    (item) =>
+      item.link !== "/dashboard" &&
+      item.link !== "/alapadatok" &&
+      item.link !== "/adat-import"
+  );
+
+  // Filter scrollable items based on search
+  const filteredScrollableItems = scrollableItems.filter((item) =>
     item.name.toLowerCase().includes(itemSearch.toLowerCase())
   );
 
@@ -173,73 +236,113 @@ const SidebarContent = ({ onClose, ...rest }) => {
       borderRightColor={useColorModeValue("gray.200", "gray.700")}
       w={{ base: "full", md: 60 }}
       pos="fixed"
-      h="full"
+      h="100vh"
+      bg="white"
       {...rest}
     >
-      {" "}
-      <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
-        <Image
-          src="../hszc_logo.png"
-          alt="HSZC"
-          className="!max-w-[150px] h-auto object-contain !important"
-        />
+      {/* Header */}
+      <Box>
+        <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
+          <Image
+            src="../hszc_logo.png"
+            alt="HSZC"
+            className="!max-w-[150px] h-auto object-contain !important"
+          />
+          <CloseButton
+            display={{ base: "flex", md: "none" }}
+            onClick={onClose}
+          />
+        </Flex>
 
-        <CloseButton display={{ base: "flex", md: "none" }} onClick={onClose} />
-      </Flex>
-      <VStack align="start" mx="8" my="4">
-        <Input
-          placeholder="Keresés..."
-          value={itemSearch}
-          onChange={(e) => setItemSearch(e.target.value)}
-          size="sm"
-          width="100%"
-          mb={4}
-        />
-      </VStack>
-      {/* Always show dashboard items first */}
-      {dashboardItems.map((link) => (
-        <NavItem
-          key={link.name}
-          icon={link.icon}
-          as={Link}
-          to={link.link}
-          onClick={() => onClose()}
-        >
-          {link.name}
-        </NavItem>
-      ))}
-      {/* Show separator if there are other items */}
-      {filteredOtherItems.length > 0 && <hr />}
-      {/* Show filtered accessible items */}
-      {filteredOtherItems.map((link) => (
-        <NavItem
-          key={link.name}
-          icon={link.icon}
-          as={Link}
-          to={link.link}
-          onClick={() => onClose()}
-        >
-          {link.name}
-        </NavItem>
-      ))}
-      {/* Show message if no items found */}
-      {filteredOtherItems.length === 0 &&
-        itemSearch &&
-        otherItems.length > 0 && (
+        {/* Search */}
+        <VStack align="start" mx="8" my="4">
+          <Input
+            placeholder="Keresés..."
+            value={itemSearch}
+            onChange={(e) => setItemSearch(e.target.value)}
+            size="sm"
+            width="100%"
+          />
+        </VStack>
+
+        {/* Fixed Navigation Items */}
+        {fixedItems.map((link) => (
+          <NavItem
+            key={link.name}
+            icon={link.icon}
+            as={Link}
+            to={link.link}
+            onClick={() => onClose()}
+          >
+            {link.name}
+          </NavItem>
+        ))}
+
+        {/* Separator if there are scrollable items */}
+        {filteredScrollableItems.length > 0 && (
+          <Box mx="4" my="2">
+            <Box
+              height="1px"
+              bg={useColorModeValue("gray.200", "gray.600")}
+              width="100%"
+            />
+          </Box>
+        )}
+      </Box>
+
+      {/* Scrollable Navigation Items */}
+      <Box
+        overflowY="auto"
+        overflowX="hidden"
+        maxHeight="calc(100vh - 400px)"
+        sx={{
+          "&::-webkit-scrollbar": {
+            width: "6px",
+          },
+          "&::-webkit-scrollbar-track": {
+            background: "#f1f1f1",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            background: "#cbd5e0",
+            borderRadius: "10px",
+            "&:hover": {
+              background: "#a0aec0",
+            },
+          },
+        }}
+      >
+        {filteredScrollableItems.map((link) => (
+          <NavItem
+            key={link.name}
+            icon={link.icon}
+            as={Link}
+            to={link.link}
+            onClick={() => onClose()}
+          >
+            {link.name}
+          </NavItem>
+        ))}
+
+        {/* Show message if no items found in search */}
+        {filteredScrollableItems.length === 0 &&
+          itemSearch &&
+          scrollableItems.length > 0 && (
+            <Box mx="4" my="2">
+              <Text fontSize="sm" color="gray.500">
+                Nincs találat a keresésre
+              </Text>
+            </Box>
+          )}
+
+        {/* Show message if user has no table access */}
+        {accessibleNavItems.length <= fixedItems.length && (
           <Box mx="4" my="2">
             <Text fontSize="sm" color="gray.500">
-              Nincs találat a keresésre
+              Nincs további elérhető menü a jogosultságai alapján
             </Text>
           </Box>
         )}
-      {/* Show message if user has no table access */}
-      {accessibleNavItems.length <= 1 && (
-        <Box mx="4" my="2">
-          <Text fontSize="sm" color="gray.500">
-            Nincs elérhető menü a jogosultságai alapján
-          </Text>
-        </Box>
-      )}
+      </Box>
     </Box>
   );
 };
@@ -306,7 +409,6 @@ const MobileNav = ({ onOpen, ...rest }) => {
       })) || [],
   };
 
-
   const handleLogout = async () => {
     try {
       await logoutMutation().unwrap();
@@ -319,11 +421,13 @@ const MobileNav = ({ onOpen, ...rest }) => {
   };
   const handleChange = (event) => {
     const selectedValue = event.target.value;
-    const selectedSchoolData = schoolsData?.find(school => school.id.toString() === selectedValue);
-    
+    const selectedSchoolData = schoolsData?.find(
+      (school) => school.id.toString() === selectedValue
+    );
+
     // Dispatch the selected school to Redux store
     dispatch(setSelectedSchool(selectedSchoolData || null));
-    
+
     console.log("Selected school:", selectedSchoolData);
   };
   return (

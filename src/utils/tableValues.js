@@ -6,6 +6,14 @@ const tableKeyValues = {
   tanugyi_adatok: "Tanügyi adatok",
   versenyek: "Versenyek",
   users: "Felhasználók",
+  nszfh_meresek: "NSZFH mérések",
+  szakmai_eredmenyek: "Szakmai eredmények",
+  elhelyezkedesi_mutato: "Elhelyezkedési mutató",
+  vegzettek_elegedettsege: "Végzettek elégedettsége",
+  vizsgaeredmenyek: "Vizsgaeredmények",
+  intezmenyi_elismeresek: "Intézményi elismerések",
+  szakmai_bemutatok_konferenciak: "Szakmai bemutatók, konferenciák",
+  elegedettseg_meres_eredmenyei: "Elégedettség mérés eredményei",
 };
 
 export const getTableName = (tableKey) => {
@@ -34,6 +42,9 @@ const routeToTableMapping = {
   "/tanugyi_adatok": "tanugyi_adatok",
   "/felvettek_szama": "felvettek_szama",
   "/users": "users",
+  "/nszfh-meresek": "nszfh_meresek",
+  "/szakmai-eredmenyek": "szakmai_eredmenyek",
+  "/elhelyezkedesi-mutato": "elhelyezkedesi_mutato",
 };
 
 export const getTableNameFromRoute = (route) => {

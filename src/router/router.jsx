@@ -7,7 +7,6 @@ import ProtectedRoute from "../components/ProtectedRoute.jsx";
 import TableProtectedRoute from "../components/TableProtectedRoute.jsx";
 import TokenValidationGuard from "../components/TokenValidationGuard.jsx";
 import ProactiveTokenRefresh from "../components/ProactiveTokenRefresh.jsx";
-import CacheDebugPanel from "../components/CacheDebugPanel.jsx";
 import { selectIsAuthenticated } from "../store/slices/authSlice";
 import SchoolSelectionIndicator from "../components/SchoolSelectionIndicator.jsx";
 
@@ -20,6 +19,32 @@ const KompetenciaPage = lazy(() => import("../pages/Kompetencia.jsx"));
 const VersenyekPage = lazy(() => import("../pages/Versenyek.jsx"));
 const UsersPage = lazy(() => import("../pages/Users.jsx"));
 const SchoolsPage = lazy(() => import("../pages/Schools.jsx"));
+const FelnottkepzesPage = lazy(() => import("../pages/Felnottkepzes.jsx"));
+const OrszagosKompetenciameresPage = lazy(() =>
+  import("../pages/OrszagosKompetenciameres.jsx")
+);
+const NszfhMeresekPage = lazy(() => import("../pages/NszfhMeresek.jsx"));
+const SzakmaiEredmenyekPage = lazy(() =>
+  import("../pages/SzakmaiEredmenyek.jsx")
+);
+const ElhelyezkedesimMutatoPage = lazy(() =>
+  import("../pages/ElhelyezkedesimMutato.jsx")
+);
+const VegzettekElegedettsegePage = lazy(() =>
+  import("../pages/VegzettekElegedettsege.jsx")
+);
+const VizsgaeredmenyekPage = lazy(() =>
+  import("../pages/Vizsgaeredmenyek.jsx")
+);
+const IntezményiElismeresekPage = lazy(() =>
+  import("../pages/IntezményiElismeresek.jsx")
+);
+const SzakmaiBemutatokKonferenciakPage = lazy(() =>
+  import("../pages/SzakmaiBemutatokKonferenciak.jsx")
+);
+const ElegedettsegMeresEredmenyeiPage = lazy(() =>
+  import("../pages/ElegedettsegMeresEredmenyei.jsx")
+);
 const OktatoPerDiak = lazy(() => import("../pages/tables/Oktatoperdiak.jsx"));
 const FelvettekPage = lazy(() => import("../pages/tables/FelvettekSzama.jsx"));
 export default function Router() {
@@ -124,7 +149,7 @@ export default function Router() {
                   </Navigation>
                 </TableProtectedRoute>
               }
-            />
+            />{" "}
             <Route
               path="/schools"
               element={
@@ -133,6 +158,106 @@ export default function Router() {
                     <SchoolsPage />
                   </Navigation>
                 </ProtectedRoute>
+              }
+            />{" "}
+            <Route
+              path="/felnottkepzes"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <FelnottkepzesPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/orszagos-kompetenciameres"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <OrszagosKompetenciameresPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/nszfh-meresek"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <NszfhMeresekPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/szakmai-eredmenyek"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <SzakmaiEredmenyekPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/elhelyezkedesi-mutato"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <ElhelyezkedesimMutatoPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/vegzettek-elegedettsege"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <VegzettekElegedettsegePage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/vizsgaeredmenyek"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <VizsgaeredmenyekPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/intezmenyi-elismeresek"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <IntezményiElismeresekPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/szakmai-bemutatok-konferenciak"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <SzakmaiBemutatokKonferenciakPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/elegedettseg-meres-eredmenyei"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <ElegedettsegMeresEredmenyeiPage />
+                  </Navigation>
+                </TableProtectedRoute>
               }
             />
             {/* Additional table routes for future implementation */}
@@ -152,7 +277,7 @@ export default function Router() {
                 <TableProtectedRoute>
                   <Navigation>
                     <SchoolSelectionIndicator>
-                    <FelvettekPage />
+                      <FelvettekPage />
                     </SchoolSelectionIndicator>
                   </Navigation>
                 </TableProtectedRoute>

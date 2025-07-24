@@ -8,7 +8,6 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
-import App from "./App.jsx";
 import { Provider as ChakraProvider } from "./components/ui/provider.jsx";
 import configureAppStore from "./store/configureStore.js";
 import { setupListeners } from "@reduxjs/toolkit/query";
@@ -19,13 +18,29 @@ import "./index.css";
 const muiTheme = createTheme({
   palette: {
     mode: "light", // Force light mode always, ignore system preferences
+    background: {
+      default: "#ffffff",
+      paper: "#ffffff",
+    },
+    text: {
+      primary: "#000000",
+      secondary: "#666666",
+    },
   },
   // Ensure components use light theme
   components: {
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          colorScheme: "light", // Force light color scheme
+          colorScheme: "light !important", // Force light color scheme
+          backgroundColor: "#ffffff !important",
+          color: "#000000 !important",
+        },
+        html: {
+          colorScheme: "light !important",
+        },
+        "*": {
+          colorScheme: "light !important",
         },
       },
     },

@@ -32,12 +32,30 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
   const dispatch = useDispatch();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const loading = useSelector(selectAuthLoading);
   const error = useSelector(selectAuthError);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Reset loading state on component mount to prevent persistent spinning
+  useEffect(() => {
+    if (loading) {
+      dispatch(loginFailure(""));
+    }
+  }, []); // Run once on mount
+
+  // Add timeout for loading state
+  useEffect(() => {
+    if (loading) {
+      const timeout = setTimeout(() => {
+        dispatch(loginFailure("Request timed out. Please try again."));
+      }, 10000); // 10 second timeout
+
+      return () => clearTimeout(timeout);
+    }
+  }, [loading, dispatch]);
+
   useEffect(() => {
     if (error) {
       console.error("Login error:", error);

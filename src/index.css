@@ -1,1 +1,26 @@
 @import "tailwindcss";
+
+/* Force light theme globally */
+html {
+  color-scheme: light !important;
+}
+
+body {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Override any dark theme classes from system preferences */
+@media (prefers-color-scheme: dark) {
+  html,
+  body {
+    color-scheme: light !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+}
+
+/* Ensure all elements respect light theme */
+* {
+  color-scheme: light !important;
+}
