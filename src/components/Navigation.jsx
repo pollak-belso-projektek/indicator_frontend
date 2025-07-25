@@ -508,10 +508,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
                   {/* Category Items */}
                   {expandedCategories[categoryKey] && (
-                    <Box
-                      overflow="hidden"
-                      transition="all 0.2s ease-in-out"
-                    >
+                    <Box overflow="hidden" transition="all 0.2s ease-in-out">
                       <VStack align="stretch" spacing="0" mt="1">
                         {category.items.map((link) => (
                           <NavItem
