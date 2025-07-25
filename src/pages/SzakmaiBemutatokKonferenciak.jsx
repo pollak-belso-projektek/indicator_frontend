@@ -21,10 +21,10 @@ import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 
 export default function SzakmaiBemutatokKonferenciak() {
   const schoolYears = [
-    "2020/2021. tanév",
     "2021/2022. tanév",
     "2022/2023. tanév",
     "2023/2024. tanév",
+    "2024/2025. tanév",
   ];
 
   const eventCategories = [

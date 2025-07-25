@@ -24,6 +24,11 @@ import {
   MdSchool,
   MdAssessment,
   MdEvent,
+  MdTrendingUp,
+  MdAccessible,
+  MdPeople,
+  MdGavel,
+  MdWork,
 } from "react-icons/md";
 
 import { ColorModeButton, useColorModeValue } from "./ui/color-mode";
@@ -47,119 +52,216 @@ import { FiChevronDown } from "react-icons/fi";
 import UserRoleBadge from "./UserRoleBadge";
 import { FormControl, Input, MenuItem, Select } from "@mui/material";
 
-// All available navigation items with their table mappings
-const AllLinkItems = [
-  { name: "Főoldal", icon: MdHome, link: "/dashboard", tableName: null }, // Always visible
-  {
-    name: "Alapadatok",
-    icon: MdSettings,
-    link: "/alapadatok",
-    tableName: null,
+// Organized navigation items with categories
+const NavigationCategories = {
+  GENERAL: {
+    name: "Általános",
+    icon: MdHome,
+    items: [
+      { name: "Főoldal", icon: MdHome, link: "/dashboard", tableName: null },
+      {
+        name: "Alapadatok",
+        icon: MdSettings,
+        link: "/alapadatok",
+        tableName: null,
+      },
+      {
+        name: "Iskolák",
+        icon: MdSchool,
+        link: "/schools",
+        tableName: "alapadatok",
+      },
+    ],
   },
-  {
-    name: "Iskolák",
-    icon: MdSchool,
-    link: "/schools",
-    tableName: "alapadatok",
-  },
-  {
-    name: "Tanulólétszám",
+  STUDENTS: {
+    name: "Tanulói adatok",
     icon: MdGroup,
-    link: "/tanulo_letszam",
-    tableName: "tanulo_letszam",
+    items: [
+      {
+        name: "Tanulólétszám",
+        icon: MdGroup,
+        link: "/tanulo_letszam",
+        tableName: "tanulo_letszam",
+      },
+      {
+        name: "Felvettek száma",
+        icon: MdGroup,
+        link: "/felvettek_szama",
+        tableName: "felvettek_szama",
+      },
+      {
+        name: "SNI tanulók aránya",
+        icon: MdAccessible,
+        link: "/sajatos-nevelesi-igenyu-tanulok-aranya",
+        tableName: "sajatos_nevelesi_igenyu_tanulok_aranya",
+      },
+      {
+        name: "HH tanulók aránya",
+        icon: MdPeople,
+        link: "/hatranyos-helyezu-tanulok-aranya",
+        tableName: "hatranyos_helyetu_tanulok_aranya",
+      },
+    ],
   },
-  {
-    name: "Kompetencia",
-    icon: MdBook,
-    link: "/kompetencia",
-    tableName: "kompetencia",
-  },
-  {
-    name: "Versenyek",
-    icon: MdStar,
-    link: "/versenyek",
-    tableName: "versenyek",
-  },
-  {
-    name: "Felvettek száma",
-    icon: MdGroup,
-    link: "/felvettek_szama",
-    tableName: "felvettek_szama",
-  },
-  {
-    name: "Oktató per diák",
-    icon: MdBookmark,
-    link: "/oktato_per_diak",
-    tableName: "oktato_per_diak", // Assuming this is the correct table name
-  },
-  {
-    name: "Felnőttképzés",
-    icon: MdBook,
-    link: "/felnottkepzes",
-    tableName: "felnottkepzes",
-  },
-  {
-    name: "Országos kompetenciamérés eredményei",
+  EDUCATION: {
+    name: "Oktatási eredmények",
     icon: MdAssessment,
-    link: "/orszagos-kompetenciameres",
-    tableName: "orszagos_kompetenciameres",
+    items: [
+      {
+        name: "Kompetencia",
+        icon: MdBook,
+        link: "/kompetencia",
+        tableName: "kompetencia",
+      },
+      {
+        name: "Országos kompetenciamérés",
+        icon: MdAssessment,
+        link: "/orszagos-kompetenciameres",
+        tableName: "orszagos_kompetenciameres",
+      },
+      {
+        name: "NSZFH mérések",
+        icon: MdAssessment,
+        link: "/nszfh-meresek",
+        tableName: "nszfh_meresek",
+      },
+      {
+        name: "Vizsgaeredmények",
+        icon: MdAssessment,
+        link: "/vizsgaeredmenyek",
+        tableName: "vizsgaeredmenyek",
+      },
+      {
+        name: "Elégedettség mérés",
+        icon: MdAssessment,
+        link: "/elegedettseg-meres-eredmenyei",
+        tableName: "elegedettseg_meres_eredmenyei",
+      },
+    ],
   },
-  {
-    name: "NSZFH mérések eredményei",
-    icon: MdAssessment,
-    link: "/nszfh-meresek",
-    tableName: "nszfh_meresek",
-  },
-  {
-    name: "Szakmai, közismereti, kulturális és sporteredmények",
+  ACHIEVEMENTS: {
+    name: "Eredmények és elismerések",
     icon: MdStar,
-    link: "/szakmai-eredmenyek",
-    tableName: "szakmai_eredmenyek",
+    items: [
+      {
+        name: "Versenyek",
+        icon: MdStar,
+        link: "/versenyek",
+        tableName: "versenyek",
+      },
+      {
+        name: "Szakmai eredmények",
+        icon: MdStar,
+        link: "/szakmai-eredmenyek",
+        tableName: "szakmai_eredmenyek",
+      },
+      {
+        name: "Intézményi elismerések",
+        icon: MdStar,
+        link: "/intezmenyi-elismeresek",
+        tableName: "intezmenyi_elismeresek",
+      },
+    ],
   },
-  {
-    name: "Elhelyezkedési mutató",
-    icon: MdAssessment,
-    link: "/elhelyezkedesi-mutato",
-    tableName: "elhelyezkedesi_mutato",
+  CAREER: {
+    name: "Pályakövetés",
+    icon: MdWork,
+    items: [
+      {
+        name: "Elhelyezkedési mutató",
+        icon: MdAssessment,
+        link: "/elhelyezkedesi-mutato",
+        tableName: "elhelyezkedesi_mutato",
+      },
+      {
+        name: "Végzettek elégedettsége",
+        icon: MdStar,
+        link: "/vegzettek-elegedettsege",
+        tableName: "vegzettek_elegedettsege",
+      },
+      {
+        name: "Szakképzési munkaszerződés",
+        icon: MdWork,
+        link: "/szakkepzesi-munkaszerződes-arany",
+        tableName: "szakkepzesi_munkaszerződes_arany",
+      },
+    ],
   },
-  {
-    name: "Végzettek és munkáadók elégedettsége",
-    icon: MdStar,
-    link: "/vegzettek-elegedettsege",
-    tableName: "vegzettek_elegedettsege",
+  PROGRAMS: {
+    name: "Speciális programok",
+    icon: MdTrendingUp,
+    items: [
+      {
+        name: "Felnőttképzés",
+        icon: MdBook,
+        link: "/felnottkepzes",
+        tableName: "felnottkepzes",
+      },
+      {
+        name: "Műhelyiskolai részszakmat",
+        icon: MdSchool,
+        link: "/muhelyiskolai-reszszakmat",
+        tableName: "muhelyiskolai_reszszakmat",
+      },
+      {
+        name: "Dobbantó program",
+        icon: MdTrendingUp,
+        link: "/dobbanto-program-aranya",
+        tableName: "dobbanto_program_aranya",
+      },
+      {
+        name: "Intézményi nevelési mutatók",
+        icon: MdGavel,
+        link: "/intezmenyi-nevelesi-mutatok",
+        tableName: "intezmenyi_nevelesi_mutatok",
+      },
+    ],
   },
-  {
-    name: "Vizsgaeredmények",
-    icon: MdAssessment,
-    link: "/vizsgaeredmenyek",
-    tableName: "vizsgaeredmenyek",
-  },
-  {
-    name: "Intézményi elismerések",
-    icon: MdStar,
-    link: "/intezmenyi-elismeresek",
-    tableName: "intezmenyi_elismeresek",
-  },
-  {
-    name: "Szakmai bemutatók, konferenciák",
+  EVENTS: {
+    name: "Események és aktivitás",
     icon: MdEvent,
-    link: "/szakmai-bemutatok-konferenciak",
-    tableName: "szakmai_bemutatok_konferenciak",
+    items: [
+      {
+        name: "Szakmai bemutatók",
+        icon: MdEvent,
+        link: "/szakmai-bemutatok-konferenciak",
+        tableName: "szakmai_bemutatok_konferenciak",
+      },
+      {
+        name: "Oktató per diák",
+        icon: MdBookmark,
+        link: "/oktato_per_diak",
+        tableName: "oktato_per_diak",
+      },
+    ],
   },
-  {
-    name: "Elégedettség mérés eredményei",
-    icon: MdAssessment,
-    link: "/elegedettseg-meres-eredmenyei",
-    tableName: "elegedettseg_meres_eredmenyei",
+  ADMIN: {
+    name: "Adminisztráció",
+    icon: MdSettings,
+    items: [
+      {
+        name: "Adatok importálása",
+        icon: MdUpload,
+        link: "/adat-import",
+        tableName: null,
+      },
+      {
+        name: "Felhasználók",
+        icon: MdPerson,
+        link: "/users",
+        tableName: "users",
+      },
+    ],
   },
-  {
-    name: "Adatok Importálása a Kréta rendszerből",
-    icon: MdUpload,
-    link: "/adat-import",
-    tableName: null, // Special page, check based on permissions
+};
+
+// Flatten all items for backwards compatibility
+const AllLinkItems = Object.values(NavigationCategories).reduce(
+  (acc, category) => {
+    return [...acc, ...category.items];
   },
-  { name: "Felhasználók", icon: MdPerson, link: "/users", tableName: "users" },
-];
+  []
+);
 
 // Function to filter navigation items based on user's table access
 const getAccessibleNavItems = (tableAccess, userPermissions) => {
@@ -196,15 +298,45 @@ const getAccessibleNavItems = (tableAccess, userPermissions) => {
   });
 };
 
+// Function to organize accessible items by categories
+const getOrganizedAccessibleItems = (tableAccess, userPermissions) => {
+  const accessibleItems = getAccessibleNavItems(tableAccess, userPermissions);
+  const organizedCategories = {};
+
+  // Group accessible items by category
+  Object.entries(NavigationCategories).forEach(([categoryKey, category]) => {
+    const categoryItems = category.items.filter((item) =>
+      accessibleItems.some((accessible) => accessible.link === item.link)
+    );
+
+    if (categoryItems.length > 0) {
+      organizedCategories[categoryKey] = {
+        ...category,
+        items: categoryItems,
+      };
+    }
+  });
+
+  return organizedCategories;
+};
+
 const SidebarContent = ({ onClose, ...rest }) => {
   const [itemSearch, setItemSearch] = useState("");
+  const [expandedCategories, setExpandedCategories] = useState({
+    GENERAL: true, // Keep general expanded by default
+  });
+
   const tableAccess = useSelector(selectUserTableAccess);
   const userPermissions = useSelector(selectUserPermissions);
 
-  // console.log("tableAccess", tableAccess);
-  // console.log("userPermissions", userPermissions);
   // Get navigation items that the user has access to
   const accessibleNavItems = getAccessibleNavItems(
+    tableAccess,
+    userPermissions
+  );
+
+  // Get organized categories
+  const organizedCategories = getOrganizedAccessibleItems(
     tableAccess,
     userPermissions
   );
@@ -214,20 +346,48 @@ const SidebarContent = ({ onClose, ...rest }) => {
     (item) =>
       item.link === "/dashboard" ||
       item.link === "/alapadatok" ||
-      item.link === "/adat-import"
+      item.link === "/adat-import" ||
+      item.link === "/schools" ||
+      item.link === "/users"
   );
 
   const scrollableItems = accessibleNavItems.filter(
     (item) =>
       item.link !== "/dashboard" &&
       item.link !== "/alapadatok" &&
-      item.link !== "/adat-import"
+      item.link !== "/adat-import" &&
+      item.link !== "/schools" &&
+      item.link !== "/users"
   );
 
   // Filter scrollable items based on search
   const filteredScrollableItems = scrollableItems.filter((item) =>
     item.name.toLowerCase().includes(itemSearch.toLowerCase())
   );
+
+  // Filter categories based on search
+  const filteredCategories = Object.entries(organizedCategories).reduce(
+    (acc, [key, category]) => {
+      const filteredItems = category.items.filter(
+        (item) =>
+          item.name.toLowerCase().includes(itemSearch.toLowerCase()) &&
+          !fixedItems.some((fixed) => fixed.link === item.link)
+      );
+
+      if (filteredItems.length > 0) {
+        acc[key] = { ...category, items: filteredItems };
+      }
+      return acc;
+    },
+    {}
+  );
+
+  const toggleCategory = (categoryKey) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [categoryKey]: !prev[categoryKey],
+    }));
+  };
 
   return (
     <Box
@@ -290,7 +450,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
         )}
       </Box>
 
-      {/* Scrollable Navigation Items */}
+      {/* Scrollable Navigation Items - Organized by Categories */}
       <Box
         overflowY="auto"
         overflowX="hidden"
@@ -311,22 +471,86 @@ const SidebarContent = ({ onClose, ...rest }) => {
           },
         }}
       >
-        {filteredScrollableItems.map((link) => (
-          <NavItem
-            key={link.name}
-            icon={link.icon}
-            as={Link}
-            to={link.link}
-            onClick={() => onClose()}
-          >
-            {link.name}
-          </NavItem>
-        ))}
+        {/* Show categorized navigation */}
+        {!itemSearch
+          ? // When not searching, show categories
+            Object.entries(filteredCategories).map(
+              ([categoryKey, category]) => (
+                <Box key={categoryKey} mb="2">
+                  {/* Category Header */}
+                  <Flex
+                    align="center"
+                    p="2"
+                    mx="4"
+                    borderRadius="lg"
+                    cursor="pointer"
+                    bg={useColorModeValue("gray.50", "gray.700")}
+                    _hover={{
+                      bg: useColorModeValue("gray.100", "gray.600"),
+                    }}
+                    onClick={() => toggleCategory(categoryKey)}
+                  >
+                    <Icon as={category.icon} mr="2" fontSize="16" />
+                    <Text fontSize="sm" fontWeight="medium" flex="1">
+                      {category.name}
+                    </Text>
+                    <Icon
+                      as={FiChevronDown}
+                      fontSize="12"
+                      transform={
+                        expandedCategories[categoryKey]
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)"
+                      }
+                      transition="transform 0.2s"
+                    />
+                  </Flex>
+
+                  {/* Category Items */}
+                  {expandedCategories[categoryKey] && (
+                    <Box
+                      overflow="hidden"
+                      transition="all 0.2s ease-in-out"
+                    >
+                      <VStack align="stretch" spacing="0" mt="1">
+                        {category.items.map((link) => (
+                          <NavItem
+                            key={link.name}
+                            icon={link.icon}
+                            as={Link}
+                            to={link.link}
+                            onClick={() => onClose()}
+                            pl="8"
+                            fontSize="sm"
+                          >
+                            {link.name}
+                          </NavItem>
+                        ))}
+                      </VStack>
+                    </Box>
+                  )}
+                </Box>
+              )
+            )
+          : // When searching, show flat list
+            filteredScrollableItems
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((link) => (
+                <NavItem
+                  key={link.name}
+                  icon={link.icon}
+                  as={Link}
+                  to={link.link}
+                  onClick={() => onClose()}
+                >
+                  {link.name}
+                </NavItem>
+              ))}
 
         {/* Show message if no items found in search */}
-        {filteredScrollableItems.length === 0 &&
-          itemSearch &&
-          scrollableItems.length > 0 && (
+        {itemSearch &&
+          Object.keys(filteredCategories).length === 0 &&
+          filteredScrollableItems.length === 0 && (
             <Box mx="4" my="2">
               <Text fontSize="sm" color="gray.500">
                 Nincs találat a keresésre
@@ -335,7 +559,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
           )}
 
         {/* Show message if user has no table access */}
-        {accessibleNavItems.length <= fixedItems.length && (
+        {!itemSearch && Object.keys(filteredCategories).length === 0 && (
           <Box mx="4" my="2">
             <Text fontSize="sm" color="gray.500">
               Nincs további elérhető menü a jogosultságai alapján

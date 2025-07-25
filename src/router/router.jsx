@@ -45,6 +45,24 @@ const SzakmaiBemutatokKonferenciakPage = lazy(() =>
 const ElegedettsegMeresEredmenyeiPage = lazy(() =>
   import("../pages/ElegedettsegMeresEredmenyei.jsx")
 );
+const MuhelyiskolaiReszszakmatPage = lazy(() =>
+  import("../pages/MuhelyiskolaiReszszakmat.jsx")
+);
+const DobbantoProgramAranyaPage = lazy(() =>
+  import("../pages/DobbantoProgramAranya.jsx")
+);
+const SajatosNevelesiIgenyuTanulokAranyaPage = lazy(() =>
+  import("../pages/SajatosNevelesiIgenyuTanulokAranya.jsx")
+);
+const HatanyosHelyzetuTanulokAranyaPage = lazy(() =>
+  import("../pages/HatanyosHelyzetuTanulokAranya.jsx")
+);
+const IntezményiNevelesiMutatokPage = lazy(() =>
+  import("../pages/IntezményiNevelesiMutatok.jsx")
+);
+const SzakképzésiMunkaszerződésArányPage = lazy(() =>
+  import("../pages/SzakképzésiMunkaszerződésArány.jsx")
+);
 const OktatoPerDiak = lazy(() => import("../pages/tables/Oktatoperdiak.jsx"));
 const FelvettekPage = lazy(() => import("../pages/tables/FelvettekSzama.jsx"));
 export default function Router() {
@@ -256,6 +274,66 @@ export default function Router() {
                 <TableProtectedRoute>
                   <Navigation>
                     <ElegedettsegMeresEredmenyeiPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/muhelyiskolai-reszszakmat"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <MuhelyiskolaiReszszakmatPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/dobbanto-program-aranya"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <DobbantoProgramAranyaPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/sajatos-nevelesi-igenyu-tanulok-aranya"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <SajatosNevelesiIgenyuTanulokAranyaPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/hatranyos-helyezu-tanulok-aranya"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <HatanyosHelyzetuTanulokAranyaPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/intezmenyi-nevelesi-mutatok"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <IntezményiNevelesiMutatokPage />
+                  </Navigation>
+                </TableProtectedRoute>
+              }
+            />
+            <Route
+              path="/szakkepzesi-munkaszerződes-arany"
+              element={
+                <TableProtectedRoute>
+                  <Navigation>
+                    <SzakképzésiMunkaszerződésArányPage />
                   </Navigation>
                 </TableProtectedRoute>
               }

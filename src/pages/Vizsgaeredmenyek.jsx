@@ -18,9 +18,10 @@ import {
   Chip,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import { generateSchoolYears } from "../utils/schoolYears";
 
 export default function Vizsgaeredmenyek() {
-  const schoolYears = ["2020/2021", "2021/2022", "2022/2023", "2023/2024"];
+  const schoolYears = generateSchoolYears();
 
   const examCategories = [
     {

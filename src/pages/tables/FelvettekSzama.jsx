@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -9,6 +9,7 @@ import Paper from "@mui/material/Paper";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
+import { generateSchoolYears } from "../../utils/schoolYears";
 
 const szakmak = [
   { nev: "magasépítő technikus (A)" },
@@ -18,7 +19,7 @@ const szakmak = [
   { nev: "festő, mázoló, tapétázó (c)" },
 ];
 
-const evszamok = ["2020/2021", "2021/2022", "2022/2023", "2023/2024"];
+const evszamok = generateSchoolYears();
 
 const FelvettekSzama = () => {
   const [value, setValue] = useState("1");
@@ -30,9 +31,18 @@ const FelvettekSzama = () => {
         [szakma.nev]: evszamok.reduce((a, ev) => ({ ...a, [ev]: "" }), {}),
       }),
       {
-        "technikum+szakképző iskola": evszamok.reduce((a, ev) => ({ ...a, [ev]: "" }), {}),
-        "ebből: technikum": evszamok.reduce((a, ev) => ({ ...a, [ev]: "" }), {}),
-        "ebből: szakképző iskola": evszamok.reduce((a, ev) => ({ ...a, [ev]: "" }), {}),
+        "technikum+szakképző iskola": evszamok.reduce(
+          (a, ev) => ({ ...a, [ev]: "" }),
+          {}
+        ),
+        "ebből: technikum": evszamok.reduce(
+          (a, ev) => ({ ...a, [ev]: "" }),
+          {}
+        ),
+        "ebből: szakképző iskola": evszamok.reduce(
+          (a, ev) => ({ ...a, [ev]: "" }),
+          {}
+        ),
       }
     )
   );
@@ -192,14 +202,22 @@ const FelvettekSzama = () => {
                 {evszamok.map((ev) => (
                   <TableCell
                     key={ev}
-                    onClick={() => handleCellClick("technikum+szakképző iskola", ev)}
-                    sx={{ cursor: "pointer", '&:hover': { backgroundColor: '#f5f5f5' } }}
+                    onClick={() =>
+                      handleCellClick("technikum+szakképző iskola", ev)
+                    }
+                    sx={{
+                      cursor: "pointer",
+                      "&:hover": { backgroundColor: "#f5f5f5" },
+                    }}
                   >
-                    {editingCell.row === "technikum+szakképző iskola" && editingCell.ev === ev ? (
+                    {editingCell.row === "technikum+szakképző iskola" &&
+                    editingCell.ev === ev ? (
                       <input
                         type="number"
                         value={letszam["technikum+szakképző iskola"][ev]}
-                        onChange={(e) => handleInputChange("technikum+szakképző iskola", ev, e)}
+                        onChange={(e) =>
+                          handleInputChange("technikum+szakképző iskola", ev, e)
+                        }
                         onBlur={handleBlur}
                         onKeyPress={handleKeyPress}
                         autoFocus
@@ -220,13 +238,19 @@ const FelvettekSzama = () => {
                   <TableCell
                     key={ev}
                     onClick={() => handleCellClick("ebből: technikum", ev)}
-                    sx={{ cursor: "pointer", '&:hover': { backgroundColor: '#f5f5f5' } }}
+                    sx={{
+                      cursor: "pointer",
+                      "&:hover": { backgroundColor: "#f5f5f5" },
+                    }}
                   >
-                    {editingCell.row === "ebből: technikum" && editingCell.ev === ev ? (
+                    {editingCell.row === "ebből: technikum" &&
+                    editingCell.ev === ev ? (
                       <input
                         type="number"
                         value={letszam["ebből: technikum"][ev]}
-                        onChange={(e) => handleInputChange("ebből: technikum", ev, e)}
+                        onChange={(e) =>
+                          handleInputChange("ebből: technikum", ev, e)
+                        }
                         onBlur={handleBlur}
                         onKeyPress={handleKeyPress}
                         autoFocus
@@ -246,14 +270,22 @@ const FelvettekSzama = () => {
                 {evszamok.map((ev) => (
                   <TableCell
                     key={ev}
-                    onClick={() => handleCellClick("ebből: szakképző iskola", ev)}
-                    sx={{ cursor: "pointer", '&:hover': { backgroundColor: '#f5f5f5' } }}
+                    onClick={() =>
+                      handleCellClick("ebből: szakképző iskola", ev)
+                    }
+                    sx={{
+                      cursor: "pointer",
+                      "&:hover": { backgroundColor: "#f5f5f5" },
+                    }}
                   >
-                    {editingCell.row === "ebből: szakképző iskola" && editingCell.ev === ev ? (
+                    {editingCell.row === "ebből: szakképző iskola" &&
+                    editingCell.ev === ev ? (
                       <input
                         type="number"
                         value={letszam["ebből: szakképző iskola"][ev]}
-                        onChange={(e) => handleInputChange("ebből: szakképző iskola", ev, e)}
+                        onChange={(e) =>
+                          handleInputChange("ebből: szakképző iskola", ev, e)
+                        }
                         onBlur={handleBlur}
                         onKeyPress={handleKeyPress}
                         autoFocus
@@ -275,9 +307,13 @@ const FelvettekSzama = () => {
                     <TableCell
                       key={ev}
                       onClick={() => handleCellClick(szakma.nev, ev)}
-                      sx={{ cursor: "pointer", '&:hover': { backgroundColor: '#f5f5f5' } }}
+                      sx={{
+                        cursor: "pointer",
+                        "&:hover": { backgroundColor: "#f5f5f5" },
+                      }}
                     >
-                      {editingCell.row === szakma.nev && editingCell.ev === ev ? (
+                      {editingCell.row === szakma.nev &&
+                      editingCell.ev === ev ? (
                         <input
                           type="number"
                           value={letszam[szakma.nev][ev]}

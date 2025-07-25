@@ -14,6 +14,12 @@ const tableKeyValues = {
   intezmenyi_elismeresek: "Intézményi elismerések",
   szakmai_bemutatok_konferenciak: "Szakmai bemutatók, konferenciák",
   elegedettseg_meres_eredmenyei: "Elégedettség mérés eredményei",
+  muhelyiskolai_reszszakmat: "Műhelyiskolai részszakmat",
+  dobbanto_program_aranya: "Dobbantó program aránya",
+  sajatos_nevelesi_igenyu_tanulok_aranya: "SNI tanulók aránya",
+  hatranyos_helyetu_tanulok_aranya: "HH tanulók aránya",
+  intezmenyi_nevelesi_mutatok: "Intézményi nevelési mutatók",
+  szakkepzesi_munkaszerződes_arany: "Szakképzési munkaszerződés aránya",
 };
 
 export const getTableName = (tableKey) => {
@@ -45,6 +51,12 @@ const routeToTableMapping = {
   "/nszfh-meresek": "nszfh_meresek",
   "/szakmai-eredmenyek": "szakmai_eredmenyek",
   "/elhelyezkedesi-mutato": "elhelyezkedesi_mutato",
+  "/dobbanto-program-aranya": "dobbanto_program_aranya",
+  "/sajatos-nevelesi-igenyu-tanulok-aranya":
+    "sajatos_nevelesi_igenyu_tanulok_aranya",
+  "/hatranyos-helyezu-tanulok-aranya": "hatranyos_helyetu_tanulok_aranya",
+  "/intezmenyi-nevelesi-mutatok": "intezmenyi_nevelesi_mutatok",
+  "/szakkepzesi-munkaszerződes-arany": "szakkepzesi_munkaszerződes_arany",
 };
 
 export const getTableNameFromRoute = (route) => {

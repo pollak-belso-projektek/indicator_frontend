@@ -32,6 +32,7 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
+import { generateSchoolYears } from "../utils/schoolYears";
 
 export default function SzakmaiEredmenyek() {
   // Predefined competition categories and names
@@ -60,7 +61,7 @@ export default function SzakmaiEredmenyek() {
     "Hazai, vármegyei sportversenyek": [],
   };
 
-  const schoolYears = ["2020/2021", "2021/2022"];
+  const schoolYears = generateSchoolYears();
   const placementTypes = [
     { key: "1_helyezes", label: "1. helyezés", color: "#FFD700" },
     { key: "1-3_helyezes", label: "1-3. helyezés", color: "#C0C0C0" },

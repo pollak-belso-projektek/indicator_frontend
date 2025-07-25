@@ -18,28 +18,38 @@ import {
   Divider,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import { generateSchoolYears } from "../utils/schoolYears";
 
 export default function Felnottkepzes() {
+  const years = generateSchoolYears();
+
+  // Initialize data objects with dynamic years
+  const initializeYearData = (defaultValue = 0) => {
+    const data = {};
+    years.forEach((year) => {
+      data[year] = defaultValue;
+    });
+    return data;
+  };
+
   // First table data (read-only) - calculated percentages
-  const [felnottkepzesiArany, setFelnottkepzesiArany] = useState({
-    "2020/2021": 75,
-    "2021/2022": 0,
-    "2022/2023": 0,
-    "2023/2024": 0,
+  const [felnottkepzesiArany, setFelnottkepzesiArany] = useState(() => {
+    const data = initializeYearData(0);
+    // Set some example data for the first year
+    data[years[3]] = 75; // oldest year gets some data
+    return data;
   });
 
   // Second table data (editable) - absolute numbers
-  const [szakmaiOktatás, setSzakmaiOktatás] = useState({
-    "2020/2021": 1000,
-    "2021/2022": 0,
-    "2022/2023": 0,
-    "2023/2024": 0,
+  const [szakmaiOktatás, setSzakmaiOktatás] = useState(() => {
+    const data = initializeYearData(0);
+    // Set some example data for the first year
+    data[years[3]] = 1000; // oldest year gets some data
+    return data;
   });
 
   const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
-
-  const years = ["2020/2021", "2021/2022", "2022/2023", "2023/2024"];
 
   // Handle changes in the editable table
   const handleSzakmaiOktatásChange = (year, value) => {
