@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Card,
@@ -16,19 +16,37 @@ import {
   Stack,
   Alert,
   Chip,
+  CircularProgress,
 } from "@mui/material";
 import {
   Save as SaveIcon,
   Refresh as RefreshIcon,
   Calculate as CalculateIcon,
 } from "@mui/icons-material";
+import {
+  useGetAllSajatosNevelesuTanulokQuery,
+  useAddSajatosNevelesuTanulokMutation,
+  useUpdateSajatosNevelesuTanulokMutation,
+} from "../store/api/apiSlice";
 
 export default function SajatosNevelesiIgenyuTanulokAranya() {
   const schoolYears = ["2021/2022.", "2022/2023.", "2023/2024.", "2024/2025."];
   const schoolTypes = ["összesen", "technikum+szakképző iskola"];
 
-  // Data structure for the three main sections
-  const [sniData, setSniData] = useState(() => {
+  // API hooks
+  const {
+    data: apiSniData,
+    error: fetchError,
+    isLoading: isFetching,
+  } = useGetAllSajatosNevelesuTanulokQuery();
+
+  const [addSajatosNevelesuTanulok, { isLoading: isAdding }] =
+    useAddSajatosNevelesuTanulokMutation();
+  const [updateSajatosNevelesuTanulok, { isLoading: isUpdating }] =
+    useUpdateSajatosNevelesuTanulokMutation();
+
+  // Initialize data structure
+  const initializeData = () => {
     const initialData = {
       percentage_overall: {},
       sni_students: {},
@@ -46,10 +64,40 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
     });
 
     return initialData;
-  });
+  };
 
+  // Data structure for the three main sections
+  const [sniData, setSniData] = useState(initializeData);
   const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
+
+  // Load data from API when component mounts or data changes
+  useEffect(() => {
+    if (apiSniData && Array.isArray(apiSniData) && apiSniData.length > 0) {
+      // Transform API data to match frontend structure
+      const transformedData = initializeData();
+
+      apiSniData.forEach((item) => {
+        const year = item.tanev_kezdete || "2024/2025.";
+        const type = item.intezmenytipus || "összesen";
+
+        if (
+          transformedData.sni_students[type] &&
+          transformedData.sni_students[type][year] !== undefined
+        ) {
+          transformedData.sni_students[type][year] =
+            item.sni_tanulok_szama?.toString() || "0";
+          transformedData.total_students[type][year] =
+            item.teljes_tanuloi_letszam?.toString() || "0";
+          transformedData.percentage_overall[type][year] =
+            item.arany?.toString() || "0";
+        }
+      });
+
+      setSniData(transformedData);
+      setSavedData(JSON.parse(JSON.stringify(transformedData)));
+    }
+  }, [apiSniData]);
 
   // Handle data changes
   const handleDataChange = (section, type, year, value) => {
@@ -77,10 +125,54 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
     }
   };
 
-  const handleSave = () => {
-    setSavedData(JSON.parse(JSON.stringify(sniData)));
-    setIsModified(false);
-    console.log("Saving SNI students data:", sniData);
+  const handleSave = async () => {
+    try {
+      // Prepare data for API submission
+      const dataToSave = [];
+
+      schoolTypes.forEach((type) => {
+        schoolYears.forEach((year) => {
+          if (sniData.sni_students[type] && sniData.sni_students[type][year]) {
+            const recordData = {
+              tanev_kezdete: year,
+              intezmenytipus: type,
+              sni_tanulok_szama:
+                parseInt(sniData.sni_students[type][year]) || 0,
+              teljes_tanuloi_letszam:
+                parseInt(sniData.total_students[type][year]) || 0,
+              arany: parseFloat(sniData.percentage_overall[type][year]) || 0,
+            };
+            dataToSave.push(recordData);
+          }
+        });
+      });
+
+      // Send data to API
+      for (const record of dataToSave) {
+        // Try to find existing record by year and type
+        const existingRecord = apiSniData?.find(
+          (item) =>
+            item.tanev_kezdete === record.tanev_kezdete &&
+            item.intezmenytipus === record.intezmenytipus
+        );
+
+        if (existingRecord) {
+          await updateSajatosNevelesuTanulok({
+            id: existingRecord.id,
+            ...record,
+          }).unwrap();
+        } else {
+          await addSajatosNevelesuTanulok(record).unwrap();
+        }
+      }
+
+      setSavedData(JSON.parse(JSON.stringify(sniData)));
+      setIsModified(false);
+      console.log("Successfully saved SNI students data");
+    } catch (error) {
+      console.error("Error saving SNI students data:", error);
+      // You can add a toast notification here
+    }
   };
 
   const handleReset = () => {
@@ -92,6 +184,26 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
   return (
     <Box sx={{ p: 3 }}>
+      {/* Loading State */}
+      {isFetching && (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="200px"
+        >
+          <CircularProgress />
+        </Box>
+      )}
+
+      {/* Error State */}
+      {fetchError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Hiba történt az adatok betöltése során:{" "}
+          {fetchError.message || "Ismeretlen hiba"}
+        </Alert>
+      )}
+
       <Typography variant="h4" component="h1" gutterBottom>
         Sajátos nevelési igényű tanulók aránya a teljes tanulói létszámhoz
         viszonyítva
@@ -499,15 +611,15 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           variant="contained"
           startIcon={<SaveIcon />}
           onClick={handleSave}
-          disabled={!isModified}
+          disabled={!isModified || isAdding || isUpdating}
         >
-          Mentés
+          {isAdding || isUpdating ? "Mentés..." : "Mentés"}
         </Button>
         <Button
           variant="outlined"
           startIcon={<RefreshIcon />}
           onClick={handleReset}
-          disabled={!isModified || !savedData}
+          disabled={!isModified || !savedData || isAdding || isUpdating}
         >
           Visszaállítás
         </Button>

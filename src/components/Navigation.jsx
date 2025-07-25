@@ -31,9 +31,9 @@ import {
   MdWork,
 } from "react-icons/md";
 
-import { ColorModeButton, useColorModeValue } from "./ui/color-mode";
-import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useColorModeValue } from "./ui/color-mode";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   useGetAllAlapadatokQuery,
@@ -321,9 +321,11 @@ const getOrganizedAccessibleItems = (tableAccess, userPermissions) => {
 };
 
 const SidebarContent = ({ onClose, ...rest }) => {
+  const location = useLocation();
   const [itemSearch, setItemSearch] = useState("");
   const [expandedCategories, setExpandedCategories] = useState({
     GENERAL: true, // Keep general expanded by default
+    FIXED_GENERAL: true, // Keep fixed general expanded by default
   });
 
   const tableAccess = useSelector(selectUserTableAccess);
@@ -335,30 +337,80 @@ const SidebarContent = ({ onClose, ...rest }) => {
     userPermissions
   );
 
+  // Separate fixed items (first 5) and scrollable items - memoized to prevent infinite re-renders
+  const fixedItems = useMemo(() => {
+    return accessibleNavItems.filter(
+      (item) =>
+        item.link === "/dashboard" ||
+        item.link === "/alapadatok" ||
+        item.link === "/adat-import" ||
+        item.link === "/schools" ||
+        item.link === "/users"
+    );
+  }, [accessibleNavItems]);
+
   // Get organized categories
   const organizedCategories = getOrganizedAccessibleItems(
     tableAccess,
     userPermissions
   );
 
-  // Separate fixed items (first 3) and scrollable items
-  const fixedItems = accessibleNavItems.filter(
-    (item) =>
-      item.link === "/dashboard" ||
-      item.link === "/alapadatok" ||
-      item.link === "/adat-import" ||
-      item.link === "/schools" ||
-      item.link === "/users"
-  );
+  // Find which category contains the current active page and expand it
+  useEffect(() => {
+    const currentPath = location.pathname;
+    let activeCategoryKey = null;
 
-  const scrollableItems = accessibleNavItems.filter(
-    (item) =>
-      item.link !== "/dashboard" &&
-      item.link !== "/alapadatok" &&
-      item.link !== "/adat-import" &&
-      item.link !== "/schools" &&
-      item.link !== "/users"
-  );
+    // Check if current path is in fixed items
+    const isInFixedItems = fixedItems.some((item) => item.link === currentPath);
+    if (isInFixedItems) {
+      setExpandedCategories((prev) => ({
+        ...prev,
+        FIXED_GENERAL: true,
+      }));
+      return;
+    }
+
+    // Find the category that contains the current path
+    Object.entries(NavigationCategories).forEach(([categoryKey, category]) => {
+      const hasActiveItem = category.items.some(
+        (item) => item.link === currentPath
+      );
+      if (hasActiveItem) {
+        activeCategoryKey = categoryKey;
+      }
+    });
+
+    // If we found an active category, expand it
+    if (activeCategoryKey) {
+      setExpandedCategories((prev) => ({
+        ...prev,
+        [activeCategoryKey]: true,
+      }));
+    }
+  }, [location.pathname, fixedItems]);
+
+  // Helper function to check if a category contains the active page
+  const isCategoryActive = (categoryKey) => {
+    const category = NavigationCategories[categoryKey];
+    if (!category) return false;
+    return category.items.some((item) => item.link === location.pathname);
+  };
+
+  // Helper function to check if fixed general category is active
+  const isFixedGeneralActive = () => {
+    return fixedItems.some((item) => item.link === location.pathname);
+  };
+
+  const scrollableItems = useMemo(() => {
+    return accessibleNavItems.filter(
+      (item) =>
+        item.link !== "/dashboard" &&
+        item.link !== "/alapadatok" &&
+        item.link !== "/adat-import" &&
+        item.link !== "/schools" &&
+        item.link !== "/users"
+    );
+  }, [accessibleNavItems]);
 
   // Filter scrollable items based on search
   const filteredScrollableItems = scrollableItems.filter((item) =>
@@ -425,18 +477,74 @@ const SidebarContent = ({ onClose, ...rest }) => {
           />
         </VStack>
 
-        {/* Fixed Navigation Items */}
-        {fixedItems.map((link) => (
-          <NavItem
-            key={link.name}
-            icon={link.icon}
-            as={Link}
-            to={link.link}
-            onClick={() => onClose()}
+        {/* Fixed Navigation Items - Collapsible */}
+        <Box mb="2">
+          {/* Fixed Category Header */}
+          <Flex
+            align="center"
+            p="2"
+            mx="4"
+            borderRadius="lg"
+            cursor="pointer"
+            bg={
+              isFixedGeneralActive()
+                ? "cyan.100"
+                : useColorModeValue("gray.50", "gray.700")
+            }
+            _hover={{
+              bg: isFixedGeneralActive()
+                ? "cyan.200"
+                : useColorModeValue("gray.100", "gray.600"),
+            }}
+            onClick={() => toggleCategory("FIXED_GENERAL")}
           >
-            {link.name}
-          </NavItem>
-        ))}
+            <Icon
+              as={MdHome}
+              mr="2"
+              fontSize="16"
+              color={isFixedGeneralActive() ? "cyan.600" : undefined}
+            />
+            <Text
+              fontSize="sm"
+              fontWeight={isFixedGeneralActive() ? "bold" : "medium"}
+              flex="1"
+              color={isFixedGeneralActive() ? "cyan.700" : undefined}
+            >
+              Általános
+            </Text>
+            <Icon
+              as={FiChevronDown}
+              fontSize="12"
+              transform={
+                expandedCategories["FIXED_GENERAL"]
+                  ? "rotate(0deg)"
+                  : "rotate(-90deg)"
+              }
+              transition="transform 0.2s"
+            />
+          </Flex>
+
+          {/* Fixed Category Items */}
+          {expandedCategories["FIXED_GENERAL"] && (
+            <Box overflow="hidden" transition="all 0.2s ease-in-out">
+              <VStack align="stretch" spacing="0" mt="1">
+                {fixedItems.map((link) => (
+                  <NavItem
+                    key={link.name}
+                    icon={link.icon}
+                    as={Link}
+                    to={link.link}
+                    onClick={() => onClose()}
+                    pl="8"
+                    fontSize="sm"
+                  >
+                    {link.name}
+                  </NavItem>
+                ))}
+              </VStack>
+            </Box>
+          )}
+        </Box>
 
         {/* Separator if there are scrollable items */}
         {filteredScrollableItems.length > 0 && (
@@ -484,14 +592,36 @@ const SidebarContent = ({ onClose, ...rest }) => {
                     mx="4"
                     borderRadius="lg"
                     cursor="pointer"
-                    bg={useColorModeValue("gray.50", "gray.700")}
+                    bg={
+                      isCategoryActive(categoryKey)
+                        ? "cyan.100"
+                        : useColorModeValue("gray.50", "gray.700")
+                    }
                     _hover={{
-                      bg: useColorModeValue("gray.100", "gray.600"),
+                      bg: isCategoryActive(categoryKey)
+                        ? "cyan.200"
+                        : useColorModeValue("gray.100", "gray.600"),
                     }}
                     onClick={() => toggleCategory(categoryKey)}
                   >
-                    <Icon as={category.icon} mr="2" fontSize="16" />
-                    <Text fontSize="sm" fontWeight="medium" flex="1">
+                    <Icon
+                      as={category.icon}
+                      mr="2"
+                      fontSize="16"
+                      color={
+                        isCategoryActive(categoryKey) ? "cyan.600" : undefined
+                      }
+                    />
+                    <Text
+                      fontSize="sm"
+                      fontWeight={
+                        isCategoryActive(categoryKey) ? "bold" : "medium"
+                      }
+                      flex="1"
+                      color={
+                        isCategoryActive(categoryKey) ? "cyan.700" : undefined
+                      }
+                    >
                       {category.name}
                     </Text>
                     <Icon
@@ -569,6 +699,11 @@ const SidebarContent = ({ onClose, ...rest }) => {
 };
 
 const NavItem = ({ icon, children, onClick, ...rest }) => {
+  const location = useLocation();
+  // Extract the 'to' prop from rest to check if it's active
+  const { to, ...otherProps } = rest;
+  const isActive = to && location.pathname === to;
+
   // Handle both the navigation and onClick (for mobile closing)
   const handleClick = (e) => {
     if (onClick) onClick(e);
@@ -588,8 +723,11 @@ const NavItem = ({ icon, children, onClick, ...rest }) => {
         bg: "cyan.400",
         color: "white",
       }}
+      bg={isActive ? "cyan.500" : undefined}
+      color={isActive ? "white" : undefined}
       onClick={handleClick}
-      {...rest}
+      to={to} // Pass the 'to' prop back for Link
+      {...otherProps}
     >
       {icon && (
         <Icon
@@ -598,6 +736,7 @@ const NavItem = ({ icon, children, onClick, ...rest }) => {
           _groupHover={{
             color: "white",
           }}
+          color={isActive ? "white" : undefined}
           as={icon}
         />
       )}
@@ -674,7 +813,6 @@ const MobileNav = ({ onOpen, ...rest }) => {
 
       <Box flex="1" flexGrow={1} justifyContent="center">
         <HStack spacing={2} alignItems="center">
-          <ColorModeButton />
           <FormControl variant="outlined" size="small" width="200px">
             <Select
               value={selectedSchool?.id?.toString() || ""}

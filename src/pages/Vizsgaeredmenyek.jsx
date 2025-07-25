@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Card,
@@ -16,11 +16,27 @@ import {
   Stack,
   Alert,
   Chip,
+  CircularProgress,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
+import {
+  useGetAllVizsgaeredmenyekQuery,
+  useAddVizsgaeredmenyekMutation,
+  useUpdateVizsgaeredmenyekMutation,
+} from "../store/api/apiSlice";
 
 export default function Vizsgaeredmenyek() {
+  // API hooks
+  const {
+    data: apiData,
+    isLoading,
+    error,
+    refetch,
+  } = useGetAllVizsgaeredmenyekQuery();
+  const [addVizsgaeredmenyek] = useAddVizsgaeredmenyekMutation();
+  const [updateVizsgaeredmenyek] = useUpdateVizsgaeredmenyekMutation();
+
   const schoolYears = generateSchoolYears();
 
   const examCategories = [
@@ -138,6 +154,45 @@ export default function Vizsgaeredmenyek() {
 
   const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Load data from API when component mounts or API data changes
+  useEffect(() => {
+    if (apiData && Array.isArray(apiData)) {
+      const transformedData = {};
+
+      // Initialize structure
+      examCategories.forEach((category) => {
+        transformedData[category.category] = {};
+        category.subjects.forEach((subject) => {
+          transformedData[category.category][subject.key] = {};
+          schoolYears.forEach((year) => {
+            transformedData[category.category][subject.key][year] = "0";
+          });
+        });
+      });
+
+      // Transform API data to match frontend structure
+      apiData.forEach((item) => {
+        const year = item.tanev_kezdete?.toString();
+        if (year && transformedData[item.category_type]) {
+          const categoryKey = item.category_type;
+          const subjectKey = item.subject_key;
+          if (
+            transformedData[categoryKey] &&
+            transformedData[categoryKey][subjectKey]
+          ) {
+            transformedData[categoryKey][subjectKey][year] =
+              item.result_value?.toString() || "0";
+          }
+        }
+      });
+
+      setExamData(transformedData);
+      setSavedData(JSON.parse(JSON.stringify(transformedData)));
+      setIsModified(false);
+    }
+  }, [apiData]);
 
   // Handle data changes
   const handleDataChange = (category, subject, year, value) => {
@@ -154,10 +209,53 @@ export default function Vizsgaeredmenyek() {
     setIsModified(true);
   };
 
-  const handleSave = () => {
-    setSavedData(JSON.parse(JSON.stringify(examData)));
-    setIsModified(false);
-    console.log("Saving exam data:", examData);
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      // Transform frontend data to API format
+      const dataToSave = [];
+
+      Object.keys(examData).forEach((categoryKey) => {
+        Object.keys(examData[categoryKey]).forEach((subjectKey) => {
+          Object.keys(examData[categoryKey][subjectKey]).forEach((year) => {
+            const value = examData[categoryKey][subjectKey][year];
+            if (value && value !== "0") {
+              dataToSave.push({
+                tanev_kezdete: parseInt(year),
+                category_type: categoryKey,
+                subject_key: subjectKey,
+                result_value: parseFloat(value) || 0,
+              });
+            }
+          });
+        });
+      });
+
+      // Check if this is an update or create operation
+      if (apiData && apiData.length > 0) {
+        // Update operation - send all data as update
+        for (const item of dataToSave) {
+          await updateVizsgaeredmenyek({
+            id: item.tanev_kezdete, // Use year as ID for now
+            ...item,
+          }).unwrap();
+        }
+      } else {
+        // Create operation - send all data as new entries
+        for (const item of dataToSave) {
+          await addVizsgaeredmenyek(item).unwrap();
+        }
+      }
+
+      setSavedData(JSON.parse(JSON.stringify(examData)));
+      setIsModified(false);
+      console.log("Exam data saved successfully");
+    } catch (error) {
+      console.error("Error saving exam data:", error);
+      // You might want to show an error message to the user here
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleReset = () => {
@@ -179,220 +277,226 @@ export default function Vizsgaeredmenyek() {
         felnőttképzési jogviszonyban.
       </Typography>
 
-      {/* Instructions Card */}
-      <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Figyelem!
-          </Typography>
-          <Typography variant="body2" color="text.primary">
-            Kérzel..., de az ágazatokat (szakmákat?) fel kellene kínálni a
-            tanulós export alapján.
-          </Typography>
-          <Box
-            sx={{
-              mt: 3,
-              p: 2,
-              backgroundColor: "#f0f8ff",
-              borderRadius: 1,
-              border: "2px solid #4dabf7",
-            }}
-          >
-            <Typography variant="body2" sx={{ fontStyle: "italic" }}>
-              <strong>Rendszerüzenet:</strong> Az ágazatok és szakmák
-              automatikusan feltöltődnek a Kréta rendszerből importált adatok
-              alapján.
-            </Typography>
-          </Box>
-        </CardContent>
-      </Card>
+      {/* Loading State */}
+      {isLoading && (
+        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
 
-      {/* Examples Card */}
-      <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Példa értékek:
-          </Typography>
-          <Box component="ul" sx={{ pl: 3, mb: 2 }}>
-            <li>
-              <Typography variant="body2">
-                <strong>Matematika érettségi tantárgyi átlaga:</strong> 3,5
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>
-                  Szakács szakmában végzettek eredményeinek átlaga:
-                </strong>{" "}
-                3,8
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>
-                  Turizmus-vendéglátás ágazatban ágazati alapvizsgát tett
-                  tanulók eredményének átlaga:
-                </strong>{" "}
-                4,2
-              </Typography>
-            </li>
-          </Box>
-          <Typography variant="body2" sx={{ fontStyle: "italic" }}>
-            <strong>Megjegyzés:</strong> Egy adott tanév vizsgájának
-            átlageredményei nem elegendőek az intézmény folyó tevékenység
-            értékeléséhez, ezért ajánlott az átlagok trendvizsgálata.
-          </Typography>
-        </CardContent>
-      </Card>
+      {/* Error State */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Hiba történt az adatok betöltése során: {error.message}
+        </Alert>
+      )}
 
-      {/* Main Data Tables */}
-      {examCategories.map((categoryData, categoryIndex) => (
-        <Card key={categoryData.category} sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography
-              variant="h6"
-              component="h2"
-              gutterBottom
-              sx={{
-                textTransform: "capitalize",
-                color: "#1976d2",
-                fontWeight: "bold",
-              }}
-            >
-              {categoryData.title}
-            </Typography>
+      {/* Content - only show when not loading */}
+      {!isLoading && (
+        <>
+          {/* Instructions Card */}
+          <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
+            <CardContent>
+              <Typography variant="h6" component="h3" gutterBottom>
+                Figyelem!
+              </Typography>
+              <Typography variant="body2">
+                Az adatokat százalékos formátumban adja meg (pl. 85.5 a
+                85,5%-hoz). A táblázat automatikusan kiszámolja az átlagokat a
+                megadott értékek alapján.
+              </Typography>
+            </CardContent>
+          </Card>
 
-            <TableContainer
-              component={Paper}
-              variant="outlined"
-              sx={{ overflowX: "auto" }}
-            >
-              <Table size="small">
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: categoryData.color }}>
-                    <TableCell
-                      sx={{
-                        fontWeight: "bold",
-                        verticalAlign: "middle",
-                        minWidth: 250,
-                        textAlign: "center",
-                      }}
-                    >
-                      Szakma / Ágazat
-                    </TableCell>
-                    <TableCell
-                      align="center"
-                      sx={{
-                        fontWeight: "bold",
-                        minWidth: 100,
-                        backgroundColor: "#ffebee",
-                        color: "#d32f2f",
-                      }}
-                    >
-                      Átlag
-                    </TableCell>
-                    {schoolYears.map((year) => (
-                      <TableCell
-                        key={year}
-                        align="center"
-                        sx={{
-                          fontWeight: "bold",
-                          minWidth: 120,
-                          backgroundColor: "#e8f4fd",
-                        }}
-                      >
-                        {year}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {categoryData.subjects.map((subject, index) => (
-                    <TableRow
-                      key={subject.key}
-                      sx={{
-                        backgroundColor: index % 2 === 0 ? "#f9f9f9" : "white",
-                        "&:hover": {
-                          backgroundColor: "#f5f5f5",
-                        },
-                      }}
-                    >
-                      <TableCell
-                        sx={{
-                          fontWeight: "medium",
-                          textAlign: "left",
-                          pl: 2,
-                        }}
-                      >
-                        {subject.label}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{
-                          backgroundColor: "#ffebee",
-                          fontWeight: "bold",
-                          color: "#d32f2f",
-                        }}
-                      >
-                        <Chip
-                          label="Átlag"
-                          size="small"
-                          variant="outlined"
+          {/* Examples Card */}
+          <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
+            <CardContent>
+              <Typography variant="h6" component="h3" gutterBottom>
+                Példa értékek:
+              </Typography>
+              <Box component="ul" sx={{ pl: 3, mb: 2 }}>
+                <li>
+                  <Typography variant="body2">
+                    <strong>Matematika érettségi tantárgyi átlaga:</strong> 3,5
+                  </Typography>
+                </li>
+                <li>
+                  <Typography variant="body2">
+                    <strong>
+                      Szakács szakmában végzettek eredményeinek átlaga:
+                    </strong>{" "}
+                    3,8
+                  </Typography>
+                </li>
+                <li>
+                  <Typography variant="body2">
+                    <strong>
+                      Turizmus-vendéglátás ágazatban ágazati alapvizsgát tett
+                      tanulók eredményének átlaga:
+                    </strong>{" "}
+                    4,2
+                  </Typography>
+                </li>
+              </Box>
+              <Typography variant="body2" sx={{ fontStyle: "italic" }}>
+                <strong>Megjegyzés:</strong> Egy adott tanév vizsgájának
+                átlageredményei nem elegendőek az intézmény folyó tevékenység
+                értékeléséhez, ezért ajánlott az átlagok trendvizsgálata.
+              </Typography>
+            </CardContent>
+          </Card>
+
+          {/* Main Data Tables */}
+          {examCategories.map((categoryData, categoryIndex) => (
+            <Card key={categoryData.category} sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography
+                  variant="h6"
+                  component="h2"
+                  gutterBottom
+                  sx={{
+                    textTransform: "capitalize",
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {categoryData.title}
+                </Typography>
+
+                <TableContainer
+                  component={Paper}
+                  variant="outlined"
+                  sx={{ overflowX: "auto" }}
+                >
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: categoryData.color }}>
+                        <TableCell
                           sx={{
-                            backgroundColor: "white",
-                            borderColor: "#d32f2f",
-                            color: "#d32f2f",
-                            fontSize: "0.75rem",
+                            fontWeight: "bold",
+                            verticalAlign: "middle",
+                            minWidth: 250,
+                            textAlign: "center",
                           }}
-                        />
-                      </TableCell>
-                      {schoolYears.map((year) => (
-                        <TableCell key={year} align="center">
-                          <TextField
-                            type="number"
-                            value={
-                              examData[categoryData.category]?.[subject.key]?.[
-                                year
-                              ] || "0"
-                            }
-                            onChange={(e) =>
-                              handleDataChange(
-                                categoryData.category,
-                                subject.key,
-                                year,
-                                e.target.value
-                              )
-                            }
-                            size="small"
-                            inputProps={{
-                              min: 1,
-                              max: 5,
-                              step: 0.1,
-                              style: { textAlign: "center" },
-                            }}
-                            sx={{ width: "80px" }}
-                            placeholder="1-5"
-                          />
+                        >
+                          Szakma / Ágazat
                         </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{
+                            fontWeight: "bold",
+                            minWidth: 100,
+                            backgroundColor: "#ffebee",
+                            color: "#d32f2f",
+                          }}
+                        >
+                          Átlag
+                        </TableCell>
+                        {schoolYears.map((year) => (
+                          <TableCell
+                            key={year}
+                            align="center"
+                            sx={{
+                              fontWeight: "bold",
+                              minWidth: 120,
+                              backgroundColor: "#e8f4fd",
+                            }}
+                          >
+                            {year}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {categoryData.subjects.map((subject, index) => (
+                        <TableRow
+                          key={subject.key}
+                          sx={{
+                            backgroundColor:
+                              index % 2 === 0 ? "#f9f9f9" : "white",
+                            "&:hover": {
+                              backgroundColor: "#f5f5f5",
+                            },
+                          }}
+                        >
+                          <TableCell
+                            sx={{
+                              fontWeight: "medium",
+                              textAlign: "left",
+                              pl: 2,
+                            }}
+                          >
+                            {subject.label}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            sx={{
+                              backgroundColor: "#ffebee",
+                              fontWeight: "bold",
+                              color: "#d32f2f",
+                            }}
+                          >
+                            <Chip
+                              label="Átlag"
+                              size="small"
+                              variant="outlined"
+                              sx={{
+                                backgroundColor: "white",
+                                borderColor: "#d32f2f",
+                                color: "#d32f2f",
+                                fontSize: "0.75rem",
+                              }}
+                            />
+                          </TableCell>
+                          {schoolYears.map((year) => (
+                            <TableCell key={year} align="center">
+                              <TextField
+                                type="number"
+                                value={
+                                  examData[categoryData.category]?.[
+                                    subject.key
+                                  ]?.[year] || "0"
+                                }
+                                onChange={(e) =>
+                                  handleDataChange(
+                                    categoryData.category,
+                                    subject.key,
+                                    year,
+                                    e.target.value
+                                  )
+                                }
+                                size="small"
+                                inputProps={{
+                                  min: 1,
+                                  max: 5,
+                                  step: 0.1,
+                                  style: { textAlign: "center" },
+                                }}
+                                sx={{ width: "80px" }}
+                                placeholder="1-5"
+                              />
+                            </TableCell>
+                          ))}
+                        </TableRow>
                       ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </CardContent>
-        </Card>
-      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </CardContent>
+            </Card>
+          ))}
+        </>
+      )}
 
       {/* Action Buttons */}
       <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
         <Button
           variant="contained"
-          startIcon={<SaveIcon />}
+          startIcon={isSaving ? <CircularProgress size={20} /> : <SaveIcon />}
           onClick={handleSave}
-          disabled={!isModified}
+          disabled={!isModified || isSaving}
         >
-          Mentés
+          {isSaving ? "Mentés..." : "Mentés"}
         </Button>
         <Button
           variant="outlined"

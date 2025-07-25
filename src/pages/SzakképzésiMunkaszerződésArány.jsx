@@ -237,8 +237,6 @@ export default function SzakképzésiMunkaszerződésArány() {
                             textAlign: "left",
                             backgroundColor: "#f5f5f5",
                             verticalAlign: "middle",
-                            writingMode: "vertical-rl",
-                            textOrientation: "mixed",
                           }}
                         >
                           {institution.category}
