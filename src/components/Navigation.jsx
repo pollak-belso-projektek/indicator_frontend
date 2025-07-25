@@ -29,6 +29,7 @@ import {
   MdPeople,
   MdGavel,
   MdWork,
+  MdClose,
 } from "react-icons/md";
 
 import { useColorModeValue } from "./ui/color-mode";
@@ -50,7 +51,15 @@ import {
 } from "../store/slices/authSlice";
 import { FiChevronDown } from "react-icons/fi";
 import UserRoleBadge from "./UserRoleBadge";
-import { FormControl, Input, MenuItem, Select } from "@mui/material";
+import {
+  FormControl,
+  OutlinedInput,
+  MenuItem,
+  Select,
+  TextField,
+  InputAdornment,
+  IconButton as MuiIconButton,
+} from "@mui/material";
 
 // Organized navigation items with categories
 const NavigationCategories = {
@@ -145,12 +154,6 @@ const NavigationCategories = {
     items: [
       {
         name: "Versenyek",
-        icon: MdStar,
-        link: "/versenyek",
-        tableName: "versenyek",
-      },
-      {
-        name: "Szakmai eredmények",
         icon: MdStar,
         link: "/szakmai-eredmenyek",
         tableName: "szakmai_eredmenyek",
@@ -468,13 +471,30 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
         {/* Search */}
         <VStack align="start" mx="8" my="4">
-          <Input
-            placeholder="Keresés..."
-            value={itemSearch}
-            onChange={(e) => setItemSearch(e.target.value)}
-            size="sm"
-            width="100%"
-          />
+          <Box width="100%">
+            <TextField
+              placeholder="Keresés..."
+              value={itemSearch}
+              onChange={(e) => setItemSearch(e.target.value)}
+              size="small"
+              fullWidth
+              variant="outlined"
+              InputProps={{
+                endAdornment: itemSearch && (
+                  <InputAdornment position="end">
+                    <MuiIconButton
+                      aria-label="Keresés törlése"
+                      onClick={() => setItemSearch("")}
+                      edge="end"
+                      size="small"
+                    >
+                      <MdClose />
+                    </MuiIconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
         </VStack>
 
         {/* Fixed Navigation Items - Collapsible */}
@@ -723,7 +743,7 @@ const NavItem = ({ icon, children, onClick, ...rest }) => {
         bg: "cyan.400",
         color: "white",
       }}
-      bg={isActive ? "cyan.500" : undefined}
+      bg={isActive ? "cyan.400" : undefined}
       color={isActive ? "white" : undefined}
       onClick={handleClick}
       to={to} // Pass the 'to' prop back for Link
@@ -818,7 +838,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
               value={selectedSchool?.id?.toString() || ""}
               onChange={handleChange}
               displayEmpty
-              input={<Input />}
+              input={<OutlinedInput />}
               renderValue={(value) =>
                 value
                   ? schools.items.find((item) => item.value === value)?.label

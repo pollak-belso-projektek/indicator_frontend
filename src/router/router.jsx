@@ -1,14 +1,15 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { Spinner } from "@chakra-ui/react";
 import { useSelector } from "react-redux";
-import Navigation from "../components/Navigation.jsx";
+import NavigationWithLoading from "../components/NavigationWithLoading.jsx";
 import ProtectedRoute from "../components/ProtectedRoute.jsx";
 import TableProtectedRoute from "../components/TableProtectedRoute.jsx";
 import TokenValidationGuard from "../components/TokenValidationGuard.jsx";
 import ProactiveTokenRefresh from "../components/ProactiveTokenRefresh.jsx";
 import { selectIsAuthenticated } from "../store/slices/authSlice";
 import SchoolSelectionIndicator from "../components/SchoolSelectionIndicator.jsx";
+import { LoadingProvider } from "../contexts/LoadingContext.jsx";
+import RouteLoadingSpinner from "../components/RouteLoadingSpinner.jsx";
 
 const LoginPage = lazy(() => import("../pages/Login"));
 const DashboardPage = lazy(() => import("../pages/Dashboard"));
@@ -69,321 +70,312 @@ export default function Router() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   return (
     <BrowserRouter>
-      <TokenValidationGuard>
-        <ProactiveTokenRefresh />
+      <LoadingProvider>
+        <TokenValidationGuard>
+          <ProactiveTokenRefresh />
 
-        <Suspense
-          fallback={
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "90vh",
-              }}
-            >
-              <Spinner size="xl" />
-            </div>
-          }
-        >
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<LoginPage />} />
-            {/* Protected routes */}
-            <Route
-              path="/"
-              element={
-                isAuthenticated ? (
-                  <Navigate to="/dashboard" />
-                ) : (
-                  <Navigate to="/login" />
-                )
-              }
-            />{" "}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Navigation>
-                    <DashboardPage />
-                  </Navigation>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/alapadatok"
-              element={
-                <Navigation>
-                  <AlapadatokPage />
-                </Navigation>
-              }
-            />
-            <Route
-              path="/adat-import"
-              element={
-                <ProtectedRoute>
-                  <Navigation>
-                    <DataImportPage />
-                  </Navigation>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/tanulo_letszam"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <TanuloletszamPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/kompetencia"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <KompetenciaPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/versenyek"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <VersenyekPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/users"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <UsersPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />{" "}
-            <Route
-              path="/schools"
-              element={
-                <ProtectedRoute>
-                  <Navigation>
-                    <SchoolsPage />
-                  </Navigation>
-                </ProtectedRoute>
-              }
-            />{" "}
-            <Route
-              path="/felnottkepzes"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <FelnottkepzesPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/orszagos-kompetenciameres"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <OrszagosKompetenciameresPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/nszfh-meresek"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <NszfhMeresekPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/szakmai-eredmenyek"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <SzakmaiEredmenyekPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/elhelyezkedesi-mutato"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <ElhelyezkedesimMutatoPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/vegzettek-elegedettsege"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <VegzettekElegedettsegePage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/vizsgaeredmenyek"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <VizsgaeredmenyekPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/intezmenyi-elismeresek"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <IntezményiElismeresekPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/szakmai-bemutatok-konferenciak"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <SzakmaiBemutatokKonferenciakPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/elegedettseg-meres-eredmenyei"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <ElegedettsegMeresEredmenyeiPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/muhelyiskolai-reszszakmat"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <MuhelyiskolaiReszszakmatPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/dobbanto-program-aranya"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <DobbantoProgramAranyaPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/sajatos-nevelesi-igenyu-tanulok-aranya"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <SajatosNevelesiIgenyuTanulokAranyaPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/hatranyos-helyezu-tanulok-aranya"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <HatanyosHelyzetuTanulokAranyaPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/intezmenyi-nevelesi-mutatok"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <IntezményiNevelesiMutatokPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/szakkepzesi-munkaszerződes-arany"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <SzakképzésiMunkaszerződésArányPage />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            {/* Additional table routes for future implementation */}
-            <Route
-              path="/tanugyi_adatok"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <div>Tanügyi adatok - Coming Soon</div>
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/felvettek_szama"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <SchoolSelectionIndicator>
-                      <FelvettekPage />
-                    </SchoolSelectionIndicator>
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="/oktato_per_diak"
-              element={
-                <TableProtectedRoute>
-                  <Navigation>
-                    <OktatoPerDiak />
-                  </Navigation>
-                </TableProtectedRoute>
-              }
-            />
-            <Route
-              path="*"
-              element={
-                isAuthenticated ? (
-                  <Navigate to="/dashboard" />
-                ) : (
-                  <Navigate to="/login" />
-                )
-              }
-            />
-          </Routes>
-        </Suspense>
-      </TokenValidationGuard>
+          <Suspense
+            fallback={<RouteLoadingSpinner message="Oldal betöltése..." />}
+          >
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<LoginPage />} />
+              {/* Protected routes */}
+              <Route
+                path="/"
+                element={
+                  isAuthenticated ? (
+                    <Navigate to="/dashboard" />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />{" "}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <NavigationWithLoading>
+                      <DashboardPage />
+                    </NavigationWithLoading>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/alapadatok"
+                element={
+                  <NavigationWithLoading>
+                    <AlapadatokPage />
+                  </NavigationWithLoading>
+                }
+              />
+              <Route
+                path="/adat-import"
+                element={
+                  <ProtectedRoute>
+                    <NavigationWithLoading>
+                      <DataImportPage />
+                    </NavigationWithLoading>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tanulo_letszam"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <TanuloletszamPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/kompetencia"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <KompetenciaPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/versenyek"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <VersenyekPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/users"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <UsersPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />{" "}
+              <Route
+                path="/schools"
+                element={
+                  <ProtectedRoute>
+                    <NavigationWithLoading>
+                      <SchoolsPage />
+                    </NavigationWithLoading>
+                  </ProtectedRoute>
+                }
+              />{" "}
+              <Route
+                path="/felnottkepzes"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <FelnottkepzesPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/orszagos-kompetenciameres"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <OrszagosKompetenciameresPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/nszfh-meresek"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <NszfhMeresekPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/szakmai-eredmenyek"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <SzakmaiEredmenyekPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/elhelyezkedesi-mutato"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <ElhelyezkedesimMutatoPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/vegzettek-elegedettsege"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <VegzettekElegedettsegePage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/vizsgaeredmenyek"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <VizsgaeredmenyekPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/intezmenyi-elismeresek"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <IntezményiElismeresekPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/szakmai-bemutatok-konferenciak"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <SzakmaiBemutatokKonferenciakPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/elegedettseg-meres-eredmenyei"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <ElegedettsegMeresEredmenyeiPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/muhelyiskolai-reszszakmat"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <MuhelyiskolaiReszszakmatPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/dobbanto-program-aranya"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <DobbantoProgramAranyaPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/sajatos-nevelesi-igenyu-tanulok-aranya"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <SajatosNevelesiIgenyuTanulokAranyaPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/hatranyos-helyezu-tanulok-aranya"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <HatanyosHelyzetuTanulokAranyaPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/intezmenyi-nevelesi-mutatok"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <IntezményiNevelesiMutatokPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/szakkepzesi-munkaszerződes-arany"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <SzakképzésiMunkaszerződésArányPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              {/* Additional table routes for future implementation */}
+              <Route
+                path="/tanugyi_adatok"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <div>Tanügyi adatok - Coming Soon</div>
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/felvettek_szama"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <SchoolSelectionIndicator>
+                        <FelvettekPage />
+                      </SchoolSelectionIndicator>
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/oktato_per_diak"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <OktatoPerDiak />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="*"
+                element={
+                  isAuthenticated ? (
+                    <Navigate to="/dashboard" />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />
+            </Routes>
+          </Suspense>
+        </TokenValidationGuard>
+      </LoadingProvider>
     </BrowserRouter>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Card,
@@ -17,8 +17,16 @@ import {
   Alert,
   Chip,
   CircularProgress,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Divider,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import {
+  Save as SaveIcon,
+  Refresh as RefreshIcon,
+  ExpandMore as ExpandMoreIcon,
+} from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import {
   useGetAllElhelyezkedesQuery,
@@ -36,256 +44,142 @@ export default function ElhelyezkedesimMutato() {
     isLoading: isFetching,
   } = useGetAllElhelyezkedesQuery();
 
+  console.log("API Employment Data:", apiEmploymentData);
+  console.log("Fetch Error:", fetchError);
+  console.log("Is Fetching:", isFetching);
+
   const [addElhelyezkedes, { isLoading: isAdding }] =
     useAddElhelyezkedesMutation();
   const [updateElhelyezkedes, { isLoading: isUpdating }] =
     useUpdateElhelyezkedesMutation();
 
-  const institutionTypes = [
-    {
-      key: "technikum_szakkepezo",
-      label: "technikum+szakképző iskola",
-      subTypes: [
-        { key: "ebbol_technikum", label: "ebből: technikum" },
-        { key: "szakmankent_1", label: "szakmánként" },
-        { key: "szakmankent_2", label: "szakmánként" },
-      ],
-    },
-    {
-      key: "szakkepezo_iskola",
-      label: "ebből: szakképző iskola",
-      subTypes: [
-        { key: "szakmankent_3", label: "szakmánként" },
-        { key: "szakmankent_4", label: "szakmánként" },
-        { key: "szakmankent_5", label: "szakmánként" },
-      ],
-    },
-  ];
-
-  const dataCategories = [
-    {
-      key: "szakmai_okatasban_vegzettek_aranya",
-      label: "szakmai oktatásban végzettek elhelyezkedési aránya (%)",
-      color: "#fff2cc",
-    },
-    {
-      key: "elhelyezkedok_szama",
-      label: "elhelyezkedők száma (fő)",
-      color: "#d5e8d4",
-    },
-    {
-      key: "szakmai_okatasban_sikeresen_vegzettek_szama",
-      label: "szakmai oktatásban sikeresen végzettek száma (fő)",
-      color: "#e8f4fd",
-    },
-  ];
-
-  // Initialize data structure
-  const initializeEmploymentData = () => {
-    const initialData = {};
-
-    // Initialize "összesen" row
-    initialData["osszesen"] = {};
-    dataCategories.forEach((category) => {
-      initialData["osszesen"][category.key] = {};
-      schoolYears.forEach((year) => {
-        initialData["osszesen"][category.key][year] = "0";
-      });
-    });
-
-    // Initialize institution type rows
-    institutionTypes.forEach((instType) => {
-      // Main institution type
-      initialData[instType.key] = {};
-      dataCategories.forEach((category) => {
-        initialData[instType.key][category.key] = {};
-        schoolYears.forEach((year) => {
-          initialData[instType.key][category.key][year] = "0";
-        });
-      });
-
-      // Sub types (szakmánként rows)
-      instType.subTypes.forEach((subType) => {
-        initialData[subType.key] = {};
-        dataCategories.forEach((category) => {
-          initialData[subType.key][category.key] = {};
-          schoolYears.forEach((year) => {
-            initialData[subType.key][category.key][year] = "0";
-          });
-        });
-      });
-    });
-
-    return initialData;
-  };
-
-  const [employmentData, setEmploymentData] = useState(
-    initializeEmploymentData
-  );
-  const [savedData, setSavedData] = useState(null);
+  const [employmentData, setEmploymentData] = useState([]);
   const [isModified, setIsModified] = useState(false);
+  const [modifiedIds, setModifiedIds] = useState(new Set());
+
+  // Transform and organize API data
+  const organizedData = useMemo(() => {
+    if (!apiEmploymentData || !Array.isArray(apiEmploymentData)) {
+      return {};
+    }
+
+    const organized = {};
+
+    apiEmploymentData.forEach((item) => {
+      const schoolName = item.alapadatok?.iskola_neve || "Ismeretlen iskola";
+      const szakiranyName = item.szakirany?.nev || "Ismeretlen szakirány";
+      const szakmaName = item.szakma?.nev || "Ismeretlen szakma";
+      const year = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
+
+      if (!organized[schoolName]) {
+        organized[schoolName] = {};
+      }
+      if (!organized[schoolName][szakiranyName]) {
+        organized[schoolName][szakiranyName] = {};
+      }
+      if (!organized[schoolName][szakiranyName][szakmaName]) {
+        organized[schoolName][szakiranyName][szakmaName] = {};
+      }
+
+      organized[schoolName][szakiranyName][szakmaName][year] = {
+        ...item,
+        elhelyezkedesi_arany:
+          item.elhelyezkedok_szama &&
+          item.szakmai_okatatasban_sikeresen_vegzettek_szama
+            ? (
+                (item.elhelyezkedok_szama /
+                  item.szakmai_okatatasban_sikeresen_vegzettek_szama) *
+                100
+              ).toFixed(2)
+            : 0,
+      };
+    });
+
+    return organized;
+  }, [apiEmploymentData]);
 
   // Load data from API when component mounts or data changes
   useEffect(() => {
-    if (
-      apiEmploymentData &&
-      Array.isArray(apiEmploymentData) &&
-      apiEmploymentData.length > 0
-    ) {
-      // Transform API data to match frontend structure
-      const transformedData = initializeEmploymentData();
-
-      apiEmploymentData.forEach((item) => {
-        const year = item.tanev_kezdete || "2024/2025";
-        const rowKey = item.intezmenytipus || "osszesen";
-
-        if (transformedData[rowKey]) {
-          // Map API fields to frontend structure
-          if (item.elhelyezkedesi_arany !== undefined) {
-            transformedData[rowKey]["szakmai_okatasban_vegzettek_aranya"][
-              year
-            ] = item.elhelyezkedesi_arany?.toString() || "0";
-          }
-          if (item.elhelyezkedok_szama !== undefined) {
-            transformedData[rowKey]["elhelyezkedok_szama"][year] =
-              item.elhelyezkedok_szama?.toString() || "0";
-          }
-          if (item.vegzettek_szama !== undefined) {
-            transformedData[rowKey][
-              "szakmai_okatasban_sikeresen_vegzettek_szama"
-            ][year] = item.vegzettek_szama?.toString() || "0";
-          }
-        }
-      });
-
-      setEmploymentData(transformedData);
-      setSavedData(JSON.parse(JSON.stringify(transformedData)));
+    console.log("Loading employment data from API...");
+    console.log("API Employment Data:", apiEmploymentData);
+    if (apiEmploymentData && Array.isArray(apiEmploymentData)) {
+      setEmploymentData(apiEmploymentData);
     }
   }, [apiEmploymentData]);
 
   // Handle data changes
-  const handleDataChange = (rowKey, category, year, value) => {
-    setEmploymentData((prev) => ({
-      ...prev,
-      [rowKey]: {
-        ...prev[rowKey],
-        [category]: {
-          ...prev[rowKey][category],
-          [year]: value,
-        },
-      },
-    }));
+  const handleDataChange = (id, field, value) => {
+    setEmploymentData((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
     setIsModified(true);
+    setModifiedIds((prev) => new Set([...prev, id]));
   };
 
   const handleSave = async () => {
     try {
-      // Prepare data for API submission
-      const dataToSave = [];
+      const itemsToUpdate = employmentData.filter((item) =>
+        modifiedIds.has(item.id)
+      );
 
-      // Get all row keys (osszesen, institution types, and subtypes)
-      const allRowKeys = [
-        "osszesen",
-        ...institutionTypes.flatMap((instType) => [
-          instType.key,
-          ...instType.subTypes.map((sub) => sub.key),
-        ]),
-      ];
-
-      allRowKeys.forEach((rowKey) => {
-        schoolYears.forEach((year) => {
-          if (employmentData[rowKey]) {
-            const recordData = {
-              tanev_kezdete: year,
-              intezmenytipus: rowKey,
-              elhelyezkedesi_arany:
-                parseFloat(
-                  employmentData[rowKey][
-                    "szakmai_okatasban_vegzettek_aranya"
-                  ]?.[year]
-                ) || 0,
-              elhelyezkedok_szama:
-                parseInt(
-                  employmentData[rowKey]["elhelyezkedok_szama"]?.[year]
-                ) || 0,
-              vegzettek_szama:
-                parseInt(
-                  employmentData[rowKey][
-                    "szakmai_okatasban_sikeresen_vegzettek_szama"
-                  ]?.[year]
-                ) || 0,
-            };
-            dataToSave.push(recordData);
-          }
-        });
-      });
-
-      // Send data to API
-      for (const record of dataToSave) {
-        // Try to find existing record by year and institution type
-        const existingRecord = apiEmploymentData?.find(
-          (item) =>
-            item.tanev_kezdete === record.tanev_kezdete &&
-            item.intezmenytipus === record.intezmenytipus
-        );
-
-        if (existingRecord) {
-          await updateElhelyezkedes({
-            id: existingRecord.id,
-            ...record,
-          }).unwrap();
-        } else {
-          await addElhelyezkedes(record).unwrap();
-        }
+      for (const item of itemsToUpdate) {
+        await updateElhelyezkedes({
+          id: item.id,
+          elhelyezkedok_szama: parseInt(item.elhelyezkedok_szama) || 0,
+          szakmai_okatatasban_sikeresen_vegzettek_szama:
+            parseInt(item.szakmai_okatatasban_sikeresen_vegzettek_szama) || 0,
+        }).unwrap();
       }
 
-      setSavedData(JSON.parse(JSON.stringify(employmentData)));
       setIsModified(false);
+      setModifiedIds(new Set());
       console.log("Successfully saved employment data");
     } catch (error) {
       console.error("Error saving employment data:", error);
-      // You can add a toast notification here
     }
   };
 
   const handleReset = () => {
-    if (savedData) {
-      setEmploymentData(JSON.parse(JSON.stringify(savedData)));
+    if (apiEmploymentData) {
+      setEmploymentData([...apiEmploymentData]);
       setIsModified(false);
+      setModifiedIds(new Set());
     }
   };
 
-  // Helper function to get row label
-  const getRowLabel = (rowKey) => {
-    if (rowKey === "osszesen") return "összesen";
+  // Calculate summary statistics
+  const summaryStats = useMemo(() => {
+    const stats = {};
 
-    const instType = institutionTypes.find((type) => type.key === rowKey);
-    if (instType) return instType.label;
-
-    // Check subtypes
-    for (const instType of institutionTypes) {
-      const subType = instType.subTypes.find((sub) => sub.key === rowKey);
-      if (subType) return subType.label;
-    }
-
-    return rowKey;
-  };
-
-  // Get all row keys in order
-  const getAllRowKeys = () => {
-    const rowKeys = ["osszesen"];
-
-    institutionTypes.forEach((instType) => {
-      rowKeys.push(instType.key);
-      instType.subTypes.forEach((subType) => {
-        rowKeys.push(subType.key);
-      });
+    employmentData.forEach((item) => {
+      const year = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
+      if (!stats[year]) {
+        stats[year] = {
+          totalElhelyezkedok: 0,
+          totalVegzettek: 0,
+          count: 0,
+        };
+      }
+      stats[year].totalElhelyezkedok += parseInt(item.elhelyezkedok_szama) || 0;
+      stats[year].totalVegzettek +=
+        parseInt(item.szakmai_okatatasban_sikeresen_vegzettek_szama) || 0;
+      stats[year].count += 1;
     });
 
-    return rowKeys;
-  };
+    // Calculate percentages
+    Object.keys(stats).forEach((year) => {
+      const yearStats = stats[year];
+      yearStats.elhelyezkedesiArany =
+        yearStats.totalVegzettek > 0
+          ? (
+              (yearStats.totalElhelyezkedok / yearStats.totalVegzettek) *
+              100
+            ).toFixed(2)
+          : 0;
+    });
 
-  const allRowKeys = getAllRowKeys();
+    return stats;
+  }, [employmentData]);
 
   return (
     <Box sx={{ p: 3 }}>
@@ -317,6 +211,102 @@ export default function ElhelyezkedesimMutato() {
         A szakmai oktatásban tanulói jogviszonyban sikeresen végzettek
         elhelyezkedési aránya.
       </Typography>
+
+      {/* Debug Information */}
+      <Card sx={{ mb: 3, backgroundColor: "#fff3cd", borderColor: "#ffeaa7" }}>
+        <CardContent>
+          <Typography variant="h6" component="h3" gutterBottom>
+            🔍 Debug információ
+          </Typography>
+          <Typography variant="body2">
+            <strong>API adatok:</strong>{" "}
+            {apiEmploymentData
+              ? `${apiEmploymentData.length} rekord`
+              : "Nincs adat"}
+          </Typography>
+          <Typography variant="body2">
+            <strong>Betöltés folyamatban:</strong> {isFetching ? "Igen" : "Nem"}
+          </Typography>
+          <Typography variant="body2">
+            <strong>Hiba:</strong>{" "}
+            {fetchError
+              ? fetchError.message || "Ismeretlen hiba"
+              : "Nincs hiba"}
+          </Typography>
+          <Typography variant="body2">
+            <strong>Várható évek:</strong> 2024, 2023, 2022, 2021
+          </Typography>
+          {apiEmploymentData && apiEmploymentData.length > 0 && (
+            <Typography variant="body2">
+              <strong>Talált évek:</strong>{" "}
+              {[...new Set(apiEmploymentData.map((item) => item.tanev_kezdete))]
+                .sort()
+                .reverse()
+                .join(", ")}
+            </Typography>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Summary Statistics */}
+      <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
+        <CardContent>
+          <Typography variant="h6" component="h3" gutterBottom>
+            Összesített statisztikák
+          </Typography>
+          {Object.keys(summaryStats).length === 0 ? (
+            <Box sx={{ textAlign: "center", py: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                Nincs statisztikai adat megjelenítésre
+              </Typography>
+            </Box>
+          ) : (
+            <TableContainer component={Paper} variant="outlined">
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                    <TableCell sx={{ fontWeight: "bold" }}>Tanév</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                      Elhelyezkedők száma (fő)
+                    </TableCell>
+                    <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                      Végzettek száma (fő)
+                    </TableCell>
+                    <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                      Elhelyezkedési arány (%)
+                    </TableCell>
+                    <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                      Rekordok száma
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {Object.entries(summaryStats).map(([year, stats]) => (
+                    <TableRow key={year}>
+                      <TableCell sx={{ fontWeight: "medium" }}>
+                        {year}
+                      </TableCell>
+                      <TableCell align="center">
+                        {stats.totalElhelyezkedok}
+                      </TableCell>
+                      <TableCell align="center">
+                        {stats.totalVegzettek}
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ fontWeight: "bold", color: "primary.main" }}
+                      >
+                        {stats.elhelyezkedesiArany}%
+                      </TableCell>
+                      <TableCell align="center">{stats.count}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Instructions Card */}
       <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
@@ -371,147 +361,193 @@ export default function ElhelyezkedesimMutato() {
         </CardContent>
       </Card>
 
-      {/* Main Data Table */}
+      {/* Detailed Data by School, Specialty, and Profession */}
       <Card>
         <CardContent>
           <Typography variant="h6" component="h2" gutterBottom>
-            Elhelyezkedési adatok intézménytípusonként
+            Részletes elhelyezkedési adatok iskolák, szakirányok és szakmák
+            szerint
           </Typography>
 
-          <TableContainer
-            component={Paper}
-            variant="outlined"
-            sx={{ overflowX: "auto" }}
-          >
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                  <TableCell
-                    rowSpan={2}
-                    sx={{
-                      fontWeight: "bold",
-                      verticalAlign: "middle",
-                      minWidth: 200,
-                      textAlign: "center",
-                    }}
-                  >
-                    Intézménytípusonként
-                  </TableCell>
-                  {dataCategories.map((category) => (
-                    <TableCell
-                      key={category.key}
-                      colSpan={schoolYears.length}
-                      align="center"
-                      sx={{
-                        fontWeight: "bold",
-                        minWidth: 300,
-                        backgroundColor: category.color,
-                        fontSize: "0.8rem",
-                      }}
-                    >
-                      {category.label}
-                    </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                  {dataCategories.map((category) =>
-                    schoolYears.map((year) => (
-                      <TableCell
-                        key={`${category.key}-${year}`}
-                        align="center"
-                        sx={{
-                          fontWeight: "bold",
-                          minWidth: 80,
-                          backgroundColor: category.color,
-                          fontSize: "0.75rem",
-                        }}
-                      >
-                        {year}
-                      </TableCell>
-                    ))
-                  )}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {allRowKeys.map((rowKey, index) => {
-                  const isMainRow =
-                    rowKey === "osszesen" ||
-                    institutionTypes.some((type) => type.key === rowKey);
-                  const isSubRow = !isMainRow;
+          {/* Show empty state if no data */}
+          {!apiEmploymentData || apiEmploymentData.length === 0 ? (
+            <Box sx={{ textAlign: "center", py: 4 }}>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                📊 Nincs megjeleníthető adat
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {isFetching
+                  ? "Adatok betöltése folyamatban..."
+                  : "Nincsenek elhelyezkedési adatok a kiválasztott időszakra."}
+              </Typography>
+            </Box>
+          ) : (
+            Object.entries(organizedData).map(([schoolName, schoolData]) => (
+              <Accordion key={schoolName} sx={{ mb: 2 }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                    {schoolName}
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {Object.entries(schoolData).map(
+                    ([szakiranyName, szakiranyData]) => (
+                      <Box key={szakiranyName} sx={{ mb: 3 }}>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{
+                            fontWeight: "bold",
+                            mb: 2,
+                            color: "primary.main",
+                          }}
+                        >
+                          📚 {szakiranyName}
+                        </Typography>
 
-                  return (
-                    <TableRow
-                      key={rowKey}
-                      sx={{
-                        backgroundColor:
-                          rowKey === "osszesen"
-                            ? "#fff2cc"
-                            : isMainRow
-                            ? "#f0f8ff"
-                            : "#f9f9f9",
-                        "&:hover": {
-                          backgroundColor:
-                            rowKey === "osszesen"
-                              ? "#ffe6b3"
-                              : isMainRow
-                              ? "#e6f3ff"
-                              : "#f0f0f0",
-                        },
-                      }}
-                    >
-                      <TableCell
-                        sx={{
-                          fontWeight: isMainRow ? "bold" : "medium",
-                          pl: isSubRow ? 4 : 2,
-                          textAlign: "left",
-                        }}
-                      >
-                        {getRowLabel(rowKey)}
-                      </TableCell>
-                      {dataCategories.map((category) =>
-                        schoolYears.map((year) => (
-                          <TableCell
-                            key={`${category.key}-${year}`}
-                            align="center"
-                            sx={{ backgroundColor: category.color + "40" }}
-                          >
-                            <TextField
-                              type="number"
-                              value={
-                                employmentData[rowKey]?.[category.key]?.[
-                                  year
-                                ] || "0"
-                              }
-                              onChange={(e) =>
-                                handleDataChange(
-                                  rowKey,
-                                  category.key,
-                                  year,
-                                  e.target.value
-                                )
-                              }
-                              size="small"
-                              inputProps={{
-                                min: 0,
-                                max: category.key.includes("aranya")
-                                  ? 100
-                                  : undefined,
-                                step: category.key.includes("aranya")
-                                  ? 0.01
-                                  : 1,
-                                style: { textAlign: "center" },
-                              }}
-                              sx={{ width: "70px" }}
-                            />
-                          </TableCell>
-                        ))
-                      )}
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                        {Object.entries(szakiranyData).map(
+                          ([szakmaName, szakmaData]) => (
+                            <Box key={szakmaName} sx={{ mb: 2, pl: 2 }}>
+                              <Typography
+                                variant="subtitle2"
+                                sx={{ fontWeight: "medium", mb: 1 }}
+                              >
+                                🔧 {szakmaName}
+                              </Typography>
+
+                              <TableContainer
+                                component={Paper}
+                                variant="outlined"
+                                sx={{ mb: 2 }}
+                              >
+                                <Table size="small">
+                                  <TableHead>
+                                    <TableRow
+                                      sx={{ backgroundColor: "#f5f5f5" }}
+                                    >
+                                      <TableCell sx={{ fontWeight: "bold" }}>
+                                        Tanév
+                                      </TableCell>
+                                      <TableCell
+                                        align="center"
+                                        sx={{
+                                          fontWeight: "bold",
+                                          backgroundColor: "#d5e8d4",
+                                        }}
+                                      >
+                                        Elhelyezkedők (fő)
+                                      </TableCell>
+                                      <TableCell
+                                        align="center"
+                                        sx={{
+                                          fontWeight: "bold",
+                                          backgroundColor: "#e8f4fd",
+                                        }}
+                                      >
+                                        Végzettek (fő)
+                                      </TableCell>
+                                      <TableCell
+                                        align="center"
+                                        sx={{
+                                          fontWeight: "bold",
+                                          backgroundColor: "#fff2cc",
+                                        }}
+                                      >
+                                        Arány (%)
+                                      </TableCell>
+                                    </TableRow>
+                                  </TableHead>
+                                  <TableBody>
+                                    {Object.entries(szakmaData).map(
+                                      ([year, data]) => (
+                                        <TableRow key={year}>
+                                          <TableCell
+                                            sx={{ fontWeight: "medium" }}
+                                          >
+                                            {year}
+                                          </TableCell>
+                                          <TableCell
+                                            align="center"
+                                            sx={{
+                                              backgroundColor: "#d5e8d4" + "40",
+                                            }}
+                                          >
+                                            <TextField
+                                              type="number"
+                                              value={
+                                                data.elhelyezkedok_szama || 0
+                                              }
+                                              onChange={(e) =>
+                                                handleDataChange(
+                                                  data.id,
+                                                  "elhelyezkedok_szama",
+                                                  e.target.value
+                                                )
+                                              }
+                                              size="small"
+                                              inputProps={{
+                                                min: 0,
+                                                style: { textAlign: "center" },
+                                              }}
+                                              sx={{ width: "80px" }}
+                                            />
+                                          </TableCell>
+                                          <TableCell
+                                            align="center"
+                                            sx={{
+                                              backgroundColor: "#e8f4fd" + "40",
+                                            }}
+                                          >
+                                            <TextField
+                                              type="number"
+                                              value={
+                                                data.szakmai_okatatasban_sikeresen_vegzettek_szama ||
+                                                0
+                                              }
+                                              onChange={(e) =>
+                                                handleDataChange(
+                                                  data.id,
+                                                  "szakmai_okatatasban_sikeresen_vegzettek_szama",
+                                                  e.target.value
+                                                )
+                                              }
+                                              size="small"
+                                              inputProps={{
+                                                min: 0,
+                                                style: { textAlign: "center" },
+                                              }}
+                                              sx={{ width: "80px" }}
+                                            />
+                                          </TableCell>
+                                          <TableCell
+                                            align="center"
+                                            sx={{
+                                              backgroundColor: "#fff2cc" + "40",
+                                              fontWeight: "bold",
+                                              color: "primary.main",
+                                            }}
+                                          >
+                                            {data.elhelyezkedesi_arany}%
+                                          </TableCell>
+                                        </TableRow>
+                                      )
+                                    )}
+                                  </TableBody>
+                                </Table>
+                              </TableContainer>
+                            </Box>
+                          )
+                        )}
+
+                        {Object.keys(szakiranyData).length > 1 && (
+                          <Divider sx={{ my: 2 }} />
+                        )}
+                      </Box>
+                    )
+                  )}
+                </AccordionDetails>
+              </Accordion>
+            ))
+          )}
 
           {/* Action Buttons */}
           <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
@@ -527,7 +563,7 @@ export default function ElhelyezkedesimMutato() {
               variant="outlined"
               startIcon={<RefreshIcon />}
               onClick={handleReset}
-              disabled={!isModified || !savedData || isAdding || isUpdating}
+              disabled={!isModified || isAdding || isUpdating}
             >
               Visszaállítás
             </Button>
@@ -541,7 +577,7 @@ export default function ElhelyezkedesimMutato() {
             </Alert>
           )}
 
-          {savedData && !isModified && (
+          {!isModified && employmentData.length > 0 && (
             <Alert severity="success" sx={{ mt: 2 }}>
               Az adatok sikeresen mentve!
             </Alert>
@@ -556,19 +592,26 @@ export default function ElhelyezkedesimMutato() {
             Jelmagyarázat
           </Typography>
           <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap">
-            {dataCategories.map((category) => (
-              <Chip
-                key={category.key}
-                label={category.label}
-                variant="outlined"
-                sx={{ backgroundColor: category.color }}
-              />
-            ))}
+            <Chip
+              label="Elhelyezkedők száma (fő)"
+              variant="outlined"
+              sx={{ backgroundColor: "#d5e8d4" }}
+            />
+            <Chip
+              label="Végzettek száma (fő)"
+              variant="outlined"
+              sx={{ backgroundColor: "#e8f4fd" }}
+            />
+            <Chip
+              label="Elhelyezkedési arány (%)"
+              variant="outlined"
+              sx={{ backgroundColor: "#fff2cc" }}
+            />
           </Stack>
           <Typography variant="body2">
-            A táblázat az elhelyezkedési mutatókat jeleníti meg
-            intézménytípusonként és tanévenként. Az arányok százalékban, a
-            létszámok főben értendők.
+            A táblázat az elhelyezkedési mutatókat jeleníti meg iskolák,
+            szakirányok és szakmák szerint csoportosítva. Az arányok
+            automatikusan számítódnak az elhelyezkedők és végzettek számából.
           </Typography>
         </CardContent>
       </Card>

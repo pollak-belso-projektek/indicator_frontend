@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Box,
   Card,
@@ -25,6 +25,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  CircularProgress,
 } from "@mui/material";
 import {
   Save as SaveIcon,
@@ -101,31 +102,44 @@ export default function SzakmaiEredmenyek() {
   const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
   const [openAddDialog, setOpenAddDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [newCompetition, setNewCompetition] = useState({
     category: "",
     name: "",
   });
 
+  // Initialize data loading effect
+  useEffect(() => {
+    // Simulate async loading to prevent blocking
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Handle data changes
-  const handleDataChange = (category, competition, year, placement, value) => {
-    setCompetitionData((prev) => ({
-      ...prev,
-      [category]: {
-        ...prev[category],
-        [competition]: {
-          ...prev[category][competition],
-          [year]: {
-            ...prev[category][competition][year],
-            [placement]: value,
+  const handleDataChange = useCallback(
+    (category, competition, year, placement, value) => {
+      setCompetitionData((prev) => ({
+        ...prev,
+        [category]: {
+          ...prev[category],
+          [competition]: {
+            ...prev[category][competition],
+            [year]: {
+              ...prev[category][competition][year],
+              [placement]: value,
+            },
           },
         },
-      },
-    }));
-    setIsModified(true);
-  };
+      }));
+      setIsModified(true);
+    },
+    []
+  );
 
   // Add new competition
-  const handleAddCompetition = () => {
+  const handleAddCompetition = useCallback(() => {
     if (newCompetition.category && newCompetition.name) {
       const updatedData = { ...competitionData };
 
@@ -148,34 +162,37 @@ export default function SzakmaiEredmenyek() {
       setNewCompetition({ category: "", name: "" });
       setIsModified(true);
     }
-  };
+  }, [newCompetition, competitionData, schoolYears, placementTypes]);
 
   // Remove competition
-  const handleRemoveCompetition = (category, competition) => {
-    const updatedData = { ...competitionData };
-    delete updatedData[category][competition];
-    setCompetitionData(updatedData);
-    setIsModified(true);
-  };
+  const handleRemoveCompetition = useCallback(
+    (category, competition) => {
+      const updatedData = { ...competitionData };
+      delete updatedData[category][competition];
+      setCompetitionData(updatedData);
+      setIsModified(true);
+    },
+    [competitionData]
+  );
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     setSavedData(JSON.parse(JSON.stringify(competitionData)));
     setIsModified(false);
     console.log("Saving competition data:", competitionData);
-  };
+  }, [competitionData]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     if (savedData) {
       setCompetitionData(JSON.parse(JSON.stringify(savedData)));
       setIsModified(false);
     }
-  };
+  }, [savedData]);
 
-  // Calculate totals
-  const calculateTotals = () => {
-    const totals = {};
+  // Calculate totals - memoized to prevent recalculation on every render
+  const totals = useMemo(() => {
+    const calculatedTotals = {};
     schoolYears.forEach((year) => {
-      totals[year] = {};
+      calculatedTotals[year] = {};
       placementTypes.forEach((placement) => {
         let sum = 0;
         Object.keys(competitionData).forEach((category) => {
@@ -186,13 +203,30 @@ export default function SzakmaiEredmenyek() {
             sum += value;
           });
         });
-        totals[year][placement.key] = sum;
+        calculatedTotals[year][placement.key] = sum;
       });
     });
-    return totals;
-  };
+    return calculatedTotals;
+  }, [competitionData, schoolYears, placementTypes]);
 
-  const totals = calculateTotals();
+  // Show loading state
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          p: 3,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "400px",
+        }}
+      >
+        <CircularProgress size={40} sx={{ mb: 2 }} />
+        <Typography variant="h6">Szakmai eredmények betöltése...</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: 3 }}>
