@@ -227,6 +227,13 @@ export const indicatorApi = createApi({
         { type: "Elhelyezkedes", id: tanev },
       ],
     }),
+    getElhelyezkedesBySchoolAndYear: build.query({
+      query: ({ alapadatokId, tanev }) =>
+        `elhelyezkedes/${alapadatokId}/${tanev}`,
+      providesTags: (result, error, { alapadatokId, tanev }) => [
+        { type: "Elhelyezkedes", id: `${alapadatokId}-${tanev}` },
+      ],
+    }),
     getAllElhelyezkedes: build.query({
       query: () => {
         // Get current school year start (e.g., 2024 for 2024/2025 school year)
@@ -265,6 +272,13 @@ export const indicatorApi = createApi({
     deleteElhelyezkedes: build.mutation({
       query: (id) => ({
         url: `elhelyezkedes/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Elhelyezkedes"],
+    }),
+    deleteElhelyezkedesBySchoolAndYear: build.mutation({
+      query: ({ alapadatokId, tanev }) => ({
+        url: `elhelyezkedes/${alapadatokId}/${tanev}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Elhelyezkedes"],
@@ -738,10 +752,12 @@ export const {
   useGetTableListQuery,
   // Educational Indicators hooks
   useGetElhelyezkedesByYearQuery,
+  useGetElhelyezkedesBySchoolAndYearQuery,
   useGetAllElhelyezkedesQuery,
   useAddElhelyezkedesMutation,
   useUpdateElhelyezkedesMutation,
   useDeleteElhelyezkedesMutation,
+  useDeleteElhelyezkedesBySchoolAndYearMutation,
   useGetAllFelvettekSzamaQuery,
   useAddFelvettekSzamaMutation,
   useUpdateFelvettekSzamaMutation,

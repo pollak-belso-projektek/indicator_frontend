@@ -43,34 +43,34 @@ import {
 } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import {
-  useGetAllSajatosNevelesuTanulokQuery,
-  useAddSajatosNevelesuTanulokMutation,
-  useUpdateSajatosNevelesuTanulokMutation,
-  useDeleteSajatosNevelesuTanulokMutation,
+  useGetAllIntezmenyiNeveltsegQuery,
+  useAddIntezmenyiNeveltsegMutation,
+  useUpdateIntezmenyiNeveltsegMutation,
+  useDeleteIntezmenyiNeveltsegMutation,
   useGetAllAlapadatokQuery,
 } from "../store/api/apiSlice";
 
-export default function SajatosNevelesiIgenyuTanulokAranya() {
+export default function IntezmenyiNeveltseg() {
   const schoolYears = generateSchoolYears();
 
   // API hooks
   const {
-    data: apiSniData,
+    data: apiEducationData,
     error: fetchError,
     isLoading: isFetching,
-  } = useGetAllSajatosNevelesuTanulokQuery();
+  } = useGetAllIntezmenyiNeveltsegQuery();
 
   const { data: schoolsData, isLoading: isLoadingSchools } =
     useGetAllAlapadatokQuery();
 
-  const [addSajatosNevelesuTanulok, { isLoading: isAdding }] =
-    useAddSajatosNevelesuTanulokMutation();
-  const [updateSajatosNevelesuTanulok, { isLoading: isUpdating }] =
-    useUpdateSajatosNevelesuTanulokMutation();
-  const [deleteSajatosNevelesuTanulok, { isLoading: isDeleting }] =
-    useDeleteSajatosNevelesuTanulokMutation();
+  const [addEducationData, { isLoading: isAdding }] =
+    useAddIntezmenyiNeveltsegMutation();
+  const [updateEducationData, { isLoading: isUpdating }] =
+    useUpdateIntezmenyiNeveltsegMutation();
+  const [deleteEducationData, { isLoading: isDeleting }] =
+    useDeleteIntezmenyiNeveltsegMutation();
 
-  const [sniData, setSniData] = useState([]);
+  const [educationData, setEducationData] = useState([]);
   const [isModified, setIsModified] = useState(false);
   const [modifiedIds, setModifiedIds] = useState(new Set());
 
@@ -92,20 +92,26 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       alapadatok_id: "",
       selectedSchool: null,
       tanev_kezdete: "",
-      sni_tanulok_szama: 0,
-      osszes_tanulo_szama: 0,
+      altalanos_iskolai_vegzettseg: 0,
+      kozepfoku_vegzettseg: 0,
+      emelt_szintu_erettsegizenusz: 0,
+      felsofoku_vegzettseg: 0,
+      ogy_fokozat: 0,
+      msc_fokozat: 0,
+      phd_fokozat: 0,
+      egyeb_szakmai_kepesites: 0,
     },
   });
 
   // Transform and organize API data
   const organizedData = useMemo(() => {
-    if (!sniData || !Array.isArray(sniData)) {
+    if (!educationData || !Array.isArray(educationData)) {
       return {};
     }
 
     const organized = {};
 
-    sniData.forEach((item) => {
+    educationData.forEach((item) => {
       const schoolName = item.alapadatok?.iskola_neve || "Ismeretlen iskola";
       const year = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
 
@@ -113,55 +119,88 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         organized[schoolName] = {};
       }
 
+      // Calculate total and percentages
+      const total =
+        (parseInt(item.altalanos_iskolai_vegzettseg) || 0) +
+        (parseInt(item.kozepfoku_vegzettseg) || 0) +
+        (parseInt(item.emelt_szintu_erettsegizenusz) || 0) +
+        (parseInt(item.felsofoku_vegzettseg) || 0) +
+        (parseInt(item.ogy_fokozat) || 0) +
+        (parseInt(item.msc_fokozat) || 0) +
+        (parseInt(item.phd_fokozat) || 0) +
+        (parseInt(item.egyeb_szakmai_kepesites) || 0);
+
       organized[schoolName][year] = {
         ...item,
-        sni_arany:
-          item.sni_tanulok_szama && item.osszes_tanulo_szama
-            ? (
-                (item.sni_tanulok_szama / item.osszes_tanulo_szama) *
-                100
-              ).toFixed(2)
-            : 0,
+        total_employees: total,
+        percentages: {
+          altalanos:
+            total > 0
+              ? (
+                  ((parseInt(item.altalanos_iskolai_vegzettseg) || 0) / total) *
+                  100
+                ).toFixed(2)
+              : 0,
+          kozepfoku:
+            total > 0
+              ? (
+                  ((parseInt(item.kozepfoku_vegzettseg) || 0) / total) *
+                  100
+                ).toFixed(2)
+              : 0,
+          emelt_szintu:
+            total > 0
+              ? (
+                  ((parseInt(item.emelt_szintu_erettsegizenusz) || 0) / total) *
+                  100
+                ).toFixed(2)
+              : 0,
+          felsofoku:
+            total > 0
+              ? (
+                  ((parseInt(item.felsofoku_vegzettseg) || 0) / total) *
+                  100
+                ).toFixed(2)
+              : 0,
+          ogy:
+            total > 0
+              ? (((parseInt(item.ogy_fokozat) || 0) / total) * 100).toFixed(2)
+              : 0,
+          msc:
+            total > 0
+              ? (((parseInt(item.msc_fokozat) || 0) / total) * 100).toFixed(2)
+              : 0,
+          phd:
+            total > 0
+              ? (((parseInt(item.phd_fokozat) || 0) / total) * 100).toFixed(2)
+              : 0,
+          egyeb:
+            total > 0
+              ? (
+                  ((parseInt(item.egyeb_szakmai_kepesites) || 0) / total) *
+                  100
+                ).toFixed(2)
+              : 0,
+        },
       };
     });
 
     return organized;
-  }, [sniData]);
+  }, [educationData]);
 
   // Load data from API
   useEffect(() => {
-    if (apiSniData && Array.isArray(apiSniData)) {
-      setSniData(apiSniData);
+    if (apiEducationData && Array.isArray(apiEducationData)) {
+      setEducationData(apiEducationData);
     }
-  }, [apiSniData]);
+  }, [apiEducationData]);
 
   // Handle data changes
   const handleDataChange = (id, field, value) => {
-    setSniData((prev) =>
+    setEducationData((prev) =>
       prev.map((item) => {
         if (item.id === id) {
           const updatedItem = { ...item, [field]: value };
-
-          // Recalculate percentage when either field changes
-          if (
-            field === "sni_tanulok_szama" ||
-            field === "osszes_tanulo_szama"
-          ) {
-            const sniTanulok =
-              field === "sni_tanulok_szama"
-                ? parseInt(value) || 0
-                : parseInt(item.sni_tanulok_szama) || 0;
-            const osszesCanulok =
-              field === "osszes_tanulo_szama"
-                ? parseInt(value) || 0
-                : parseInt(item.osszes_tanulo_szama) || 0;
-
-            updatedItem.sni_arany =
-              osszesCanulok > 0
-                ? ((sniTanulok / osszesCanulok) * 100).toFixed(2)
-                : 0;
-          }
-
           return updatedItem;
         }
         return item;
@@ -173,13 +212,23 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
   const handleSave = async () => {
     try {
-      const itemsToUpdate = sniData.filter((item) => modifiedIds.has(item.id));
+      const itemsToUpdate = educationData.filter((item) =>
+        modifiedIds.has(item.id)
+      );
 
       for (const item of itemsToUpdate) {
-        await updateSajatosNevelesuTanulok({
+        await updateEducationData({
           id: item.id,
-          sni_tanulok_szama: parseInt(item.sni_tanulok_szama) || 0,
-          osszes_tanulo_szama: parseInt(item.osszes_tanulo_szama) || 0,
+          altalanos_iskolai_vegzettseg:
+            parseInt(item.altalanos_iskolai_vegzettseg) || 0,
+          kozepfoku_vegzettseg: parseInt(item.kozepfoku_vegzettseg) || 0,
+          emelt_szintu_erettsegizenusz:
+            parseInt(item.emelt_szintu_erettsegizenusz) || 0,
+          felsofoku_vegzettseg: parseInt(item.felsofoku_vegzettseg) || 0,
+          ogy_fokozat: parseInt(item.ogy_fokozat) || 0,
+          msc_fokozat: parseInt(item.msc_fokozat) || 0,
+          phd_fokozat: parseInt(item.phd_fokozat) || 0,
+          egyeb_szakmai_kepesites: parseInt(item.egyeb_szakmai_kepesites) || 0,
         }).unwrap();
       }
 
@@ -192,7 +241,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         severity: "success",
       });
     } catch (error) {
-      console.error("Error saving SNI data:", error);
+      console.error("Error saving education data:", error);
       setNotification({
         open: true,
         message: `Hiba történt a mentés során: ${
@@ -204,8 +253,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
   };
 
   const handleReset = () => {
-    if (apiSniData) {
-      setSniData([...apiSniData]);
+    if (apiEducationData) {
+      setEducationData([...apiEducationData]);
       setIsModified(false);
       setModifiedIds(new Set());
     }
@@ -213,9 +262,9 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
   const handleDelete = async (id) => {
     try {
-      await deleteSajatosNevelesuTanulok(id).unwrap();
+      await deleteEducationData(id).unwrap();
 
-      setSniData((prev) => prev.filter((item) => item.id !== id));
+      setEducationData((prev) => prev.filter((item) => item.id !== id));
 
       setNotification({
         open: true,
@@ -225,7 +274,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
       setDeleteDialog({ open: false, id: null, schoolName: "", year: "" });
     } catch (error) {
-      console.error("Error deleting SNI data:", error);
+      console.error("Error deleting education data:", error);
       setNotification({
         open: true,
         message: `Hiba történt a törlés során: ${
@@ -255,8 +304,14 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         alapadatok_id: "",
         selectedSchool: null,
         tanev_kezdete: currentSchoolYear,
-        sni_tanulok_szama: 0,
-        osszes_tanulo_szama: 0,
+        altalanos_iskolai_vegzettseg: 0,
+        kozepfoku_vegzettseg: 0,
+        emelt_szintu_erettsegizenusz: 0,
+        felsofoku_vegzettseg: 0,
+        ogy_fokozat: 0,
+        msc_fokozat: 0,
+        phd_fokozat: 0,
+        egyeb_szakmai_kepesites: 0,
       },
     });
   };
@@ -268,8 +323,14 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         alapadatok_id: "",
         selectedSchool: null,
         tanev_kezdete: "",
-        sni_tanulok_szama: 0,
-        osszes_tanulo_szama: 0,
+        altalanos_iskolai_vegzettseg: 0,
+        kozepfoku_vegzettseg: 0,
+        emelt_szintu_erettsegizenusz: 0,
+        felsofoku_vegzettseg: 0,
+        ogy_fokozat: 0,
+        msc_fokozat: 0,
+        phd_fokozat: 0,
+        egyeb_szakmai_kepesites: 0,
       },
     });
   };
@@ -288,16 +349,26 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           addDialog.newRecord.selectedSchool?.id ||
           parseInt(addDialog.newRecord.alapadatok_id),
         tanev_kezdete: parseInt(addDialog.newRecord.tanev_kezdete),
-        sni_tanulok_szama: parseInt(addDialog.newRecord.sni_tanulok_szama) || 0,
-        osszes_tanulo_szama:
-          parseInt(addDialog.newRecord.osszes_tanulo_szama) || 0,
+        altalanos_iskolai_vegzettseg:
+          parseInt(addDialog.newRecord.altalanos_iskolai_vegzettseg) || 0,
+        kozepfoku_vegzettseg:
+          parseInt(addDialog.newRecord.kozepfoku_vegzettseg) || 0,
+        emelt_szintu_erettsegizenusz:
+          parseInt(addDialog.newRecord.emelt_szintu_erettsegizenusz) || 0,
+        felsofoku_vegzettseg:
+          parseInt(addDialog.newRecord.felsofoku_vegzettseg) || 0,
+        ogy_fokozat: parseInt(addDialog.newRecord.ogy_fokozat) || 0,
+        msc_fokozat: parseInt(addDialog.newRecord.msc_fokozat) || 0,
+        phd_fokozat: parseInt(addDialog.newRecord.phd_fokozat) || 0,
+        egyeb_szakmai_kepesites:
+          parseInt(addDialog.newRecord.egyeb_szakmai_kepesites) || 0,
       };
 
-      await addSajatosNevelesuTanulok(newRecord).unwrap();
+      await addEducationData(newRecord).unwrap();
 
       setNotification({
         open: true,
-        message: `Új SNI tanuló arány rekord sikeresen hozzáadva: ${
+        message: `Új intézményi neveltsitég rekord sikeresen hozzáadva: ${
           addDialog.newRecord.selectedSchool?.iskola_neve || "Ismeretlen iskola"
         } - ${newRecord.tanev_kezdete}/${newRecord.tanev_kezdete + 1}`,
         severity: "success",
@@ -305,7 +376,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
       closeAddDialog();
     } catch (error) {
-      console.error("Error adding new SNI data:", error);
+      console.error("Error adding new education data:", error);
       setNotification({
         open: true,
         message: `Hiba történt az új rekord hozzáadása során: ${
@@ -320,34 +391,131 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
   const summaryStats = useMemo(() => {
     const stats = {};
 
-    sniData.forEach((item) => {
+    educationData.forEach((item) => {
       const year = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
       if (!stats[year]) {
         stats[year] = {
-          totalSniTanulok: 0,
-          totalOsszesTanulok: 0,
+          totalAltalanos: 0,
+          totalKozepfoku: 0,
+          totalEmeltSzintu: 0,
+          totalFelsofoku: 0,
+          totalOgy: 0,
+          totalMsc: 0,
+          totalPhd: 0,
+          totalEgyeb: 0,
+          totalEmployees: 0,
           count: 0,
         };
       }
-      stats[year].totalSniTanulok += parseInt(item.sni_tanulok_szama) || 0;
-      stats[year].totalOsszesTanulok += parseInt(item.osszes_tanulo_szama) || 0;
+
+      stats[year].totalAltalanos +=
+        parseInt(item.altalanos_iskolai_vegzettseg) || 0;
+      stats[year].totalKozepfoku += parseInt(item.kozepfoku_vegzettseg) || 0;
+      stats[year].totalEmeltSzintu +=
+        parseInt(item.emelt_szintu_erettsegizenusz) || 0;
+      stats[year].totalFelsofoku += parseInt(item.felsofoku_vegzettseg) || 0;
+      stats[year].totalOgy += parseInt(item.ogy_fokozat) || 0;
+      stats[year].totalMsc += parseInt(item.msc_fokozat) || 0;
+      stats[year].totalPhd += parseInt(item.phd_fokozat) || 0;
+      stats[year].totalEgyeb += parseInt(item.egyeb_szakmai_kepesites) || 0;
       stats[year].count += 1;
     });
 
-    // Calculate average percentage
+    // Calculate totals and percentages
     Object.keys(stats).forEach((year) => {
       const yearStats = stats[year];
-      yearStats.atlagArany =
-        yearStats.totalOsszesTanulok > 0
-          ? (
-              (yearStats.totalSniTanulok / yearStats.totalOsszesTanulok) *
-              100
-            ).toFixed(2)
-          : 0;
+      yearStats.totalEmployees =
+        yearStats.totalAltalanos +
+        yearStats.totalKozepfoku +
+        yearStats.totalEmeltSzintu +
+        yearStats.totalFelsofoku +
+        yearStats.totalOgy +
+        yearStats.totalMsc +
+        yearStats.totalPhd +
+        yearStats.totalEgyeb;
+
+      if (yearStats.totalEmployees > 0) {
+        yearStats.percentages = {
+          altalanos: (
+            (yearStats.totalAltalanos / yearStats.totalEmployees) *
+            100
+          ).toFixed(2),
+          kozepfoku: (
+            (yearStats.totalKozepfoku / yearStats.totalEmployees) *
+            100
+          ).toFixed(2),
+          emeltSzintu: (
+            (yearStats.totalEmeltSzintu / yearStats.totalEmployees) *
+            100
+          ).toFixed(2),
+          felsofoku: (
+            (yearStats.totalFelsofoku / yearStats.totalEmployees) *
+            100
+          ).toFixed(2),
+          ogy: ((yearStats.totalOgy / yearStats.totalEmployees) * 100).toFixed(
+            2
+          ),
+          msc: ((yearStats.totalMsc / yearStats.totalEmployees) * 100).toFixed(
+            2
+          ),
+          phd: ((yearStats.totalPhd / yearStats.totalEmployees) * 100).toFixed(
+            2
+          ),
+          egyeb: (
+            (yearStats.totalEgyeb / yearStats.totalEmployees) *
+            100
+          ).toFixed(2),
+        };
+      } else {
+        yearStats.percentages = {
+          altalanos: 0,
+          kozepfoku: 0,
+          emeltSzintu: 0,
+          felsofoku: 0,
+          ogy: 0,
+          msc: 0,
+          phd: 0,
+          egyeb: 0,
+        };
+      }
     });
 
     return stats;
-  }, [sniData]);
+  }, [educationData]);
+
+  // Education level fields for dynamic rendering
+  const educationFields = [
+    {
+      key: "altalanos_iskolai_vegzettseg",
+      label: "Általános iskolai",
+      color: "#ffcccc",
+    },
+    { key: "kozepfoku_vegzettseg", label: "Középfokú", color: "#ffe6cc" },
+    {
+      key: "emelt_szintu_erettsegizenusz",
+      label: "Emelt szintű érettségi",
+      color: "#fff3cd",
+    },
+    { key: "felsofoku_vegzettseg", label: "Felsőfokú", color: "#d4edda" },
+    { key: "ogy_fokozat", label: "OGY fokozat", color: "#cce5ff" },
+    { key: "msc_fokozat", label: "MSc fokozat", color: "#e6ccff" },
+    { key: "phd_fokozat", label: "PhD fokozat", color: "#ffccff" },
+    {
+      key: "egyeb_szakmai_kepesites",
+      label: "Egyéb szakmai",
+      color: "#e6f3ff",
+    },
+  ];
+
+  const calculateNewRecordTotal = () => {
+    return Object.values(addDialog.newRecord)
+      .filter((_, index, array) => {
+        const keys = Object.keys(addDialog.newRecord);
+        const key = keys[index];
+        return educationFields.some((field) => field.key === key);
+      })
+      .reduce((sum, value) => sum + (parseInt(value) || 0), 0);
+  };
 
   return (
     <Box sx={{ p: 3 }}>
@@ -371,14 +539,12 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       )}
 
       <Typography variant="h4" component="h1" gutterBottom>
-        Sajátos nevelési igényű tanulók aránya
+        Intézményi nevelettségi mutatók
       </Typography>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        A sajátos nevelési igényű (SNI) tanulók arányának nyomon követése
-        intézményenként és tanévenként. Ez az indikátor az inkluzív oktatás
-        hatékonyságának és az egyenlő esélyű hozzáférés biztosításának fontos
-        mutatója.
+        Az intézmény alkalmazottainak végzettségi szintjének nyomon követése
+        iskolánként és tanévenként.
       </Typography>
 
       {/* Summary Statistics */}
@@ -401,24 +567,45 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                     <TableCell sx={{ fontWeight: "bold" }}>Tanév</TableCell>
                     <TableCell
                       align="center"
-                      sx={{ fontWeight: "bold", backgroundColor: "#fff3cd" }}
+                      sx={{ fontWeight: "bold", backgroundColor: "#ffcccc" }}
                     >
-                      SNI tanulók (fő)
+                      Általános (fő)
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ fontWeight: "bold", backgroundColor: "#ffe6cc" }}
+                    >
+                      Középfokú (fő)
                     </TableCell>
                     <TableCell
                       align="center"
                       sx={{ fontWeight: "bold", backgroundColor: "#d4edda" }}
                     >
-                      Összes tanuló (fő)
+                      Felsőfokú (fő)
                     </TableCell>
                     <TableCell
                       align="center"
                       sx={{ fontWeight: "bold", backgroundColor: "#cce5ff" }}
                     >
-                      SNI arány (%)
+                      OGY (fő)
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ fontWeight: "bold", backgroundColor: "#e6ccff" }}
+                    >
+                      MSc (fő)
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ fontWeight: "bold", backgroundColor: "#ffccff" }}
+                    >
+                      PhD (fő)
                     </TableCell>
                     <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                      Intézmények száma
+                      Összesen (fő)
+                    </TableCell>
+                    <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                      Intézmények
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -430,25 +617,45 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                       </TableCell>
                       <TableCell
                         align="center"
-                        sx={{ backgroundColor: "#fff3cd40" }}
+                        sx={{ backgroundColor: "#ffcccc40" }}
                       >
-                        {stats.totalSniTanulok}
+                        {stats.totalAltalanos} ({stats.percentages.altalanos}%)
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ backgroundColor: "#ffe6cc40" }}
+                      >
+                        {stats.totalKozepfoku} ({stats.percentages.kozepfoku}%)
                       </TableCell>
                       <TableCell
                         align="center"
                         sx={{ backgroundColor: "#d4edda40" }}
                       >
-                        {stats.totalOsszesTanulok}
+                        {stats.totalFelsofoku} ({stats.percentages.felsofoku}%)
                       </TableCell>
                       <TableCell
                         align="center"
-                        sx={{
-                          backgroundColor: "#cce5ff40",
-                          fontWeight: "bold",
-                          color: "primary.main",
-                        }}
+                        sx={{ backgroundColor: "#cce5ff40" }}
                       >
-                        {stats.atlagArany}%
+                        {stats.totalOgy} ({stats.percentages.ogy}%)
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ backgroundColor: "#e6ccff40" }}
+                      >
+                        {stats.totalMsc} ({stats.percentages.msc}%)
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ backgroundColor: "#ffccff40" }}
+                      >
+                        {stats.totalPhd} ({stats.percentages.phd}%)
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ fontWeight: "bold", color: "primary.main" }}
+                      >
+                        {stats.totalEmployees}
                       </TableCell>
                       <TableCell align="center">{stats.count}</TableCell>
                     </TableRow>
@@ -464,55 +671,47 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
         <CardContent>
           <Typography variant="h6" component="h3" gutterBottom>
-            SNI tanulók kategóriái és jellemzői
+            Végzettségi szintek kategóriái
           </Typography>
           <Box component="ul" sx={{ pl: 3, mb: 2 }}>
             <li>
               <Typography variant="body2">
-                <strong>Érzékszervi fogyatékosság:</strong> Látás- vagy
-                halláskárosodás
+                <strong>Általános iskolai végzettség:</strong> 8 általános
+                befejezése
               </Typography>
             </li>
             <li>
               <Typography variant="body2">
-                <strong>Értelmi fogyatékosság:</strong> Enyhe, középsúlyos vagy
-                súlyos
+                <strong>Középfokú végzettség:</strong> Érettségi bizonyítvány
               </Typography>
             </li>
             <li>
               <Typography variant="body2">
-                <strong>Beszédfogyatékosság:</strong> Kommunikációs nehézségek
+                <strong>Emelt szintű érettségi:</strong> Legalább egy
+                tantárgyból emelt szinten tett érettségi
               </Typography>
             </li>
             <li>
               <Typography variant="body2">
-                <strong>Mozgásfogyatékosság:</strong> Fizikai korlátozottság
+                <strong>Felsőfokú végzettség:</strong> Főiskolai vagy egyetemi
+                diploma
               </Typography>
             </li>
             <li>
               <Typography variant="body2">
-                <strong>Tanulási nehézség:</strong> Diszlexia, diszgráfia,
-                diszkalkúlia
+                <strong>OGY fokozat:</strong> Okleveles Gimnáziumi Tanár fokozat
               </Typography>
             </li>
             <li>
               <Typography variant="body2">
-                <strong>Autizmus spektrum zavar:</strong> Társas kommunikációs
-                nehézségek
+                <strong>MSc fokozat:</strong> Mesterszintű egyetemi végzettség
               </Typography>
             </li>
-          </Box>
-
-          <Box
-            sx={{ mt: 3, p: 2, backgroundColor: "#e8f5e8", borderRadius: 1 }}
-          >
-            <Typography variant="body2" sx={{ fontStyle: "italic" }}>
-              <strong>Jogszabályi háttér:</strong>
-              <br />A 2011. évi CXC. törvény a nemzeti köznevelésről és a
-              326/2013. (VIII. 30.) Korm. rendelet a pedagógusok előmeneteli
-              rendszeréről alapján az SNI tanulók szakértői bizottság véleménye
-              alapján részesülnek egyéni fejlesztésben.
-            </Typography>
+            <li>
+              <Typography variant="body2">
+                <strong>PhD fokozat:</strong> Doktori fokozat
+              </Typography>
+            </li>
           </Box>
         </CardContent>
       </Card>
@@ -521,11 +720,11 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       <Card>
         <CardContent>
           <Typography variant="h6" component="h2" gutterBottom>
-            Részletes SNI tanuló arány adatok iskolák szerint
+            Részletes nevelettségi adatok iskolák szerint
           </Typography>
 
           {/* Show empty state if no data */}
-          {!sniData || sniData.length === 0 ? (
+          {!educationData || educationData.length === 0 ? (
             <Box sx={{ textAlign: "center", py: 4 }}>
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 📊 Nincs megjeleníthető adat
@@ -533,7 +732,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
               <Typography variant="body2" color="text.secondary">
                 {isFetching
                   ? "Adatok betöltése folyamatban..."
-                  : "Nincsenek SNI tanuló arány adatok a kiválasztott időszakra."}
+                  : "Nincsenek intézményi nevelettségi adatok a kiválasztott időszakra."}
               </Typography>
             </Box>
           ) : (
@@ -552,32 +751,20 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                           <TableCell sx={{ fontWeight: "bold" }}>
                             Tanév
                           </TableCell>
-                          <TableCell
-                            align="center"
-                            sx={{
-                              fontWeight: "bold",
-                              backgroundColor: "#fff3cd",
-                            }}
-                          >
-                            SNI tanulók száma (fő)
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            sx={{
-                              fontWeight: "bold",
-                              backgroundColor: "#d4edda",
-                            }}
-                          >
-                            Összes tanuló (fő)
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            sx={{
-                              fontWeight: "bold",
-                              backgroundColor: "#cce5ff",
-                            }}
-                          >
-                            SNI arány (%)
+                          {educationFields.map((field) => (
+                            <TableCell
+                              key={field.key}
+                              align="center"
+                              sx={{
+                                fontWeight: "bold",
+                                backgroundColor: field.color,
+                              }}
+                            >
+                              {field.label}
+                            </TableCell>
+                          ))}
+                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                            Összesen
                           </TableCell>
                           <TableCell align="center" sx={{ fontWeight: "bold" }}>
                             Műveletek
@@ -590,59 +777,49 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                             <TableCell sx={{ fontWeight: "medium" }}>
                               {year}
                             </TableCell>
+                            {educationFields.map((field) => (
+                              <TableCell
+                                key={field.key}
+                                align="center"
+                                sx={{ backgroundColor: field.color + "40" }}
+                              >
+                                <TextField
+                                  type="number"
+                                  value={data[field.key] || 0}
+                                  onChange={(e) =>
+                                    handleDataChange(
+                                      data.id,
+                                      field.key,
+                                      e.target.value
+                                    )
+                                  }
+                                  size="small"
+                                  inputProps={{
+                                    min: 0,
+                                    style: { textAlign: "center" },
+                                  }}
+                                  sx={{ width: "70px" }}
+                                />
+                                <Typography
+                                  variant="caption"
+                                  display="block"
+                                  sx={{ mt: 0.5 }}
+                                >
+                                  (
+                                  {data.percentages[field.key.split("_")[0]] ||
+                                    data.percentages[
+                                      field.key.replace(/_.*/, "")
+                                    ] ||
+                                    "0"}
+                                  %)
+                                </Typography>
+                              </TableCell>
+                            ))}
                             <TableCell
                               align="center"
-                              sx={{ backgroundColor: "#fff3cd40" }}
+                              sx={{ fontWeight: "bold", color: "primary.main" }}
                             >
-                              <TextField
-                                type="number"
-                                value={data.sni_tanulok_szama || 0}
-                                onChange={(e) =>
-                                  handleDataChange(
-                                    data.id,
-                                    "sni_tanulok_szama",
-                                    e.target.value
-                                  )
-                                }
-                                size="small"
-                                inputProps={{
-                                  min: 0,
-                                  style: { textAlign: "center" },
-                                }}
-                                sx={{ width: "80px" }}
-                              />
-                            </TableCell>
-                            <TableCell
-                              align="center"
-                              sx={{ backgroundColor: "#d4edda40" }}
-                            >
-                              <TextField
-                                type="number"
-                                value={data.osszes_tanulo_szama || 0}
-                                onChange={(e) =>
-                                  handleDataChange(
-                                    data.id,
-                                    "osszes_tanulo_szama",
-                                    e.target.value
-                                  )
-                                }
-                                size="small"
-                                inputProps={{
-                                  min: 0,
-                                  style: { textAlign: "center" },
-                                }}
-                                sx={{ width: "80px" }}
-                              />
-                            </TableCell>
-                            <TableCell
-                              align="center"
-                              sx={{
-                                backgroundColor: "#cce5ff40",
-                                fontWeight: "bold",
-                                color: "primary.main",
-                              }}
-                            >
-                              {data.sni_arany}%
+                              {data.total_employees}
                             </TableCell>
                             <TableCell align="center">
                               <IconButton
@@ -711,28 +888,21 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           <Typography variant="h6" component="h3" gutterBottom>
             Jelmagyarázat
           </Typography>
-          <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap">
-            <Chip
-              label="SNI tanulók"
-              variant="outlined"
-              sx={{ backgroundColor: "#fff3cd" }}
-            />
-            <Chip
-              label="Összes tanuló"
-              variant="outlined"
-              sx={{ backgroundColor: "#d4edda" }}
-            />
-            <Chip
-              label="SNI arány"
-              variant="outlined"
-              sx={{ backgroundColor: "#cce5ff" }}
-            />
+          <Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap">
+            {educationFields.map((field) => (
+              <Chip
+                key={field.key}
+                label={field.label}
+                variant="outlined"
+                sx={{ backgroundColor: field.color }}
+              />
+            ))}
           </Stack>
           <Typography variant="body2">
-            A táblázat a sajátos nevelési igényű tanulók arányát jeleníti meg
-            iskolák és tanévek szerint. Az arány automatikusan számítódik az SNI
-            és összes tanuló létszám alapján. Az adatok szakértői bizottság
-            véleményén alapulnak.
+            A táblázat az intézményi alkalmazottak végzettségi szintjeit
+            jeleníti meg iskolák és tanévek szerint. A zárójelben szereplő
+            százalékos értékek az adott végzettségű alkalmazottak arányát
+            mutatják.
           </Typography>
         </CardContent>
       </Card>
@@ -741,18 +911,13 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       <Dialog
         open={deleteDialog.open}
         onClose={() =>
-          setDeleteDialog({
-            open: false,
-            id: null,
-            schoolName: "",
-            year: "",
-          })
+          setDeleteDialog({ open: false, id: null, schoolName: "", year: "" })
         }
       >
         <DialogTitle>Törlés megerősítése</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Biztosan törölni szeretnéd a következő SNI tanuló arány adatokat?
+            Biztosan törölni szeretnéd a következő nevelettségi adatokat?
             <br />
             <strong>Iskola:</strong> {deleteDialog.schoolName}
             <br />
@@ -790,10 +955,10 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       <Dialog
         open={addDialog.open}
         onClose={closeAddDialog}
-        maxWidth="md"
+        maxWidth="lg"
         fullWidth
       >
-        <DialogTitle>Új SNI tanuló arány rekord hozzáadása</DialogTitle>
+        <DialogTitle>Új intézményi nevelettségi rekord hozzáadása</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} md={6}>
@@ -844,33 +1009,21 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="SNI tanulók száma (fő)"
-                type="number"
-                value={addDialog.newRecord.sni_tanulok_szama}
-                onChange={(e) =>
-                  handleNewRecordChange("sni_tanulok_szama", e.target.value)
-                }
-                inputProps={{ min: 0 }}
-                helperText="Sajátos nevelési igényű tanulók száma"
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Összes tanuló száma (fő)"
-                type="number"
-                value={addDialog.newRecord.osszes_tanulo_szama}
-                onChange={(e) =>
-                  handleNewRecordChange("osszes_tanulo_szama", e.target.value)
-                }
-                inputProps={{ min: 0 }}
-                helperText="Az intézmény teljes tanulói létszáma"
-              />
-            </Grid>
+            {educationFields.map((field) => (
+              <Grid item xs={12} md={6} key={field.key}>
+                <TextField
+                  fullWidth
+                  label={`${field.label} (fő)`}
+                  type="number"
+                  value={addDialog.newRecord[field.key]}
+                  onChange={(e) =>
+                    handleNewRecordChange(field.key, e.target.value)
+                  }
+                  inputProps={{ min: 0 }}
+                  helperText={`${field.label} végzettségű alkalmazottak száma`}
+                />
+              </Grid>
+            ))}
 
             <Grid item xs={12}>
               <Typography
@@ -878,19 +1031,12 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                 sx={{
                   mt: 2,
                   p: 2,
-                  backgroundColor: "#cce5ff",
+                  backgroundColor: "#fff2cc",
                   borderRadius: 1,
                 }}
               >
-                <strong>Számított SNI arány:</strong>{" "}
-                {addDialog.newRecord.osszes_tanulo_szama > 0
-                  ? (
-                      (addDialog.newRecord.sni_tanulok_szama /
-                        addDialog.newRecord.osszes_tanulo_szama) *
-                      100
-                    ).toFixed(2)
-                  : 0}
-                %
+                <strong>Összesen alkalmazottak száma:</strong>{" "}
+                {calculateNewRecordTotal()} fő
               </Typography>
             </Grid>
           </Grid>

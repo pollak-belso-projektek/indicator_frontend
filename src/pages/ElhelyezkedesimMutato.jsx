@@ -21,17 +21,34 @@ import {
   AccordionSummary,
   AccordionDetails,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
+  Snackbar,
+  IconButton,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Grid,
 } from "@mui/material";
 import {
   Save as SaveIcon,
   Refresh as RefreshIcon,
   ExpandMore as ExpandMoreIcon,
+  Delete as DeleteIcon,
+  Close as CloseIcon,
+  Add as AddIcon,
 } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import {
   useGetAllElhelyezkedesQuery,
   useAddElhelyezkedesMutation,
   useUpdateElhelyezkedesMutation,
+  useDeleteElhelyezkedesBySchoolAndYearMutation,
+  useGetAllAlapadatokQuery,
 } from "../store/api/apiSlice";
 
 export default function ElhelyezkedesimMutato() {
@@ -44,28 +61,56 @@ export default function ElhelyezkedesimMutato() {
     isLoading: isFetching,
   } = useGetAllElhelyezkedesQuery();
 
-  console.log("API Employment Data:", apiEmploymentData);
-  console.log("Fetch Error:", fetchError);
-  console.log("Is Fetching:", isFetching);
+  const { data: schoolsData, isLoading: isLoadingSchools } =
+    useGetAllAlapadatokQuery();
 
   const [addElhelyezkedes, { isLoading: isAdding }] =
     useAddElhelyezkedesMutation();
   const [updateElhelyezkedes, { isLoading: isUpdating }] =
     useUpdateElhelyezkedesMutation();
+  const [deleteElhelyezkedesBySchoolAndYear, { isLoading: isDeleting }] =
+    useDeleteElhelyezkedesBySchoolAndYearMutation();
 
   const [employmentData, setEmploymentData] = useState([]);
   const [isModified, setIsModified] = useState(false);
   const [modifiedIds, setModifiedIds] = useState(new Set());
 
+  // UI state for notifications and dialogs
+  const [notification, setNotification] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    schoolId: null,
+    schoolName: "",
+    year: "",
+  });
+  const [addDialog, setAddDialog] = useState({
+    open: false,
+    newRecord: {
+      alapadatok_id: "",
+      selectedSchool: null, // {id, iskola_neve}
+      szakirany_id: "",
+      selectedSzakirany: null, // {id, nev}
+      szakma_id: "",
+      selectedSzakma: null, // {id, nev}
+      tanev_kezdete: "",
+      elhelyezkedok_szama: 0,
+      szakmai_okatatasban_sikeresen_vegzettek_szama: 0,
+    },
+  });
+
   // Transform and organize API data
   const organizedData = useMemo(() => {
-    if (!apiEmploymentData || !Array.isArray(apiEmploymentData)) {
+    if (!employmentData || !Array.isArray(employmentData)) {
       return {};
     }
 
     const organized = {};
 
-    apiEmploymentData.forEach((item) => {
+    employmentData.forEach((item) => {
       const schoolName = item.alapadatok?.iskola_neve || "Ismeretlen iskola";
       const szakiranyName = item.szakirany?.nev || "Ismeretlen szakirány";
       const szakmaName = item.szakma?.nev || "Ismeretlen szakma";
@@ -96,12 +141,10 @@ export default function ElhelyezkedesimMutato() {
     });
 
     return organized;
-  }, [apiEmploymentData]);
+  }, [employmentData]);
 
   // Load data from API when component mounts or data changes
   useEffect(() => {
-    console.log("Loading employment data from API...");
-    console.log("API Employment Data:", apiEmploymentData);
     if (apiEmploymentData && Array.isArray(apiEmploymentData)) {
       setEmploymentData(apiEmploymentData);
     }
@@ -110,7 +153,36 @@ export default function ElhelyezkedesimMutato() {
   // Handle data changes
   const handleDataChange = (id, field, value) => {
     setEmploymentData((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+      prev.map((item) => {
+        if (item.id === id) {
+          const updatedItem = { ...item, [field]: value };
+
+          // Recalculate percentage when either field changes
+          if (
+            field === "elhelyezkedok_szama" ||
+            field === "szakmai_okatatasban_sikeresen_vegzettek_szama"
+          ) {
+            const elhelyezkedok =
+              field === "elhelyezkedok_szama"
+                ? parseInt(value) || 0
+                : parseInt(item.elhelyezkedok_szama) || 0;
+            const vegzettek =
+              field === "szakmai_okatatasban_sikeresen_vegzettek_szama"
+                ? parseInt(value) || 0
+                : parseInt(
+                    item.szakmai_okatatasban_sikeresen_vegzettek_szama
+                  ) || 0;
+
+            updatedItem.elhelyezkedesi_arany =
+              vegzettek > 0
+                ? ((elhelyezkedok / vegzettek) * 100).toFixed(2)
+                : 0;
+          }
+
+          return updatedItem;
+        }
+        return item;
+      })
     );
     setIsModified(true);
     setModifiedIds((prev) => new Set([...prev, id]));
@@ -133,9 +205,26 @@ export default function ElhelyezkedesimMutato() {
 
       setIsModified(false);
       setModifiedIds(new Set());
+
+      // Show success notification
+      setNotification({
+        open: true,
+        message: `Sikeresen mentve: ${itemsToUpdate.length} rekord frissítve`,
+        severity: "success",
+      });
+
       console.log("Successfully saved employment data");
     } catch (error) {
       console.error("Error saving employment data:", error);
+
+      // Show error notification
+      setNotification({
+        open: true,
+        message: `Hiba történt a mentés során: ${
+          error.data?.message || error.message || "Ismeretlen hiba"
+        }`,
+        severity: "error",
+      });
     }
   };
 
@@ -146,6 +235,222 @@ export default function ElhelyezkedesimMutato() {
       setModifiedIds(new Set());
     }
   };
+
+  // Delete data for a specific school and year
+  const handleDeleteBySchoolAndYear = async (alapadatokId, tanev) => {
+    try {
+      // Convert tanev format from "2024/2025" to start year (2024)
+      const startYear = parseInt(tanev.split("/")[0]);
+
+      await deleteElhelyezkedesBySchoolAndYear({
+        alapadatokId,
+        tanev: startYear,
+      }).unwrap();
+
+      console.log(
+        `Successfully deleted employment data for school ${alapadatokId} and year ${tanev}`
+      );
+
+      // Remove the deleted items from local state
+      setEmploymentData((prev) =>
+        prev.filter(
+          (item) =>
+            !(
+              item.alapadatok?.id === alapadatokId &&
+              item.tanev_kezdete === startYear
+            )
+        )
+      );
+
+      // Show success notification
+      setNotification({
+        open: true,
+        message: `Sikeresen törölve: ${deleteDialog.schoolName} - ${tanev}`,
+        severity: "success",
+      });
+
+      // Close delete dialog
+      setDeleteDialog({
+        open: false,
+        schoolId: null,
+        schoolName: "",
+        year: "",
+      });
+    } catch (error) {
+      console.error("Error deleting employment data:", error);
+
+      // Show error notification
+      setNotification({
+        open: true,
+        message: `Hiba történt a törlés során: ${
+          error.data?.message || error.message || "Ismeretlen hiba"
+        }`,
+        severity: "error",
+      });
+
+      // Close delete dialog
+      setDeleteDialog({
+        open: false,
+        schoolId: null,
+        schoolName: "",
+        year: "",
+      });
+    }
+  };
+
+  // Open delete confirmation dialog
+  const openDeleteDialog = (schoolId, schoolName, year) => {
+    setDeleteDialog({
+      open: true,
+      schoolId,
+      schoolName,
+      year,
+    });
+  };
+
+  // Handle notification close
+  const handleNotificationClose = () => {
+    setNotification({ ...notification, open: false });
+  };
+
+  // Open add new record dialog
+  const openAddDialog = () => {
+    const currentYear = new Date().getFullYear();
+    const currentSchoolYear =
+      new Date().getMonth() >= 8 ? currentYear : currentYear - 1;
+
+    setAddDialog({
+      open: true,
+      newRecord: {
+        alapadatok_id: "",
+        selectedSchool: null,
+        szakirany_id: "",
+        selectedSzakirany: null,
+        szakma_id: "",
+        selectedSzakma: null,
+        tanev_kezdete: currentSchoolYear,
+        elhelyezkedok_szama: 0,
+        szakmai_okatatasban_sikeresen_vegzettek_szama: 0,
+      },
+    });
+  };
+
+  // Close add dialog
+  const closeAddDialog = () => {
+    setAddDialog({
+      open: false,
+      newRecord: {
+        alapadatok_id: "",
+        selectedSchool: null,
+        szakirany_id: "",
+        selectedSzakirany: null,
+        szakma_id: "",
+        selectedSzakma: null,
+        tanev_kezdete: "",
+        elhelyezkedok_szama: 0,
+        szakmai_okatatasban_sikeresen_vegzettek_szama: 0,
+      },
+    });
+  };
+
+  // Handle new record field changes
+  const handleNewRecordChange = (field, value) => {
+    setAddDialog((prev) => ({
+      ...prev,
+      newRecord: {
+        ...prev.newRecord,
+        [field]: value,
+      },
+    }));
+  };
+
+  // Handle adding new record
+  const handleAddNewRecord = async () => {
+    try {
+      const newRecord = {
+        alapadatok_id:
+          addDialog.newRecord.selectedSchool?.id ||
+          parseInt(addDialog.newRecord.alapadatok_id),
+        szakirany_id:
+          addDialog.newRecord.selectedSzakirany?.id ||
+          parseInt(addDialog.newRecord.szakirany_id),
+        szakma_id:
+          addDialog.newRecord.selectedSzakma?.id ||
+          parseInt(addDialog.newRecord.szakma_id),
+        tanev_kezdete: parseInt(addDialog.newRecord.tanev_kezdete),
+        elhelyezkedok_szama:
+          parseInt(addDialog.newRecord.elhelyezkedok_szama) || 0,
+        szakmai_okatatasban_sikeresen_vegzettek_szama:
+          parseInt(
+            addDialog.newRecord.szakmai_okatatasban_sikeresen_vegzettek_szama
+          ) || 0,
+      };
+
+      await addElhelyezkedes(newRecord).unwrap();
+
+      // Show success notification
+      setNotification({
+        open: true,
+        message: `Új elhelyezkedési rekord sikeresen hozzáadva: ${
+          addDialog.newRecord.selectedSchool?.iskola_neve || "Ismeretlen iskola"
+        } - ${newRecord.tanev_kezdete}/${newRecord.tanev_kezdete + 1}`,
+        severity: "success",
+      });
+
+      // Close dialog
+      closeAddDialog();
+
+      console.log("Successfully added new employment record");
+    } catch (error) {
+      console.error("Error adding new employment record:", error);
+
+      // Show error notification
+      setNotification({
+        open: true,
+        message: `Hiba történt az új rekord hozzáadása során: ${
+          error.data?.message || error.message || "Ismeretlen hiba"
+        }`,
+        severity: "error",
+      });
+    }
+  };
+
+  // Extract unique szakirányok and szakmák from existing data
+  const uniqueSzakiranyok = useMemo(() => {
+    if (!employmentData || !Array.isArray(employmentData)) return [];
+
+    const szakiranyMap = new Map();
+    employmentData.forEach((item) => {
+      if (item.szakirany && item.szakirany.id && item.szakirany.nev) {
+        szakiranyMap.set(item.szakirany.id, {
+          id: item.szakirany.id,
+          nev: item.szakirany.nev,
+        });
+      }
+    });
+
+    return Array.from(szakiranyMap.values()).sort((a, b) =>
+      a.nev.localeCompare(b.nev)
+    );
+  }, [employmentData]);
+
+  const uniqueSzakmak = useMemo(() => {
+    if (!employmentData || !Array.isArray(employmentData)) return [];
+
+    const szakmaMap = new Map();
+    employmentData.forEach((item) => {
+      if (item.szakma && item.szakma.id && item.szakma.nev) {
+        szakmaMap.set(item.szakma.id, {
+          id: item.szakma.id,
+          nev: item.szakma.nev,
+        });
+      }
+    });
+
+    return Array.from(szakmaMap.values()).sort((a, b) =>
+      a.nev.localeCompare(b.nev)
+    );
+  }, [employmentData]);
 
   // Calculate summary statistics
   const summaryStats = useMemo(() => {
@@ -211,42 +516,6 @@ export default function ElhelyezkedesimMutato() {
         A szakmai oktatásban tanulói jogviszonyban sikeresen végzettek
         elhelyezkedési aránya.
       </Typography>
-
-      {/* Debug Information */}
-      <Card sx={{ mb: 3, backgroundColor: "#fff3cd", borderColor: "#ffeaa7" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            🔍 Debug információ
-          </Typography>
-          <Typography variant="body2">
-            <strong>API adatok:</strong>{" "}
-            {apiEmploymentData
-              ? `${apiEmploymentData.length} rekord`
-              : "Nincs adat"}
-          </Typography>
-          <Typography variant="body2">
-            <strong>Betöltés folyamatban:</strong> {isFetching ? "Igen" : "Nem"}
-          </Typography>
-          <Typography variant="body2">
-            <strong>Hiba:</strong>{" "}
-            {fetchError
-              ? fetchError.message || "Ismeretlen hiba"
-              : "Nincs hiba"}
-          </Typography>
-          <Typography variant="body2">
-            <strong>Várható évek:</strong> 2024, 2023, 2022, 2021
-          </Typography>
-          {apiEmploymentData && apiEmploymentData.length > 0 && (
-            <Typography variant="body2">
-              <strong>Talált évek:</strong>{" "}
-              {[...new Set(apiEmploymentData.map((item) => item.tanev_kezdete))]
-                .sort()
-                .reverse()
-                .join(", ")}
-            </Typography>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Summary Statistics */}
       <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
@@ -370,7 +639,7 @@ export default function ElhelyezkedesimMutato() {
           </Typography>
 
           {/* Show empty state if no data */}
-          {!apiEmploymentData || apiEmploymentData.length === 0 ? (
+          {!employmentData || employmentData.length === 0 ? (
             <Box sx={{ textAlign: "center", py: 4 }}>
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 📊 Nincs megjeleníthető adat
@@ -454,6 +723,12 @@ export default function ElhelyezkedesimMutato() {
                                       >
                                         Arány (%)
                                       </TableCell>
+                                      <TableCell
+                                        align="center"
+                                        sx={{ fontWeight: "bold" }}
+                                      >
+                                        Műveletek
+                                      </TableCell>
                                     </TableRow>
                                   </TableHead>
                                   <TableBody>
@@ -528,6 +803,23 @@ export default function ElhelyezkedesimMutato() {
                                           >
                                             {data.elhelyezkedesi_arany}%
                                           </TableCell>
+                                          <TableCell align="center">
+                                            <IconButton
+                                              size="small"
+                                              color="error"
+                                              onClick={() =>
+                                                openDeleteDialog(
+                                                  data.alapadatok?.id,
+                                                  data.alapadatok
+                                                    ?.iskola_neve || schoolName,
+                                                  year
+                                                )
+                                              }
+                                              title={`Törlés: ${schoolName} - ${year}`}
+                                            >
+                                              <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                          </TableCell>
                                         </TableRow>
                                       )
                                     )}
@@ -555,7 +847,7 @@ export default function ElhelyezkedesimMutato() {
               variant="contained"
               startIcon={<SaveIcon />}
               onClick={handleSave}
-              disabled={!isModified || isAdding || isUpdating}
+              disabled={!isModified || isAdding || isUpdating || isDeleting}
             >
               {isAdding || isUpdating ? "Mentés..." : "Mentés"}
             </Button>
@@ -563,9 +855,18 @@ export default function ElhelyezkedesimMutato() {
               variant="outlined"
               startIcon={<RefreshIcon />}
               onClick={handleReset}
-              disabled={!isModified || isAdding || isUpdating}
+              disabled={!isModified || isAdding || isUpdating || isDeleting}
             >
               Visszaállítás
+            </Button>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<AddIcon />}
+              onClick={openAddDialog}
+              disabled={isAdding || isUpdating || isDeleting}
+            >
+              Új rekord hozzáadása
             </Button>
           </Stack>
 
@@ -615,6 +916,385 @@ export default function ElhelyezkedesimMutato() {
           </Typography>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={() =>
+          setDeleteDialog({
+            open: false,
+            schoolId: null,
+            schoolName: "",
+            year: "",
+          })
+        }
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Törlés megerősítése</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Biztosan törölni szeretnéd a következő elhelyezkedési adatokat?
+            <br />
+            <strong>Iskola:</strong> {deleteDialog.schoolName}
+            <br />
+            <strong>Tanév:</strong> {deleteDialog.year}
+            <br />
+            <br />
+            Ez a művelet nem vonható vissza!
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() =>
+              setDeleteDialog({
+                open: false,
+                schoolId: null,
+                schoolName: "",
+                year: "",
+              })
+            }
+            color="primary"
+          >
+            Mégse
+          </Button>
+          <Button
+            onClick={() =>
+              handleDeleteBySchoolAndYear(
+                deleteDialog.schoolId,
+                deleteDialog.year
+              )
+            }
+            color="error"
+            variant="contained"
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Törlés..." : "Törlés"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add New Record Dialog */}
+      <Dialog
+        open={addDialog.open}
+        onClose={closeAddDialog}
+        aria-labelledby="add-dialog-title"
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle id="add-dialog-title">
+          Új elhelyezkedési rekord hozzáadása
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Válaszd ki az iskolát, szakirányt és szakmát a legördülő
+                menükből, majd add meg az elhelyezkedési adatokat:
+              </Typography>
+              {(!schoolsData || schoolsData.length === 0) &&
+                !isLoadingSchools && (
+                  <Alert severity="warning" sx={{ mb: 2 }}>
+                    Nincsenek elérhető iskolák. Ellenőrizd az API kapcsolatot.
+                  </Alert>
+                )}
+              {(uniqueSzakiranyok.length === 0 || uniqueSzakmak.length === 0) &&
+                employmentData.length === 0 && (
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    A szakirányok és szakmák listája a meglévő adatok alapján
+                    töltődik fel. Ha ez az első rekord, lehet, hogy üres lesz a
+                    lista.
+                  </Alert>
+                )}
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Iskola *</InputLabel>
+                <Select
+                  value={addDialog.newRecord.selectedSchool?.id || ""}
+                  label="Iskola *"
+                  onChange={(e) => {
+                    const selectedSchool = schoolsData?.find(
+                      (school) => school.id === e.target.value
+                    );
+                    handleNewRecordChange("selectedSchool", selectedSchool);
+                    handleNewRecordChange("alapadatok_id", e.target.value);
+                  }}
+                  disabled={isLoadingSchools}
+                  required
+                >
+                  {schoolsData?.map((school) => (
+                    <MenuItem key={school.id} value={school.id}>
+                      {school.iskola_neve}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {isLoadingSchools && (
+                  <Typography variant="caption" color="text.secondary">
+                    Iskolák betöltése...
+                  </Typography>
+                )}
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Szakirány *</InputLabel>
+                <Select
+                  value={addDialog.newRecord.selectedSzakirany?.id || ""}
+                  label="Szakirány *"
+                  onChange={(e) => {
+                    const selectedSzakirany = uniqueSzakiranyok.find(
+                      (sz) => sz.id === e.target.value
+                    );
+                    handleNewRecordChange(
+                      "selectedSzakirany",
+                      selectedSzakirany
+                    );
+                    handleNewRecordChange("szakirany_id", e.target.value);
+                  }}
+                  required
+                >
+                  {uniqueSzakiranyok.map((szakirany) => (
+                    <MenuItem key={szakirany.id} value={szakirany.id}>
+                      {szakirany.nev}
+                    </MenuItem>
+                  ))}
+                </Select>
+                <Typography variant="caption" color="text.secondary">
+                  {uniqueSzakiranyok.length === 0
+                    ? "Nincs elérhető szakirány"
+                    : `${uniqueSzakiranyok.length} szakirány érhető el`}
+                </Typography>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Szakma *</InputLabel>
+                <Select
+                  value={addDialog.newRecord.selectedSzakma?.id || ""}
+                  label="Szakma *"
+                  onChange={(e) => {
+                    const selectedSzakma = uniqueSzakmak.find(
+                      (sz) => sz.id === e.target.value
+                    );
+                    handleNewRecordChange("selectedSzakma", selectedSzakma);
+                    handleNewRecordChange("szakma_id", e.target.value);
+                  }}
+                  required
+                >
+                  {uniqueSzakmak.map((szakma) => (
+                    <MenuItem key={szakma.id} value={szakma.id}>
+                      {szakma.nev}
+                    </MenuItem>
+                  ))}
+                </Select>
+                <Typography variant="caption" color="text.secondary">
+                  {uniqueSzakmak.length === 0
+                    ? "Nincs elérhető szakma"
+                    : `${uniqueSzakmak.length} szakma érhető el`}
+                </Typography>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Tanév kezdete</InputLabel>
+                <Select
+                  value={addDialog.newRecord.tanev_kezdete}
+                  label="Tanév kezdete"
+                  onChange={(e) =>
+                    handleNewRecordChange("tanev_kezdete", e.target.value)
+                  }
+                  required
+                >
+                  {schoolYears.map((year) => {
+                    const startYear = parseInt(year.split("/")[0]);
+                    return (
+                      <MenuItem key={startYear} value={startYear}>
+                        {year}
+                      </MenuItem>
+                    );
+                  })}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Elhelyezkedők száma (fő)"
+                type="number"
+                value={addDialog.newRecord.elhelyezkedok_szama}
+                onChange={(e) =>
+                  handleNewRecordChange("elhelyezkedok_szama", e.target.value)
+                }
+                inputProps={{ min: 0 }}
+                helperText="A sikeresen elhelyezkedett végzettek száma"
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Végzettek száma (fő)"
+                type="number"
+                value={
+                  addDialog.newRecord
+                    .szakmai_okatatasban_sikeresen_vegzettek_szama
+                }
+                onChange={(e) =>
+                  handleNewRecordChange(
+                    "szakmai_okatatasban_sikeresen_vegzettek_szama",
+                    e.target.value
+                  )
+                }
+                inputProps={{ min: 0 }}
+                helperText="A szakmai oktatásban sikeresen végzettek száma"
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Typography
+                variant="body2"
+                sx={{
+                  mt: 2,
+                  p: 2,
+                  backgroundColor: "#fff2cc",
+                  borderRadius: 1,
+                }}
+              >
+                <strong>Számított elhelyezkedési arány:</strong>{" "}
+                {addDialog.newRecord
+                  .szakmai_okatatasban_sikeresen_vegzettek_szama > 0
+                  ? (
+                      (addDialog.newRecord.elhelyezkedok_szama /
+                        addDialog.newRecord
+                          .szakmai_okatatasban_sikeresen_vegzettek_szama) *
+                      100
+                    ).toFixed(2)
+                  : 0}
+                %
+              </Typography>
+            </Grid>
+
+            {/* Fallback manual ID input - only show if no selections made */}
+            {!addDialog.newRecord.selectedSchool &&
+              !addDialog.newRecord.selectedSzakirany &&
+              !addDialog.newRecord.selectedSzakma && (
+                <Grid item xs={12}>
+                  <Alert severity="info" sx={{ mt: 2 }}>
+                    <Typography variant="body2" sx={{ mb: 2 }}>
+                      <strong>Fejlett felhasználóknak:</strong> Ha új
+                      iskola/szakirány/szakma hozzáadására van szükség, használd
+                      az alábbi ID mezőket:
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={4}>
+                        <TextField
+                          size="small"
+                          fullWidth
+                          label="Iskola ID"
+                          type="number"
+                          value={addDialog.newRecord.alapadatok_id}
+                          onChange={(e) =>
+                            handleNewRecordChange(
+                              "alapadatok_id",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </Grid>
+                      <Grid item xs={4}>
+                        <TextField
+                          size="small"
+                          fullWidth
+                          label="Szakirány ID"
+                          type="number"
+                          value={addDialog.newRecord.szakirany_id}
+                          onChange={(e) =>
+                            handleNewRecordChange(
+                              "szakirany_id",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </Grid>
+                      <Grid item xs={4}>
+                        <TextField
+                          size="small"
+                          fullWidth
+                          label="Szakma ID"
+                          type="number"
+                          value={addDialog.newRecord.szakma_id}
+                          onChange={(e) =>
+                            handleNewRecordChange("szakma_id", e.target.value)
+                          }
+                        />
+                      </Grid>
+                    </Grid>
+                  </Alert>
+                </Grid>
+              )}
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeAddDialog} color="primary">
+            Mégse
+          </Button>
+          <Button
+            onClick={handleAddNewRecord}
+            variant="contained"
+            color="success"
+            disabled={
+              !(
+                addDialog.newRecord.selectedSchool ||
+                addDialog.newRecord.alapadatok_id
+              ) ||
+              !(
+                addDialog.newRecord.selectedSzakirany ||
+                addDialog.newRecord.szakirany_id
+              ) ||
+              !(
+                addDialog.newRecord.selectedSzakma ||
+                addDialog.newRecord.szakma_id
+              ) ||
+              !addDialog.newRecord.tanev_kezdete ||
+              isAdding
+            }
+          >
+            {isAdding ? "Hozzáadás..." : "Hozzáadás"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleNotificationClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleNotificationClose}
+          severity={notification.severity}
+          sx={{ width: "100%" }}
+          action={
+            <IconButton
+              size="small"
+              aria-label="close"
+              color="inherit"
+              onClick={handleNotificationClose}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          }
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

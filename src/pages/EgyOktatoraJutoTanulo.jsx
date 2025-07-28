@@ -43,34 +43,34 @@ import {
 } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import {
-  useGetAllSajatosNevelesuTanulokQuery,
-  useAddSajatosNevelesuTanulokMutation,
-  useUpdateSajatosNevelesuTanulokMutation,
-  useDeleteSajatosNevelesuTanulokMutation,
+  useGetAllEgyOktatoraJutoTanuloQuery,
+  useAddEgyOktatoraJutoTanuloMutation,
+  useUpdateEgyOktatoraJutoTanuloMutation,
+  useDeleteEgyOktatoraJutoTanuloMutation,
   useGetAllAlapadatokQuery,
 } from "../store/api/apiSlice";
 
-export default function SajatosNevelesiIgenyuTanulokAranya() {
+export default function EgyOktatoraJutoTanulo() {
   const schoolYears = generateSchoolYears();
 
   // API hooks
   const {
-    data: apiSniData,
+    data: apiTeacherRatioData,
     error: fetchError,
     isLoading: isFetching,
-  } = useGetAllSajatosNevelesuTanulokQuery();
+  } = useGetAllEgyOktatoraJutoTanuloQuery();
 
   const { data: schoolsData, isLoading: isLoadingSchools } =
     useGetAllAlapadatokQuery();
 
-  const [addSajatosNevelesuTanulok, { isLoading: isAdding }] =
-    useAddSajatosNevelesuTanulokMutation();
-  const [updateSajatosNevelesuTanulok, { isLoading: isUpdating }] =
-    useUpdateSajatosNevelesuTanulokMutation();
-  const [deleteSajatosNevelesuTanulok, { isLoading: isDeleting }] =
-    useDeleteSajatosNevelesuTanulokMutation();
+  const [addTeacherRatioData, { isLoading: isAdding }] =
+    useAddEgyOktatoraJutoTanuloMutation();
+  const [updateTeacherRatioData, { isLoading: isUpdating }] =
+    useUpdateEgyOktatoraJutoTanuloMutation();
+  const [deleteTeacherRatioData, { isLoading: isDeleting }] =
+    useDeleteEgyOktatoraJutoTanuloMutation();
 
-  const [sniData, setSniData] = useState([]);
+  const [teacherRatioData, setTeacherRatioData] = useState([]);
   const [isModified, setIsModified] = useState(false);
   const [modifiedIds, setModifiedIds] = useState(new Set());
 
@@ -92,20 +92,20 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       alapadatok_id: "",
       selectedSchool: null,
       tanev_kezdete: "",
-      sni_tanulok_szama: 0,
-      osszes_tanulo_szama: 0,
+      tanulok_szama: 0,
+      oktatok_szama: 0,
     },
   });
 
   // Transform and organize API data
   const organizedData = useMemo(() => {
-    if (!sniData || !Array.isArray(sniData)) {
+    if (!teacherRatioData || !Array.isArray(teacherRatioData)) {
       return {};
     }
 
     const organized = {};
 
-    sniData.forEach((item) => {
+    teacherRatioData.forEach((item) => {
       const schoolName = item.alapadatok?.iskola_neve || "Ismeretlen iskola";
       const year = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
 
@@ -115,51 +115,43 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
       organized[schoolName][year] = {
         ...item,
-        sni_arany:
-          item.sni_tanulok_szama && item.osszes_tanulo_szama
-            ? (
-                (item.sni_tanulok_szama / item.osszes_tanulo_szama) *
-                100
-              ).toFixed(2)
+        oktato_per_tanulo_arany:
+          item.oktatok_szama > 0 && item.tanulok_szama > 0
+            ? (item.tanulok_szama / item.oktatok_szama).toFixed(2)
             : 0,
       };
     });
 
     return organized;
-  }, [sniData]);
+  }, [teacherRatioData]);
 
   // Load data from API
   useEffect(() => {
-    if (apiSniData && Array.isArray(apiSniData)) {
-      setSniData(apiSniData);
+    if (apiTeacherRatioData && Array.isArray(apiTeacherRatioData)) {
+      setTeacherRatioData(apiTeacherRatioData);
     }
-  }, [apiSniData]);
+  }, [apiTeacherRatioData]);
 
   // Handle data changes
   const handleDataChange = (id, field, value) => {
-    setSniData((prev) =>
+    setTeacherRatioData((prev) =>
       prev.map((item) => {
         if (item.id === id) {
           const updatedItem = { ...item, [field]: value };
 
-          // Recalculate percentage when either field changes
-          if (
-            field === "sni_tanulok_szama" ||
-            field === "osszes_tanulo_szama"
-          ) {
-            const sniTanulok =
-              field === "sni_tanulok_szama"
+          // Recalculate ratio when either field changes
+          if (field === "tanulok_szama" || field === "oktatok_szama") {
+            const tanulok =
+              field === "tanulok_szama"
                 ? parseInt(value) || 0
-                : parseInt(item.sni_tanulok_szama) || 0;
-            const osszesCanulok =
-              field === "osszes_tanulo_szama"
+                : parseInt(item.tanulok_szama) || 0;
+            const oktatok =
+              field === "oktatok_szama"
                 ? parseInt(value) || 0
-                : parseInt(item.osszes_tanulo_szama) || 0;
+                : parseInt(item.oktatok_szama) || 0;
 
-            updatedItem.sni_arany =
-              osszesCanulok > 0
-                ? ((sniTanulok / osszesCanulok) * 100).toFixed(2)
-                : 0;
+            updatedItem.oktato_per_tanulo_arany =
+              oktatok > 0 && tanulok > 0 ? (tanulok / oktatok).toFixed(2) : 0;
           }
 
           return updatedItem;
@@ -173,13 +165,15 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
   const handleSave = async () => {
     try {
-      const itemsToUpdate = sniData.filter((item) => modifiedIds.has(item.id));
+      const itemsToUpdate = teacherRatioData.filter((item) =>
+        modifiedIds.has(item.id)
+      );
 
       for (const item of itemsToUpdate) {
-        await updateSajatosNevelesuTanulok({
+        await updateTeacherRatioData({
           id: item.id,
-          sni_tanulok_szama: parseInt(item.sni_tanulok_szama) || 0,
-          osszes_tanulo_szama: parseInt(item.osszes_tanulo_szama) || 0,
+          tanulok_szama: parseInt(item.tanulok_szama) || 0,
+          oktatok_szama: parseInt(item.oktatok_szama) || 0,
         }).unwrap();
       }
 
@@ -192,7 +186,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         severity: "success",
       });
     } catch (error) {
-      console.error("Error saving SNI data:", error);
+      console.error("Error saving teacher ratio data:", error);
       setNotification({
         open: true,
         message: `Hiba történt a mentés során: ${
@@ -204,8 +198,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
   };
 
   const handleReset = () => {
-    if (apiSniData) {
-      setSniData([...apiSniData]);
+    if (apiTeacherRatioData) {
+      setTeacherRatioData([...apiTeacherRatioData]);
       setIsModified(false);
       setModifiedIds(new Set());
     }
@@ -213,9 +207,9 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
   const handleDelete = async (id) => {
     try {
-      await deleteSajatosNevelesuTanulok(id).unwrap();
+      await deleteTeacherRatioData(id).unwrap();
 
-      setSniData((prev) => prev.filter((item) => item.id !== id));
+      setTeacherRatioData((prev) => prev.filter((item) => item.id !== id));
 
       setNotification({
         open: true,
@@ -225,7 +219,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
       setDeleteDialog({ open: false, id: null, schoolName: "", year: "" });
     } catch (error) {
-      console.error("Error deleting SNI data:", error);
+      console.error("Error deleting teacher ratio data:", error);
       setNotification({
         open: true,
         message: `Hiba történt a törlés során: ${
@@ -255,8 +249,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         alapadatok_id: "",
         selectedSchool: null,
         tanev_kezdete: currentSchoolYear,
-        sni_tanulok_szama: 0,
-        osszes_tanulo_szama: 0,
+        tanulok_szama: 0,
+        oktatok_szama: 0,
       },
     });
   };
@@ -268,8 +262,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         alapadatok_id: "",
         selectedSchool: null,
         tanev_kezdete: "",
-        sni_tanulok_szama: 0,
-        osszes_tanulo_szama: 0,
+        tanulok_szama: 0,
+        oktatok_szama: 0,
       },
     });
   };
@@ -288,16 +282,15 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           addDialog.newRecord.selectedSchool?.id ||
           parseInt(addDialog.newRecord.alapadatok_id),
         tanev_kezdete: parseInt(addDialog.newRecord.tanev_kezdete),
-        sni_tanulok_szama: parseInt(addDialog.newRecord.sni_tanulok_szama) || 0,
-        osszes_tanulo_szama:
-          parseInt(addDialog.newRecord.osszes_tanulo_szama) || 0,
+        tanulok_szama: parseInt(addDialog.newRecord.tanulok_szama) || 0,
+        oktatok_szama: parseInt(addDialog.newRecord.oktatok_szama) || 0,
       };
 
-      await addSajatosNevelesuTanulok(newRecord).unwrap();
+      await addTeacherRatioData(newRecord).unwrap();
 
       setNotification({
         open: true,
-        message: `Új SNI tanuló arány rekord sikeresen hozzáadva: ${
+        message: `Új oktató/tanuló arány rekord sikeresen hozzáadva: ${
           addDialog.newRecord.selectedSchool?.iskola_neve || "Ismeretlen iskola"
         } - ${newRecord.tanev_kezdete}/${newRecord.tanev_kezdete + 1}`,
         severity: "success",
@@ -305,7 +298,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
       closeAddDialog();
     } catch (error) {
-      console.error("Error adding new SNI data:", error);
+      console.error("Error adding new teacher ratio data:", error);
       setNotification({
         open: true,
         message: `Hiba történt az új rekord hozzáadása során: ${
@@ -320,34 +313,31 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
   const summaryStats = useMemo(() => {
     const stats = {};
 
-    sniData.forEach((item) => {
+    teacherRatioData.forEach((item) => {
       const year = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
       if (!stats[year]) {
         stats[year] = {
-          totalSniTanulok: 0,
-          totalOsszesTanulok: 0,
+          totalTanulok: 0,
+          totalOktatok: 0,
           count: 0,
         };
       }
-      stats[year].totalSniTanulok += parseInt(item.sni_tanulok_szama) || 0;
-      stats[year].totalOsszesTanulok += parseInt(item.osszes_tanulo_szama) || 0;
+      stats[year].totalTanulok += parseInt(item.tanulok_szama) || 0;
+      stats[year].totalOktatok += parseInt(item.oktatok_szama) || 0;
       stats[year].count += 1;
     });
 
-    // Calculate average percentage
+    // Calculate average ratio
     Object.keys(stats).forEach((year) => {
       const yearStats = stats[year];
       yearStats.atlagArany =
-        yearStats.totalOsszesTanulok > 0
-          ? (
-              (yearStats.totalSniTanulok / yearStats.totalOsszesTanulok) *
-              100
-            ).toFixed(2)
+        yearStats.totalOktatok > 0
+          ? (yearStats.totalTanulok / yearStats.totalOktatok).toFixed(2)
           : 0;
     });
 
     return stats;
-  }, [sniData]);
+  }, [teacherRatioData]);
 
   return (
     <Box sx={{ p: 3 }}>
@@ -371,14 +361,12 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       )}
 
       <Typography variant="h4" component="h1" gutterBottom>
-        Sajátos nevelési igényű tanulók aránya
+        Egy oktatóra jutó tanulók száma
       </Typography>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        A sajátos nevelési igényű (SNI) tanulók arányának nyomon követése
-        intézményenként és tanévenként. Ez az indikátor az inkluzív oktatás
-        hatékonyságának és az egyenlő esélyű hozzáférés biztosításának fontos
-        mutatója.
+        Az oktató-tanuló arány nyomon követése iskolánként és tanévenként. Ez az
+        indikátor az oktatás minőségének és terhelésének egyik fontos mutatója.
       </Typography>
 
       {/* Summary Statistics */}
@@ -401,21 +389,21 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                     <TableCell sx={{ fontWeight: "bold" }}>Tanév</TableCell>
                     <TableCell
                       align="center"
-                      sx={{ fontWeight: "bold", backgroundColor: "#fff3cd" }}
-                    >
-                      SNI tanulók (fő)
-                    </TableCell>
-                    <TableCell
-                      align="center"
                       sx={{ fontWeight: "bold", backgroundColor: "#d4edda" }}
                     >
                       Összes tanuló (fő)
                     </TableCell>
                     <TableCell
                       align="center"
-                      sx={{ fontWeight: "bold", backgroundColor: "#cce5ff" }}
+                      sx={{ fontWeight: "bold", backgroundColor: "#e6f3ff" }}
                     >
-                      SNI arány (%)
+                      Összes oktató (fő)
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ fontWeight: "bold", backgroundColor: "#fff3cd" }}
+                    >
+                      Átlagos arány (tanuló/oktató)
                     </TableCell>
                     <TableCell align="center" sx={{ fontWeight: "bold" }}>
                       Intézmények száma
@@ -430,25 +418,25 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                       </TableCell>
                       <TableCell
                         align="center"
-                        sx={{ backgroundColor: "#fff3cd40" }}
+                        sx={{ backgroundColor: "#d4edda40" }}
                       >
-                        {stats.totalSniTanulok}
+                        {stats.totalTanulok}
                       </TableCell>
                       <TableCell
                         align="center"
-                        sx={{ backgroundColor: "#d4edda40" }}
+                        sx={{ backgroundColor: "#e6f3ff40" }}
                       >
-                        {stats.totalOsszesTanulok}
+                        {stats.totalOktatok}
                       </TableCell>
                       <TableCell
                         align="center"
                         sx={{
-                          backgroundColor: "#cce5ff40",
+                          backgroundColor: "#fff3cd40",
                           fontWeight: "bold",
                           color: "primary.main",
                         }}
                       >
-                        {stats.atlagArany}%
+                        {stats.atlagArany}
                       </TableCell>
                       <TableCell align="center">{stats.count}</TableCell>
                     </TableRow>
@@ -464,54 +452,43 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
         <CardContent>
           <Typography variant="h6" component="h3" gutterBottom>
-            SNI tanulók kategóriái és jellemzői
+            Oktató-tanuló arány értelmezése
           </Typography>
           <Box component="ul" sx={{ pl: 3, mb: 2 }}>
             <li>
               <Typography variant="body2">
-                <strong>Érzékszervi fogyatékosság:</strong> Látás- vagy
-                halláskárosodás
+                <strong>Optimális arány:</strong> Általában 15-25 tanuló juthat
+                egy oktatóra a hatékony oktatás érdekében
               </Typography>
             </li>
             <li>
               <Typography variant="body2">
-                <strong>Értelmi fogyatékosság:</strong> Enyhe, középsúlyos vagy
-                súlyos
+                <strong>Alacsony arány (10 alatt):</strong> Kis csoportméret,
+                intenzívebb figyelem, de nagyobb költség
               </Typography>
             </li>
             <li>
               <Typography variant="body2">
-                <strong>Beszédfogyatékosság:</strong> Kommunikációs nehézségek
+                <strong>Magas arány (30 felett):</strong> Nagy csoportméret,
+                megnövekedett oktató terhelés
               </Typography>
             </li>
             <li>
               <Typography variant="body2">
-                <strong>Mozgásfogyatékosság:</strong> Fizikai korlátozottság
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Tanulási nehézség:</strong> Diszlexia, diszgráfia,
-                diszkalkúlia
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Autizmus spektrum zavar:</strong> Társas kommunikációs
-                nehézségek
+                <strong>Szakmai képzésben:</strong> A gyakorlati oktatásnál
+                alacsonyabb arány szükséges
               </Typography>
             </li>
           </Box>
 
           <Box
-            sx={{ mt: 3, p: 2, backgroundColor: "#e8f5e8", borderRadius: 1 }}
+            sx={{ mt: 3, p: 2, backgroundColor: "#fff2cc", borderRadius: 1 }}
           >
             <Typography variant="body2" sx={{ fontStyle: "italic" }}>
-              <strong>Jogszabályi háttér:</strong>
-              <br />A 2011. évi CXC. törvény a nemzeti köznevelésről és a
-              326/2013. (VIII. 30.) Korm. rendelet a pedagógusok előmeneteli
-              rendszeréről alapján az SNI tanulók szakértői bizottság véleménye
-              alapján részesülnek egyéni fejlesztésben.
+              <strong>Számítási módszer:</strong>
+              <br />
+              Egy oktatóra jutó tanulók száma = Összes tanuló száma / Összes
+              oktató száma
             </Typography>
           </Box>
         </CardContent>
@@ -521,11 +498,11 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       <Card>
         <CardContent>
           <Typography variant="h6" component="h2" gutterBottom>
-            Részletes SNI tanuló arány adatok iskolák szerint
+            Részletes oktató-tanuló arány adatok iskolák szerint
           </Typography>
 
           {/* Show empty state if no data */}
-          {!sniData || sniData.length === 0 ? (
+          {!teacherRatioData || teacherRatioData.length === 0 ? (
             <Box sx={{ textAlign: "center", py: 4 }}>
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 📊 Nincs megjeleníthető adat
@@ -533,7 +510,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
               <Typography variant="body2" color="text.secondary">
                 {isFetching
                   ? "Adatok betöltése folyamatban..."
-                  : "Nincsenek SNI tanuló arány adatok a kiválasztott időszakra."}
+                  : "Nincsenek oktató-tanuló arány adatok a kiválasztott időszakra."}
               </Typography>
             </Box>
           ) : (
@@ -556,28 +533,28 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                             align="center"
                             sx={{
                               fontWeight: "bold",
-                              backgroundColor: "#fff3cd",
-                            }}
-                          >
-                            SNI tanulók száma (fő)
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            sx={{
-                              fontWeight: "bold",
                               backgroundColor: "#d4edda",
                             }}
                           >
-                            Összes tanuló (fő)
+                            Tanulók száma (fő)
                           </TableCell>
                           <TableCell
                             align="center"
                             sx={{
                               fontWeight: "bold",
-                              backgroundColor: "#cce5ff",
+                              backgroundColor: "#e6f3ff",
                             }}
                           >
-                            SNI arány (%)
+                            Oktatók száma (fő)
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            sx={{
+                              fontWeight: "bold",
+                              backgroundColor: "#fff3cd",
+                            }}
+                          >
+                            Egy oktatóra jutó tanulók
                           </TableCell>
                           <TableCell align="center" sx={{ fontWeight: "bold" }}>
                             Műveletek
@@ -592,15 +569,15 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                             </TableCell>
                             <TableCell
                               align="center"
-                              sx={{ backgroundColor: "#fff3cd40" }}
+                              sx={{ backgroundColor: "#d4edda40" }}
                             >
                               <TextField
                                 type="number"
-                                value={data.sni_tanulok_szama || 0}
+                                value={data.tanulok_szama || 0}
                                 onChange={(e) =>
                                   handleDataChange(
                                     data.id,
-                                    "sni_tanulok_szama",
+                                    "tanulok_szama",
                                     e.target.value
                                   )
                                 }
@@ -614,15 +591,15 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                             </TableCell>
                             <TableCell
                               align="center"
-                              sx={{ backgroundColor: "#d4edda40" }}
+                              sx={{ backgroundColor: "#e6f3ff40" }}
                             >
                               <TextField
                                 type="number"
-                                value={data.osszes_tanulo_szama || 0}
+                                value={data.oktatok_szama || 0}
                                 onChange={(e) =>
                                   handleDataChange(
                                     data.id,
-                                    "osszes_tanulo_szama",
+                                    "oktatok_szama",
                                     e.target.value
                                   )
                                 }
@@ -637,12 +614,12 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                             <TableCell
                               align="center"
                               sx={{
-                                backgroundColor: "#cce5ff40",
+                                backgroundColor: "#fff3cd40",
                                 fontWeight: "bold",
                                 color: "primary.main",
                               }}
                             >
-                              {data.sni_arany}%
+                              {data.oktato_per_tanulo_arany}
                             </TableCell>
                             <TableCell align="center">
                               <IconButton
@@ -713,26 +690,25 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           </Typography>
           <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap">
             <Chip
-              label="SNI tanulók"
-              variant="outlined"
-              sx={{ backgroundColor: "#fff3cd" }}
-            />
-            <Chip
-              label="Összes tanuló"
+              label="Tanulók száma"
               variant="outlined"
               sx={{ backgroundColor: "#d4edda" }}
             />
             <Chip
-              label="SNI arány"
+              label="Oktatók száma"
               variant="outlined"
-              sx={{ backgroundColor: "#cce5ff" }}
+              sx={{ backgroundColor: "#e6f3ff" }}
+            />
+            <Chip
+              label="Oktató-tanuló arány"
+              variant="outlined"
+              sx={{ backgroundColor: "#fff3cd" }}
             />
           </Stack>
           <Typography variant="body2">
-            A táblázat a sajátos nevelési igényű tanulók arányát jeleníti meg
-            iskolák és tanévek szerint. Az arány automatikusan számítódik az SNI
-            és összes tanuló létszám alapján. Az adatok szakértői bizottság
-            véleményén alapulnak.
+            A táblázat az oktató-tanuló arányt jeleníti meg iskolák és tanévek
+            szerint. Az arány automatikusan számítódik a tanulók és oktatók
+            száma alapján. Alacsonyabb érték kisebb csoportméretet jelent.
           </Typography>
         </CardContent>
       </Card>
@@ -752,7 +728,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         <DialogTitle>Törlés megerősítése</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Biztosan törölni szeretnéd a következő SNI tanuló arány adatokat?
+            Biztosan törölni szeretnéd a következő oktató-tanuló arány adatokat?
             <br />
             <strong>Iskola:</strong> {deleteDialog.schoolName}
             <br />
@@ -793,7 +769,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Új SNI tanuló arány rekord hozzáadása</DialogTitle>
+        <DialogTitle>Új oktató-tanuló arány rekord hozzáadása</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} md={6}>
@@ -847,28 +823,28 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="SNI tanulók száma (fő)"
+                label="Tanulók száma (fő)"
                 type="number"
-                value={addDialog.newRecord.sni_tanulok_szama}
+                value={addDialog.newRecord.tanulok_szama}
                 onChange={(e) =>
-                  handleNewRecordChange("sni_tanulok_szama", e.target.value)
+                  handleNewRecordChange("tanulok_szama", e.target.value)
                 }
                 inputProps={{ min: 0 }}
-                helperText="Sajátos nevelési igényű tanulók száma"
+                helperText="Az intézményben tanuló diákok száma"
               />
             </Grid>
 
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Összes tanuló száma (fő)"
+                label="Oktatók száma (fő)"
                 type="number"
-                value={addDialog.newRecord.osszes_tanulo_szama}
+                value={addDialog.newRecord.oktatok_szama}
                 onChange={(e) =>
-                  handleNewRecordChange("osszes_tanulo_szama", e.target.value)
+                  handleNewRecordChange("oktatok_szama", e.target.value)
                 }
                 inputProps={{ min: 0 }}
-                helperText="Az intézmény teljes tanulói létszáma"
+                helperText="Az intézményben dolgozó oktatók száma"
               />
             </Grid>
 
@@ -878,19 +854,18 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                 sx={{
                   mt: 2,
                   p: 2,
-                  backgroundColor: "#cce5ff",
+                  backgroundColor: "#fff2cc",
                   borderRadius: 1,
                 }}
               >
-                <strong>Számított SNI arány:</strong>{" "}
-                {addDialog.newRecord.osszes_tanulo_szama > 0
+                <strong>Számított oktató-tanuló arány:</strong>{" "}
+                {addDialog.newRecord.oktatok_szama > 0
                   ? (
-                      (addDialog.newRecord.sni_tanulok_szama /
-                        addDialog.newRecord.osszes_tanulo_szama) *
-                      100
+                      addDialog.newRecord.tanulok_szama /
+                      addDialog.newRecord.oktatok_szama
                     ).toFixed(2)
-                  : 0}
-                %
+                  : 0}{" "}
+                tanuló/oktató
               </Typography>
             </Grid>
           </Grid>

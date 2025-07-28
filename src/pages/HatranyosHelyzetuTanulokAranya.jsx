@@ -43,34 +43,34 @@ import {
 } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import {
-  useGetAllSajatosNevelesuTanulokQuery,
-  useAddSajatosNevelesuTanulokMutation,
-  useUpdateSajatosNevelesuTanulokMutation,
-  useDeleteSajatosNevelesuTanulokMutation,
+  useGetAllHHesHHHNevelesuTanulokQuery,
+  useAddHHesHHHNevelesuTanulokMutation,
+  useUpdateHHesHHHNevelesuTanulokMutation,
+  useDeleteHHesHHHNevelesuTanulokMutation,
   useGetAllAlapadatokQuery,
 } from "../store/api/apiSlice";
 
-export default function SajatosNevelesiIgenyuTanulokAranya() {
+export default function HatranyosHelyzetuTanulokAranya() {
   const schoolYears = generateSchoolYears();
 
   // API hooks
   const {
-    data: apiSniData,
+    data: apiHHData,
     error: fetchError,
     isLoading: isFetching,
-  } = useGetAllSajatosNevelesuTanulokQuery();
+  } = useGetAllHHesHHHNevelesuTanulokQuery();
 
   const { data: schoolsData, isLoading: isLoadingSchools } =
     useGetAllAlapadatokQuery();
 
-  const [addSajatosNevelesuTanulok, { isLoading: isAdding }] =
-    useAddSajatosNevelesuTanulokMutation();
-  const [updateSajatosNevelesuTanulok, { isLoading: isUpdating }] =
-    useUpdateSajatosNevelesuTanulokMutation();
-  const [deleteSajatosNevelesuTanulok, { isLoading: isDeleting }] =
-    useDeleteSajatosNevelesuTanulokMutation();
+  const [addHHData, { isLoading: isAdding }] =
+    useAddHHesHHHNevelesuTanulokMutation();
+  const [updateHHData, { isLoading: isUpdating }] =
+    useUpdateHHesHHHNevelesuTanulokMutation();
+  const [deleteHHData, { isLoading: isDeleting }] =
+    useDeleteHHesHHHNevelesuTanulokMutation();
 
-  const [sniData, setSniData] = useState([]);
+  const [hhData, setHHData] = useState([]);
   const [isModified, setIsModified] = useState(false);
   const [modifiedIds, setModifiedIds] = useState(new Set());
 
@@ -92,20 +92,21 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       alapadatok_id: "",
       selectedSchool: null,
       tanev_kezdete: "",
-      sni_tanulok_szama: 0,
+      hh_tanulok_szama: 0,
+      hhh_tanulok_szama: 0,
       osszes_tanulo_szama: 0,
     },
   });
 
   // Transform and organize API data
   const organizedData = useMemo(() => {
-    if (!sniData || !Array.isArray(sniData)) {
+    if (!hhData || !Array.isArray(hhData)) {
       return {};
     }
 
     const organized = {};
 
-    sniData.forEach((item) => {
+    hhData.forEach((item) => {
       const schoolName = item.alapadatok?.iskola_neve || "Ismeretlen iskola";
       const year = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
 
@@ -115,10 +116,27 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
       organized[schoolName][year] = {
         ...item,
-        sni_arany:
-          item.sni_tanulok_szama && item.osszes_tanulo_szama
+        hh_arany:
+          item.hh_tanulok_szama && item.osszes_tanulo_szama
             ? (
-                (item.sni_tanulok_szama / item.osszes_tanulo_szama) *
+                (item.hh_tanulok_szama / item.osszes_tanulo_szama) *
+                100
+              ).toFixed(2)
+            : 0,
+        hhh_arany:
+          item.hhh_tanulok_szama && item.osszes_tanulo_szama
+            ? (
+                (item.hhh_tanulok_szama / item.osszes_tanulo_szama) *
+                100
+              ).toFixed(2)
+            : 0,
+        osszes_hh_hhh_arany:
+          (item.hh_tanulok_szama || 0) + (item.hhh_tanulok_szama || 0) &&
+          item.osszes_tanulo_szama
+            ? (
+                (((item.hh_tanulok_szama || 0) +
+                  (item.hhh_tanulok_szama || 0)) /
+                  item.osszes_tanulo_szama) *
                 100
               ).toFixed(2)
             : 0,
@@ -126,39 +144,52 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
     });
 
     return organized;
-  }, [sniData]);
+  }, [hhData]);
 
   // Load data from API
   useEffect(() => {
-    if (apiSniData && Array.isArray(apiSniData)) {
-      setSniData(apiSniData);
+    if (apiHHData && Array.isArray(apiHHData)) {
+      setHHData(apiHHData);
     }
-  }, [apiSniData]);
+  }, [apiHHData]);
 
   // Handle data changes
   const handleDataChange = (id, field, value) => {
-    setSniData((prev) =>
+    setHHData((prev) =>
       prev.map((item) => {
         if (item.id === id) {
           const updatedItem = { ...item, [field]: value };
 
-          // Recalculate percentage when either field changes
+          // Recalculate percentages when any field changes
           if (
-            field === "sni_tanulok_szama" ||
+            field === "hh_tanulok_szama" ||
+            field === "hhh_tanulok_szama" ||
             field === "osszes_tanulo_szama"
           ) {
-            const sniTanulok =
-              field === "sni_tanulok_szama"
+            const hhTanulok =
+              field === "hh_tanulok_szama"
                 ? parseInt(value) || 0
-                : parseInt(item.sni_tanulok_szama) || 0;
-            const osszesCanulok =
+                : parseInt(item.hh_tanulok_szama) || 0;
+            const hhhTanulok =
+              field === "hhh_tanulok_szama"
+                ? parseInt(value) || 0
+                : parseInt(item.hhh_tanulok_szama) || 0;
+            const osszesTanulo =
               field === "osszes_tanulo_szama"
                 ? parseInt(value) || 0
                 : parseInt(item.osszes_tanulo_szama) || 0;
 
-            updatedItem.sni_arany =
-              osszesCanulok > 0
-                ? ((sniTanulok / osszesCanulok) * 100).toFixed(2)
+            updatedItem.hh_arany =
+              osszesTanulo > 0
+                ? ((hhTanulok / osszesTanulo) * 100).toFixed(2)
+                : 0;
+            updatedItem.hhh_arany =
+              osszesTanulo > 0
+                ? ((hhhTanulok / osszesTanulo) * 100).toFixed(2)
+                : 0;
+            updatedItem.osszes_hh_hhh_arany =
+              osszesTanulo > 0
+                ? (((hhTanulok + hhhTanulok) / osszesTanulo) * 100).toFixed(2)
                 : 0;
           }
 
@@ -173,12 +204,13 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
   const handleSave = async () => {
     try {
-      const itemsToUpdate = sniData.filter((item) => modifiedIds.has(item.id));
+      const itemsToUpdate = hhData.filter((item) => modifiedIds.has(item.id));
 
       for (const item of itemsToUpdate) {
-        await updateSajatosNevelesuTanulok({
+        await updateHHData({
           id: item.id,
-          sni_tanulok_szama: parseInt(item.sni_tanulok_szama) || 0,
+          hh_tanulok_szama: parseInt(item.hh_tanulok_szama) || 0,
+          hhh_tanulok_szama: parseInt(item.hhh_tanulok_szama) || 0,
           osszes_tanulo_szama: parseInt(item.osszes_tanulo_szama) || 0,
         }).unwrap();
       }
@@ -192,7 +224,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         severity: "success",
       });
     } catch (error) {
-      console.error("Error saving SNI data:", error);
+      console.error("Error saving HH data:", error);
       setNotification({
         open: true,
         message: `Hiba történt a mentés során: ${
@@ -204,8 +236,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
   };
 
   const handleReset = () => {
-    if (apiSniData) {
-      setSniData([...apiSniData]);
+    if (apiHHData) {
+      setHHData([...apiHHData]);
       setIsModified(false);
       setModifiedIds(new Set());
     }
@@ -213,9 +245,9 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
   const handleDelete = async (id) => {
     try {
-      await deleteSajatosNevelesuTanulok(id).unwrap();
+      await deleteHHData(id).unwrap();
 
-      setSniData((prev) => prev.filter((item) => item.id !== id));
+      setHHData((prev) => prev.filter((item) => item.id !== id));
 
       setNotification({
         open: true,
@@ -225,7 +257,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
       setDeleteDialog({ open: false, id: null, schoolName: "", year: "" });
     } catch (error) {
-      console.error("Error deleting SNI data:", error);
+      console.error("Error deleting HH data:", error);
       setNotification({
         open: true,
         message: `Hiba történt a törlés során: ${
@@ -255,7 +287,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         alapadatok_id: "",
         selectedSchool: null,
         tanev_kezdete: currentSchoolYear,
-        sni_tanulok_szama: 0,
+        hh_tanulok_szama: 0,
+        hhh_tanulok_szama: 0,
         osszes_tanulo_szama: 0,
       },
     });
@@ -268,7 +301,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         alapadatok_id: "",
         selectedSchool: null,
         tanev_kezdete: "",
-        sni_tanulok_szama: 0,
+        hh_tanulok_szama: 0,
+        hhh_tanulok_szama: 0,
         osszes_tanulo_szama: 0,
       },
     });
@@ -288,16 +322,17 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           addDialog.newRecord.selectedSchool?.id ||
           parseInt(addDialog.newRecord.alapadatok_id),
         tanev_kezdete: parseInt(addDialog.newRecord.tanev_kezdete),
-        sni_tanulok_szama: parseInt(addDialog.newRecord.sni_tanulok_szama) || 0,
+        hh_tanulok_szama: parseInt(addDialog.newRecord.hh_tanulok_szama) || 0,
+        hhh_tanulok_szama: parseInt(addDialog.newRecord.hhh_tanulok_szama) || 0,
         osszes_tanulo_szama:
           parseInt(addDialog.newRecord.osszes_tanulo_szama) || 0,
       };
 
-      await addSajatosNevelesuTanulok(newRecord).unwrap();
+      await addHHData(newRecord).unwrap();
 
       setNotification({
         open: true,
-        message: `Új SNI tanuló arány rekord sikeresen hozzáadva: ${
+        message: `Új HH/HHH rekord sikeresen hozzáadva: ${
           addDialog.newRecord.selectedSchool?.iskola_neve || "Ismeretlen iskola"
         } - ${newRecord.tanev_kezdete}/${newRecord.tanev_kezdete + 1}`,
         severity: "success",
@@ -305,7 +340,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
       closeAddDialog();
     } catch (error) {
-      console.error("Error adding new SNI data:", error);
+      console.error("Error adding new HH data:", error);
       setNotification({
         open: true,
         message: `Hiba történt az új rekord hozzáadása során: ${
@@ -320,34 +355,45 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
   const summaryStats = useMemo(() => {
     const stats = {};
 
-    sniData.forEach((item) => {
+    hhData.forEach((item) => {
       const year = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
       if (!stats[year]) {
         stats[year] = {
-          totalSniTanulok: 0,
-          totalOsszesTanulok: 0,
+          totalHH: 0,
+          totalHHH: 0,
+          totalStudents: 0,
           count: 0,
         };
       }
-      stats[year].totalSniTanulok += parseInt(item.sni_tanulok_szama) || 0;
-      stats[year].totalOsszesTanulok += parseInt(item.osszes_tanulo_szama) || 0;
+      stats[year].totalHH += parseInt(item.hh_tanulok_szama) || 0;
+      stats[year].totalHHH += parseInt(item.hhh_tanulok_szama) || 0;
+      stats[year].totalStudents += parseInt(item.osszes_tanulo_szama) || 0;
       stats[year].count += 1;
     });
 
-    // Calculate average percentage
+    // Calculate percentages
     Object.keys(stats).forEach((year) => {
       const yearStats = stats[year];
-      yearStats.atlagArany =
-        yearStats.totalOsszesTanulok > 0
+      yearStats.hhArany =
+        yearStats.totalStudents > 0
+          ? ((yearStats.totalHH / yearStats.totalStudents) * 100).toFixed(2)
+          : 0;
+      yearStats.hhhArany =
+        yearStats.totalStudents > 0
+          ? ((yearStats.totalHHH / yearStats.totalStudents) * 100).toFixed(2)
+          : 0;
+      yearStats.osszesArany =
+        yearStats.totalStudents > 0
           ? (
-              (yearStats.totalSniTanulok / yearStats.totalOsszesTanulok) *
+              ((yearStats.totalHH + yearStats.totalHHH) /
+                yearStats.totalStudents) *
               100
             ).toFixed(2)
           : 0;
     });
 
     return stats;
-  }, [sniData]);
+  }, [hhData]);
 
   return (
     <Box sx={{ p: 3 }}>
@@ -371,14 +417,12 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       )}
 
       <Typography variant="h4" component="h1" gutterBottom>
-        Sajátos nevelési igényű tanulók aránya
+        Hátrányos helyzetű és halmozottan hátrányos helyzetű tanulók aránya
       </Typography>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        A sajátos nevelési igényű (SNI) tanulók arányának nyomon követése
-        intézményenként és tanévenként. Ez az indikátor az inkluzív oktatás
-        hatékonyságának és az egyenlő esélyű hozzáférés biztosításának fontos
-        mutatója.
+        A hátrányos helyzetű (HH) és halmozottan hátrányos helyzetű (HHH)
+        tanulók arányának nyomon követése iskolánként és tanévenként.
       </Typography>
 
       {/* Summary Statistics */}
@@ -401,24 +445,39 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                     <TableCell sx={{ fontWeight: "bold" }}>Tanév</TableCell>
                     <TableCell
                       align="center"
-                      sx={{ fontWeight: "bold", backgroundColor: "#fff3cd" }}
+                      sx={{ fontWeight: "bold", backgroundColor: "#ffe6cc" }}
                     >
-                      SNI tanulók (fő)
+                      HH tanulók (fő)
                     </TableCell>
                     <TableCell
                       align="center"
-                      sx={{ fontWeight: "bold", backgroundColor: "#d4edda" }}
+                      sx={{ fontWeight: "bold", backgroundColor: "#ffcccc" }}
+                    >
+                      HHH tanulók (fő)
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ fontWeight: "bold", backgroundColor: "#e6f3ff" }}
                     >
                       Összes tanuló (fő)
                     </TableCell>
                     <TableCell
                       align="center"
-                      sx={{ fontWeight: "bold", backgroundColor: "#cce5ff" }}
+                      sx={{ fontWeight: "bold", backgroundColor: "#d4edda" }}
                     >
-                      SNI arány (%)
+                      HH arány (%)
                     </TableCell>
-                    <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                      Intézmények száma
+                    <TableCell
+                      align="center"
+                      sx={{ fontWeight: "bold", backgroundColor: "#f8d7da" }}
+                    >
+                      HHH arány (%)
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ fontWeight: "bold", backgroundColor: "#fff3cd" }}
+                    >
+                      Összes arány (%)
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -430,27 +489,50 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                       </TableCell>
                       <TableCell
                         align="center"
-                        sx={{ backgroundColor: "#fff3cd40" }}
+                        sx={{ backgroundColor: "#ffe6cc40" }}
                       >
-                        {stats.totalSniTanulok}
+                        {stats.totalHH}
                       </TableCell>
                       <TableCell
                         align="center"
-                        sx={{ backgroundColor: "#d4edda40" }}
+                        sx={{ backgroundColor: "#ffcccc40" }}
                       >
-                        {stats.totalOsszesTanulok}
+                        {stats.totalHHH}
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ backgroundColor: "#e6f3ff40" }}
+                      >
+                        {stats.totalStudents}
                       </TableCell>
                       <TableCell
                         align="center"
                         sx={{
-                          backgroundColor: "#cce5ff40",
+                          backgroundColor: "#d4edda40",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {stats.hhArany}%
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          backgroundColor: "#f8d7da40",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {stats.hhhArany}%
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          backgroundColor: "#fff3cd40",
                           fontWeight: "bold",
                           color: "primary.main",
                         }}
                       >
-                        {stats.atlagArany}%
+                        {stats.osszesArany}%
                       </TableCell>
-                      <TableCell align="center">{stats.count}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -460,72 +542,15 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         </CardContent>
       </Card>
 
-      {/* Instructions Card */}
-      <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            SNI tanulók kategóriái és jellemzői
-          </Typography>
-          <Box component="ul" sx={{ pl: 3, mb: 2 }}>
-            <li>
-              <Typography variant="body2">
-                <strong>Érzékszervi fogyatékosság:</strong> Látás- vagy
-                halláskárosodás
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Értelmi fogyatékosság:</strong> Enyhe, középsúlyos vagy
-                súlyos
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Beszédfogyatékosság:</strong> Kommunikációs nehézségek
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Mozgásfogyatékosság:</strong> Fizikai korlátozottság
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Tanulási nehézség:</strong> Diszlexia, diszgráfia,
-                diszkalkúlia
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Autizmus spektrum zavar:</strong> Társas kommunikációs
-                nehézségek
-              </Typography>
-            </li>
-          </Box>
-
-          <Box
-            sx={{ mt: 3, p: 2, backgroundColor: "#e8f5e8", borderRadius: 1 }}
-          >
-            <Typography variant="body2" sx={{ fontStyle: "italic" }}>
-              <strong>Jogszabályi háttér:</strong>
-              <br />A 2011. évi CXC. törvény a nemzeti köznevelésről és a
-              326/2013. (VIII. 30.) Korm. rendelet a pedagógusok előmeneteli
-              rendszeréről alapján az SNI tanulók szakértői bizottság véleménye
-              alapján részesülnek egyéni fejlesztésben.
-            </Typography>
-          </Box>
-        </CardContent>
-      </Card>
-
       {/* Detailed Data by School */}
       <Card>
         <CardContent>
           <Typography variant="h6" component="h2" gutterBottom>
-            Részletes SNI tanuló arány adatok iskolák szerint
+            Részletes adatok iskolák szerint
           </Typography>
 
           {/* Show empty state if no data */}
-          {!sniData || sniData.length === 0 ? (
+          {!hhData || hhData.length === 0 ? (
             <Box sx={{ textAlign: "center", py: 4 }}>
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 📊 Nincs megjeleníthető adat
@@ -533,7 +558,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
               <Typography variant="body2" color="text.secondary">
                 {isFetching
                   ? "Adatok betöltése folyamatban..."
-                  : "Nincsenek SNI tanuló arány adatok a kiválasztott időszakra."}
+                  : "Nincsenek HH/HHH adatok a kiválasztott időszakra."}
               </Typography>
             </Box>
           ) : (
@@ -556,16 +581,25 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                             align="center"
                             sx={{
                               fontWeight: "bold",
-                              backgroundColor: "#fff3cd",
+                              backgroundColor: "#ffe6cc",
                             }}
                           >
-                            SNI tanulók száma (fő)
+                            HH tanulók (fő)
                           </TableCell>
                           <TableCell
                             align="center"
                             sx={{
                               fontWeight: "bold",
-                              backgroundColor: "#d4edda",
+                              backgroundColor: "#ffcccc",
+                            }}
+                          >
+                            HHH tanulók (fő)
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            sx={{
+                              fontWeight: "bold",
+                              backgroundColor: "#e6f3ff",
                             }}
                           >
                             Összes tanuló (fő)
@@ -574,10 +608,28 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                             align="center"
                             sx={{
                               fontWeight: "bold",
-                              backgroundColor: "#cce5ff",
+                              backgroundColor: "#d4edda",
                             }}
                           >
-                            SNI arány (%)
+                            HH arány (%)
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            sx={{
+                              fontWeight: "bold",
+                              backgroundColor: "#f8d7da",
+                            }}
+                          >
+                            HHH arány (%)
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            sx={{
+                              fontWeight: "bold",
+                              backgroundColor: "#fff3cd",
+                            }}
+                          >
+                            Összes arány (%)
                           </TableCell>
                           <TableCell align="center" sx={{ fontWeight: "bold" }}>
                             Műveletek
@@ -592,15 +644,15 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                             </TableCell>
                             <TableCell
                               align="center"
-                              sx={{ backgroundColor: "#fff3cd40" }}
+                              sx={{ backgroundColor: "#ffe6cc40" }}
                             >
                               <TextField
                                 type="number"
-                                value={data.sni_tanulok_szama || 0}
+                                value={data.hh_tanulok_szama || 0}
                                 onChange={(e) =>
                                   handleDataChange(
                                     data.id,
-                                    "sni_tanulok_szama",
+                                    "hh_tanulok_szama",
                                     e.target.value
                                   )
                                 }
@@ -614,7 +666,29 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                             </TableCell>
                             <TableCell
                               align="center"
-                              sx={{ backgroundColor: "#d4edda40" }}
+                              sx={{ backgroundColor: "#ffcccc40" }}
+                            >
+                              <TextField
+                                type="number"
+                                value={data.hhh_tanulok_szama || 0}
+                                onChange={(e) =>
+                                  handleDataChange(
+                                    data.id,
+                                    "hhh_tanulok_szama",
+                                    e.target.value
+                                  )
+                                }
+                                size="small"
+                                inputProps={{
+                                  min: 0,
+                                  style: { textAlign: "center" },
+                                }}
+                                sx={{ width: "80px" }}
+                              />
+                            </TableCell>
+                            <TableCell
+                              align="center"
+                              sx={{ backgroundColor: "#e6f3ff40" }}
                             >
                               <TextField
                                 type="number"
@@ -637,12 +711,30 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                             <TableCell
                               align="center"
                               sx={{
-                                backgroundColor: "#cce5ff40",
+                                backgroundColor: "#d4edda40",
+                                fontWeight: "bold",
+                              }}
+                            >
+                              {data.hh_arany}%
+                            </TableCell>
+                            <TableCell
+                              align="center"
+                              sx={{
+                                backgroundColor: "#f8d7da40",
+                                fontWeight: "bold",
+                              }}
+                            >
+                              {data.hhh_arany}%
+                            </TableCell>
+                            <TableCell
+                              align="center"
+                              sx={{
+                                backgroundColor: "#fff3cd40",
                                 fontWeight: "bold",
                                 color: "primary.main",
                               }}
                             >
-                              {data.sni_arany}%
+                              {data.osszes_hh_hhh_arany}%
                             </TableCell>
                             <TableCell align="center">
                               <IconButton
@@ -713,26 +805,33 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           </Typography>
           <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap">
             <Chip
-              label="SNI tanulók"
+              label="HH tanulók"
               variant="outlined"
-              sx={{ backgroundColor: "#fff3cd" }}
+              sx={{ backgroundColor: "#ffe6cc" }}
+            />
+            <Chip
+              label="HHH tanulók"
+              variant="outlined"
+              sx={{ backgroundColor: "#ffcccc" }}
             />
             <Chip
               label="Összes tanuló"
               variant="outlined"
-              sx={{ backgroundColor: "#d4edda" }}
+              sx={{ backgroundColor: "#e6f3ff" }}
             />
             <Chip
-              label="SNI arány"
+              label="Számított arányok (%)"
               variant="outlined"
-              sx={{ backgroundColor: "#cce5ff" }}
+              sx={{ backgroundColor: "#fff3cd" }}
             />
           </Stack>
           <Typography variant="body2">
-            A táblázat a sajátos nevelési igényű tanulók arányát jeleníti meg
-            iskolák és tanévek szerint. Az arány automatikusan számítódik az SNI
-            és összes tanuló létszám alapján. Az adatok szakértői bizottság
-            véleményén alapulnak.
+            <strong>HH:</strong> Hátrányos helyzetű tanulók
+            <br />
+            <strong>HHH:</strong> Halmozottan hátrányos helyzetű tanulók
+            <br />
+            Az arányok automatikusan számítódnak az adott kategória tanulóinak
+            száma és az összes tanuló száma alapján.
           </Typography>
         </CardContent>
       </Card>
@@ -741,18 +840,13 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       <Dialog
         open={deleteDialog.open}
         onClose={() =>
-          setDeleteDialog({
-            open: false,
-            id: null,
-            schoolName: "",
-            year: "",
-          })
+          setDeleteDialog({ open: false, id: null, schoolName: "", year: "" })
         }
       >
         <DialogTitle>Törlés megerősítése</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Biztosan törölni szeretnéd a következő SNI tanuló arány adatokat?
+            Biztosan törölni szeretnéd a következő HH/HHH adatokat?
             <br />
             <strong>Iskola:</strong> {deleteDialog.schoolName}
             <br />
@@ -793,10 +887,10 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Új SNI tanuló arány rekord hozzáadása</DialogTitle>
+        <DialogTitle>Új HH/HHH rekord hozzáadása</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12}>
               <FormControl fullWidth>
                 <InputLabel>Iskola *</InputLabel>
                 <Select
@@ -847,14 +941,28 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="SNI tanulók száma (fő)"
+                label="HH tanulók száma (fő)"
                 type="number"
-                value={addDialog.newRecord.sni_tanulok_szama}
+                value={addDialog.newRecord.hh_tanulok_szama}
                 onChange={(e) =>
-                  handleNewRecordChange("sni_tanulok_szama", e.target.value)
+                  handleNewRecordChange("hh_tanulok_szama", e.target.value)
                 }
                 inputProps={{ min: 0 }}
-                helperText="Sajátos nevelési igényű tanulók száma"
+                helperText="Hátrányos helyzetű tanulók száma"
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="HHH tanulók száma (fő)"
+                type="number"
+                value={addDialog.newRecord.hhh_tanulok_szama}
+                onChange={(e) =>
+                  handleNewRecordChange("hhh_tanulok_szama", e.target.value)
+                }
+                inputProps={{ min: 0 }}
+                helperText="Halmozottan hátrányos helyzetű tanulók száma"
               />
             </Grid>
 
@@ -868,7 +976,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                   handleNewRecordChange("osszes_tanulo_szama", e.target.value)
                 }
                 inputProps={{ min: 0 }}
-                helperText="Az intézmény teljes tanulói létszáma"
+                helperText="Az iskola összes tanulójának száma"
               />
             </Grid>
 
@@ -878,14 +986,36 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                 sx={{
                   mt: 2,
                   p: 2,
-                  backgroundColor: "#cce5ff",
+                  backgroundColor: "#fff2cc",
                   borderRadius: 1,
                 }}
               >
-                <strong>Számított SNI arány:</strong>{" "}
+                <strong>Számított arányok:</strong>
+                <br />
+                HH arány:{" "}
                 {addDialog.newRecord.osszes_tanulo_szama > 0
                   ? (
-                      (addDialog.newRecord.sni_tanulok_szama /
+                      (addDialog.newRecord.hh_tanulok_szama /
+                        addDialog.newRecord.osszes_tanulo_szama) *
+                      100
+                    ).toFixed(2)
+                  : 0}
+                %<br />
+                HHH arány:{" "}
+                {addDialog.newRecord.osszes_tanulo_szama > 0
+                  ? (
+                      (addDialog.newRecord.hhh_tanulok_szama /
+                        addDialog.newRecord.osszes_tanulo_szama) *
+                      100
+                    ).toFixed(2)
+                  : 0}
+                %<br />
+                Összes arány:{" "}
+                {addDialog.newRecord.osszes_tanulo_szama > 0
+                  ? (
+                      (((parseInt(addDialog.newRecord.hh_tanulok_szama) || 0) +
+                        (parseInt(addDialog.newRecord.hhh_tanulok_szama) ||
+                          0)) /
                         addDialog.newRecord.osszes_tanulo_szama) *
                       100
                     ).toFixed(2)
