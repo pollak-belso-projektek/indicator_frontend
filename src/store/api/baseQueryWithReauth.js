@@ -1,10 +1,11 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { logout, refreshTokenSuccess } from "../slices/authSlice";
 import config from "../../config";
 
 // Base query with authentication and automatic token refresh
 const baseQuery = fetchBaseQuery({
   baseUrl: config.apiBaseUrl,
+  timeout: 10000, // 10 second timeout for all API calls
   prepareHeaders: (headers, { getState }) => {
     // Get the access token from the auth state
     const token = getState().auth?.accessToken;

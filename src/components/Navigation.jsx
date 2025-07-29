@@ -39,6 +39,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   useGetAllAlapadatokQuery,
   useLogoutMutation,
+  indicatorApi,
 } from "../store/api/apiSlice";
 import {
   logout,
@@ -51,6 +52,7 @@ import {
 } from "../store/slices/authSlice";
 import { FiChevronDown } from "react-icons/fi";
 import UserRoleBadge from "./UserRoleBadge";
+import { toaster } from "./ui/toaster";
 import {
   FormControl,
   OutlinedInput,
@@ -775,11 +777,46 @@ const MobileNav = ({ onOpen, ...rest }) => {
   const [logoutMutation] = useLogoutMutation();
 
   const { data: schoolsData } = useGetAllAlapadatokQuery();
+
   useEffect(() => {
     if (schoolsData) {
       console.log("Schools data:", schoolsData);
     }
   }, [schoolsData]);
+
+  // Emergency logout handler (bypasses API call)
+  const handleEmergencyLogout = () => {
+    console.log("Emergency logout triggered - bypassing API call");
+
+    // Show immediate toast
+    toaster.create({
+      title: "Azonnali kijelentkezés",
+      description: "Helyi kijelentkezést hajt végre API hívás nélkül.",
+      status: "info",
+      duration: 2000,
+    });
+
+    // Clear all RTK Query cache data
+    dispatch(indicatorApi.util.resetApiState());
+    // Clear auth state
+    dispatch(logout());
+    // Navigate to login immediately
+    navigate("/login");
+  };
+
+  // Add keyboard shortcut for emergency logout (Ctrl+Shift+L)
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "l") {
+        event.preventDefault();
+        console.log("Emergency logout shortcut activated");
+        handleEmergencyLogout();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, []);
 
   const schools = {
     items:
@@ -790,13 +827,70 @@ const MobileNav = ({ onOpen, ...rest }) => {
   };
 
   const handleLogout = async () => {
+    // Show loading toast
+    const loadingToast = toaster.create({
+      title: "Kijelentkezés...",
+      description: "Kérjük várjon, amíg a kijelentkezés folyamata befejeződik.",
+      status: "loading",
+      duration: null, // Don't auto-close
+    });
+
     try {
-      await logoutMutation().unwrap();
+      console.log("Starting logout process...");
+
+      // Add a timeout for the logout API call - shorter timeout for logout
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Logout request timed out")), 3000)
+      );
+
+      // Try to call the logout API with timeout
+      await Promise.race([logoutMutation().unwrap(), timeoutPromise]);
+
+      console.log("Server logout successful");
+
+      // Update loading toast to success
+      toaster.update(loadingToast, {
+        title: "Sikeres kijelentkezés",
+        description: "A szerver kijelentkeztette Önt.",
+        status: "success",
+        duration: 2000,
+      });
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("Logout API error (proceeding with local logout):", error);
+
+      // Update loading toast to warning
+      toaster.update(loadingToast, {
+        title: "Helyi kijelentkezés",
+        description:
+          "Szerver kapcsolat megszakadt, de a helyi kijelentkezés megtörtént.",
+        status: "warning",
+        duration: 3000,
+      });
+
+      // Check if it's a timeout or connection error
+      if (
+        error.message?.includes("timeout") ||
+        error.status === "FETCH_ERROR"
+      ) {
+        console.log("Network issue detected - logging out locally");
+      }
+
+      // Even if API logout fails, we still want to log out locally
+      // This is important for security - never leave user "stuck" logged in
     } finally {
+      // Always perform local logout regardless of API response
+      console.log("Performing local logout...");
+
+      // Clear all RTK Query cache data
+      dispatch(indicatorApi.util.resetApiState());
+
+      // Clear auth state
       dispatch(logout());
-      navigate("/login");
+
+      // Navigate to login
+      setTimeout(() => {
+        navigate("/login");
+      }, 1000); // Small delay to show the toast
     }
   };
   const handleChange = (event) => {
@@ -901,6 +995,13 @@ const MobileNav = ({ onOpen, ...rest }) => {
                 <Menu.Item>Settings</Menu.Item>
                 <Menu.Separator />
                 <Menu.Item onClick={handleLogout}>Sign out</Menu.Item>
+                <Menu.Item
+                  onClick={handleEmergencyLogout}
+                  color="red.500"
+                  fontSize="sm"
+                >
+                  Emergency Logout (if timeout)
+                </Menu.Item>
               </Menu.Content>
             </Menu.Positioner>
           </Menu.Root>
