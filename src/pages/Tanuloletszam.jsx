@@ -1,176 +1,127 @@
+import React, { useState, useMemo, useEffect } from "react";
+import { useSelector } from "react-redux";
 import {
-  useReactTable,
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-} from "@tanstack/react-table";
-import {
-  useGetTanugyiAdatokQuery,
-  useAddTanuloLetszamMutation,
-  useGetTanuloLetszamQuery,
-  useDeleteTanuloLetszamMutation,
-} from "../store/api/apiSlice";
-import {
-  Spinner,
-  Text,
-  Button,
-  HStack,
-  Tooltip,
-  Table,
   Box,
-  VStack,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Button,
+  Stack,
+  Alert,
+  Card,
+  CardContent,
   Tabs,
-} from "@chakra-ui/react";
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+  Tab,
+} from "@mui/material";
+import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import { selectSelectedSchool } from "../store/slices/authSlice";
+import {
+  useGetTanuloLetszamQuery,
+  useAddTanuloLetszamMutation,
+  useGetAllAlapadatokQuery,
+} from "../store/api/apiSlice";
+import { generateSchoolYears } from "../utils/schoolYears";
 import TanuloLetszamChart from "../components/TanuloLetszamChart";
 
-const columnHelper = createColumnHelper();
+const evszamok = generateSchoolYears();
 
-export default function TanuloLatszam() {
+export default function TanuloLetszam() {
+  const selectedSchool = useSelector(selectSelectedSchool);
+
+  // API hooks
   const {
-    data: tanugyiData,
-    error,
-    isLoading,
-  } = useGetTanugyiAdatokQuery({
-    alapadatok_id: "2e31291b-7c2d-4bd8-bdca-de8580136874",
-    ev: 2024,
-  });
+    data: apiStudentData,
+    error: fetchError,
+    isLoading: isFetching,
+  } = useGetTanuloLetszamQuery(
+    { alapadatok_id: selectedSchool?.id },
+    { skip: !selectedSchool?.id }
+  );
 
-  const {
-    data: tanuloLetszamData,
-    error: letszamError,
-    isLoading: letszamIsLoading,
-  } = useGetTanuloLetszamQuery({
-    alapadatok_id: "2e31291b-7c2d-4bd8-bdca-de8580136874",
-  });
+  const { data: schoolsData, isLoading: isLoadingSchools } =
+    useGetAllAlapadatokQuery();
 
-  const [addTanuloLetszam, result] = useAddTanuloLetszamMutation();
-  const [deleteTanuloLetszam, resultDelete] = useDeleteTanuloLetszamMutation();
+  const [addStudentData, { isLoading: isUpdating }] =
+    useAddTanuloLetszamMutation();
 
-  const { agazatData, years } = getGroupedData();
+  // State for the integrated table data
+  const [tableData, setTableData] = useState({});
+  const [isModified, setIsModified] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const [editableData, setEditableData] = useState([]);
 
-  const [editableData, setEditableData] = useState(agazatData);
-  const [prevData, setPrevData] = useState(agazatData);
+  // Program types based on the selected school's actual data
+  const programTypes = useMemo(() => {
+    if (!schoolsData || !Array.isArray(schoolsData)) return [];
 
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (tanugyiData) {
-      const { agazatData } = getGroupedData();
-      setEditableData(agazatData);
-      setPrevData(agazatData);
+    let relevantSchools = schoolsData;
+    if (selectedSchool) {
+      relevantSchools = schoolsData.filter(
+        (school) => school.id === selectedSchool.id
+      );
     }
-  }, [tanugyiData]);
 
-  const columns = [
-    columnHelper.accessor("name", {
-      header: "Ágazat típusa",
-      cell: (info) => info.getValue(),
-    }),
+    const categories = [];
 
-    // Grouped columns
-    ...["Tanulói jogviszony", "Felnőttképzési jogviszony", "Összesen"].map(
-      (category) => ({
-        header: category,
-        columns: years?.map((year) => ({
-          id: `${category}-${year}`,
-          header: `${year}/${year + 1}`,
-          cell: ({ row, column }) => {
-            const [isEditing, setIsEditing] = React.useState(false);
-            const [inputValue, setInputValue] = React.useState(() => {
-              const yearKey = column.id.split("-")[1];
-              const categoryKey = column.id.split("-")[0];
-              const data = row.original.yearCounts[yearKey] || {};
-              return data[categoryKey] ?? 0;
-            });
+    // Add "Összesen" category with institution types
+    const institutionTypes = [
+      ...new Set(relevantSchools.map((school) => school.intezmeny_tipus)),
+    ];
+    if (institutionTypes.length > 0) {
+      categories.push({
+        category: "Összesen",
+        subTypes: institutionTypes,
+        isTotal: true,
+      });
 
-            const yearKey = column.id.split("-")[1];
-            const categoryKey = column.id.split("-")[0];
+      // Add individual institution types
+      institutionTypes.forEach((instType) => {
+        categories.push({
+          category: `Intézménytípusonként`,
+          subTypes: [`ebből: ${instType}`],
+          isInstitutionType: true,
+        });
+      });
+    }
 
-            if (categoryKey === "Összesen") {
-              const data = row.original.yearCounts[yearKey] || {};
-              return (
-                (data["Tanulói jogviszony"] || 0) +
-                (data["Felnőttképzési jogviszony"] || 0) +
-                (data["Egyéb"] || 0)
-              );
+    // Extract szakirányok and szakmák from the schools
+    relevantSchools.forEach((school) => {
+      if (
+        school.alapadatok_szakirany &&
+        Array.isArray(school.alapadatok_szakirany)
+      ) {
+        school.alapadatok_szakirany.forEach((szakiranyData) => {
+          const szakirany = szakiranyData.szakirany;
+          if (szakirany) {
+            // Add szakmák under this szakirány
+            if (szakirany.szakma && Array.isArray(szakirany.szakma)) {
+              const szakmaNevek = szakirany.szakma
+                .map((szakmaData) => szakmaData.szakma?.nev)
+                .filter(Boolean);
+              if (szakmaNevek.length > 0) {
+                categories.push({
+                  category: `Szakmánként`,
+                  subTypes: szakmaNevek,
+                  isSpecialty: true,
+                });
+              }
             }
+          }
+        });
+      }
+    });
 
-            const handleCommit = () => {
-              setEditableData((prev) => {
-                const newRow = { ...prev[row.index] };
-                const newYearCounts = { ...newRow.yearCounts };
-                newYearCounts[yearKey] = {
-                  ...newYearCounts[yearKey],
-                  [categoryKey]: Number(inputValue),
-                };
-                const updatedRow = {
-                  ...newRow,
-                  yearCounts: newYearCounts,
-                };
-                const updatedData = [...prev];
-                updatedData[row.index] = updatedRow;
-                return updatedData;
-              });
-              setIsEditing(false);
-            };
+    return categories;
+  }, [schoolsData, selectedSchool]);
 
-            return isEditing ? (
-              <input
-                autoFocus
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onBlur={handleCommit}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleCommit();
-                  } else if (e.key === "Escape") {
-                    setIsEditing(false);
-                  }
-                }}
-                style={{
-                  width: "100%",
-                  height: "24px",
-                  boxSizing: "border-box",
-                  padding: "2px 4px",
-                  fontSize: "inherit",
-                  fontFamily: "inherit",
-                  margin: 0,
-                  borderRadius: "8px",
-                  transition: "all 0.3s ease",
-                  fieldSizing: "content",
-                }}
-              />
-            ) : (
-              <div
-                onClick={() => setIsEditing(true)}
-                style={{
-                  cursor: "pointer",
-                  height: "24px",
-                  padding: "2px 4px",
-                  display: "flex",
-                  alignItems: "center",
-                  margin: 0,
-                }}
-              >
-                {inputValue}
-              </div>
-            );
-          },
-        })),
-      })
-    ),
-  ];
-
-  const table = useReactTable({
-    data: editableData,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
-  function getGroupedData() {
+  // Process API data into chart-compatible format
+  const { chartData, years } = useMemo(() => {
     // Generate the last 4 academic years based on current date
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
@@ -185,12 +136,11 @@ export default function TanuloLatszam() {
       (_, i) => academicYearStart - 3 + i
     );
 
-    // If tanuloLetszamData is available, use it to set initial values
-    if (tanuloLetszamData) {
+    if (apiStudentData && Array.isArray(apiStudentData)) {
       const groupedByAgazat = {};
 
-      tanuloLetszamData.forEach((item) => {
-        const agazatType = item.szakirany.nev;
+      apiStudentData.forEach((item) => {
+        const agazatType = item.szakirany?.nev || "Nincs megadva";
         const year = item.tanev_kezdete;
         const jogviszonyType =
           item.jogv_tipus === 0
@@ -229,326 +179,465 @@ export default function TanuloLatszam() {
         });
       });
 
-      return {
-        agazatData: Object.values(groupedByAgazat),
-        years: last4Years,
-      };
-    } else {
-      if (!tanugyiData || !Array.isArray(tanugyiData)) {
-        return { agazatData: [], years: last4Years };
-      }
-
-      const groupedByAgazat = {};
-
-      tanugyiData.forEach((item) => {
-        const agazatType = item.uj_Szkt_agazat_tipusa || "Nincs megadva";
-        const year = item.tanev_kezdete ? item.tanev_kezdete : "Nincs év";
-        const jogviszonyType = item.tanulo_jogviszonya || "Nincs megadva";
-
-        if (!groupedByAgazat[agazatType]) {
-          groupedByAgazat[agazatType] = {
-            name: agazatType,
-            yearCounts: {},
-          };
-        }
-
-        if (!groupedByAgazat[agazatType].yearCounts[year]) {
-          groupedByAgazat[agazatType].yearCounts[year] = {
-            "Tanulói jogviszony": 0,
-            "Felnőttképzési jogviszony": 0,
-            Egyéb: 0,
-          };
-        }
-
-        if (jogviszonyType === "Tanulói jogviszony") {
-          groupedByAgazat[agazatType].yearCounts[year][
-            "Tanulói jogviszony"
-          ] += 1;
-        } else if (jogviszonyType === "Felnőttképzési jogviszony") {
-          groupedByAgazat[agazatType].yearCounts[year][
-            "Felnőttképzési jogviszony"
-          ] += 1;
-        } else {
-          groupedByAgazat[agazatType].yearCounts[year]["Egyéb"] += 1;
-        }
-      });
-
-      // Ensure all agazat types have entries for all 4 years
-      Object.values(groupedByAgazat).forEach((agazat) => {
-        last4Years.forEach((year) => {
-          if (!agazat.yearCounts[year]) {
-            agazat.yearCounts[year] = {
-              "Tanulói jogviszony": 0,
-              "Felnőttképzési jogviszony": 0,
-              Egyéb: 0,
-            };
-          }
-        });
-      });
+      const chartCompatibleData = Object.values(groupedByAgazat);
+      setEditableData(chartCompatibleData); // Set for table use too
 
       return {
-        agazatData: Object.values(groupedByAgazat),
+        chartData: chartCompatibleData,
         years: last4Years,
       };
     }
-  }
 
-  const computeTotal = (year, category) => {
-    return editableData.reduce((sum, item) => {
-      if (category === "Összesen") {
-        const data = item.yearCounts[year] || {};
-        return (
-          sum +
-          (data["Tanulói jogviszony"] || 0) +
-          (data["Felnőttképzési jogviszony"] || 0) +
-          (data["Egyéb"] || 0)
-        );
+    // Empty fallback
+    return {
+      chartData: [],
+      years: last4Years,
+    };
+  }, [apiStudentData]);
+
+  // Handle data changes
+  const handleDataChange = (programType, year, field, value) => {
+    setTableData((prev) => ({
+      ...prev,
+      [programType]: {
+        ...(prev[programType] || {}),
+        [year]: {
+          ...(prev[programType]?.[year] || {}),
+          [field]: parseFloat(value) || 0,
+        },
+      },
+    }));
+    setIsModified(true);
+  };
+
+  // Calculate totals automatically
+  const calculateTotal = (programType, year) => {
+    const data = tableData[programType]?.[year];
+    if (!data) return 0;
+
+    const tanuloi = data.tanuloi_jogviszony || 0;
+    const felnottkepzesi = data.felnottkepzesi_jogviszony || 0;
+    return tanuloi + felnottkepzesi;
+  };
+
+  const handleSaveData = async () => {
+    try {
+      // Convert tableData to API format and save
+      for (const [programType, yearData] of Object.entries(tableData)) {
+        for (const [year, fields] of Object.entries(yearData)) {
+          if (fields.tanuloi_jogviszony > 0) {
+            await addStudentData({
+              alapadatok_id: selectedSchool?.id,
+              letszam: fields.tanuloi_jogviszony,
+              jogv_tipus: 0, // 0 for tanulói jogviszony
+              szakirany: programType,
+              tanev_kezdete: parseInt(year),
+            });
+          }
+          if (fields.felnottkepzesi_jogviszony > 0) {
+            await addStudentData({
+              alapadatok_id: selectedSchool?.id,
+              letszam: fields.felnottkepzesi_jogviszony,
+              jogv_tipus: 1, // 1 for felnőttképzési jogviszony
+              szakirany: programType,
+              tanev_kezdete: parseInt(year),
+            });
+          }
+        }
       }
-      return sum + (item.yearCounts[year]?.[category] || 0);
-    }, 0);
+      setIsModified(false);
+      console.log("Data saved successfully");
+    } catch (error) {
+      console.error("Error saving student data:", error);
+    }
   };
 
-  const computeChange = (yearIndex, category) => {
-    if (yearIndex === 0) return "-";
-    const year = years[yearIndex];
-    const prevYear = years[yearIndex - 1];
-    const current = computeTotal(year, category);
-    const prev = computeTotal(prevYear, category);
-
-    console.log("Change: ", prev, current);
-
-    if (prev === 0) return "-";
-    return ((current / prev) * 100).toFixed(2);
+  const handleResetData = () => {
+    setIsModified(false);
   };
 
-  const handleSave = () => {
-    editableData.forEach((item) => {
-      Object.keys(item.yearCounts).forEach((year) => {
-        const tanuloLetszam = item.yearCounts[year];
-        Object.keys(tanuloLetszam).forEach((category) => {
-          if (category === "Egyéb") return; // Skip "Egyéb" category
-
-          addTanuloLetszam({
-            alapadatok_id: "2e31291b-7c2d-4bd8-bdca-de8580136874",
-            letszam: tanuloLetszam[category],
-            jogv_tipus: category === "Tanulói jogviszony" ? 0 : 1, // Assuming 0 for "Tanulói jogviszony" and 1 for "Felnőttképzési jogviszony"
-            szakirany: item.name,
-            tanev_kezdete: year,
-          });
-        });
-      });
-    });
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
   };
 
-  const handleBack = () => {
-    setEditableData(prevData);
-  };
+  useEffect(() => {
+    console.log("Program types:", programTypes);
+    console.log("Chart data:", chartData);
+    console.log("Chart years:", years);
+    console.log("Editable data:", editableData);
+  }, [programTypes, chartData, years, editableData]);
 
-  const handleReset = () => {
-    editableData.forEach((item) => {
-      Object.keys(item.yearCounts).forEach((year) => {
-        deleteTanuloLetszam({
-          alapadatok_id: "2e31291b-7c2d-4bd8-bdca-de8580136874",
-          year: year,
-        });
-      });
-    });
+  return (
+    <Box sx={{ p: 3 }}>
+      {/* Info Card */}
+      <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
+        <CardContent>
+          <Typography variant="h6" color="primary" gutterBottom>
+            📊 Tanulólétszám
+          </Typography>
+          <Typography variant="body2">
+            A szakképző intézményben adott tanév október 1-jén szakmai
+            oktatásban (tanulói jogviszonyban és felnőttképzési jogviszonyban)
+            tanulók száma.
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            A trendvizsgálathoz a szakképző intézmény évente gyűjti az október
+            1-jei létszámadatát azonos bontásban/kategóriában (intézménytípus,
+            ágazat, szakma).
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            A második adatgyűjtési évtől kezdődően vizsgálja kategóriánként az
+            időbeli változást. A változás mértékének számításánál a viszonyítás
+            alapja lehet az előző tanév adata vagy az első adatgyűjtés évének
+            adata. [%]
+          </Typography>
 
-    // navigate(0);
-  };
+          <Box
+            sx={{ mt: 2, p: 2, backgroundColor: "#ffeb3b", borderRadius: 1 }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+              A kék tanulók tanügyi adatai exportból szerintöm össze lehet
+              számolni, ha október 1-jén feltöltjük az iskolákkal. Az ágazatok
+              mindenképpen szerepelnek, az 11-ig a szakmák is. Minden iskolának
+              annyit sor lesz, ahány szakma, illetve szakirány (mint ebben a
+              táblázatban).
+            </Typography>
+          </Box>
+        </CardContent>
+      </Card>
 
-  return isLoading ? (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "90vh",
-      }}
-    >
-      <Spinner size="xl" />
-    </div>
-  ) : error ? (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "90vh",
-      }}
-    >
-      <h1 style={{ color: "red" }}>Hiba történt az adatok betöltésekor!</h1>
-    </div>
-  ) : (
-    <Box>
-      <Text fontSize="2xl" mb={4}>
-        Tanulói létszám adatok
-      </Text>
-      <Text mb={4}>
-        Ideiglenes adatok, az excel táblázatból származnak. <br />
-        Szükség esetén módosíthatóak a cellákba kattintva. <br />A módosítások
-        mentéséhez kérjük, használja a "Mentés" gombot, mellyel a módosításokat
-        elmentheti és véglegesítheti.
-      </Text>
+      {selectedSchool && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
+        </Alert>
+      )}
 
-      <Tabs.Root defaultValue="chart" variant="enclosed">
-        <Tabs.List>
-          <Tabs.Trigger value="chart">📊 Grafikon nézet</Tabs.Trigger>
-          <Tabs.Trigger value="table">📋 Táblázat nézet</Tabs.Trigger>
-        </Tabs.List>
+      {!selectedSchool && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Nincs iskola kiválasztva - az összes iskola adatait összegzi a
+          rendszer.
+        </Alert>
+      )}
 
-        <Tabs.Content value="chart">
-          <TanuloLetszamChart data={editableData} years={years} />
-        </Tabs.Content>
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          aria-label="Tanulólétszám nézetek"
+        >
+          <Tab label="📊 Grafikon nézet" />
+          <Tab label="📋 Táblázat nézet" />
+        </Tabs>
+      </Box>
 
-        <Tabs.Content value="table">
-          <VStack spacing={4} align="stretch">
-            <HStack>
-              <Tooltip.Root>
-                <Tooltip.Trigger>
-                  <Button
-                    onClick={handleReset}
-                    mb={4}
-                    backgroundColor={"red.600"}
+      {activeTab === 0 && (
+        <Box>
+          <TanuloLetszamChart data={chartData} years={years} />
+        </Box>
+      )}
+
+      {activeTab === 1 && (
+        <>
+          <TableContainer
+            component={Paper}
+            sx={{ maxWidth: "100%", overflowX: "auto" }}
+          >
+            <Table size="small" sx={{ minWidth: 1400 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell
+                    rowSpan={3}
+                    sx={{
+                      fontWeight: "bold",
+                      minWidth: 250,
+                      borderRight: "2px solid #ddd",
+                      position: "sticky",
+                      left: 0,
+                      backgroundColor: "#ffffff",
+                      zIndex: 3,
+                      verticalAlign: "middle",
+                    }}
                   >
-                    Teljes visszaállítás
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Positioner>
-                  <Tooltip.Content>
-                    Az adatok visszaállítása a számított értékekre
-                  </Tooltip.Content>
-                </Tooltip.Positioner>
-              </Tooltip.Root>
-
-              <Tooltip.Root>
-                <Tooltip.Trigger>
-                  <Button
-                    onClick={handleBack}
-                    mb={4}
-                    backgroundColor={"red.700"}
+                    Létszámváltozás az előző év adatához viszonyítva
+                  </TableCell>
+                  <TableCell
+                    colSpan={evszamok.length * 3}
+                    align="center"
+                    sx={{
+                      fontWeight: "bold",
+                      backgroundColor: "#ffcdd2",
+                      borderBottom: "2px solid #ddd",
+                    }}
                   >
-                    Módosítások visszavonása
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Positioner>
-                  <Tooltip.Content>
-                    Az adatok visszaállítása az előző verzióra
-                  </Tooltip.Content>
-                </Tooltip.Positioner>
-              </Tooltip.Root>
-
-              <Tooltip.Root>
-                <Tooltip.Trigger>
-                  <Button
-                    onClick={handleSave}
-                    backgroundColor={"green.700"}
-                    mb={4}
+                    Létszám (Október 1.)
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell
+                    colSpan={evszamok.length}
+                    align="center"
+                    sx={{
+                      fontWeight: "bold",
+                      backgroundColor: "#ffcdd2",
+                      borderRight: "1px solid #ddd",
+                    }}
                   >
-                    Mentés
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Positioner>
-                  <Tooltip.Content>Az adatok mentése</Tooltip.Content>
-                </Tooltip.Positioner>
-              </Tooltip.Root>
-            </HStack>
-            <Table.Root size="md" showColumnBorder variant="outline" striped>
-              <Table.Header>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <Table.Row key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      const columnRelativeDepth =
-                        header.depth - header.column.depth;
+                    (tanulói + felnőttképzési jogviszony) (fő)
+                  </TableCell>
+                  <TableCell
+                    colSpan={evszamok.length}
+                    align="center"
+                    sx={{
+                      fontWeight: "bold",
+                      backgroundColor: "#e1f5fe",
+                      borderRight: "1px solid #ddd",
+                    }}
+                  >
+                    tanulói jogviszony (fő)
+                  </TableCell>
+                  <TableCell
+                    colSpan={evszamok.length}
+                    align="center"
+                    sx={{
+                      fontWeight: "bold",
+                      backgroundColor: "#f3e5f5",
+                    }}
+                  >
+                    felnőttképzési jogviszony (fő)
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  {/* Összesen oszlopok */}
+                  {evszamok.map((year) => (
+                    <TableCell
+                      key={`total-${year}`}
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        backgroundColor: "#ffcdd240",
+                        fontSize: "0.75rem",
+                        borderRight:
+                          year === evszamok[evszamok.length - 1]
+                            ? "1px solid #ddd"
+                            : "none",
+                      }}
+                    >
+                      {year}
+                    </TableCell>
+                  ))}
+                  {/* Tanulói jogviszony oszlopok */}
+                  {evszamok.map((year) => (
+                    <TableCell
+                      key={`student-${year}`}
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        backgroundColor: "#e1f5fe40",
+                        fontSize: "0.75rem",
+                        borderRight:
+                          year === evszamok[evszamok.length - 1]
+                            ? "1px solid #ddd"
+                            : "none",
+                      }}
+                    >
+                      {year}
+                    </TableCell>
+                  ))}
+                  {/* Felnőttképzési jogviszony oszlopok */}
+                  {evszamok.map((year) => (
+                    <TableCell
+                      key={`adult-${year}`}
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        backgroundColor: "#f3e5f540",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {year}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {programTypes.map((category, categoryIndex) => (
+                  <React.Fragment key={categoryIndex}>
+                    {/* Category header row */}
+                    <TableRow>
+                      <TableCell
+                        sx={{
+                          fontWeight: "bold",
+                          backgroundColor: category.isTotal
+                            ? "#e8f5e8"
+                            : category.isInstitutionType
+                            ? "#fff3e0"
+                            : "#f0f8ff",
+                          borderBottom: "2px solid #ddd",
+                          borderRight: "2px solid #ddd",
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 2,
+                        }}
+                      >
+                        {category.category}
+                      </TableCell>
+                      {/* Empty cells for years */}
+                      {Array(evszamok.length * 3)
+                        .fill(0)
+                        .map((_, index) => (
+                          <TableCell
+                            key={index}
+                            sx={{
+                              backgroundColor: category.isTotal
+                                ? "#e8f5e8"
+                                : category.isInstitutionType
+                                ? "#fff3e0"
+                                : "#f0f8ff",
+                            }}
+                          />
+                        ))}
+                    </TableRow>
 
-                      if (
-                        !header.isPlaceholder &&
-                        columnRelativeDepth > 1 &&
-                        header.id === header.column.id
-                      ) {
-                        return null;
-                      }
-
-                      let rowSpan = 1;
-                      if (header.isPlaceholder) {
-                        const leafs = header.getLeafHeaders();
-                        rowSpan = leafs[leafs.length - 1].depth - header.depth;
-                      }
-
-                      return (
-                        <Table.ColumnHeader
-                          key={header.id}
-                          colSpan={header.colSpan}
-                          rowSpan={rowSpan}
-                          fontSize="md"
-                          fontWeight="bold"
+                    {/* Sub-type rows */}
+                    {category.subTypes.map((subType) => (
+                      <TableRow key={subType}>
+                        <TableCell
+                          sx={{
+                            fontWeight: "medium",
+                            pl: category.isSpecialty ? 4 : 2,
+                            borderRight: "1px solid #ddd",
+                            position: "sticky",
+                            left: 0,
+                            backgroundColor: "#ffffff",
+                            zIndex: 1,
+                          }}
                         >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                        </Table.ColumnHeader>
-                      );
-                    })}
-                  </Table.Row>
-                ))}
-              </Table.Header>
-              <Table.Body>
-                {table.getRowModel().rows.map((row) => (
-                  <Table.Row key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <Table.Cell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </Table.Cell>
+                          {subType}
+                        </TableCell>
+
+                        {/* Összesen (tanulói + felnőttképzési) */}
+                        {evszamok.map((schoolYear) => {
+                          const startYear = parseInt(schoolYear.split("/")[0]);
+                          const total = calculateTotal(subType, startYear);
+                          const hasData = total > 0;
+
+                          return (
+                            <TableCell
+                              key={`total-${subType}-${startYear}`}
+                              align="center"
+                              sx={{
+                                backgroundColor: "#ffcdd220",
+                                fontWeight: "bold",
+                                color: hasData
+                                  ? "primary.main"
+                                  : "text.disabled",
+                              }}
+                            >
+                              {total}
+                            </TableCell>
+                          );
+                        })}
+
+                        {/* Tanulói jogviszony */}
+                        {evszamok.map((schoolYear) => {
+                          const startYear = parseInt(schoolYear.split("/")[0]);
+                          const data = tableData[subType]?.[startYear];
+                          return (
+                            <TableCell
+                              key={`student-${subType}-${startYear}`}
+                              align="center"
+                              sx={{ backgroundColor: "#e1f5fe20" }}
+                            >
+                              <TextField
+                                type="number"
+                                value={data?.tanuloi_jogviszony || 0}
+                                onChange={(e) =>
+                                  handleDataChange(
+                                    subType,
+                                    startYear,
+                                    "tanuloi_jogviszony",
+                                    e.target.value
+                                  )
+                                }
+                                size="small"
+                                inputProps={{
+                                  min: 0,
+                                  style: { textAlign: "center" },
+                                }}
+                                sx={{ width: "70px" }}
+                              />
+                            </TableCell>
+                          );
+                        })}
+
+                        {/* Felnőttképzési jogviszony */}
+                        {evszamok.map((schoolYear) => {
+                          const startYear = parseInt(schoolYear.split("/")[0]);
+                          const data = tableData[subType]?.[startYear];
+                          return (
+                            <TableCell
+                              key={`adult-${subType}-${startYear}`}
+                              align="center"
+                              sx={{ backgroundColor: "#f3e5f520" }}
+                            >
+                              <TextField
+                                type="number"
+                                value={data?.felnottkepzesi_jogviszony || 0}
+                                onChange={(e) =>
+                                  handleDataChange(
+                                    subType,
+                                    startYear,
+                                    "felnottkepzesi_jogviszony",
+                                    e.target.value
+                                  )
+                                }
+                                size="small"
+                                inputProps={{
+                                  min: 0,
+                                  style: { textAlign: "center" },
+                                }}
+                                sx={{ width: "70px" }}
+                              />
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
                     ))}
-                  </Table.Row>
+                  </React.Fragment>
                 ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
 
-                {/* Totals Row */}
-                <Table.Row>
-                  <Table.Cell fontWeight={"bold"}>Összesen</Table.Cell>
-                  {[
-                    "Tanulói jogviszony",
-                    "Felnőttképzési jogviszony",
-                    "Összesen",
-                  ].flatMap((category) =>
-                    years?.map((year) => (
-                      <Table.Cell
-                        key={`total-${category}-${year}`}
-                        fontWeight={"bold"}
-                      >
-                        {computeTotal(year, category)}
-                      </Table.Cell>
-                    ))
-                  )}
-                </Table.Row>
+          {/* Action Buttons */}
+          <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+            <Button
+              variant="contained"
+              startIcon={<SaveIcon />}
+              onClick={handleSaveData}
+              disabled={!isModified || isUpdating}
+            >
+              {isUpdating ? "Mentés..." : "Mentés"}
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleResetData}
+              disabled={!isModified || isUpdating}
+            >
+              Visszaállítás
+            </Button>
+          </Stack>
+        </>
+      )}
 
-                {/* Change Row */}
-                <Table.Row>
-                  <Table.Cell fontWeight={"bold"}>Adatváltozás</Table.Cell>
-                  {[
-                    "Tanulói jogviszony",
-                    "Felnőttképzési jogviszony",
-                    "Összesen",
-                  ].flatMap((category) =>
-                    years?.map((_, idx) => (
-                      <Table.Cell
-                        key={`change-${category}-${idx}`}
-                        fontWeight={"bold"}
-                      >
-                        {computeChange(idx, category)}
-                      </Table.Cell>
-                    ))
-                  )}
-                </Table.Row>
-              </Table.Body>
-            </Table.Root>
-          </VStack>
-        </Tabs.Content>
-      </Tabs.Root>
+      {/* Status Messages */}
+      {isModified && (
+        <Alert severity="warning" sx={{ mt: 2 }}>
+          Mentetlen módosítások vannak. Ne felejtsd el menteni a
+          változtatásokat!
+        </Alert>
+      )}
     </Box>
   );
 }

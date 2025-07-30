@@ -109,7 +109,7 @@ export default function Login() {
         <CardContent>
           <Stack spacing={3}>
             <Image
-              src="../public/hszc_logo.png"
+              src="https://cms.hodmezovasarhelyi.szc.edir.hu/uploads/HSZC_logo_color_tomb_k_4b19d45dc7.png"
               alt="Logo"
               objectFit="cover"
               mx="auto"

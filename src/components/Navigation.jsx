@@ -461,7 +461,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
       <Box>
         <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
           <Image
-            src="../hszc_logo.png"
+            src="https://cms.hodmezovasarhelyi.szc.edir.hu/uploads/HSZC_logo_color_tomb_k_4b19d45dc7.png"
             alt="HSZC"
             className="!max-w-[150px] h-auto object-contain !important"
           />
