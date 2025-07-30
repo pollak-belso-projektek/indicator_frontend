@@ -83,7 +83,13 @@ const Schools = () => {
   const addSzakirany = (szakiranyName) => {
     if (!szakiranyName.trim()) return;
 
+    // Generate a temporary unique ID for new szakirány
+    const tempId = `temp_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+
     const newSzakiranyData = {
+      szakirany_id: tempId,
       alapadatok_id: selectedSchool?.id || "",
       szakirany: {
         nev: szakiranyName.trim(),
@@ -113,7 +119,13 @@ const Schools = () => {
   const addSzakmaToSzakirany = (szakiranyId, szakmaName) => {
     if (!szakmaName.trim()) return;
 
+    // Generate a temporary unique ID for new szakma
+    const tempSzakmaId = `temp_szakma_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+
     const newSzakmaData = {
+      szakma_id: tempSzakmaId,
       szakirany_id: szakiranyId,
       szakma: {
         nev: szakmaName.trim(),

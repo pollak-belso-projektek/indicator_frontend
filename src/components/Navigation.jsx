@@ -899,6 +899,12 @@ const MobileNav = ({ onOpen, ...rest }) => {
       (school) => school.id.toString() === selectedValue
     );
 
+    // Debug logging
+    console.log("School selection change:");
+    console.log("- Selected value:", selectedValue);
+    console.log("- Available schools:", schools.items);
+    console.log("- Found school data:", selectedSchoolData);
+
     // Dispatch the selected school to Redux store
     dispatch(setSelectedSchool(selectedSchoolData || null));
 
@@ -933,15 +939,15 @@ const MobileNav = ({ onOpen, ...rest }) => {
               onChange={handleChange}
               displayEmpty
               input={<OutlinedInput />}
-              renderValue={(value) =>
-                value
-                  ? schools.items.find((item) => item.value === value)?.label
-                  : "Válassz iskolát"
-              }
+              renderValue={(value) => {
+                if (!value) return "Válassz iskolát";
+                const found = schools.items.find(
+                  (item) => item.value === value
+                );
+                return found ? found.label : "Ismeretlen iskola";
+              }}
             >
-              <MenuItem default value="">
-                Válassz iskolát
-              </MenuItem>
+              <MenuItem value="">Válassz iskolát</MenuItem>
               {schools.items.map((school) => (
                 <MenuItem key={school.value} value={school.value}>
                   {school.label}

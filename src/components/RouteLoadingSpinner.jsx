@@ -5,6 +5,13 @@ import { useColorModeValue } from "./ui/color-mode";
 const RouteLoadingSpinner = ({ message = "Oldal betöltése..." }) => {
   const [isVisible, setIsVisible] = useState(false);
 
+  // Call hooks unconditionally at the top level
+  const bgColor = useColorModeValue(
+    "rgba(255, 255, 255, 0.9)",
+    "rgba(26, 32, 44, 0.9)"
+  );
+  const textColor = useColorModeValue("gray.600", "gray.300");
+
   useEffect(() => {
     // Show the spinner after a tiny delay to avoid flash
     const showTimer = setTimeout(() => {
@@ -25,10 +32,7 @@ const RouteLoadingSpinner = ({ message = "Oldal betöltése..." }) => {
       left="0"
       right="0"
       bottom="0"
-      bg={useColorModeValue(
-        "rgba(255, 255, 255, 0.9)",
-        "rgba(26, 32, 44, 0.9)"
-      )}
+      bg={bgColor}
       backdropFilter="blur(2px)"
       zIndex="9999"
       display="flex"
@@ -45,11 +49,7 @@ const RouteLoadingSpinner = ({ message = "Oldal betöltése..." }) => {
           color="cyan.500"
           size="lg"
         />
-        <Text
-          fontSize="md"
-          fontWeight="medium"
-          color={useColorModeValue("gray.600", "gray.300")}
-        >
+        <Text fontSize="md" fontWeight="medium" color={textColor}>
           {message}
         </Text>
       </VStack>

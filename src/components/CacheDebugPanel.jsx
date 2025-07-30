@@ -7,7 +7,8 @@ import {
 
 const CacheDebugPanel = () => {
   const dispatch = useDispatch();
-  const state = useSelector((state) => state);
+  // Only get the API state instead of the entire state
+  const apiState = useSelector((state) => state.api);
 
   // Only show in development
   if (!import.meta.env.DEV) {
