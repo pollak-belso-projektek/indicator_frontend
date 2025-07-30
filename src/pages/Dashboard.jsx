@@ -42,7 +42,6 @@ import {
   selectSelectedSchool,
 } from "../store/slices/authSlice";
 import CacheDebugPanel from "../components/CacheDebugPanel";
-import UserRoleBadge from "../components/UserRoleBadge";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -202,14 +201,6 @@ export default function Dashboard() {
             <Typography variant="body1" sx={{ opacity: 0.8 }}>
               {getUserTypeDescription()}
             </Typography>
-          </Box>
-          <Box sx={{ textAlign: "right" }}>
-            <UserRoleBadge />
-            {selectedSchool && (
-              <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
-                Kiválasztott iskola: {selectedSchool.name}
-              </Typography>
-            )}
           </Box>
         </Box>
       </Paper>
