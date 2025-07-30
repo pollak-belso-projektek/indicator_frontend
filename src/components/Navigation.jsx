@@ -510,12 +510,12 @@ const SidebarContent = ({ onClose, ...rest }) => {
             cursor="pointer"
             bg={
               isFixedGeneralActive()
-                ? "cyan.100"
+                ? "blue.50"
                 : useColorModeValue("gray.50", "gray.700")
             }
             _hover={{
               bg: isFixedGeneralActive()
-                ? "cyan.200"
+                ? "blue.100"
                 : useColorModeValue("gray.100", "gray.600"),
             }}
             onClick={() => toggleCategory("FIXED_GENERAL")}
@@ -524,13 +524,13 @@ const SidebarContent = ({ onClose, ...rest }) => {
               as={MdHome}
               mr="2"
               fontSize="16"
-              color={isFixedGeneralActive() ? "cyan.600" : undefined}
+              color={isFixedGeneralActive() ? "blue.600" : undefined}
             />
             <Text
               fontSize="sm"
               fontWeight={isFixedGeneralActive() ? "bold" : "medium"}
               flex="1"
-              color={isFixedGeneralActive() ? "cyan.700" : undefined}
+              color={isFixedGeneralActive() ? "blue.700" : undefined}
             >
               Általános
             </Text>
@@ -616,12 +616,12 @@ const SidebarContent = ({ onClose, ...rest }) => {
                     cursor="pointer"
                     bg={
                       isCategoryActive(categoryKey)
-                        ? "cyan.100"
+                        ? "blue.50"
                         : useColorModeValue("gray.50", "gray.700")
                     }
                     _hover={{
                       bg: isCategoryActive(categoryKey)
-                        ? "cyan.200"
+                        ? "blue.100"
                         : useColorModeValue("gray.100", "gray.600"),
                     }}
                     onClick={() => toggleCategory(categoryKey)}
@@ -631,7 +631,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
                       mr="2"
                       fontSize="16"
                       color={
-                        isCategoryActive(categoryKey) ? "cyan.600" : undefined
+                        isCategoryActive(categoryKey) ? "blue.600" : undefined
                       }
                     />
                     <Text
@@ -641,7 +641,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
                       }
                       flex="1"
                       color={
-                        isCategoryActive(categoryKey) ? "cyan.700" : undefined
+                        isCategoryActive(categoryKey) ? "blue.700" : undefined
                       }
                     >
                       {category.name}
@@ -742,10 +742,10 @@ const NavItem = ({ icon, children, onClick, ...rest }) => {
       style={{ textDecoration: "none" }}
       _focus={{ boxShadow: "none" }}
       _hover={{
-        bg: "cyan.400",
+        bg: "blue.500",
         color: "white",
       }}
-      bg={isActive ? "cyan.400" : undefined}
+      bg={isActive ? "blue.500" : undefined}
       color={isActive ? "white" : undefined}
       onClick={handleClick}
       to={to} // Pass the 'to' prop back for Link
