@@ -21,7 +21,7 @@ import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../../utils/schoolYears";
 import { selectSelectedSchool } from "../../store/slices/authSlice";
 import {
-  useGetFelvettekSzamaByAlapadatokIdQuery,
+  useGetFelvettekSzamaByAlapadatokIdAndYearQuery,
   useAddFelvettekSzamaMutation,
   useUpdateFelvettekSzamaMutation,
   useGetAllAlapadatokQuery,
@@ -35,7 +35,10 @@ const FelvettekSzama = () => {
 
   // API hooks
   const { data: apiAdmissionData, isLoading: isFetching } =
-    useGetFelvettekSzamaByAlapadatokIdQuery(selectedSchool?.id);
+    useGetFelvettekSzamaByAlapadatokIdAndYearQuery({
+      alapadatokId: selectedSchool?.id,
+      year: 2024,
+    });
 
   const { data: schoolsData, isLoading: isLoadingSchools } =
     useGetAllAlapadatokQuery();
@@ -129,16 +132,143 @@ const FelvettekSzama = () => {
     setIsModified(true);
   };
 
+  // Check if a program type is a summary row (read-only)
+  const isSummaryRow = (programType) => {
+    // Find the category this programType belongs to
+    const category = programTypes.find((cat) =>
+      cat.subTypes.includes(programType)
+    );
+
+    if (!category) return false;
+
+    // Summary rows are "Összesen" and "Szakirány" categories
+    return (
+      category.category === "Összesen" || category.category === "Szakirány"
+    );
+  };
+
+  // Calculate summary values for institution types (Összesen category)
+  const calculateInstitutionSummary = (institutionType, year, field) => {
+    if (!schoolsData) return 0;
+
+    // Find all szakmák that belong to this institution type
+    let totalValue = 0;
+
+    schoolsData
+      .filter((school) => school.intezmeny_tipus === institutionType)
+      .forEach((school) => {
+        if (
+          school.alapadatok_szakirany &&
+          Array.isArray(school.alapadatok_szakirany)
+        ) {
+          school.alapadatok_szakirany.forEach((szakiranyData) => {
+            const szakirany = szakiranyData.szakirany;
+            if (
+              szakirany &&
+              szakirany.szakma &&
+              Array.isArray(szakirany.szakma)
+            ) {
+              szakirany.szakma.forEach((szakmaData) => {
+                const szakmaNev = szakmaData.szakma?.nev;
+                if (
+                  szakmaNev &&
+                  tableData[szakmaNev] &&
+                  tableData[szakmaNev][year]
+                ) {
+                  totalValue += tableData[szakmaNev][year][field] || 0;
+                }
+              });
+            }
+          });
+        }
+      });
+
+    return totalValue;
+  };
+
+  // Calculate summary values for szakirány categories
+  const calculateSzakiranySummary = (szakiranyNev, year, field) => {
+    if (!schoolsData) return 0;
+
+    // Find all szakmák that belong to this szakirány
+    let totalValue = 0;
+
+    schoolsData.forEach((school) => {
+      if (
+        school.alapadatok_szakirany &&
+        Array.isArray(school.alapadatok_szakirany)
+      ) {
+        school.alapadatok_szakirany.forEach((szakiranyData) => {
+          const szakirany = szakiranyData.szakirany;
+          if (szakirany && szakirany.nev === szakiranyNev) {
+            if (szakirany.szakma && Array.isArray(szakirany.szakma)) {
+              szakirany.szakma.forEach((szakmaData) => {
+                const szakmaNev = szakmaData.szakma?.nev;
+                if (
+                  szakmaNev &&
+                  tableData[szakmaNev] &&
+                  tableData[szakmaNev][year]
+                ) {
+                  totalValue += tableData[szakmaNev][year][field] || 0;
+                }
+              });
+            }
+          }
+        });
+      }
+    });
+
+    return totalValue;
+  };
+
+  // Get calculated value for summary rows
+  const getCalculatedValue = (programType, year, field) => {
+    const category = programTypes.find((cat) =>
+      cat.subTypes.includes(programType)
+    );
+
+    if (!category) return 0;
+
+    if (category.category === "Összesen") {
+      return calculateInstitutionSummary(programType, year, field);
+    } else if (category.category === "Szakirány") {
+      return calculateSzakiranySummary(programType, year, field);
+    }
+
+    return 0;
+  };
+
   // Calculate percentage automatically (jelentkezők/felvettek arány)
   const calculatePercentage = (programType, year) => {
-    const programData = tableData[programType];
-    if (!programData) return "0%";
+    let jelentkezokSzama, felvettekSzama;
 
-    const data = programData[year];
-    if (!data || !data.felvettek_szama_9 || data.felvettek_szama_9 === 0)
-      return "0%";
+    if (isSummaryRow(programType)) {
+      // For summary rows, calculate from aggregated data
+      jelentkezokSzama = getCalculatedValue(
+        programType,
+        year,
+        "jelentkezok_szama_9"
+      );
+      felvettekSzama = getCalculatedValue(
+        programType,
+        year,
+        "felvettek_szama_9"
+      );
+    } else {
+      // For regular rows, use table data
+      const programData = tableData[programType];
+      if (!programData) return "0%";
 
-    const ratio = data.jelentkezok_szama_9 / data.felvettek_szama_9;
+      const data = programData[year];
+      if (!data) return "0%";
+
+      jelentkezokSzama = data.jelentkezok_szama_9 || 0;
+      felvettekSzama = data.felvettek_szama_9 || 0;
+    }
+
+    if (!felvettekSzama || felvettekSzama === 0) return "0%";
+
+    const ratio = jelentkezokSzama / felvettekSzama;
     const percentage = ratio * 100;
 
     // Handle special cases for display
@@ -406,6 +536,12 @@ const FelvettekSzama = () => {
           rendszer.
         </Alert>
       )}
+      {isModified && (
+        <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+          Mentetlen módosítások vannak. Ne felejtsd el menteni a
+          változtatásokat!
+        </Alert>
+      )}
       <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
         <Button
           variant="contained"
@@ -619,23 +755,47 @@ const FelvettekSzama = () => {
                         subType,
                         startYear
                       );
-                      const data = tableData[subType]?.[startYear];
-                      const hasData =
-                        data &&
-                        (data.jelentkezok_szama_9 > 0 ||
-                          data.felvettek_szama_9 > 0);
+                      const isReadOnly = isSummaryRow(subType);
+
+                      let hasData, displayValue;
+
+                      if (isReadOnly) {
+                        // For summary rows, check if calculated values have data
+                        const jelentkezok = getCalculatedValue(
+                          subType,
+                          startYear,
+                          "jelentkezok_szama_9"
+                        );
+                        const felvettek = getCalculatedValue(
+                          subType,
+                          startYear,
+                          "felvettek_szama_9"
+                        );
+                        hasData = jelentkezok > 0 || felvettek > 0;
+                        displayValue = hasData ? percentage : "0%";
+                      } else {
+                        // For regular rows, check tableData
+                        const data = tableData[subType]?.[startYear];
+                        hasData =
+                          data &&
+                          (data.jelentkezok_szama_9 > 0 ||
+                            data.felvettek_szama_9 > 0);
+                        displayValue = hasData ? percentage : "0";
+                      }
 
                       return (
                         <TableCell
                           key={`jelentkezesek-${subType}-${startYear}`}
                           align="center"
                           sx={{
-                            backgroundColor: "#e3f2fd20",
+                            backgroundColor: isReadOnly
+                              ? "#f5f5f5"
+                              : "#e3f2fd20",
                             fontWeight: "bold",
                             color: hasData ? "primary.main" : "text.disabled",
                           }}
                         >
-                          {hasData ? percentage : "0"}
+                          {displayValue}
                         </TableCell>
                       );
                     })}
@@ -644,6 +804,19 @@ const FelvettekSzama = () => {
                     {evszamok.map((schoolYear) => {
                       const startYear = parseInt(schoolYear.split("/")[0]);
                       const data = tableData[subType]?.[startYear];
+                      const isReadOnly = isSummaryRow(subType);
+                      const displayValue = isReadOnly
+                        ? getCalculatedValue(
+                            subType,
+                            startYear,
+                            "jelentkezok_szama_9"
+                          )
+                        : data?.jelentkezok_szama_9 || 0;
+
+                      // Check if this field has been modified
+                      const isModified =
+                        !isReadOnly && data?.jelentkezok_szama_9 > 0;
+
                       return (
                         <TableCell
                           key={`jelentkezok-${subType}-${startYear}`}
@@ -652,21 +825,49 @@ const FelvettekSzama = () => {
                         >
                           <TextField
                             type="number"
-                            value={data?.jelentkezok_szama_9 || 0}
-                            onChange={(e) =>
-                              handleDataChange(
-                                subType,
-                                startYear,
-                                "jelentkezok_szama_9",
-                                e.target.value
-                              )
-                            }
+                            value={displayValue}
+                            onChange={(e) => {
+                              if (!isReadOnly) {
+                                handleDataChange(
+                                  subType,
+                                  startYear,
+                                  "jelentkezok_szama_9",
+                                  e.target.value
+                                );
+                              }
+                            }}
+                            disabled={isReadOnly}
                             size="small"
                             inputProps={{
                               min: 0,
                               style: { textAlign: "center" },
                             }}
-                            sx={{ width: "70px" }}
+                            sx={{
+                              width: "70px",
+                              backgroundColor: isReadOnly ? "#f5f5f5" : "white",
+                              "& .MuiInputBase-input": {
+                                fontWeight: isReadOnly ? "bold" : "normal",
+                                color: isReadOnly ? "#666" : "inherit",
+                              },
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: isModified
+                                    ? "#ff9800"
+                                    : undefined,
+                                  borderWidth: isModified ? "2px" : "1px",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: isModified
+                                    ? "#ff9800"
+                                    : undefined,
+                                },
+                                "&.Mui-focused fieldset": {
+                                  borderColor: isModified
+                                    ? "#ff9800"
+                                    : undefined,
+                                },
+                              },
+                            }}
                           />
                         </TableCell>
                       );
@@ -676,6 +877,19 @@ const FelvettekSzama = () => {
                     {evszamok.map((schoolYear) => {
                       const startYear = parseInt(schoolYear.split("/")[0]);
                       const data = tableData[subType]?.[startYear];
+                      const isReadOnly = isSummaryRow(subType);
+                      const displayValue = isReadOnly
+                        ? getCalculatedValue(
+                            subType,
+                            startYear,
+                            "felvettek_szama_9"
+                          )
+                        : data?.felvettek_szama_9 || 0;
+
+                      // Check if this field has been modified
+                      const isModified =
+                        !isReadOnly && data?.felvettek_szama_9 > 0;
+
                       return (
                         <TableCell
                           key={`felvettek-${subType}-${startYear}`}
@@ -684,21 +898,49 @@ const FelvettekSzama = () => {
                         >
                           <TextField
                             type="number"
-                            value={data?.felvettek_szama_9 || 0}
-                            onChange={(e) =>
-                              handleDataChange(
-                                subType,
-                                startYear,
-                                "felvettek_szama_9",
-                                e.target.value
-                              )
-                            }
+                            value={displayValue}
+                            onChange={(e) => {
+                              if (!isReadOnly) {
+                                handleDataChange(
+                                  subType,
+                                  startYear,
+                                  "felvettek_szama_9",
+                                  e.target.value
+                                );
+                              }
+                            }}
+                            disabled={isReadOnly}
                             size="small"
                             inputProps={{
                               min: 0,
                               style: { textAlign: "center" },
                             }}
-                            sx={{ width: "70px" }}
+                            sx={{
+                              width: "70px",
+                              backgroundColor: isReadOnly ? "#f5f5f5" : "white",
+                              "& .MuiInputBase-input": {
+                                fontWeight: isReadOnly ? "bold" : "normal",
+                                color: isReadOnly ? "#666" : "inherit",
+                              },
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: isModified
+                                    ? "#ff9800"
+                                    : undefined,
+                                  borderWidth: isModified ? "2px" : "1px",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: isModified
+                                    ? "#ff9800"
+                                    : undefined,
+                                },
+                                "&.Mui-focused fieldset": {
+                                  borderColor: isModified
+                                    ? "#ff9800"
+                                    : undefined,
+                                },
+                              },
+                            }}
                           />
                         </TableCell>
                       );
@@ -708,6 +950,19 @@ const FelvettekSzama = () => {
                     {evszamok.map((schoolYear) => {
                       const startYear = parseInt(schoolYear.split("/")[0]);
                       const data = tableData[subType]?.[startYear];
+                      const isReadOnly = isSummaryRow(subType);
+                      const displayValue = isReadOnly
+                        ? getCalculatedValue(
+                            subType,
+                            startYear,
+                            "felvettek_letszam_9"
+                          )
+                        : data?.felvettek_letszam_9 || 0;
+
+                      // Check if this field has been modified
+                      const isModified =
+                        !isReadOnly && data?.felvettek_letszam_9 > 0;
+
                       return (
                         <TableCell
                           key={`letszam-${subType}-${startYear}`}
@@ -716,21 +971,49 @@ const FelvettekSzama = () => {
                         >
                           <TextField
                             type="number"
-                            value={data?.felvettek_letszam_9 || 0}
-                            onChange={(e) =>
-                              handleDataChange(
-                                subType,
-                                startYear,
-                                "felvettek_letszam_9",
-                                e.target.value
-                              )
-                            }
+                            value={displayValue}
+                            onChange={(e) => {
+                              if (!isReadOnly) {
+                                handleDataChange(
+                                  subType,
+                                  startYear,
+                                  "felvettek_letszam_9",
+                                  e.target.value
+                                );
+                              }
+                            }}
+                            disabled={isReadOnly}
                             size="small"
                             inputProps={{
                               min: 0,
                               style: { textAlign: "center" },
                             }}
-                            sx={{ width: "70px" }}
+                            sx={{
+                              width: "70px",
+                              backgroundColor: isReadOnly ? "#f5f5f5" : "white",
+                              "& .MuiInputBase-input": {
+                                fontWeight: isReadOnly ? "bold" : "normal",
+                                color: isReadOnly ? "#666" : "inherit",
+                              },
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: isModified
+                                    ? "#ff9800"
+                                    : undefined,
+                                  borderWidth: isModified ? "2px" : "1px",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: isModified
+                                    ? "#ff9800"
+                                    : undefined,
+                                },
+                                "&.Mui-focused fieldset": {
+                                  borderColor: isModified
+                                    ? "#ff9800"
+                                    : undefined,
+                                },
+                              },
+                            }}
                           />
                         </TableCell>
                       );
@@ -746,12 +1029,6 @@ const FelvettekSzama = () => {
       {/* Action Buttons */}
 
       {/* Status Messages */}
-      {isModified && (
-        <Alert severity="warning" sx={{ mt: 2 }}>
-          Mentetlen módosítások vannak. Ne felejtsd el menteni a
-          változtatásokat!
-        </Alert>
-      )}
 
       {/* Snackbar for save notifications */}
       <Snackbar
