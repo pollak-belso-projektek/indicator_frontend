@@ -256,6 +256,12 @@ const NavigationCategories = {
         link: "/users",
         tableName: "users",
       },
+      {
+        name: "Rendszer naplók",
+        icon: MdBookmark,
+        link: "/logs",
+        tableName: "logs",
+      },
     ],
   },
 };
@@ -296,6 +302,11 @@ const getAccessibleNavItems = (tableAccess, userPermissions) => {
         );
       }
       return true;
+    }
+
+    // Special case for logs - only admins can access
+    if (item.tableName === "logs") {
+      return userPermissions?.isAdmin || userPermissions?.isSuperadmin;
     }
 
     // Show items that the user has table access to
@@ -350,7 +361,8 @@ const SidebarContent = ({ onClose, ...rest }) => {
         item.link === "/alapadatok" ||
         item.link === "/adat-import" ||
         item.link === "/schools" ||
-        item.link === "/users"
+        item.link === "/users" ||
+        item.link === "/logs"
     );
   }, [accessibleNavItems]);
 
@@ -413,7 +425,8 @@ const SidebarContent = ({ onClose, ...rest }) => {
         item.link !== "/alapadatok" &&
         item.link !== "/adat-import" &&
         item.link !== "/schools" &&
-        item.link !== "/users"
+        item.link !== "/users" &&
+        item.link !== "/logs"
     );
   }, [accessibleNavItems]);
 
@@ -584,7 +597,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
       <Box
         overflowY="auto"
         overflowX="hidden"
-        maxHeight="calc(100vh - 400px)"
+        maxHeight="calc(100vh - 550px)"
         sx={{
           "&::-webkit-scrollbar": {
             width: "6px",
@@ -1046,7 +1059,7 @@ export default function Navigation({ children }) {
         </Drawer.Root>
         {/* mobilenav */}
         <MobileNav onOpen={() => setIsOpen(true)} />
-        <Box ml={{ base: 0, md: 60 }} p="4">
+        <Box ml={{ base: 0, md: 60 }} p="4" mt="10">
           {children}
         </Box>
       </Box>

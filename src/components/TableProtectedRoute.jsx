@@ -46,6 +46,18 @@ export default function TableProtectedRoute({ children, tableName = null }) {
   // Determine table name - either provided explicitly or derived from route
   const targetTableName = tableName || getTableNameFromRoute(location.pathname);
 
+  // Special case for logs - only admins and superadmins can access
+  if (targetTableName === "logs") {
+    const isAdmin = userPermissions?.isAdmin || userPermissions?.isSuperadmin;
+    if (!isAdmin) {
+      console.warn(
+        `Access denied to logs - admin permissions required for route: ${location.pathname}`
+      );
+      return <Navigate to="/dashboard" replace />;
+    }
+    return children;
+  }
+
   if (targetTableName && !hasTableAccess(tableAccess, targetTableName)) {
     // User doesn't have access to this table, redirect to dashboard
     console.warn(

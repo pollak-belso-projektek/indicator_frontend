@@ -30,6 +30,7 @@ export const indicatorApi = createApi({
     "SZMSZ",
     "EgyOktatoraJutoTanulo",
     "IntezmenyiNeveltseg",
+    "Logs",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -289,10 +290,11 @@ export const indicatorApi = createApi({
       query: () => "felvettek_szama",
       providesTags: ["FelvettekSzama"],
     }),
-    getFelvettekSzamaByAlapadatokId: build.query({
-      query: (alapadatokId) => `felvettek_szama/${alapadatokId}`,
-      providesTags: (result, error, alapadatokId) => [
-        { type: "FelvettekSzama", id: alapadatokId },
+    getFelvettekSzamaByAlapadatokIdAndYear: build.query({
+      query: ({ alapadatokId, year }) =>
+        `felvettek_szama/${alapadatokId}/${year}`,
+      providesTags: (result, error, { alapadatokId, year }) => [
+        { type: "FelvettekSzama", id: `${alapadatokId}-${year}` },
       ],
     }),
     addFelvettekSzama: build.mutation({
@@ -321,7 +323,7 @@ export const indicatorApi = createApi({
 
     // Sajatos_nevelesu_tanulok (Special Needs Students)
     getSajatosNevelesuTanulokByYear: build.query({
-      query: (tanev) => `sajatos_nevelesi_tanulok/${tanev}`,
+      query: (tanev) => `sajatos_nevelesu_tanulok/${tanev}`,
       providesTags: (result, error, tanev) => [
         { type: "SajatosNevelesuTanulok", id: tanev },
       ],
@@ -339,7 +341,7 @@ export const indicatorApi = createApi({
           currentSchoolYearStart = currentYear - 1;
         }
 
-        return `sajatos_nevelesi_tanulok/${currentSchoolYearStart}`;
+        return `sajatos_nevelesu_tanulok/${currentSchoolYearStart}`;
       },
       providesTags: ["SajatosNevelesuTanulok"],
     }),
@@ -728,6 +730,53 @@ export const indicatorApi = createApi({
       invalidatesTags: ["IntezmenyiNeveltseg"],
     }),
 
+    // Logs management endpoints (Admin/Superadmin only)
+    getLogs: build.query({
+      query: ({
+        page = 1,
+        limit = 50,
+        level,
+        method,
+        userId,
+        startDate,
+        endDate,
+      } = {}) => {
+        const params = new URLSearchParams();
+        params.append("page", page.toString());
+        params.append("limit", limit.toString());
+
+        if (level) params.append("level", level);
+        if (method) params.append("method", method);
+        if (userId) params.append("userId", userId);
+        if (startDate) params.append("startDate", startDate);
+        if (endDate) params.append("endDate", endDate);
+
+        return `logs?${params.toString()}`;
+      },
+      providesTags: (result, error, params) => [
+        { type: "Logs", id: `page-${params?.page || 1}` },
+        "Logs",
+      ],
+    }),
+    getLogById: build.query({
+      query: (id) => `logs/${id}`,
+      providesTags: (result, error, id) => [{ type: "Logs", id }],
+    }),
+    deleteLogs: build.mutation({
+      query: ({ before, level, method } = {}) => {
+        const params = new URLSearchParams();
+        if (before) params.append("before", before);
+        if (level) params.append("level", level);
+        if (method) params.append("method", method);
+
+        return {
+          url: `logs?${params.toString()}`,
+          method: "DELETE",
+        };
+      },
+      invalidatesTags: ["Logs"],
+    }),
+
     // User management endpoints
   }),
 });
@@ -765,7 +814,7 @@ export const {
   useDeleteElhelyezkedesMutation,
   useDeleteElhelyezkedesBySchoolAndYearMutation,
   useGetAllFelvettekSzamaQuery,
-  useGetFelvettekSzamaByAlapadatokIdQuery,
+  useGetFelvettekSzamaByAlapadatokIdAndYearQuery,
   useAddFelvettekSzamaMutation,
   useUpdateFelvettekSzamaMutation,
   useDeleteFelvettekSzamaMutation,
@@ -813,4 +862,8 @@ export const {
   useAddIntezmenyiNeveltsegMutation,
   useUpdateIntezmenyiNeveltsegMutation,
   useDeleteIntezmenyiNeveltsegMutation,
+  // Logs hooks
+  useGetLogsQuery,
+  useGetLogByIdQuery,
+  useDeleteLogsMutation,
 } = indicatorApi;

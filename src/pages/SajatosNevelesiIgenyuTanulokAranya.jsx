@@ -15,7 +15,6 @@ import {
   Button,
   Stack,
   Alert,
-  Chip,
   CircularProgress,
   Accordion,
   AccordionSummary,
@@ -49,6 +48,7 @@ import {
   useDeleteSajatosNevelesuTanulokMutation,
   useGetAllAlapadatokQuery,
 } from "../store/api/apiSlice";
+import SNIJelmagy from "../components/infos/SNIJelmagy";
 
 export default function SajatosNevelesiIgenyuTanulokAranya() {
   const schoolYears = generateSchoolYears();
@@ -321,6 +321,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
     const stats = {};
 
     sniData.forEach((item) => {
+      console.log("Processing item:", item);
       const year = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
       if (!stats[year]) {
         stats[year] = {
@@ -330,7 +331,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         };
       }
       stats[year].totalSniTanulok += parseInt(item.sni_tanulok_szama) || 0;
-      stats[year].totalOsszesTanulok += parseInt(item.osszes_tanulo_szama) || 0;
+      stats[year].totalOsszesTanulok += parseInt(item.tanulok_osszesen) || 0;
       stats[year].count += 1;
     });
 
@@ -346,6 +347,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           : 0;
     });
 
+    console.log("Summary Statistics:", stats);
     return stats;
   }, [sniData]);
 
@@ -370,11 +372,11 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         </Alert>
       )}
 
-      <Typography variant="h4" component="h1" gutterBottom>
+      <Typography variant="h5" component="h1" gutterBottom>
         Sajátos nevelési igényű tanulók aránya
       </Typography>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         A sajátos nevelési igényű (SNI) tanulók arányának nyomon követése
         intézményenként és tanévenként. Ez az indikátor az inkluzív oktatás
         hatékonyságának és az egyenlő esélyű hozzáférés biztosításának fontos
@@ -382,8 +384,10 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       </Typography>
 
       {/* Summary Statistics */}
-      <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
+
+      <Card sx={{ mb: 2, backgroundColor: "#f8f9fa" }}>
         <CardContent>
+          <SNIJelmagy />
           <Typography variant="h6" component="h3" gutterBottom>
             Összesített statisztikák
           </Typography>
@@ -461,67 +465,12 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       </Card>
 
       {/* Instructions Card */}
-      <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            SNI tanulók kategóriái és jellemzői
-          </Typography>
-          <Box component="ul" sx={{ pl: 3, mb: 2 }}>
-            <li>
-              <Typography variant="body2">
-                <strong>Érzékszervi fogyatékosság:</strong> Látás- vagy
-                halláskárosodás
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Értelmi fogyatékosság:</strong> Enyhe, középsúlyos vagy
-                súlyos
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Beszédfogyatékosság:</strong> Kommunikációs nehézségek
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Mozgásfogyatékosság:</strong> Fizikai korlátozottság
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Tanulási nehézség:</strong> Diszlexia, diszgráfia,
-                diszkalkúlia
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Autizmus spektrum zavar:</strong> Társas kommunikációs
-                nehézségek
-              </Typography>
-            </li>
-          </Box>
-
-          <Box
-            sx={{ mt: 3, p: 2, backgroundColor: "#e8f5e8", borderRadius: 1 }}
-          >
-            <Typography variant="body2" sx={{ fontStyle: "italic" }}>
-              <strong>Jogszabályi háttér:</strong>
-              <br />A 2011. évi CXC. törvény a nemzeti köznevelésről és a
-              326/2013. (VIII. 30.) Korm. rendelet a pedagógusok előmeneteli
-              rendszeréről alapján az SNI tanulók szakértői bizottság véleménye
-              alapján részesülnek egyéni fejlesztésben.
-            </Typography>
-          </Box>
-        </CardContent>
-      </Card>
 
       {/* Detailed Data by School */}
       <Card>
         <CardContent>
           <Typography variant="h6" component="h2" gutterBottom>
-            Részletes SNI tanuló arány adatok iskolák szerint
+            Részletes SNI tanuló arány adatok
           </Typography>
 
           {/* Show empty state if no data */}
@@ -704,36 +653,47 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           )}
         </CardContent>
       </Card>
-
-      {/* Legend */}
-      <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
+      <Card sx={{ mt: 2, backgroundColor: "#f8f9fa" }}>
         <CardContent>
           <Typography variant="h6" component="h3" gutterBottom>
-            Jelmagyarázat
+            SNI tanulók kategóriái és jellemzői
           </Typography>
-          <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap">
-            <Chip
-              label="SNI tanulók"
-              variant="outlined"
-              sx={{ backgroundColor: "#fff3cd" }}
-            />
-            <Chip
-              label="Összes tanuló"
-              variant="outlined"
-              sx={{ backgroundColor: "#d4edda" }}
-            />
-            <Chip
-              label="SNI arány"
-              variant="outlined"
-              sx={{ backgroundColor: "#cce5ff" }}
-            />
-          </Stack>
-          <Typography variant="body2">
-            A táblázat a sajátos nevelési igényű tanulók arányát jeleníti meg
-            iskolák és tanévek szerint. Az arány automatikusan számítódik az SNI
-            és összes tanuló létszám alapján. Az adatok szakértői bizottság
-            véleményén alapulnak.
-          </Typography>
+          <Box component="ul" sx={{ pl: 3 }}>
+            <li>
+              <Typography variant="body2">
+                <strong>Érzékszervi fogyatékosság:</strong> Látás- vagy
+                halláskárosodás
+              </Typography>
+            </li>
+            <li>
+              <Typography variant="body2">
+                <strong>Értelmi fogyatékosság:</strong> Enyhe, középsúlyos vagy
+                súlyos
+              </Typography>
+            </li>
+            <li>
+              <Typography variant="body2">
+                <strong>Beszédfogyatékosság:</strong> Kommunikációs nehézségek
+              </Typography>
+            </li>
+            <li>
+              <Typography variant="body2">
+                <strong>Mozgásfogyatékosság:</strong> Fizikai korlátozottság
+              </Typography>
+            </li>
+            <li>
+              <Typography variant="body2">
+                <strong>Tanulási nehézség:</strong> Diszlexia, diszgráfia,
+                diszkalkúlia
+              </Typography>
+            </li>
+            <li>
+              <Typography variant="body2">
+                <strong>Autizmus spektrum zavar:</strong> Társas kommunikációs
+                nehézségek
+              </Typography>
+            </li>
+          </Box>
         </CardContent>
       </Card>
 

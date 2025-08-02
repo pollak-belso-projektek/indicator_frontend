@@ -66,6 +66,7 @@ const SzakképzésiMunkaszerződésArányPage = lazy(() =>
 );
 const OktatoPerDiak = lazy(() => import("../pages/tables/Oktatoperdiak.jsx"));
 const FelvettekPage = lazy(() => import("../pages/tables/FelvettekSzama.jsx"));
+const LogsPage = lazy(() => import("../pages/Logs.jsx"));
 export default function Router() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   return (
@@ -155,6 +156,16 @@ export default function Router() {
                   <TableProtectedRoute>
                     <NavigationWithLoading>
                       <UsersPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/logs"
+                element={
+                  <TableProtectedRoute tableName="logs">
+                    <NavigationWithLoading>
+                      <LogsPage />
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }

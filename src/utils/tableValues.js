@@ -20,6 +20,7 @@ const tableKeyValues = {
   hatranyos_helyetu_tanulok_aranya: "HH tanulók aránya",
   intezmenyi_nevelesi_mutatok: "Intézményi nevelési mutatók",
   szakkepzesi_munkaszerződes_arany: "Szakképzési munkaszerződés aránya",
+  logs: "Rendszer naplók",
 };
 
 export const getTableName = (tableKey) => {
@@ -57,6 +58,7 @@ const routeToTableMapping = {
   "/hatranyos-helyezu-tanulok-aranya": "hatranyos_helyetu_tanulok_aranya",
   "/intezmenyi-nevelesi-mutatok": "intezmenyi_nevelesi_mutatok",
   "/szakkepzesi-munkaszerződes-arany": "szakkepzesi_munkaszerződes_arany",
+  "/logs": "logs",
 };
 
 export const getTableNameFromRoute = (route) => {
@@ -99,9 +101,14 @@ export const hasRouteAccess = (tableAccess, route, isSuperadmin = false) => {
  * Get all accessible routes for a user based on their table permissions
  * @param {Array} tableAccess - User's table access array from JWT
  * @param {boolean} isSuperadmin - Whether user is superadmin (gets all routes)
+ * @param {Object} userPermissions - User's permissions object
  * @returns {Array} - Array of accessible route paths
  */
-export const getAccessibleRoutes = (tableAccess, isSuperadmin = false) => {
+export const getAccessibleRoutes = (
+  tableAccess,
+  isSuperadmin = false,
+  userPermissions = {}
+) => {
   // Superadmin gets all routes
   if (isSuperadmin) {
     return [
@@ -114,6 +121,7 @@ export const getAccessibleRoutes = (tableAccess, isSuperadmin = false) => {
       "/tanugyi_adatok",
       "/felvettek_szama",
       "/users",
+      "/logs",
     ];
   }
 
@@ -122,6 +130,12 @@ export const getAccessibleRoutes = (tableAccess, isSuperadmin = false) => {
 
   const accessibleRoutes = allRoutes.filter((route) => {
     const tableName = getTableNameFromRoute(route);
+
+    // Special case for logs - only admins can access
+    if (tableName === "logs") {
+      return userPermissions?.isAdmin || userPermissions?.isSuperadmin;
+    }
+
     return tableName ? hasTableAccess(tableAccess, tableName) : false;
   });
 
