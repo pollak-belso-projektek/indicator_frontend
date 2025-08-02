@@ -15,10 +15,18 @@ import {
   Button,
   Stack,
   Alert,
+  CircularProgress,
+  Backdrop,
+  Snackbar,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
-import { useGetTanugyiAdatokQuery } from "../store/api/apiSlice";
+import {
+  useGetTanugyiAdatokQuery,
+  useGetAllSZMSZQuery,
+  useAddSZMSZMutation,
+  useUpdateSZMSZMutation,
+} from "../store/api/apiSlice";
 import { useSelector } from "react-redux";
 import { selectSelectedSchool } from "../store/slices/authSlice";
 
@@ -27,14 +35,18 @@ export default function SzakképzésiMunkaszerződésArány() {
 
   const selectedSchool = useSelector(selectSelectedSchool);
 
-  const { data, error, isLoading } = useGetTanugyiAdatokQuery({
+  const { data } = useGetTanugyiAdatokQuery({
     alapadatok_id: selectedSchool?.id,
     ev: 2024,
   });
 
-  console.log("API Data:", data);
-  console.log("Is Loading:", isLoading);
-  console.log("Error:", error);
+  const { data: szmszData } = useGetAllSZMSZQuery({
+    alapadatok_id: selectedSchool?.id,
+    tanev: 2024,
+  });
+
+  const [addSZMSZ, { isLoading: isAdding }] = useAddSZMSZMutation();
+  const [updateSZMSZ, { isLoading: isUpdating }] = useUpdateSZMSZMutation();
 
   function szakiranyok_szakmak(tipus) {
     return (
@@ -137,12 +149,18 @@ export default function SzakképzésiMunkaszerződésArány() {
   const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
   const [hasInitializedFromAPI, setHasInitializedFromAPI] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   // Use useEffect to calculate data when API data becomes available
   useEffect(() => {
     console.log(
       "useEffect triggered - data:",
       data?.length,
+      "szmszData:",
+      szmszData?.length,
       "institutionStructure:",
       institutionStructure.length,
       "hasInitializedFromAPI:",
@@ -153,15 +171,14 @@ export default function SzakképzésiMunkaszerződésArány() {
 
     // Only initialize from API if we haven't done it yet and user hasn't made changes
     if (
-      data &&
-      Array.isArray(data) &&
-      data.length > 0 &&
+      ((szmszData && Array.isArray(szmszData) && szmszData.length > 0) ||
+        (data && Array.isArray(data) && data.length > 0)) &&
       !hasInitializedFromAPI &&
       !isModified
     ) {
       console.log("Calculating data from API...");
 
-      // Function to calculate data from API response
+      // Function to calculate data from SZMSZ endpoint or fall back to student data
       const calculateDataFromAPI = () => {
         const calculatedData = {
           percentage: {},
@@ -203,272 +220,501 @@ export default function SzakképzésiMunkaszerződésArány() {
           });
         });
 
-        // Calculate actual numbers from API data
-        schoolYears.forEach((schoolYear) => {
-          const yearStart = parseInt(schoolYear.split("/")[0]);
+        // Check if we have SZMSZ data (saved data) to use first
+        if (szmszData && Array.isArray(szmszData) && szmszData.length > 0) {
+          console.log("Using SZMSZ saved data...");
 
-          // Filter students for this school year
-          const studentsForYear = data.filter(
-            (student) =>
-              student.tanev_kezdete === yearStart &&
-              student.tanulo_jogviszonya === "Tanulói jogviszony"
-          );
+          // Process SZMSZ data
+          schoolYears.forEach((schoolYear) => {
+            const yearStart = parseInt(schoolYear.split("/")[0]);
 
-          // Count by institution type and specialization
-          institutionStructure.forEach((institution, institutionIndex) => {
-            const key = `${institution.category}_${institutionIndex}`;
+            // Filter SZMSZ data for this school year
+            const szmszForYear = szmszData.filter(
+              (record) => record.tanev_kezdete === yearStart
+            );
 
-            if (institution.category === "összesen") {
-              // Calculate totals for all institution types
-              let totalContractStudents = 0;
-              let totalStudents = 0;
+            institutionStructure.forEach((institution, institutionIndex) => {
+              const key = `${institution.category}_${institutionIndex}`;
 
-              studentsForYear.forEach((student) => {
-                const hasContract =
-                  student.szakkepzesi_munkaszerzodessel === "Igen";
-                const evfolyam = student.evfolyam || "";
+              if (institution.category === "összesen") {
+                // Calculate totals for all institution types from SZMSZ data
+                let totalContractStudents = 0;
+                let totalStudents = 0;
 
-                // Check if it's technikum or szakképző iskola
-                if (
-                  evfolyam.toLowerCase().includes("technikum") ||
-                  evfolyam.toLowerCase().includes("szakképző")
-                ) {
-                  totalStudents++;
-                  if (hasContract) {
-                    totalContractStudents++;
+                szmszForYear.forEach((record) => {
+                  if (
+                    record.szakma?.tipus === "Technikum" ||
+                    record.szakma?.tipus === "Szakképző iskola"
+                  ) {
+                    totalStudents += record.tanulok_osszeletszam || 0;
+                    totalContractStudents +=
+                      record.munkaszerzodeses_tanulok_szama || 0;
                   }
+                });
+
+                calculatedData.total_students[key][institution.subcategory][
+                  schoolYear
+                ] = totalStudents.toString();
+                calculatedData.contract_students[key][institution.subcategory][
+                  schoolYear
+                ] = totalContractStudents.toString();
+              } else if (institution.subcategory.includes("technikum")) {
+                // Calculate for technikum from SZMSZ data
+                let contractStudents = 0;
+                let totalStudents = 0;
+
+                if (
+                  institution.szakiranyok &&
+                  institution.szakiranyok.length > 0
+                ) {
+                  institution.szakiranyok.forEach((szakirany) => {
+                    let szakiranyContractStudents = 0;
+                    let szakiranyTotalStudents = 0;
+
+                    szakirany.specializations.forEach((spec, specIndex) => {
+                      const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
+                      let specContractStudents = 0;
+                      let specTotalStudents = 0;
+
+                      if (spec === "Nincs meghatározva") {
+                        // For "Nincs meghatározva", sum all records for this szakirany that don't match other specs
+                        const szakiranyRecords = szmszForYear.filter(
+                          (record) =>
+                            record.szakma?.tipus === "Technikum" &&
+                            record.szakirany?.nev === szakirany.name
+                        );
+
+                        const matchedSpecs = new Set();
+                        szakirany.specializations
+                          .slice(0, -1)
+                          .forEach((otherSpec) => {
+                            szakiranyRecords.forEach((record) => {
+                              if (record.szakma?.nev === otherSpec) {
+                                matchedSpecs.add(record.szakma.nev);
+                              }
+                            });
+                          });
+
+                        szakiranyRecords.forEach((record) => {
+                          if (!matchedSpecs.has(record.szakma?.nev)) {
+                            specTotalStudents +=
+                              record.tanulok_osszeletszam || 0;
+                            specContractStudents +=
+                              record.munkaszerzodeses_tanulok_szama || 0;
+                          }
+                        });
+                      } else {
+                        // Find exact match for this specialization
+                        const matchingRecords = szmszForYear.filter(
+                          (record) =>
+                            record.szakma?.tipus === "Technikum" &&
+                            record.szakirany?.nev === szakirany.name &&
+                            record.szakma?.nev === spec
+                        );
+
+                        matchingRecords.forEach((record) => {
+                          specTotalStudents += record.tanulok_osszeletszam || 0;
+                          specContractStudents +=
+                            record.munkaszerzodeses_tanulok_szama || 0;
+                        });
+                      }
+
+                      calculatedData.total_students[key][uniqueSpecKey][
+                        schoolYear
+                      ] = specTotalStudents.toString();
+                      calculatedData.contract_students[key][uniqueSpecKey][
+                        schoolYear
+                      ] = specContractStudents.toString();
+
+                      szakiranyTotalStudents += specTotalStudents;
+                      szakiranyContractStudents += specContractStudents;
+                    });
+
+                    // Update szakirany totals
+                    calculatedData.total_students[key][szakirany.name][
+                      schoolYear
+                    ] = szakiranyTotalStudents.toString();
+                    calculatedData.contract_students[key][szakirany.name][
+                      schoolYear
+                    ] = szakiranyContractStudents.toString();
+
+                    totalStudents += szakiranyTotalStudents;
+                    contractStudents += szakiranyContractStudents;
+                  });
                 }
-              });
 
-              calculatedData.total_students[key][institution.subcategory][
-                schoolYear
-              ] = totalStudents.toString();
-              calculatedData.contract_students[key][institution.subcategory][
-                schoolYear
-              ] = totalContractStudents.toString();
-            } else if (institution.subcategory.includes("technikum")) {
-              // Calculate for technikum
-              let contractStudents = 0;
-              let totalStudents = 0;
+                calculatedData.total_students[key][institution.subcategory][
+                  schoolYear
+                ] = totalStudents.toString();
+                calculatedData.contract_students[key][institution.subcategory][
+                  schoolYear
+                ] = contractStudents.toString();
+              } else if (institution.subcategory.includes("szakképző iskola")) {
+                // Calculate for szakképző iskola from SZMSZ data
+                let contractStudents = 0;
+                let totalStudents = 0;
 
-              const technikumStudents = studentsForYear.filter((student) => {
-                const evfolyam = student.evfolyam || "";
-                return evfolyam.toLowerCase().includes("technikum");
-              });
+                if (
+                  institution.szakiranyok &&
+                  institution.szakiranyok.length > 0
+                ) {
+                  institution.szakiranyok.forEach((szakirany) => {
+                    let szakiranyContractStudents = 0;
+                    let szakiranyTotalStudents = 0;
 
-              if (
-                institution.szakiranyok &&
-                institution.szakiranyok.length > 0
-              ) {
-                institution.szakiranyok.forEach((szakirany) => {
-                  let szakiranyContractStudents = 0;
-                  let szakiranyTotalStudents = 0;
+                    szakirany.specializations.forEach((spec, specIndex) => {
+                      const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
+                      let specContractStudents = 0;
+                      let specTotalStudents = 0;
 
-                  // Filter students for this specific szakirany
-                  const szakiranyStudents = technikumStudents.filter(
-                    (student) => {
-                      const studentAgazat = student.uj_Szkt_agazat_tipusa || "";
-                      return (
-                        studentAgazat
-                          .toLowerCase()
-                          .includes(szakirany.name.toLowerCase()) ||
-                        studentAgazat === "Na" ||
-                        !studentAgazat
-                      );
-                    }
-                  );
+                      if (spec === "Nincs meghatározva") {
+                        // For "Nincs meghatározva", sum all records for this szakirany that don't match other specs
+                        const szakiranyRecords = szmszForYear.filter(
+                          (record) =>
+                            record.szakma?.tipus === "Szakképző iskola" &&
+                            record.szakirany?.nev === szakirany.name
+                        );
 
-                  szakirany.specializations.forEach((spec, specIndex) => {
-                    const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
-                    let specContractStudents = 0;
-                    let specTotalStudents = 0;
+                        const matchedSpecs = new Set();
+                        szakirany.specializations
+                          .slice(0, -1)
+                          .forEach((otherSpec) => {
+                            szakiranyRecords.forEach((record) => {
+                              if (record.szakma?.nev === otherSpec) {
+                                matchedSpecs.add(record.szakma.nev);
+                              }
+                            });
+                          });
 
-                    if (spec === "Nincs meghatározva") {
-                      // Count students with "Na" or empty szakma, or those that don't match any other specialization
-                      const studentsWithoutSpecificSzakma =
-                        szakiranyStudents.filter((student) => {
-                          const studentSzakma =
-                            student.uj_szkt_szakma_tipusa || "";
-                          return (
-                            studentSzakma === "Na" ||
-                            !studentSzakma ||
-                            !szakirany.specializations
-                              .slice(0, -1)
-                              .some((otherSpec) =>
-                                studentSzakma
-                                  .toLowerCase()
-                                  .includes(otherSpec.toLowerCase())
-                              )
-                          );
+                        szakiranyRecords.forEach((record) => {
+                          if (!matchedSpecs.has(record.szakma?.nev)) {
+                            specTotalStudents +=
+                              record.tanulok_osszeletszam || 0;
+                            specContractStudents +=
+                              record.munkaszerzodeses_tanulok_szama || 0;
+                          }
                         });
+                      } else {
+                        // Find exact match for this specialization
+                        const matchingRecords = szmszForYear.filter(
+                          (record) =>
+                            record.szakma?.tipus === "Szakképző iskola" &&
+                            record.szakirany?.nev === szakirany.name &&
+                            record.szakma?.nev === spec
+                        );
 
-                      specTotalStudents = studentsWithoutSpecificSzakma.length;
-                      specContractStudents =
-                        studentsWithoutSpecificSzakma.filter(
-                          (s) => s.szakkepzesi_munkaszerzodessel === "Igen"
-                        ).length;
-                    } else {
-                      // Count students with this specific specialization within the szakirany
-                      const studentsWithSpec = szakiranyStudents.filter(
-                        (student) => {
-                          const studentSzakma =
-                            student.uj_szkt_szakma_tipusa || "";
-                          return studentSzakma
-                            .toLowerCase()
-                            .includes(spec.toLowerCase());
-                        }
-                      );
-
-                      specTotalStudents = studentsWithSpec.length;
-                      specContractStudents = studentsWithSpec.filter(
-                        (s) => s.szakkepzesi_munkaszerzodessel === "Igen"
-                      ).length;
-                    }
-
-                    calculatedData.total_students[key][uniqueSpecKey][
-                      schoolYear
-                    ] = specTotalStudents.toString();
-                    calculatedData.contract_students[key][uniqueSpecKey][
-                      schoolYear
-                    ] = specContractStudents.toString();
-
-                    szakiranyTotalStudents += specTotalStudents;
-                    szakiranyContractStudents += specContractStudents;
-                  });
-
-                  // Update szakirany totals
-                  calculatedData.total_students[key][szakirany.name][
-                    schoolYear
-                  ] = szakiranyTotalStudents.toString();
-                  calculatedData.contract_students[key][szakirany.name][
-                    schoolYear
-                  ] = szakiranyContractStudents.toString();
-
-                  totalStudents += szakiranyTotalStudents;
-                  contractStudents += szakiranyContractStudents;
-                });
-              }
-
-              calculatedData.total_students[key][institution.subcategory][
-                schoolYear
-              ] = totalStudents.toString();
-              calculatedData.contract_students[key][institution.subcategory][
-                schoolYear
-              ] = contractStudents.toString();
-            } else if (institution.subcategory.includes("szakképző iskola")) {
-              // Calculate for szakképző iskola
-              let contractStudents = 0;
-              let totalStudents = 0;
-
-              const szakképzőStudents = studentsForYear.filter((student) => {
-                const evfolyam = student.evfolyam || "";
-                return (
-                  evfolyam.toLowerCase().includes("szakképző") &&
-                  !evfolyam.toLowerCase().includes("technikum")
-                );
-              });
-
-              if (
-                institution.szakiranyok &&
-                institution.szakiranyok.length > 0
-              ) {
-                institution.szakiranyok.forEach((szakirany) => {
-                  let szakiranyContractStudents = 0;
-                  let szakiranyTotalStudents = 0;
-
-                  // Filter students for this specific szakirany
-                  const szakiranyStudents = szakképzőStudents.filter(
-                    (student) => {
-                      const studentAgazat = student.uj_Szkt_agazat_tipusa || "";
-                      return (
-                        studentAgazat
-                          .toLowerCase()
-                          .includes(szakirany.name.toLowerCase()) ||
-                        studentAgazat === "Na" ||
-                        !studentAgazat
-                      );
-                    }
-                  );
-
-                  szakirany.specializations.forEach((spec, specIndex) => {
-                    const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
-                    let specContractStudents = 0;
-                    let specTotalStudents = 0;
-
-                    if (spec === "Nincs meghatározva") {
-                      const studentsWithoutSpecificSzakma =
-                        szakiranyStudents.filter((student) => {
-                          const studentSzakma =
-                            student.uj_szkt_szakma_tipusa || "";
-                          return (
-                            studentSzakma === "Na" ||
-                            !studentSzakma ||
-                            !szakirany.specializations
-                              .slice(0, -1)
-                              .some((otherSpec) =>
-                                studentSzakma
-                                  .toLowerCase()
-                                  .includes(otherSpec.toLowerCase())
-                              )
-                          );
+                        matchingRecords.forEach((record) => {
+                          specTotalStudents += record.tanulok_osszeletszam || 0;
+                          specContractStudents +=
+                            record.munkaszerzodeses_tanulok_szama || 0;
                         });
+                      }
 
-                      specTotalStudents = studentsWithoutSpecificSzakma.length;
-                      specContractStudents =
-                        studentsWithoutSpecificSzakma.filter(
-                          (s) => s.szakkepzesi_munkaszerzodessel === "Igen"
-                        ).length;
-                    } else {
-                      const studentsWithSpec = szakiranyStudents.filter(
-                        (student) => {
-                          const studentSzakma =
-                            student.uj_szkt_szakma_tipusa || "";
-                          return studentSzakma
-                            .toLowerCase()
-                            .includes(spec.toLowerCase());
-                        }
-                      );
+                      calculatedData.total_students[key][uniqueSpecKey][
+                        schoolYear
+                      ] = specTotalStudents.toString();
+                      calculatedData.contract_students[key][uniqueSpecKey][
+                        schoolYear
+                      ] = specContractStudents.toString();
 
-                      specTotalStudents = studentsWithSpec.length;
-                      specContractStudents = studentsWithSpec.filter(
-                        (s) => s.szakkepzesi_munkaszerzodessel === "Igen"
-                      ).length;
-                    }
+                      szakiranyTotalStudents += specTotalStudents;
+                      szakiranyContractStudents += specContractStudents;
+                    });
 
-                    calculatedData.total_students[key][uniqueSpecKey][
+                    calculatedData.total_students[key][szakirany.name][
                       schoolYear
-                    ] = specTotalStudents.toString();
-                    calculatedData.contract_students[key][uniqueSpecKey][
+                    ] = szakiranyTotalStudents.toString();
+                    calculatedData.contract_students[key][szakirany.name][
                       schoolYear
-                    ] = specContractStudents.toString();
+                    ] = szakiranyContractStudents.toString();
 
-                    szakiranyTotalStudents += specTotalStudents;
-                    szakiranyContractStudents += specContractStudents;
+                    totalStudents += szakiranyTotalStudents;
+                    contractStudents += szakiranyContractStudents;
                   });
+                }
 
-                  calculatedData.total_students[key][szakirany.name][
-                    schoolYear
-                  ] = szakiranyTotalStudents.toString();
-                  calculatedData.contract_students[key][szakirany.name][
-                    schoolYear
-                  ] = szakiranyContractStudents.toString();
-
-                  totalStudents += szakiranyTotalStudents;
-                  contractStudents += szakiranyContractStudents;
-                });
+                calculatedData.total_students[key][institution.subcategory][
+                  schoolYear
+                ] = totalStudents.toString();
+                calculatedData.contract_students[key][institution.subcategory][
+                  schoolYear
+                ] = contractStudents.toString();
               }
-
-              calculatedData.total_students[key][institution.subcategory][
-                schoolYear
-              ] = totalStudents.toString();
-              calculatedData.contract_students[key][institution.subcategory][
-                schoolYear
-              ] = contractStudents.toString();
-            }
+            });
           });
-        });
+        } else if (data && Array.isArray(data) && data.length > 0) {
+          console.log("No SZMSZ data found, calculating from student data...");
+          // Fall back to original calculation from student data
+          schoolYears.forEach((schoolYear) => {
+            const yearStart = parseInt(schoolYear.split("/")[0]);
 
-        // Calculate percentages
+            // Filter students for this school year
+            const studentsForYear = data.filter(
+              (student) =>
+                student.tanev_kezdete === yearStart &&
+                student.tanulo_jogviszonya === "Tanulói jogviszony"
+            );
+
+            // Count by institution type and specialization
+            institutionStructure.forEach((institution, institutionIndex) => {
+              const key = `${institution.category}_${institutionIndex}`;
+
+              if (institution.category === "összesen") {
+                // Calculate totals for all institution types
+                let totalContractStudents = 0;
+                let totalStudents = 0;
+
+                studentsForYear.forEach((student) => {
+                  const hasContract =
+                    student.szakkepzesi_munkaszerzodessel === "Igen";
+                  const evfolyam = student.evfolyam || "";
+
+                  // Check if it's technikum or szakképző iskola
+                  if (
+                    evfolyam.toLowerCase().includes("technikum") ||
+                    evfolyam.toLowerCase().includes("szakképző")
+                  ) {
+                    totalStudents++;
+                    if (hasContract) {
+                      totalContractStudents++;
+                    }
+                  }
+                });
+
+                calculatedData.total_students[key][institution.subcategory][
+                  schoolYear
+                ] = totalStudents.toString();
+                calculatedData.contract_students[key][institution.subcategory][
+                  schoolYear
+                ] = totalContractStudents.toString();
+              } else if (institution.subcategory.includes("technikum")) {
+                // Calculate for technikum
+                let contractStudents = 0;
+                let totalStudents = 0;
+
+                const technikumStudents = studentsForYear.filter((student) => {
+                  const evfolyam = student.evfolyam || "";
+                  return evfolyam.toLowerCase().includes("technikum");
+                });
+
+                if (
+                  institution.szakiranyok &&
+                  institution.szakiranyok.length > 0
+                ) {
+                  institution.szakiranyok.forEach((szakirany) => {
+                    let szakiranyContractStudents = 0;
+                    let szakiranyTotalStudents = 0;
+
+                    // Filter students for this specific szakirany
+                    const szakiranyStudents = technikumStudents.filter(
+                      (student) => {
+                        const studentAgazat =
+                          student.uj_Szkt_agazat_tipusa || "";
+                        return (
+                          studentAgazat
+                            .toLowerCase()
+                            .includes(szakirany.name.toLowerCase()) ||
+                          studentAgazat === "Na" ||
+                          !studentAgazat
+                        );
+                      }
+                    );
+
+                    szakirany.specializations.forEach((spec, specIndex) => {
+                      const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
+                      let specContractStudents = 0;
+                      let specTotalStudents = 0;
+
+                      if (spec === "Nincs meghatározva") {
+                        // Count students with "Na" or empty szakma, or those that don't match any other specialization
+                        const studentsWithoutSpecificSzakma =
+                          szakiranyStudents.filter((student) => {
+                            const studentSzakma =
+                              student.uj_szkt_szakma_tipusa || "";
+                            return (
+                              studentSzakma === "Na" ||
+                              !studentSzakma ||
+                              !szakirany.specializations
+                                .slice(0, -1)
+                                .some((otherSpec) =>
+                                  studentSzakma
+                                    .toLowerCase()
+                                    .includes(otherSpec.toLowerCase())
+                                )
+                            );
+                          });
+
+                        specTotalStudents =
+                          studentsWithoutSpecificSzakma.length;
+                        specContractStudents =
+                          studentsWithoutSpecificSzakma.filter(
+                            (s) => s.szakkepzesi_munkaszerzodessel === "Igen"
+                          ).length;
+                      } else {
+                        // Count students with this specific specialization within the szakirany
+                        const studentsWithSpec = szakiranyStudents.filter(
+                          (student) => {
+                            const studentSzakma =
+                              student.uj_szkt_szakma_tipusa || "";
+                            return studentSzakma
+                              .toLowerCase()
+                              .includes(spec.toLowerCase());
+                          }
+                        );
+
+                        specTotalStudents = studentsWithSpec.length;
+                        specContractStudents = studentsWithSpec.filter(
+                          (s) => s.szakkepzesi_munkaszerzodessel === "Igen"
+                        ).length;
+                      }
+
+                      calculatedData.total_students[key][uniqueSpecKey][
+                        schoolYear
+                      ] = specTotalStudents.toString();
+                      calculatedData.contract_students[key][uniqueSpecKey][
+                        schoolYear
+                      ] = specContractStudents.toString();
+
+                      szakiranyTotalStudents += specTotalStudents;
+                      szakiranyContractStudents += specContractStudents;
+                    });
+
+                    // Update szakirany totals
+                    calculatedData.total_students[key][szakirany.name][
+                      schoolYear
+                    ] = szakiranyTotalStudents.toString();
+                    calculatedData.contract_students[key][szakirany.name][
+                      schoolYear
+                    ] = szakiranyContractStudents.toString();
+
+                    totalStudents += szakiranyTotalStudents;
+                    contractStudents += szakiranyContractStudents;
+                  });
+                }
+
+                calculatedData.total_students[key][institution.subcategory][
+                  schoolYear
+                ] = totalStudents.toString();
+                calculatedData.contract_students[key][institution.subcategory][
+                  schoolYear
+                ] = contractStudents.toString();
+              } else if (institution.subcategory.includes("szakképző iskola")) {
+                // Calculate for szakképző iskola
+                let contractStudents = 0;
+                let totalStudents = 0;
+
+                const szakképzőStudents = studentsForYear.filter((student) => {
+                  const evfolyam = student.evfolyam || "";
+                  return (
+                    evfolyam.toLowerCase().includes("szakképző") &&
+                    !evfolyam.toLowerCase().includes("technikum")
+                  );
+                });
+
+                if (
+                  institution.szakiranyok &&
+                  institution.szakiranyok.length > 0
+                ) {
+                  institution.szakiranyok.forEach((szakirany) => {
+                    let szakiranyContractStudents = 0;
+                    let szakiranyTotalStudents = 0;
+
+                    // Filter students for this specific szakirany
+                    const szakiranyStudents = szakképzőStudents.filter(
+                      (student) => {
+                        const studentAgazat =
+                          student.uj_Szkt_agazat_tipusa || "";
+                        return (
+                          studentAgazat
+                            .toLowerCase()
+                            .includes(szakirany.name.toLowerCase()) ||
+                          studentAgazat === "Na" ||
+                          !studentAgazat
+                        );
+                      }
+                    );
+
+                    szakirany.specializations.forEach((spec, specIndex) => {
+                      const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
+                      let specContractStudents = 0;
+                      let specTotalStudents = 0;
+
+                      if (spec === "Nincs meghatározva") {
+                        const studentsWithoutSpecificSzakma =
+                          szakiranyStudents.filter((student) => {
+                            const studentSzakma =
+                              student.uj_szkt_szakma_tipusa || "";
+                            return (
+                              studentSzakma === "Na" ||
+                              !studentSzakma ||
+                              !szakirany.specializations
+                                .slice(0, -1)
+                                .some((otherSpec) =>
+                                  studentSzakma
+                                    .toLowerCase()
+                                    .includes(otherSpec.toLowerCase())
+                                )
+                            );
+                          });
+
+                        specTotalStudents =
+                          studentsWithoutSpecificSzakma.length;
+                        specContractStudents =
+                          studentsWithoutSpecificSzakma.filter(
+                            (s) => s.szakkepzesi_munkaszerzodessel === "Igen"
+                          ).length;
+                      } else {
+                        const studentsWithSpec = szakiranyStudents.filter(
+                          (student) => {
+                            const studentSzakma =
+                              student.uj_szkt_szakma_tipusa || "";
+                            return studentSzakma
+                              .toLowerCase()
+                              .includes(spec.toLowerCase());
+                          }
+                        );
+
+                        specTotalStudents = studentsWithSpec.length;
+                        specContractStudents = studentsWithSpec.filter(
+                          (s) => s.szakkepzesi_munkaszerzodessel === "Igen"
+                        ).length;
+                      }
+
+                      calculatedData.total_students[key][uniqueSpecKey][
+                        schoolYear
+                      ] = specTotalStudents.toString();
+                      calculatedData.contract_students[key][uniqueSpecKey][
+                        schoolYear
+                      ] = specContractStudents.toString();
+
+                      szakiranyTotalStudents += specTotalStudents;
+                      szakiranyContractStudents += specContractStudents;
+                    });
+
+                    calculatedData.total_students[key][szakirany.name][
+                      schoolYear
+                    ] = szakiranyTotalStudents.toString();
+                    calculatedData.contract_students[key][szakirany.name][
+                      schoolYear
+                    ] = szakiranyContractStudents.toString();
+
+                    totalStudents += szakiranyTotalStudents;
+                    contractStudents += szakiranyContractStudents;
+                  });
+                }
+
+                calculatedData.total_students[key][institution.subcategory][
+                  schoolYear
+                ] = totalStudents.toString();
+                calculatedData.contract_students[key][institution.subcategory][
+                  schoolYear
+                ] = contractStudents.toString();
+              }
+            });
+          });
+        }
+
+        // Calculate percentages for all data (both SZMSZ and student data)
         Object.keys(calculatedData.percentage).forEach((institutionKey) => {
           Object.keys(calculatedData.percentage[institutionKey]).forEach(
             (itemKey) => {
@@ -509,6 +755,7 @@ export default function SzakképzésiMunkaszerződésArány() {
     }
   }, [
     data,
+    szmszData,
     institutionStructure,
     schoolYears,
     hasInitializedFromAPI,
@@ -759,10 +1006,164 @@ export default function SzakképzésiMunkaszerződésArány() {
     setIsModified(true);
   };
 
-  const handleSave = () => {
-    setSavedData(JSON.parse(JSON.stringify(szakképzésiData)));
-    setIsModified(false);
-    console.log("Saving vocational contract data:", szakképzésiData);
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      let savedCount = 0;
+      let updatedCount = 0;
+
+      console.log("🔍 DEBUG: Starting save process");
+      console.log("🔍 DEBUG: szmszData available:", szmszData);
+
+      // Convert szakképzésiData to API format and save/update
+      for (const [institutionKey, institutionData] of Object.entries(
+        szakképzésiData.total_students
+      )) {
+        for (const [itemKey, yearData] of Object.entries(institutionData)) {
+          // ONLY PROCESS SPECIALIZATIONS (uniqueSpecKey format with underscores)
+          // Skip subcategories and szakirany-level data since they're not editable
+          if (!itemKey.includes("_") || itemKey.split("_").length < 3) {
+            console.log(
+              `🔍 DEBUG: Skipping non-specialization data: ${itemKey}`
+            );
+            continue; // Skip subcategories and szakirany-level data
+          }
+
+          for (const [year, totalValue] of Object.entries(yearData)) {
+            const contractValue =
+              szakképzésiData.contract_students[institutionKey]?.[itemKey]?.[
+                year
+              ] || "0";
+
+            // Only save if there's actual data
+            if (parseFloat(totalValue) > 0 || parseFloat(contractValue) > 0) {
+              console.log(
+                `🔍 DEBUG: Processing specialization record - institutionKey: ${institutionKey}, itemKey: ${itemKey}, year: ${year}`
+              );
+
+              // Extract szakma from institution key
+              const [szakmaFromInst] = institutionKey.split("_");
+
+              // Parse uniqueSpecKey format: "Gazdasági szakirány_0_Pénzügyi-számviteli ügyintéző"
+              const parts = itemKey.split("_");
+              const szakiranyNev = parts[0]; // "Gazdasági szakirány"
+              const szakmaNev = parts.slice(2).join("_"); // "Pénzügyi-számviteli ügyintéző"
+
+              const yearStart = parseInt(year.split("/")[0]);
+
+              console.log(`🔍 DEBUG: Extracted data:`);
+              console.log(`  - szakmaFromInst: ${szakmaFromInst}`);
+              console.log(`  - szakiranyNev: ${szakiranyNev}`);
+              console.log(`  - szakmaNev: ${szakmaNev}`);
+              console.log(`  - yearStart: ${yearStart}`);
+
+              // Check if a record already exists for this combination
+              const existingRecord = szmszData?.find((record) => {
+                // Try both nested object and flat string formats for API fields
+                const recordSzakma = record.szakma?.nev || record.szakma;
+                const recordSzakirany =
+                  record.szakirany?.nev || record.szakirany;
+                const recordSpecialization =
+                  record.szakkepzes_nev || record.specialization;
+
+                const szakmaMatch = recordSzakma === szakmaFromInst;
+                const szakiranyMatch = recordSzakirany === szakiranyNev;
+                const yearMatch = record.tanev_kezdete === yearStart;
+                const specMatch = recordSpecialization === szakmaNev;
+
+                console.log(`🔍 DEBUG: Checking record ${record.id}:`);
+                console.log(
+                  `  - szakma match: ${recordSzakma} === ${szakmaFromInst} -> ${szakmaMatch}`
+                );
+                console.log(
+                  `  - szakirany match: ${recordSzakirany} === ${szakiranyNev} -> ${szakiranyMatch}`
+                );
+                console.log(
+                  `  - year match: ${record.tanev_kezdete} === ${yearStart} -> ${yearMatch}`
+                );
+                console.log(
+                  `  - specialization match: ${recordSpecialization} === ${szakmaNev} -> ${specMatch}`
+                );
+
+                return szakmaMatch && szakiranyMatch && yearMatch && specMatch;
+              });
+
+              console.log(
+                `🔍 DEBUG: Found existing record:`,
+                existingRecord ? `ID ${existingRecord.id}` : "none"
+              );
+
+              const recordData = {
+                alapadatok_id: selectedSchool?.id,
+                tanev_kezdete: yearStart,
+                szakiranyNev: szakiranyNev,
+                szakmaNev: szakmaNev, // Add specialization name
+                tanulok_osszeletszam: parseInt(totalValue) || 0,
+                munkaszerzodeses_tanulok_szama: parseInt(contractValue) || 0,
+              };
+
+              try {
+                if (existingRecord) {
+                  // Update existing record
+                  await updateSZMSZ({
+                    id: existingRecord.id,
+                    ...recordData,
+                  }).unwrap();
+                  updatedCount++;
+                  console.log(
+                    `Updated SZMSZ record for ${szakmaNev} - ${szakiranyNev} - ${year}`
+                  );
+                } else {
+                  // Create new record
+                  await addSZMSZ(recordData).unwrap();
+                  savedCount++;
+                  console.log(
+                    `Created new SZMSZ record for ${szakmaNev} - ${szakiranyNev} - ${year}`
+                  );
+                }
+              } catch (recordError) {
+                console.error(
+                  `Error saving SZMSZ record for ${szakmaNev} - ${szakiranyNev} - ${year}:`,
+                  recordError
+                );
+                throw recordError; // Re-throw to be caught by outer catch
+              }
+            }
+          }
+        }
+      }
+
+      setSavedData(JSON.parse(JSON.stringify(szakképzésiData)));
+      setIsModified(false);
+      console.log(
+        `Successfully saved ${savedCount} new SZMSZ records and updated ${updatedCount} existing records`
+      );
+
+      // Show success snackbar
+      setSnackbarMessage(
+        `Sikeresen mentve: ${savedCount} új rekord és ${updatedCount} frissített rekord`
+      );
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("Error saving SZMSZ data:", error);
+      const errorMessage =
+        error.data?.message || error.message || "Hiba történt a mentés során";
+
+      // Show error snackbar
+      setSnackbarMessage(errorMessage);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbarOpen(false);
   };
 
   const handleReset = () => {
@@ -1088,15 +1489,17 @@ export default function SzakképzésiMunkaszerződésArány() {
           variant="contained"
           startIcon={<SaveIcon />}
           onClick={handleSave}
-          disabled={!isModified}
+          disabled={!isModified || isUpdating || isAdding || isSaving}
         >
-          Mentés
+          {isUpdating || isAdding || isSaving ? "Mentés..." : "Mentés"}
         </Button>
         <Button
           variant="outlined"
           startIcon={<RefreshIcon />}
           onClick={handleReset}
-          disabled={!isModified || !savedData}
+          disabled={
+            !isModified || !savedData || isUpdating || isAdding || isSaving
+          }
         >
           Visszaállítás
         </Button>
@@ -1113,146 +1516,44 @@ export default function SzakképzésiMunkaszerződésArány() {
           Az adatok sikeresen mentve!
         </Alert>
       )}
-      {/* Vocational Training Information
-      <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Szakképzési munkaszerződés jellemzői
-          </Typography>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2 }}>
-            <Chip label="Duális képzés" color="primary" variant="outlined" />
-            <Chip
-              label="Munkahelyi gyakorlat"
-              color="secondary"
-              variant="outlined"
-            />
-            <Chip
-              label="Szakmai kompetenciák"
-              color="success"
-              variant="outlined"
-            />
-            <Chip label="Mentorálás" color="info" variant="outlined" />
-            <Chip
-              label="Gyakorlati oktatás"
-              color="warning"
-              variant="outlined"
-            />
-            <Chip
-              label="Munkavállalói jogok"
-              color="error"
-              variant="outlined"
-            />
-          </Box>
-          <Typography variant="body2">
-            A szakképzési munkaszerződés a tanuló és a fogadó szervezet között
-            létrejövő megállapodás, amely biztosítja a gyakorlati képzés
-            kereteit.
-          </Typography>
-        </CardContent>
-      </Card>
 
-      <Card sx={{ mt: 3, backgroundColor: "#f0f8ff" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Intézménytípusok és szakirányok
-          </Typography>
-          <Box component="ul" sx={{ pl: 3, mb: 2 }}>
-            <li>
-              <Typography variant="body2">
-                <strong>Technikum:</strong> Magasépítő technikus, Mélyépítő
-                technikus
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Szakképző iskola:</strong> Kőműves, Burkkoló,
-                Festő-mázóló-tapétázó
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Duális képzés:</strong> Elméleti és gyakorlati oktatás
-                kombinációja
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Szakmai gyakorlat:</strong> Valós munkahelyi
-                környezetben történő képzés
-              </Typography>
-            </li>
+      {/* Loading Overlay */}
+      {isSaving && (
+        <Backdrop
+          sx={{
+            position: "fixed",
+            zIndex: 1300,
+            backgroundColor: "rgba(255, 255, 255, 0.8)",
+            color: "primary.main",
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+          }}
+          open={isSaving}
+        >
+          <CircularProgress size={50} />
+          <Box sx={{ textAlign: "center", fontWeight: "medium" }}>
+            Adatok mentése folyamatban, kérjük várjon...
           </Box>
-        </CardContent>
-      </Card>
+        </Backdrop>
+      )}
 
-      <Card sx={{ mt: 3, backgroundColor: "#f8fff8" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Jogszabályi háttér
-          </Typography>
-          <Box component="ul" sx={{ pl: 3, mb: 2 }}>
-            <li>
-              <Typography variant="body2">
-                <strong>Szerződéskötés:</strong> A tanuló, az iskola és a fogadó
-                szervezet háromoldalú megállapodása
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Időtartam:</strong> A képzési idő alatt érvényes,
-                meghatározott gyakorlati óraszámmal
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Díjazás:</strong> A tanuló jogosult gyakorlati képzési
-                díjra
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Mentorálás:</strong> Munkahelyi mentor kijelölése
-                kötelező
-              </Typography>
-            </li>
-          </Box>
-        </CardContent>
-      </Card>
-
-      <Card sx={{ mt: 3, backgroundColor: "#fff8f0" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Adatminőség irányelvek
-          </Typography>
-          <Box component="ul" sx={{ pl: 3 }}>
-            <li>
-              <Typography variant="body2">
-                <strong>Szerződés típusa:</strong> Csak érvényes szakképzési
-                munkaszerződésekkel rendelkező tanulók számítanak
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Jogviszony:</strong> Tanulói jogviszonyban lévő tanulók
-                adatait kell figyelembe venni
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Időzítés:</strong> Az október 1-jei állapot szerint kell
-                jelenteni az adatokat
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Szakirányok:</strong> Intézménytípusonként és
-                szakirányanként részletezett bontásban
-              </Typography>
-            </li>
-          </Box>
-        </CardContent>
-      </Card>{" "}
-      */}
+      {/* Snackbar for save notifications */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

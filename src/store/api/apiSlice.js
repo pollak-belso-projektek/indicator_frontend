@@ -25,6 +25,7 @@ export const indicatorApi = createApi({
     "HHesHHHNevelesuTanulok",
     "Vizsgaeredmenyek",
     "SzakmaiVizsgaEredmenyek",
+    "SzakkepzesiMunszerzodesArany",
     "Muhelyiskola",
     "NSZFH",
     "SZMSZ",
@@ -611,20 +612,7 @@ export const indicatorApi = createApi({
       providesTags: (result, error, tanev) => [{ type: "SZMSZ", id: tanev }],
     }),
     getAllSZMSZ: build.query({
-      query: () => {
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1;
-
-        let currentSchoolYearStart;
-        if (currentMonth >= 9) {
-          currentSchoolYearStart = currentYear;
-        } else {
-          currentSchoolYearStart = currentYear - 1;
-        }
-
-        return `szmsz/${currentSchoolYearStart}`;
-      },
+      query: ({ alapadatok_id, tanev }) => `szmsz/${alapadatok_id}/${tanev}`,
       providesTags: ["SZMSZ"],
     }),
     addSZMSZ: build.mutation({
