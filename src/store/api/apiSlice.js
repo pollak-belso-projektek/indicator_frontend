@@ -289,6 +289,12 @@ export const indicatorApi = createApi({
       query: () => "felvettek_szama",
       providesTags: ["FelvettekSzama"],
     }),
+    getFelvettekSzamaByAlapadatokId: build.query({
+      query: (alapadatokId) => `felvettek_szama/${alapadatokId}`,
+      providesTags: (result, error, alapadatokId) => [
+        { type: "FelvettekSzama", id: alapadatokId },
+      ],
+    }),
     addFelvettekSzama: build.mutation({
       query: (data) => ({
         url: "felvettek_szama",
@@ -759,6 +765,7 @@ export const {
   useDeleteElhelyezkedesMutation,
   useDeleteElhelyezkedesBySchoolAndYearMutation,
   useGetAllFelvettekSzamaQuery,
+  useGetFelvettekSzamaByAlapadatokIdQuery,
   useAddFelvettekSzamaMutation,
   useUpdateFelvettekSzamaMutation,
   useDeleteFelvettekSzamaMutation,

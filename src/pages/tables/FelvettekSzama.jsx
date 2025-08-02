@@ -8,12 +8,21 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
-import { Alert, TextField, Button, Stack } from "@mui/material";
+import {
+  Alert,
+  TextField,
+  Button,
+  Stack,
+  CircularProgress,
+  Backdrop,
+  Snackbar,
+} from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../../utils/schoolYears";
 import { selectSelectedSchool } from "../../store/slices/authSlice";
 import {
-  useGetAllFelvettekSzamaQuery,
+  useGetFelvettekSzamaByAlapadatokIdQuery,
+  useAddFelvettekSzamaMutation,
   useUpdateFelvettekSzamaMutation,
   useGetAllAlapadatokQuery,
 } from "../../store/api/apiSlice";
@@ -25,21 +34,26 @@ const FelvettekSzama = () => {
   const selectedSchool = useSelector(selectSelectedSchool);
 
   // API hooks
-  const {
-    data: apiAdmissionData,
-    error: fetchError,
-    isLoading: isFetching,
-  } = useGetAllFelvettekSzamaQuery();
+  const { data: apiAdmissionData, isLoading: isFetching } =
+    useGetFelvettekSzamaByAlapadatokIdQuery(selectedSchool?.id);
 
   const { data: schoolsData, isLoading: isLoadingSchools } =
     useGetAllAlapadatokQuery();
 
+  const [addAdmissionData, { isLoading: isAdding }] =
+    useAddFelvettekSzamaMutation();
   const [updateAdmissionData, { isLoading: isUpdating }] =
     useUpdateFelvettekSzamaMutation();
 
   // State for the integrated table data
   const [tableData, setTableData] = useState({});
   const [isModified, setIsModified] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   // Program types based on the selected school's actual data
   const programTypes = useMemo(() => {
@@ -137,11 +151,181 @@ const FelvettekSzama = () => {
 
   const handleSave = async () => {
     try {
-      // Implementation for saving the structured data
+      setIsSaving(true);
+      setSaveError(null);
+      let savedCount = 0;
+      let updatedCount = 0;
+
+      // Recreate relevantSchools for institution type lookup
+      let relevantSchools = schoolsData;
+      if (selectedSchool) {
+        relevantSchools = schoolsData.filter(
+          (school) => school.id === selectedSchool.id
+        );
+      }
+
+      // Convert tableData to API format and save/update
+      for (const [programType, yearData] of Object.entries(tableData)) {
+        for (const [year, fields] of Object.entries(yearData)) {
+          // Only save if there's actual data
+          if (
+            fields.jelentkezok_szama_9 > 0 ||
+            fields.felvettek_szama_9 > 0 ||
+            fields.felvettek_letszam_9 > 0
+          ) {
+            // Determine szakmaNev and szakiranyNev from programType
+            let szakmaNev = "";
+            let szakiranyNev = "";
+
+            // Find the program type in our categories to get proper names
+            const category = programTypes.find((cat) =>
+              cat.subTypes.includes(programType)
+            );
+
+            if (category) {
+              if (category.category === "Szakirány") {
+                szakiranyNev = programType;
+                // For szakirány level, we need a default szakma or skip
+                console.warn(
+                  `Skipping szakirány level record: ${programType} - no szakma specified`
+                );
+                continue; // Skip this iteration as backend requires both szakma and szakirany
+              } else if (category.category.includes("szakmái")) {
+                // Extract szakirány name from category
+                szakiranyNev = category.category.replace(" szakmái", "");
+                szakmaNev = programType;
+              } else if (category.category === "Összesen") {
+                // For institution types like "Technikum", we need to find actual szakma/szakirany pairs
+                // Let's find all szakma-szakirany combinations for this institution type
+                const institutionSchools = relevantSchools.filter(
+                  (school) => school.intezmeny_tipus === programType
+                );
+
+                if (institutionSchools.length > 0) {
+                  // For now, let's use the first available szakma-szakirany pair
+                  // You might want to create separate records for each pair later
+                  const firstSchool = institutionSchools[0];
+                  if (
+                    firstSchool.alapadatok_szakirany &&
+                    Array.isArray(firstSchool.alapadatok_szakirany) &&
+                    firstSchool.alapadatok_szakirany.length > 0
+                  ) {
+                    const firstSzakirany =
+                      firstSchool.alapadatok_szakirany[0].szakirany;
+                    if (firstSzakirany) {
+                      szakiranyNev = firstSzakirany.nev;
+
+                      // Try to get the first szakma from this szakirany
+                      if (
+                        firstSzakirany.szakma &&
+                        Array.isArray(firstSzakirany.szakma) &&
+                        firstSzakirany.szakma.length > 0
+                      ) {
+                        const firstSzakma = firstSzakirany.szakma[0].szakma;
+                        if (firstSzakma) {
+                          szakmaNev = firstSzakma.nev;
+                        }
+                      }
+                    }
+                  }
+                }
+
+                if (!szakmaNev || !szakiranyNev) {
+                  console.warn(
+                    `Institution type record: ${programType} - could not find valid szakma/szakirany pair`
+                  );
+                  continue;
+                } else {
+                  console.log(
+                    `Institution type record: ${programType} - using szakma: ${szakmaNev}, szakirany: ${szakiranyNev}`
+                  );
+                }
+              }
+            }
+
+            // Skip if we don't have both szakma and szakirany names
+            if (!szakmaNev || !szakiranyNev) {
+              console.warn(
+                `Skipping record - missing szakma (${szakmaNev}) or szakirany (${szakiranyNev})`
+              );
+              continue;
+            }
+
+            // Check if a record already exists for this combination
+            const existingRecord = apiAdmissionData?.find(
+              (record) =>
+                record.szakma?.nev === szakmaNev &&
+                record.szakirany?.nev === szakiranyNev &&
+                record.tanev_kezdete === parseInt(year)
+            );
+
+            const recordData = {
+              alapadatok_id: selectedSchool?.id,
+              tanev_kezdete: parseInt(year),
+              szakmaNev: szakmaNev,
+              szakiranyNev: szakiranyNev,
+              jelentkezo_letszam: fields.jelentkezok_szama_9 || 0,
+              felveheto_letszam: fields.felvettek_letszam_9 || 0,
+              felvett_letszam: fields.felvettek_szama_9 || 0,
+            };
+
+            try {
+              if (existingRecord) {
+                // Update existing record
+                await updateAdmissionData({
+                  id: existingRecord.id,
+                  ...recordData,
+                }).unwrap();
+                updatedCount++;
+                console.log(
+                  `Updated record for ${szakmaNev} - ${szakiranyNev} - ${year}`
+                );
+              } else {
+                // Create new record
+                await addAdmissionData(recordData).unwrap();
+                savedCount++;
+                console.log(
+                  `Created new record for ${szakmaNev} - ${szakiranyNev} - ${year}`
+                );
+              }
+            } catch (recordError) {
+              console.error(
+                `Error saving record for ${szakmaNev} - ${szakiranyNev} - ${year}:`,
+                recordError
+              );
+              throw recordError; // Re-throw to be caught by outer catch
+            }
+          }
+        }
+      }
+
       setIsModified(false);
-      console.log("Saving data:", tableData);
+      setSaveSuccess(true);
+      console.log(
+        `Successfully saved ${savedCount} new records and updated ${updatedCount} existing records`
+      );
+
+      // Show success snackbar
+      setSnackbarMessage(
+        `Sikeresen mentve: ${savedCount} új rekord és ${updatedCount} frissített rekord`
+      );
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
       console.error("Error saving admission data:", error);
+      const errorMessage =
+        error.data?.message || error.message || "Hiba történt a mentés során";
+      setSaveError(errorMessage);
+
+      // Show error snackbar
+      setSnackbarMessage(errorMessage);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -149,9 +333,63 @@ const FelvettekSzama = () => {
     setIsModified(false);
   };
 
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
+
   useEffect(() => {
     console.log(programTypes);
   }, [programTypes]);
+
+  // Load existing API data into tableData when component mounts or data changes
+  useEffect(() => {
+    if (
+      apiAdmissionData &&
+      Array.isArray(apiAdmissionData) &&
+      apiAdmissionData.length > 0
+    ) {
+      console.log("Loading existing admission data:", apiAdmissionData);
+
+      const newTableData = {};
+
+      apiAdmissionData.forEach((record) => {
+        const {
+          tanev_kezdete,
+          jelentkezo_letszam,
+          felveheto_letszam,
+          felvett_letszam,
+          szakma,
+          szakirany,
+        } = record;
+
+        if (szakma && szakirany) {
+          // Use szakma name as the key for the table data
+          const programKey = szakma.nev;
+
+          if (!newTableData[programKey]) {
+            newTableData[programKey] = {};
+          }
+
+          if (!newTableData[programKey][tanev_kezdete]) {
+            newTableData[programKey][tanev_kezdete] = {};
+          }
+
+          // Map the API field names to our internal field names
+          newTableData[programKey][tanev_kezdete] = {
+            jelentkezok_szama_9: jelentkezo_letszam || 0,
+            felvettek_letszam_9: felveheto_letszam || 0,
+            felvettek_szama_9: felvett_letszam || 0,
+          };
+        }
+      });
+
+      console.log("Transformed table data:", newTableData);
+      setTableData(newTableData);
+    }
+  }, [apiAdmissionData]);
 
   return (
     <Box sx={{ p: 3 }}>
@@ -168,11 +406,49 @@ const FelvettekSzama = () => {
           rendszer.
         </Alert>
       )}
-
+      <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+        <Button
+          variant="contained"
+          startIcon={<SaveIcon />}
+          onClick={handleSave}
+          disabled={!isModified || isUpdating || isAdding || isSaving}
+        >
+          {isUpdating || isAdding || isSaving ? "Mentés..." : "Mentés"}
+        </Button>
+        <Button
+          variant="outlined"
+          startIcon={<RefreshIcon />}
+          onClick={handleReset}
+          disabled={!isModified || isUpdating || isAdding || isSaving}
+        >
+          Visszaállítás
+        </Button>
+      </Stack>
       <TableContainer
         component={Paper}
-        sx={{ maxWidth: "100%", overflowX: "auto" }}
+        sx={{ maxWidth: "100%", overflowX: "auto", position: "relative" }}
       >
+        {/* Loading Overlay */}
+        {isSaving && (
+          <Backdrop
+            sx={{
+              position: "absolute",
+              zIndex: 10,
+              backgroundColor: "rgba(255, 255, 255, 0.8)",
+              color: "primary.main",
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+            open={isSaving}
+          >
+            <CircularProgress size={50} />
+            <Box sx={{ textAlign: "center", fontWeight: "medium" }}>
+              Adatok mentése folyamatban, kérjük várjon...
+            </Box>
+          </Backdrop>
+        )}
+
         <Table size="small" sx={{ minWidth: 1200 }}>
           <TableHead>
             <TableRow>
@@ -468,24 +744,6 @@ const FelvettekSzama = () => {
       </TableContainer>
 
       {/* Action Buttons */}
-      <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-        <Button
-          variant="contained"
-          startIcon={<SaveIcon />}
-          onClick={handleSave}
-          disabled={!isModified || isUpdating}
-        >
-          {isUpdating ? "Mentés..." : "Mentés"}
-        </Button>
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={handleReset}
-          disabled={!isModified || isUpdating}
-        >
-          Visszaállítás
-        </Button>
-      </Stack>
 
       {/* Status Messages */}
       {isModified && (
@@ -494,6 +752,23 @@ const FelvettekSzama = () => {
           változtatásokat!
         </Alert>
       )}
+
+      {/* Snackbar for save notifications */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
