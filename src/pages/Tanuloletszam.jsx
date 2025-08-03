@@ -384,6 +384,20 @@ export default function TanuloLetszam() {
     return total;
   };
 
+  // Calculate grand total percentage change as decimal
+  const calculateGrandTotalPercentageChange = (currentYear, field) => {
+    const currentYearData = calculateGrandTotal(currentYear, field);
+    const previousYear = currentYear - 1;
+    const previousYearData = calculateGrandTotal(previousYear, field);
+
+    if (previousYearData === 0) {
+      return currentYearData > 0 ? "-" : "-";
+    }
+
+    const change = (currentYearData / previousYearData) * 100;
+    return change.toFixed(1);
+  };
+
   const handleSaveData = async () => {
     try {
       setIsSaving(true);
@@ -1000,9 +1014,7 @@ export default function TanuloLetszam() {
                       zIndex: 3,
                       verticalAlign: "middle",
                     }}
-                  >
-                    Létszámváltozás az előző év adatához viszonyítva
-                  </TableCell>
+                  ></TableCell>
                   <TableCell
                     colSpan={evszamok.length * 3}
                     align="center"
@@ -1103,6 +1115,114 @@ export default function TanuloLetszam() {
                 </TableRow>
               </TableHead>
               <TableBody>
+                {/* Percentage Change Row - moved to top */}
+                <TableRow>
+                  <TableCell
+                    sx={{
+                      fontWeight: "bold",
+                      backgroundColor: "#e8f5e8",
+                      borderBottom: "2px solid #4caf50",
+                      borderRight: "2px solid #ddd",
+                      position: "sticky",
+                      left: 0,
+                      zIndex: 2,
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    Létszámváltozás az előző év adatához viszonyítva
+                  </TableCell>
+
+                  {/* Total percentage changes */}
+                  {evszamok.map((schoolYear) => {
+                    const startYear = parseInt(schoolYear.split("/")[0]);
+                    const change = calculateGrandTotalPercentageChange(
+                      startYear,
+                      "total"
+                    );
+                    const isPositive = parseFloat(change) > 0;
+                    const isNegative = parseFloat(change) < 0;
+
+                    return (
+                      <TableCell
+                        key={`change-total-${startYear}`}
+                        align="center"
+                        sx={{
+                          backgroundColor: "#e8f5e8",
+                          fontWeight: "bold",
+                          color: isPositive
+                            ? "#2e7d32"
+                            : isNegative
+                            ? "#d32f2f"
+                            : "text.primary",
+                          borderBottom: "2px solid #4caf50",
+                        }}
+                      >
+                        {change === "∞" ? "∞" : change}
+                      </TableCell>
+                    );
+                  })}
+
+                  {/* Student enrollment percentage changes */}
+                  {evszamok.map((schoolYear) => {
+                    const startYear = parseInt(schoolYear.split("/")[0]);
+                    const change = calculateGrandTotalPercentageChange(
+                      startYear,
+                      "tanuloi_jogviszony"
+                    );
+                    const isPositive = parseFloat(change) > 0;
+                    const isNegative = parseFloat(change) < 0;
+
+                    return (
+                      <TableCell
+                        key={`change-student-${startYear}`}
+                        align="center"
+                        sx={{
+                          backgroundColor: "#e8f5e8",
+                          fontWeight: "bold",
+                          color: isPositive
+                            ? "#2e7d32"
+                            : isNegative
+                            ? "#d32f2f"
+                            : "text.primary",
+                          borderBottom: "2px solid #4caf50",
+                        }}
+                      >
+                        {change === "∞" ? "∞" : change}
+                      </TableCell>
+                    );
+                  })}
+
+                  {/* Adult education percentage changes */}
+                  {evszamok.map((schoolYear) => {
+                    const startYear = parseInt(schoolYear.split("/")[0]);
+                    const change = calculateGrandTotalPercentageChange(
+                      startYear,
+                      "felnottkepzesi_jogviszony"
+                    );
+                    const isPositive = parseFloat(change) > 0;
+                    const isNegative = parseFloat(change) < 0;
+
+                    return (
+                      <TableCell
+                        key={`change-adult-${startYear}`}
+                        align="center"
+                        sx={{
+                          backgroundColor: "#e8f5e8",
+                          fontWeight: "bold",
+                          color: isPositive
+                            ? "#2e7d32"
+                            : isNegative
+                            ? "#d32f2f"
+                            : "text.primary",
+                          borderBottom: "2px solid #4caf50",
+                        }}
+                      >
+                        {change === "∞" ? "∞" : change}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+
                 {programTypes.map((category, categoryIndex) => (
                   <React.Fragment key={categoryIndex}>
                     {/* Category rows with potential subcategory */}
@@ -1365,54 +1485,81 @@ export default function TanuloLetszam() {
                     ) : (
                       // Original logic for non-szakirány categories
                       <>
-                        {/* Category header row */}
-                        <TableRow>
-                          <TableCell
-                            sx={{
-                              fontWeight: "bold",
-                              backgroundColor: category.isTotal
-                                ? "#e8f5e8"
-                                : category.isInstitutionType
-                                ? "#fff3e0"
-                                : "#f0f8ff",
-                              borderBottom: "2px solid #ddd",
-                              borderRight: "2px solid #ddd",
-                              position: "sticky",
-                              left: 0,
-                              zIndex: 2,
-                            }}
-                          >
-                            {category.category}
-                          </TableCell>
-                          {/* Empty cells for years */}
-                          {Array(evszamok.length * 3)
-                            .fill(0)
-                            .map((_, index) => (
-                              <TableCell
-                                key={index}
-                                sx={{
-                                  backgroundColor: category.isTotal
-                                    ? "#e8f5e8"
-                                    : category.isInstitutionType
-                                    ? "#fff3e0"
-                                    : "#f0f8ff",
-                                }}
-                              />
-                            ))}
-                        </TableRow>
+                        {/* Category header row - only show if different from single subType */}
+                        {!(
+                          category.subTypes.length === 1 &&
+                          category.category === category.subTypes[0]
+                        ) && (
+                          <TableRow>
+                            <TableCell
+                              sx={{
+                                fontWeight: "bold",
+                                backgroundColor: category.isTotal
+                                  ? "#e8f5e8"
+                                  : category.isInstitutionType
+                                  ? "#fff3e0"
+                                  : "#f0f8ff",
+                                borderBottom: "2px solid #ddd",
+                                borderRight: "2px solid #ddd",
+                                position: "sticky",
+                                left: 0,
+                                zIndex: 2,
+                              }}
+                            >
+                              {category.category}
+                            </TableCell>
+                            {/* Empty cells for years */}
+                            {Array(evszamok.length * 3)
+                              .fill(0)
+                              .map((_, index) => (
+                                <TableCell
+                                  key={index}
+                                  sx={{
+                                    backgroundColor: category.isTotal
+                                      ? "#e8f5e8"
+                                      : category.isInstitutionType
+                                      ? "#fff3e0"
+                                      : "#f0f8ff",
+                                  }}
+                                />
+                              ))}
+                          </TableRow>
+                        )}
 
                         {/* Sub-type rows */}
                         {category.subTypes.map((subType) => (
-                          <TableRow key={subType}>
+                          <TableRow
+                            key={subType}
+                            sx={{
+                              backgroundColor:
+                                category.isTotal && subType === "Összesen"
+                                  ? "#f1f8e9"
+                                  : "inherit",
+                            }}
+                          >
                             <TableCell
                               sx={{
-                                fontWeight: "medium",
+                                fontWeight:
+                                  category.isTotal && subType === "Összesen"
+                                    ? "bold"
+                                    : "medium",
                                 pl: category.isSpecialty ? 4 : 2,
                                 borderRight: "1px solid #ddd",
                                 position: "sticky",
                                 left: 0,
-                                backgroundColor: "#ffffff",
+                                backgroundColor:
+                                  category.isTotal && subType === "Összesen"
+                                    ? "#e8f5e8"
+                                    : "#ffffff",
                                 zIndex: 1,
+                                borderTop:
+                                  category.isTotal && subType === "Összesen"
+                                    ? "2px solid #4caf50"
+                                    : "none",
+                                borderBottom:
+                                  category.isTotal && subType === "Összesen"
+                                    ? "2px solid #4caf50"
+                                    : "none",
                               }}
                             >
                               {subType}
@@ -1448,11 +1595,22 @@ export default function TanuloLetszam() {
                                   key={`total-${subType}-${startYear}`}
                                   align="center"
                                   sx={{
-                                    backgroundColor: "#ffcdd220",
+                                    backgroundColor:
+                                      category.isTotal && subType === "Összesen"
+                                        ? "#e8f5e8"
+                                        : "#ffcdd220",
                                     fontWeight: "bold",
                                     color: hasData
                                       ? "primary.main"
                                       : "text.disabled",
+                                    borderTop:
+                                      category.isTotal && subType === "Összesen"
+                                        ? "2px solid #4caf50"
+                                        : "none",
+                                    borderBottom:
+                                      category.isTotal && subType === "Összesen"
+                                        ? "2px solid #4caf50"
+                                        : "none",
                                   }}
                                 >
                                   {total}
@@ -1503,12 +1661,14 @@ export default function TanuloLetszam() {
                                     key={`student-${subType}-${startYear}`}
                                     align="center"
                                     sx={{
-                                      backgroundColor: "#e1f5fe40",
+                                      backgroundColor: "#e8f5e8",
                                       fontWeight: "bold",
                                       color:
                                         value > 0
                                           ? "primary.main"
                                           : "text.disabled",
+                                      borderTop: "2px solid #4caf50",
+                                      borderBottom: "2px solid #4caf50",
                                     }}
                                   >
                                     {value}
@@ -1589,12 +1749,14 @@ export default function TanuloLetszam() {
                                     key={`adult-${subType}-${startYear}`}
                                     align="center"
                                     sx={{
-                                      backgroundColor: "#f3e5f540",
+                                      backgroundColor: "#e8f5e8",
                                       fontWeight: "bold",
                                       color:
                                         value > 0
                                           ? "primary.main"
                                           : "text.disabled",
+                                      borderTop: "2px solid #4caf50",
+                                      borderBottom: "2px solid #4caf50",
                                     }}
                                   >
                                     {value}
