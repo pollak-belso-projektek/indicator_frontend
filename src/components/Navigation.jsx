@@ -1014,13 +1014,6 @@ const MobileNav = ({ onOpen, ...rest }) => {
                 <Menu.Item>Settings</Menu.Item>
                 <Menu.Separator />
                 <Menu.Item onClick={handleLogout}>Sign out</Menu.Item>
-                <Menu.Item
-                  onClick={handleEmergencyLogout}
-                  color="red.500"
-                  fontSize="sm"
-                >
-                  Emergency Logout (if timeout)
-                </Menu.Item>
               </Menu.Content>
             </Menu.Positioner>
           </Menu.Root>
@@ -1059,7 +1052,7 @@ export default function Navigation({ children }) {
         </Drawer.Root>
         {/* mobilenav */}
         <MobileNav onOpen={() => setIsOpen(true)} />
-        <Box ml={{ base: 0, md: 60 }} p="4" mt="10">
+        <Box ml={{ base: 0, md: 60 }} p="1">
           {children}
         </Box>
       </Box>

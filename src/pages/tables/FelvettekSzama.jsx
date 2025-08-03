@@ -58,6 +58,9 @@ const FelvettekSzama = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
+  // Track which specific cells have been modified by the user
+  const [modifiedCells, setModifiedCells] = useState({});
+
   // Program types based on the selected school's actual data
   const programTypes = useMemo(() => {
     if (!schoolsData || !Array.isArray(schoolsData)) return [];
@@ -129,6 +132,14 @@ const FelvettekSzama = () => {
         },
       },
     }));
+
+    // Track this specific cell as modified
+    const cellKey = `${programType}-${year}-${field}`;
+    setModifiedCells((prev) => ({
+      ...prev,
+      [cellKey]: true,
+    }));
+
     setIsModified(true);
   };
 
@@ -430,6 +441,7 @@ const FelvettekSzama = () => {
       }
 
       setIsModified(false);
+      setModifiedCells({}); // Clear modified cells tracking after successful save
       setSaveSuccess(true);
       console.log(
         `Successfully saved ${savedCount} new records and updated ${updatedCount} existing records`
@@ -461,6 +473,8 @@ const FelvettekSzama = () => {
 
   const handleReset = () => {
     setIsModified(false);
+    // Clear the modified cells tracking when resetting
+    setModifiedCells({});
   };
 
   const handleSnackbarClose = (event, reason) => {
@@ -813,9 +827,9 @@ const FelvettekSzama = () => {
                           )
                         : data?.jelentkezok_szama_9 || 0;
 
-                      // Check if this field has been modified
-                      const isModified =
-                        !isReadOnly && data?.jelentkezok_szama_9 > 0;
+                      // Check if this specific cell has been modified by the user
+                      const cellKey = `${subType}-${startYear}-jelentkezok_szama_9`;
+                      const isModified = !isReadOnly && modifiedCells[cellKey];
 
                       return (
                         <TableCell
@@ -886,9 +900,9 @@ const FelvettekSzama = () => {
                           )
                         : data?.felvettek_szama_9 || 0;
 
-                      // Check if this field has been modified
-                      const isModified =
-                        !isReadOnly && data?.felvettek_szama_9 > 0;
+                      // Check if this specific cell has been modified by the user
+                      const cellKey = `${subType}-${startYear}-felvettek_szama_9`;
+                      const isModified = !isReadOnly && modifiedCells[cellKey];
 
                       return (
                         <TableCell
@@ -959,9 +973,9 @@ const FelvettekSzama = () => {
                           )
                         : data?.felvettek_letszam_9 || 0;
 
-                      // Check if this field has been modified
-                      const isModified =
-                        !isReadOnly && data?.felvettek_letszam_9 > 0;
+                      // Check if this specific cell has been modified by the user
+                      const cellKey = `${subType}-${startYear}-felvettek_letszam_9`;
+                      const isModified = !isReadOnly && modifiedCells[cellKey];
 
                       return (
                         <TableCell

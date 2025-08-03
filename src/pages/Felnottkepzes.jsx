@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import {
   Box,
   Card,
@@ -11,17 +12,24 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
-  Button,
-  Stack,
   Alert,
   Divider,
+  CircularProgress,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
+import { selectSelectedSchool } from "../store/slices/authSlice";
+import { useGetTanuloLetszamQuery } from "../store/api/apiSlice";
 
 export default function Felnottkepzes() {
   const years = generateSchoolYears();
+  const selectedSchool = useSelector(selectSelectedSchool);
+
+  // Fetch student data from API
+  const { data: apiStudentData, isLoading: isFetching } =
+    useGetTanuloLetszamQuery(
+      { alapadatok_id: selectedSchool?.id },
+      { skip: !selectedSchool?.id } // Skip the query if no school is selected
+    );
 
   // Initialize data objects with dynamic years
   const initializeYearData = (defaultValue = 0) => {
@@ -33,23 +41,103 @@ export default function Felnottkepzes() {
   };
 
   // First table data (read-only) - calculated percentages
-  const [felnottkepzesiArany, setFelnottkepzesiArany] = useState(() => {
-    const data = initializeYearData(0);
-    // Set some example data for the first year
-    data[years[3]] = 75; // oldest year gets some data
-    return data;
-  });
+  const [felnottkepzesiArany, setFelnottkepzesiArany] = useState(() =>
+    initializeYearData(0)
+  );
 
   // Second table data (editable) - absolute numbers
-  const [szakmaiOktatás, setSzakmaiOktatás] = useState(() => {
-    const data = initializeYearData(0);
-    // Set some example data for the first year
-    data[years[3]] = 1000; // oldest year gets some data
-    return data;
-  });
+  const [szakmaiOktatás, setSzakmaiOktatás] = useState(() =>
+    initializeYearData(0)
+  );
+
+  // Adult education data from API (jogv_tipus = 1)
+  const [felnottkepzesiJogviszony, setFelnottkepzesiJogviszony] = useState(() =>
+    initializeYearData(0)
+  );
 
   const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
+
+  // Extract adult education data from API response
+  const extractAdultEducationData = (apiData) => {
+    const adultEducationData = {};
+    years.forEach((yearRange) => {
+      const startYear = parseInt(yearRange.split("/")[0]);
+      adultEducationData[yearRange] = 0;
+
+      if (apiData && Array.isArray(apiData)) {
+        // Find records for this year with jogv_tipus = 1 (adult education)
+        const yearRecords = apiData.filter(
+          (record) =>
+            record.jogv_tipus === 1 && record.tanev_kezdete === startYear
+        );
+        // Sum up all the student counts for adult education
+        const totalCount = yearRecords.reduce((sum, record) => {
+          return sum + (record.letszam || 0);
+        }, 0);
+        console.log(
+          `Year: ${yearRange}, Start Year: ${startYear}, Adult Education Count: ${totalCount}, Records found: ${yearRecords.length}`
+        );
+        adultEducationData[yearRange] = totalCount;
+      }
+    });
+    return adultEducationData;
+  };
+
+  // Extract total student data (all jogv_tipus) for percentage calculation
+  const extractTotalStudentData = (apiData) => {
+    const totalStudentData = {};
+    years.forEach((yearRange) => {
+      const startYear = parseInt(yearRange.split("/")[0]);
+      totalStudentData[yearRange] = 0;
+
+      if (apiData && Array.isArray(apiData)) {
+        // Find all records for this year
+        const yearRecords = apiData.filter(
+          (record) => record.tanev_kezdete === startYear
+        );
+
+        // Sum up all the student counts
+        const totalCount = yearRecords.reduce((sum, record) => {
+          return sum + (record.letszam || 0);
+        }, 0);
+
+        totalStudentData[yearRange] = totalCount;
+      }
+    });
+    return totalStudentData;
+  };
+
+  // Load data from API when it's available
+  useEffect(() => {
+    if (apiStudentData && Array.isArray(apiStudentData)) {
+      console.log("Loading student data from API:", apiStudentData);
+
+      // Debug: Log unique jogv_tipus values and years
+      const uniqueJogvTipus = [
+        ...new Set(apiStudentData.map((record) => record.jogv_tipus)),
+      ];
+      const uniqueYears = [
+        ...new Set(apiStudentData.map((record) => record.tanev_kezdete)),
+      ];
+      console.log("Unique jogv_tipus values:", uniqueJogvTipus);
+      console.log("Unique years found:", uniqueYears);
+
+      // Debug: Show sample records
+      console.log("Sample records:", apiStudentData.slice(0, 3));
+
+      // Extract adult education data (jogv_tipus = 1)
+      const adultEducationData = extractAdultEducationData(apiStudentData);
+      setFelnottkepzesiJogviszony(adultEducationData);
+
+      // Extract total student data for calculation base
+      const totalStudentData = extractTotalStudentData(apiStudentData);
+      setSzakmaiOktatás(totalStudentData);
+
+      console.log("Adult education data:", adultEducationData);
+      console.log("Total student data:", totalStudentData);
+    }
+  }, [apiStudentData]);
 
   // Handle changes in the editable table
   const handleSzakmaiOktatásChange = (year, value) => {
@@ -63,25 +151,24 @@ export default function Felnottkepzes() {
 
   // Calculate percentage for first table based on formula
   const calculatePercentage = (year) => {
-    // Based on the formula in the image:
-    // (felnőttképzési jogviszonyú rendszerekben tanulók száma / szakmai oktatásban tanulók összlétszáma) * 100
-    const szakmaiCount = szakmaiOktatás[year];
+    // Formula: (felnőttképzési jogviszonyú tanulók száma / szakmai oktatásban tanulók összlétszáma) * 100
+    const szakmaiCount = szakmaiOktatás[year] || 0;
+    const felnottkepzesiCount = felnottkepzesiJogviszony[year] || 0;
+
     if (szakmaiCount === 0) return 0;
 
-    // For demonstration, using a base calculation
-    // In real implementation, this would come from another data source
-    const felnottkepzesiCount = Math.floor(szakmaiCount * 0.1); // Example calculation
-    return Math.round((felnottkepzesiCount / szakmaiCount) * 100);
+    const percentage = (felnottkepzesiCount / szakmaiCount) * 100;
+    return Math.round(percentage * 10) / 10; // Round to 1 decimal place
   };
 
-  // Update calculated percentages when szakmai oktatás data changes
+  // Update calculated percentages when data changes
   useEffect(() => {
     const newArany = {};
     years.forEach((year) => {
       newArany[year] = calculatePercentage(year);
     });
     setFelnottkepzesiArany(newArany);
-  }, [szakmaiOktatás]);
+  }, [szakmaiOktatás, felnottkepzesiJogviszony]);
 
   const handleSave = () => {
     setSavedData({ ...szakmaiOktatás });
@@ -106,6 +193,28 @@ export default function Felnottkepzes() {
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         Felnőttképzési jogviszonyú tanulók adatai és statisztikái
       </Typography>
+
+      {/* Selected School Alert */}
+      {selectedSchool && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
+        </Alert>
+      )}
+
+      {!selectedSchool && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Nincs iskola kiválasztva - az összes iskola adatait összegzi a
+          rendszer.
+        </Alert>
+      )}
+
+      {/* Loading State */}
+      {isFetching && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          <CircularProgress size={20} sx={{ mr: 1 }} />
+          Adatok betöltése...
+        </Alert>
+      )}
 
       {/* First Table - Read Only (Percentages) */}
       <Card sx={{ mb: 3 }}>
@@ -150,15 +259,62 @@ export default function Felnottkepzes() {
 
       <Divider sx={{ my: 3 }} />
 
-      {/* Second Table - Editable (Absolute Numbers) */}
-      <Card>
+      {/* Third Table - Adult Education Numbers (Read Only) */}
+      <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" component="h2" gutterBottom>
-            Szakmai oktatásban tanulók összlétszáma
+            Felnőttképzési jogviszonyú tanulók száma (fő)
           </Typography>
 
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            A felnőttképzési jogviszony + tanulói jogviszony összesen (fő)
+            API-ból származó adatok (jogv_tipus = 1). Ezek az értékek nem
+            módosíthatók.
+          </Typography>
+
+          <TableContainer component={Paper} variant="outlined">
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: "#e8f5e8" }}>
+                  {years.map((year) => (
+                    <TableCell
+                      key={year}
+                      align="center"
+                      sx={{ fontWeight: "bold" }}
+                    >
+                      {year}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  {years.map((year) => (
+                    <TableCell
+                      key={year}
+                      align="center"
+                      sx={{ backgroundColor: "#f8fdf8", fontWeight: "medium" }}
+                    >
+                      {felnottkepzesiJogviszony[year]}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </CardContent>
+      </Card>
+
+      <Divider sx={{ my: 3 }} />
+
+      {/* Second Table - Total Student Numbers (Read Only from API) */}
+      <Card>
+        <CardContent>
+          <Typography variant="h6" component="h2" gutterBottom>
+            Szakmai oktatásban tanulók összlétszáma (fő)
+          </Typography>
+
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Az összes jogviszony típus összesen (API-ból származó adatok)
           </Typography>
 
           <TableContainer component={Paper} variant="outlined">
@@ -179,59 +335,18 @@ export default function Felnottkepzes() {
               <TableBody>
                 <TableRow>
                   {years.map((year) => (
-                    <TableCell key={year} align="center">
-                      <TextField
-                        type="number"
-                        value={szakmaiOktatás[year]}
-                        onChange={(e) =>
-                          handleSzakmaiOktatásChange(year, e.target.value)
-                        }
-                        size="small"
-                        inputProps={{
-                          min: 0,
-                          style: { textAlign: "center" },
-                        }}
-                        sx={{ width: "100px" }}
-                      />
+                    <TableCell
+                      key={year}
+                      align="center"
+                      sx={{ backgroundColor: "#fafafa", fontWeight: "medium" }}
+                    >
+                      {szakmaiOktatás[year]}
                     </TableCell>
                   ))}
                 </TableRow>
               </TableBody>
             </Table>
           </TableContainer>
-
-          {/* Action Buttons */}
-          <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSave}
-              disabled={!isModified}
-            >
-              Mentés
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleReset}
-              disabled={!isModified || !savedData}
-            >
-              Visszaállítás
-            </Button>
-          </Stack>
-
-          {isModified && (
-            <Alert severity="warning" sx={{ mt: 2 }}>
-              Mentetlen módosítások vannak. Ne felejtsd el menteni a
-              változtatásokat!
-            </Alert>
-          )}
-
-          {savedData && !isModified && (
-            <Alert severity="success" sx={{ mt: 2 }}>
-              Az adatok sikeresen mentve!
-            </Alert>
-          )}
         </CardContent>
       </Card>
 
