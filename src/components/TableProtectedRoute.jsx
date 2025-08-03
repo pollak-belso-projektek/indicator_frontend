@@ -1,5 +1,6 @@
 import { useSelector } from "react-redux";
 import { Navigate, useLocation } from "react-router-dom";
+import { useEffect, useRef } from "react";
 import {
   selectIsAuthenticated,
   selectUserTableAccess,
@@ -22,20 +23,37 @@ export default function TableProtectedRoute({ children, tableName = null }) {
   const location = useLocation();
   const { validateToken } = useTokenValidation();
 
+  // Use ref to prevent multiple token validation calls
+  const tokenValidationTriggered = useRef(false);
+
+  // Handle token expiration in useEffect to prevent render loops
+  useEffect(() => {
+    if (
+      isAuthenticated &&
+      isTokenExpired &&
+      !tokenValidationTriggered.current
+    ) {
+      console.warn("Token expired in TableProtectedRoute, validating...");
+      tokenValidationTriggered.current = true;
+      validateToken();
+
+      // Reset the flag after a delay to allow future validations if needed
+      const timer = setTimeout(() => {
+        tokenValidationTriggered.current = false;
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, isTokenExpired, validateToken]);
+
   // Don't redirect if token is being refreshed - just let the auth system handle it
   if (!isAuthenticated) {
     // Redirect to login page with return url
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Check if token is expired, but don't immediately redirect
-  // Let the TokenValidationGuard and ProactiveTokenRefresh handle the refresh
-  if (isAuthenticated && isTokenExpired) {
-    console.warn("Token expired in TableProtectedRoute, validating...");
-    // Don't redirect immediately, just trigger validation
-    validateToken();
-    // Continue rendering the component - let other systems handle the redirect if needed
-  }
+  // If token is expired, let the TokenValidationGuard and ProactiveTokenRefresh handle it
+  // Don't block rendering here, just let the validation happen in the background
 
   // Superadmin bypasses all permission checks
   const isSuperadmin = userPermissions?.isSuperadmin || false;

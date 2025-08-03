@@ -8,15 +8,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
-import {
-  Alert,
-  TextField,
-  Button,
-  Stack,
-  CircularProgress,
-  Backdrop,
-  Snackbar,
-} from "@mui/material";
+import { Alert, TextField, Button, Stack } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../../utils/schoolYears";
 import { selectSelectedSchool } from "../../store/slices/authSlice";
@@ -27,6 +19,10 @@ import {
   useGetAllAlapadatokQuery,
 } from "../../store/api/apiSlice";
 import FelvettekSzamaInfo from "../../components/infos/FelvettekSzamaInfo";
+import {
+  TableLoadingOverlay,
+  NotificationSnackbar,
+} from "../../components/shared";
 
 const evszamok = generateSchoolYears();
 
@@ -57,6 +53,9 @@ const FelvettekSzama = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+
+  // Track which specific cells have been modified by the user
+  const [modifiedCells, setModifiedCells] = useState({});
 
   // Program types based on the selected school's actual data
   const programTypes = useMemo(() => {
@@ -129,6 +128,14 @@ const FelvettekSzama = () => {
         },
       },
     }));
+
+    // Track this specific cell as modified
+    const cellKey = `${programType}-${year}-${field}`;
+    setModifiedCells((prev) => ({
+      ...prev,
+      [cellKey]: true,
+    }));
+
     setIsModified(true);
   };
 
@@ -430,6 +437,7 @@ const FelvettekSzama = () => {
       }
 
       setIsModified(false);
+      setModifiedCells({}); // Clear modified cells tracking after successful save
       setSaveSuccess(true);
       console.log(
         `Successfully saved ${savedCount} new records and updated ${updatedCount} existing records`
@@ -461,6 +469,8 @@ const FelvettekSzama = () => {
 
   const handleReset = () => {
     setIsModified(false);
+    // Clear the modified cells tracking when resetting
+    setModifiedCells({});
   };
 
   const handleSnackbarClose = (event, reason) => {
@@ -565,25 +575,10 @@ const FelvettekSzama = () => {
         sx={{ maxWidth: "100%", overflowX: "auto", position: "relative" }}
       >
         {/* Loading Overlay */}
-        {isSaving && (
-          <Backdrop
-            sx={{
-              position: "absolute",
-              zIndex: 10,
-              backgroundColor: "rgba(255, 255, 255, 0.8)",
-              color: "primary.main",
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-            }}
-            open={isSaving}
-          >
-            <CircularProgress size={50} />
-            <Box sx={{ textAlign: "center", fontWeight: "medium" }}>
-              Adatok mentése folyamatban, kérjük várjon...
-            </Box>
-          </Backdrop>
-        )}
+        <TableLoadingOverlay
+          isLoading={isSaving}
+          message="Adatok mentése folyamatban, kérjük várjon..."
+        />
 
         <Table size="small" sx={{ minWidth: 1200 }}>
           <TableHead>
@@ -813,9 +808,9 @@ const FelvettekSzama = () => {
                           )
                         : data?.jelentkezok_szama_9 || 0;
 
-                      // Check if this field has been modified
-                      const isModified =
-                        !isReadOnly && data?.jelentkezok_szama_9 > 0;
+                      // Check if this specific cell has been modified by the user
+                      const cellKey = `${subType}-${startYear}-jelentkezok_szama_9`;
+                      const isModified = !isReadOnly && modifiedCells[cellKey];
 
                       return (
                         <TableCell
@@ -886,9 +881,9 @@ const FelvettekSzama = () => {
                           )
                         : data?.felvettek_szama_9 || 0;
 
-                      // Check if this field has been modified
-                      const isModified =
-                        !isReadOnly && data?.felvettek_szama_9 > 0;
+                      // Check if this specific cell has been modified by the user
+                      const cellKey = `${subType}-${startYear}-felvettek_szama_9`;
+                      const isModified = !isReadOnly && modifiedCells[cellKey];
 
                       return (
                         <TableCell
@@ -959,9 +954,9 @@ const FelvettekSzama = () => {
                           )
                         : data?.felvettek_letszam_9 || 0;
 
-                      // Check if this field has been modified
-                      const isModified =
-                        !isReadOnly && data?.felvettek_letszam_9 > 0;
+                      // Check if this specific cell has been modified by the user
+                      const cellKey = `${subType}-${startYear}-felvettek_letszam_9`;
+                      const isModified = !isReadOnly && modifiedCells[cellKey];
 
                       return (
                         <TableCell
@@ -1031,21 +1026,14 @@ const FelvettekSzama = () => {
       {/* Status Messages */}
 
       {/* Snackbar for save notifications */}
-      <Snackbar
+      <NotificationSnackbar
         open={snackbarOpen}
-        autoHideDuration={6000}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
         onClose={handleSnackbarClose}
+        autoHideDuration={6000}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          onClose={handleSnackbarClose}
-          severity={snackbarSeverity}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+      />
     </Box>
   );
 };

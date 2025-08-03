@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
 import {
   Box,
   Card,
@@ -17,14 +18,63 @@ import {
   Alert,
   Chip,
 } from "@mui/material";
+import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import { generateSchoolYears } from "../utils/schoolYears";
+import { selectSelectedSchool } from "../store/slices/authSlice";
 import {
-  Save as SaveIcon,
-  Refresh as RefreshIcon,
-  Calculate as CalculateIcon,
-} from "@mui/icons-material";
+  useGetTanuloLetszamQuery,
+  useAddMuhelyiskolaMutation,
+  useUpdateMuhelyiskolaMutation,
+  useGetMuhelyiskolaQuery,
+} from "../store/api/apiSlice";
+import {
+  TableLoadingOverlay,
+  NotificationSnackbar,
+} from "../components/shared";
 
 export default function MuhelyiskolaiReszszakmat() {
-  const schoolYears = ["2021/2022.", "2022/2023.", "2023/2024.", "2024/2025."];
+  const schoolYears = generateSchoolYears();
+  const selectedSchool = useSelector(selectSelectedSchool);
+
+  // Fetch student data from API
+  const { data: apiStudentData, isLoading: isFetching } =
+    useGetTanuloLetszamQuery(
+      { alapadatok_id: selectedSchool?.id },
+      { skip: !selectedSchool?.id } // Skip the query if no school is selected
+    );
+
+  // Fetch existing workshop school data from API for all years
+  const workshopQueries = schoolYears.map((yearRange) => {
+    const startYear = parseInt(yearRange.split("/")[0]);
+    return useGetMuhelyiskolaQuery(
+      {
+        alapadatok_id: selectedSchool?.id,
+        tanev: startYear,
+      },
+      { skip: !selectedSchool?.id }
+    );
+  });
+
+  // Memoize combined workshop data and loading states to prevent infinite loops
+  const existingWorkshopData = useMemo(() => {
+    return workshopQueries.flatMap((query) => query.data || []);
+  }, [
+    workshopQueries.map((q) => q.data?.length).join(","),
+    selectedSchool?.id,
+  ]);
+
+  const isWorkshopFetching = useMemo(() => {
+    return workshopQueries.some((query) => query.isLoading);
+  }, [workshopQueries.map((q) => q.isLoading).join(",")]);
+
+  // Mutations for saving workshop data
+  const [addWorkshop, { isLoading: isAdding, error: addError }] =
+    useAddMuhelyiskolaMutation();
+  const [updateWorkshop, { isLoading: isUpdating, error: updateError }] =
+    useUpdateMuhelyiskolaMutation();
+
+  const isSaving = isAdding || isUpdating;
+  const saveError = addError || updateError;
 
   // Data structure for the three main sections
   const [workshopData, setWorkshopData] = useState(() => {
@@ -47,8 +97,90 @@ export default function MuhelyiskolaiReszszakmat() {
   const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
 
-  // Handle data changes
+  // Snackbar state for notifications
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+
+  // Extract total student data (all jogv_tipus) from API response
+  const extractTotalStudentData = (apiData) => {
+    const totalStudentData = {};
+    schoolYears.forEach((yearRange) => {
+      const startYear = parseInt(yearRange.split("/")[0]);
+      totalStudentData[yearRange] = 0;
+
+      if (apiData && Array.isArray(apiData)) {
+        // Find all records for this year (all jogv_tipus)
+        const yearRecords = apiData.filter(
+          (record) => record.tanev_kezdete === startYear
+        );
+
+        // Sum up all the student counts
+        const totalCount = yearRecords.reduce((sum, record) => {
+          return sum + (record.letszam || 0);
+        }, 0);
+
+        totalStudentData[yearRange] = totalCount;
+      }
+    });
+    return totalStudentData;
+  };
+
+  // Load total student data from API when available
+  useEffect(() => {
+    if (apiStudentData && Array.isArray(apiStudentData)) {
+      console.log(
+        "Loading student data from API for Workshop School:",
+        apiStudentData
+      );
+
+      // Extract total student data (all jogv_tipus combined)
+      const totalStudentData = extractTotalStudentData(apiStudentData);
+
+      // Update the total_students in workshopData
+      setWorkshopData((prev) => ({
+        ...prev,
+        total_students: totalStudentData,
+      }));
+
+      console.log("Total student data for Workshop School:", totalStudentData);
+    }
+  }, [apiStudentData]);
+
+  // Load existing workshop data from API when available
+  useEffect(() => {
+    if (existingWorkshopData && existingWorkshopData.length > 0) {
+      console.log("Loading existing workshop data:", existingWorkshopData);
+
+      const participantsCountData = {};
+
+      // Process existing workshop data
+      existingWorkshopData.forEach((record) => {
+        const yearRange = `${record.tanev_kezdete}/${record.tanev_kezdete + 1}`;
+        participantsCountData[yearRange] = record.resztvevok_szama || 0;
+      });
+
+      // Update participants_count with existing data
+      setWorkshopData((prev) => ({
+        ...prev,
+        participants_count: participantsCountData,
+      }));
+
+      // Set as saved data since this is loaded from server
+      setSavedData((prev) => ({
+        ...prev,
+        participants_count: participantsCountData,
+      }));
+
+      console.log("Loaded workshop participants data:", participantsCountData);
+    }
+  }, [existingWorkshopData.length, selectedSchool?.id]);
+
+  // Handle data changes - only participants_count is editable
   const handleDataChange = (section, year, value) => {
+    // Only participants_count is editable
+    if (section !== "participants_count") return;
+
     setWorkshopData((prev) => ({
       ...prev,
       [section]: {
@@ -66,14 +198,102 @@ export default function MuhelyiskolaiReszszakmat() {
 
     if (total > 0) {
       const percentage = ((participants / total) * 100).toFixed(1);
-      handleDataChange("percentage_overall", year, percentage);
+      return percentage;
     }
+    return "0.0";
   };
 
-  const handleSave = () => {
-    setSavedData(JSON.parse(JSON.stringify(workshopData)));
-    setIsModified(false);
-    console.log("Saving workshop school data:", workshopData);
+  // Auto-calculate percentages when participants_count or total_students change
+  useEffect(() => {
+    const newPercentages = {};
+    schoolYears.forEach((year) => {
+      newPercentages[year] = calculatePercentage(year);
+    });
+
+    setWorkshopData((prev) => ({
+      ...prev,
+      percentage_overall: newPercentages,
+    }));
+  }, [
+    JSON.stringify(workshopData.participants_count),
+    JSON.stringify(workshopData.total_students),
+  ]);
+
+  const handleSave = async () => {
+    if (!selectedSchool?.id) {
+      setSnackbarMessage("Kérjük, válasszon ki egy iskolát a mentés előtt!");
+      setSnackbarSeverity("warning");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    try {
+      // Save for each school year separately
+      const savePromises = schoolYears.map(async (yearRange) => {
+        const startYear = parseInt(yearRange.split("/")[0]);
+        const participants = parseInt(
+          workshopData.participants_count[yearRange] || 0
+        );
+        const totalStudents = parseInt(
+          workshopData.total_students[yearRange] || 0
+        );
+
+        // Ensure we're sending valid numbers, not NaN
+        const validParticipants = isNaN(participants) ? 0 : participants;
+        const validTotalStudents = isNaN(totalStudents) ? 0 : totalStudents;
+
+        console.log(
+          `Mentés ${yearRange}: participants=${validParticipants}, total=${validTotalStudents}`
+        );
+
+        // Check if data already exists for this year
+        const existingRecord = existingWorkshopData?.find(
+          (record) => record.tanev_kezdete === startYear
+        );
+
+        const payload = {
+          alapadatok_id: selectedSchool.id,
+          tanev_kezdete: startYear,
+          resztvevok_szama: validParticipants,
+          tanulok_osszesen: validTotalStudents,
+        };
+
+        if (existingRecord) {
+          // Update existing record (PUT)
+          console.log(
+            `Updating existing record for ${yearRange}, ID: ${existingRecord.id}`
+          );
+          return await updateWorkshop({
+            id: existingRecord.id,
+            ...payload,
+          }).unwrap();
+        } else {
+          // Create new record (POST)
+          console.log(`Creating new record for ${yearRange}`);
+          return await addWorkshop(payload).unwrap();
+        }
+      });
+
+      await Promise.all(savePromises);
+
+      setSavedData(JSON.parse(JSON.stringify(workshopData)));
+      setIsModified(false);
+      console.log("Műhelyiskolai adatok sikeresen mentve!");
+
+      // Show success notification
+      setSnackbarMessage("Műhelyiskolai adatok sikeresen mentve!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("Hiba a mentés során:", error);
+      const errorMessage =
+        error?.data?.message || error.message || "Hiba történt a mentés során";
+
+      // Show error notification
+      setSnackbarMessage(errorMessage);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
   };
 
   const handleReset = () => {
@@ -85,6 +305,11 @@ export default function MuhelyiskolaiReszszakmat() {
 
   return (
     <Box sx={{ p: 3 }}>
+      {/* Loading overlay */}
+      {(isFetching || isWorkshopFetching || isSaving) && (
+        <TableLoadingOverlay />
+      )}
+
       <Typography variant="h4" component="h1" gutterBottom>
         21. Műhelyiskolában részszakmát szerzők aránya a képzésben résztvevők
         összlétszámához viszonyítva
@@ -217,13 +442,6 @@ export default function MuhelyiskolaiReszszakmat() {
                       <TextField
                         type="number"
                         value={workshopData.percentage_overall[year] || "0"}
-                        onChange={(e) =>
-                          handleDataChange(
-                            "percentage_overall",
-                            year,
-                            e.target.value
-                          )
-                        }
                         size="small"
                         inputProps={{
                           min: 0,
@@ -233,6 +451,7 @@ export default function MuhelyiskolaiReszszakmat() {
                         }}
                         sx={{ width: "80px" }}
                         placeholder="0-100"
+                        disabled // Auto-calculated field
                       />
                     </TableCell>
                   ))}
@@ -364,13 +583,6 @@ export default function MuhelyiskolaiReszszakmat() {
                       <TextField
                         type="number"
                         value={workshopData.total_students[year] || "0"}
-                        onChange={(e) =>
-                          handleDataChange(
-                            "total_students",
-                            year,
-                            e.target.value
-                          )
-                        }
                         size="small"
                         inputProps={{
                           min: 0,
@@ -379,6 +591,7 @@ export default function MuhelyiskolaiReszszakmat() {
                         }}
                         sx={{ width: "80px" }}
                         placeholder="0"
+                        disabled // Read-only field from API
                       />
                     </TableCell>
                   ))}
@@ -396,21 +609,15 @@ export default function MuhelyiskolaiReszszakmat() {
             Automatikus számítás
           </Typography>
           <Typography variant="body2" sx={{ mb: 2 }}>
-            Kattintson a számítás gombra az automatikus százalékszámításhoz:
+            A százalékos értékek automatikusan kiszámításra kerülnek a résztvevő
+            tanulók és az összlétszám alapján. Az összlétszám adatok az API-ból
+            automatikusan betöltődnek.
           </Typography>
-          <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
-            {schoolYears.map((year) => (
-              <Button
-                key={year}
-                variant="outlined"
-                startIcon={<CalculateIcon />}
-                onClick={() => calculatePercentage(year)}
-                size="small"
-              >
-                {year}
-              </Button>
-            ))}
-          </Stack>
+          <Alert severity="info" sx={{ mt: 1 }}>
+            Csak a "részszakmát szerző tanulók száma" mezők szerkeszthetők. A
+            százalékos értékek és az összlétszám automatikusan
+            számítódik/töltődik be.
+          </Alert>
         </CardContent>
       </Card>
 
@@ -420,21 +627,27 @@ export default function MuhelyiskolaiReszszakmat() {
           variant="contained"
           startIcon={<SaveIcon />}
           onClick={handleSave}
-          disabled={!isModified}
+          disabled={!isModified || isSaving}
         >
-          Mentés
+          {isSaving ? "Mentés..." : "Mentés"}
         </Button>
         <Button
           variant="outlined"
           startIcon={<RefreshIcon />}
           onClick={handleReset}
-          disabled={!isModified || !savedData}
+          disabled={!isModified || !savedData || isSaving}
         >
           Visszaállítás
         </Button>
       </Stack>
 
       {/* Status Messages */}
+      {!selectedSchool && (
+        <Alert severity="warning" sx={{ mt: 2 }}>
+          Kérjük, válasszon ki egy iskolát az adatok betöltéséhez és mentéséhez.
+        </Alert>
+      )}
+
       {isModified && (
         <Alert severity="warning" sx={{ mt: 2 }}>
           Mentetlen módosítások vannak. Ne felejtsd el menteni a
@@ -447,6 +660,21 @@ export default function MuhelyiskolaiReszszakmat() {
           Az adatok sikeresen mentve!
         </Alert>
       )}
+
+      {saveError && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          Hiba történt a mentés során:{" "}
+          {saveError?.data?.message || saveError.message}
+        </Alert>
+      )}
+
+      {/* Notification Snackbar */}
+      <NotificationSnackbar
+        open={snackbarOpen}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
+        onClose={() => setSnackbarOpen(false)}
+      />
 
       {/* Workshop School Information */}
       <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
