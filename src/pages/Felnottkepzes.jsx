@@ -266,11 +266,6 @@ export default function Felnottkepzes() {
             Felnőttképzési jogviszonyú tanulók száma (fő)
           </Typography>
 
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            API-ból származó adatok (jogv_tipus = 1). Ezek az értékek nem
-            módosíthatók.
-          </Typography>
-
           <TableContainer component={Paper} variant="outlined">
             <Table size="small">
               <TableHead>
@@ -312,11 +307,6 @@ export default function Felnottkepzes() {
           <Typography variant="h6" component="h2" gutterBottom>
             Szakmai oktatásban tanulók összlétszáma (fő)
           </Typography>
-
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Az összes jogviszony típus összesen (API-ból származó adatok)
-          </Typography>
-
           <TableContainer component={Paper} variant="outlined">
             <Table size="small">
               <TableHead>

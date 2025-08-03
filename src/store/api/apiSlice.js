@@ -15,6 +15,7 @@ export const indicatorApi = createApi({
   tagTypes: [
     "User",
     "TanugyiAdatok",
+    "AlkalmazottAdatok",
     "Alapadatok",
     "Kompetencia",
     "TanuloLetszam",
@@ -31,6 +32,7 @@ export const indicatorApi = createApi({
     "SZMSZ",
     "EgyOktatoraJutoTanulo",
     "IntezmenyiNeveltseg",
+    "Dobbanto",
     "Logs",
   ],
   endpoints: (build) => ({
@@ -181,6 +183,27 @@ export const indicatorApi = createApi({
           id: `${params.alapadatok_id}_${params.tanev_kezdete || "all"}`,
         },
         "TanugyiAdatok",
+      ],
+    }),
+    addAlkalmazottAdatok: build.mutation({
+      query: (params) => ({
+        url: "alkalmazott_adatok/",
+        method: "POST",
+        body: {
+          alapadatok_id: params.alapadatok_id,
+          alkalmazott_adatok: params.alkalmazott_adatok,
+        },
+      }),
+      invalidatesTags: ["AlkalmazottAdatok"],
+    }),
+    getAlkalmazottAdatok: build.query({
+      query: (params) =>
+        `alkalmazott_adatok/${params.alapadatok_id}/${params.ev}`,
+      providesTags: (result, error, params) => [
+        {
+          type: "AlkalmazottAdatok",
+          id: `${params.alapadatok_id}_${params.ev}`,
+        },
       ],
     }),
     addKompetencia: build.mutation({
@@ -515,36 +538,32 @@ export const indicatorApi = createApi({
     }),
 
     // Muhelyiskola (Workshop Schools)
-    getMuhelyiskolaByYear: build.query({
-      query: (tanev) => `muhelyiskola/${tanev}`,
-      providesTags: (result, error, tanev) => [
-        { type: "Muhelyiskola", id: tanev },
-      ],
-    }),
-    getAllMuhelyiskola: build.query({
-      query: () => {
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1;
-
-        let currentSchoolYearStart;
-        if (currentMonth >= 9) {
-          currentSchoolYearStart = currentYear;
-        } else {
-          currentSchoolYearStart = currentYear - 1;
-        }
-
-        return `muhelyiskola/${currentSchoolYearStart}`;
+    getMuhelyiskola: build.query({
+      query: ({ alapadatok_id, tanev } = {}) => {
+        // Always use the tanev parameter if provided, otherwise default to current year
+        const yearToUse = tanev || new Date().getFullYear();
+        return `muhelyiskola/${yearToUse}`;
       },
-      providesTags: ["Muhelyiskola"],
+      providesTags: (result, error, params = {}) => [
+        { type: "Muhelyiskola", id: params.alapadatok_id || "all" },
+        "Muhelyiskola",
+      ],
     }),
     addMuhelyiskola: build.mutation({
       query: (data) => ({
         url: "muhelyiskola",
         method: "POST",
-        body: data,
+        body: {
+          alapadatok_id: data.alapadatok_id,
+          tanev_kezdete: data.tanev_kezdete,
+          resztvevok_szama: data.resztvevok_szama,
+          tanulok_osszesen: data.tanulok_osszesen,
+        },
       }),
-      invalidatesTags: ["Muhelyiskola"],
+      invalidatesTags: (result, error, data) => [
+        { type: "Muhelyiskola", id: data.alapadatok_id },
+        "Muhelyiskola",
+      ],
     }),
     updateMuhelyiskola: build.mutation({
       query: ({ id, ...data }) => ({
@@ -552,7 +571,10 @@ export const indicatorApi = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["Muhelyiskola"],
+      invalidatesTags: (result, error, { alapadatok_id }) => [
+        { type: "Muhelyiskola", id: alapadatok_id },
+        "Muhelyiskola",
+      ],
     }),
     deleteMuhelyiskola: build.mutation({
       query: (id) => ({
@@ -765,6 +787,57 @@ export const indicatorApi = createApi({
       invalidatesTags: ["Logs"],
     }),
 
+    // Dobbantó program endpoints
+    getDobbanto: build.query({
+      query: ({ alapadatok_id, tanev } = {}) => {
+        if (alapadatok_id && tanev) {
+          return `dobbanto/${tanev}`;
+        } else if (tanev) {
+          return `dobbanto/${tanev}`;
+        }
+        // Default to current year if no tanev provided
+        return `dobbanto/${new Date().getFullYear()}`;
+      },
+      providesTags: (result, error, params) => [
+        { type: "Dobbanto", id: params?.alapadatok_id || "all" },
+        "Dobbanto",
+      ],
+    }),
+    addDobbanto: build.mutation({
+      query: (data) => ({
+        url: "dobbanto",
+        method: "POST",
+        body: {
+          alapadatok_id: data.alapadatok_id,
+          tanev_kezdete: data.tanev_kezdete,
+          dobbanto_szama: data.dobbanto_szama,
+          tanulok_osszesen: data.tanulok_osszesen,
+        },
+      }),
+      invalidatesTags: (result, error, data) => [
+        { type: "Dobbanto", id: data.alapadatok_id },
+        "Dobbanto",
+      ],
+    }),
+    updateDobbanto: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `dobbanto/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: (result, error, { alapadatok_id }) => [
+        { type: "Dobbanto", id: alapadatok_id },
+        "Dobbanto",
+      ],
+    }),
+    deleteDobbanto: build.mutation({
+      query: (id) => ({
+        url: `dobbanto/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Dobbanto"],
+    }),
+
     // User management endpoints
   }),
 });
@@ -774,6 +847,8 @@ export const indicatorApi = createApi({
 export const {
   useGetTanugyiAdatokQuery,
   useAddTanugyiAdatokMutation,
+  useGetAlkalmazottAdatokQuery,
+  useAddAlkalmazottAdatokMutation,
   useGetAlapadatokQuery,
   useGetAllAlapadatokQuery,
   useAddAlapadatokMutation,
@@ -826,8 +901,7 @@ export const {
   useAddSzakmaiVizsgaEredmenyekMutation,
   useUpdateSzakmaiVizsgaEredmenyekMutation,
   useDeleteSzakmaiVizsgaEredmenyekMutation,
-  useGetMuhelyiskolaByYearQuery,
-  useGetAllMuhelyiskolaQuery,
+  useGetMuhelyiskolaQuery,
   useAddMuhelyiskolaMutation,
   useUpdateMuhelyiskolaMutation,
   useDeleteMuhelyiskolaMutation,
@@ -854,4 +928,9 @@ export const {
   useGetLogsQuery,
   useGetLogByIdQuery,
   useDeleteLogsMutation,
+  // Dobbanto hooks
+  useGetDobbantoQuery,
+  useAddDobbantoMutation,
+  useUpdateDobbantoMutation,
+  useDeleteDobbantoMutation,
 } = indicatorApi;

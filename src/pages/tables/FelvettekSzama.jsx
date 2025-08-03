@@ -8,15 +8,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
-import {
-  Alert,
-  TextField,
-  Button,
-  Stack,
-  CircularProgress,
-  Backdrop,
-  Snackbar,
-} from "@mui/material";
+import { Alert, TextField, Button, Stack } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../../utils/schoolYears";
 import { selectSelectedSchool } from "../../store/slices/authSlice";
@@ -27,6 +19,10 @@ import {
   useGetAllAlapadatokQuery,
 } from "../../store/api/apiSlice";
 import FelvettekSzamaInfo from "../../components/infos/FelvettekSzamaInfo";
+import {
+  TableLoadingOverlay,
+  NotificationSnackbar,
+} from "../../components/shared";
 
 const evszamok = generateSchoolYears();
 
@@ -579,25 +575,10 @@ const FelvettekSzama = () => {
         sx={{ maxWidth: "100%", overflowX: "auto", position: "relative" }}
       >
         {/* Loading Overlay */}
-        {isSaving && (
-          <Backdrop
-            sx={{
-              position: "absolute",
-              zIndex: 10,
-              backgroundColor: "rgba(255, 255, 255, 0.8)",
-              color: "primary.main",
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-            }}
-            open={isSaving}
-          >
-            <CircularProgress size={50} />
-            <Box sx={{ textAlign: "center", fontWeight: "medium" }}>
-              Adatok mentése folyamatban, kérjük várjon...
-            </Box>
-          </Backdrop>
-        )}
+        <TableLoadingOverlay
+          isLoading={isSaving}
+          message="Adatok mentése folyamatban, kérjük várjon..."
+        />
 
         <Table size="small" sx={{ minWidth: 1200 }}>
           <TableHead>
@@ -1045,21 +1026,14 @@ const FelvettekSzama = () => {
       {/* Status Messages */}
 
       {/* Snackbar for save notifications */}
-      <Snackbar
+      <NotificationSnackbar
         open={snackbarOpen}
-        autoHideDuration={6000}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
         onClose={handleSnackbarClose}
+        autoHideDuration={6000}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          onClose={handleSnackbarClose}
-          severity={snackbarSeverity}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+      />
     </Box>
   );
 };
