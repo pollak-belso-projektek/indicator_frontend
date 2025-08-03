@@ -152,6 +152,7 @@ export const indicatorApi = createApi({
           letszam: params.letszam,
           jogv_tipus: params.jogv_tipus,
           szakirany: params.szakirany,
+          szakma: params.szakma,
           tanev_kezdete: params.tanev_kezdete,
         },
       }),
@@ -159,10 +160,18 @@ export const indicatorApi = createApi({
         { type: "TanuloLetszam", id: params.alapadatok_id },
       ],
     }),
-    deleteTanuloLetszam: build.mutation({
+    updateTanuloLetszam: build.mutation({
       query: (params) => ({
-        url: `tanulo_letszam/${params.alapadatok_id}/${params.year}`,
-        method: "DELETE",
+        url: `tanulo_letszam/${params.id}`,
+        method: "PUT",
+        body: {
+          alapadatok_id: params.alapadatok_id,
+          letszam: params.letszam,
+          jogv_tipus: params.jogv_tipus,
+          szakirany: params.szakirany,
+          szakma: params.szakma,
+          tanev_kezdete: params.tanev_kezdete,
+        },
       }),
       invalidatesTags: (result, error, params) => [
         { type: "TanuloLetszam", id: params.alapadatok_id },
@@ -858,6 +867,7 @@ export const {
   useAddKompetenciaMutation,
   useGetTanuloLetszamQuery,
   useAddTanuloLetszamMutation,
+  useUpdateTanuloLetszamMutation,
   useDeleteTanuloLetszamMutation,
   useGetUsersQuery,
   useGetUserByIdQuery,

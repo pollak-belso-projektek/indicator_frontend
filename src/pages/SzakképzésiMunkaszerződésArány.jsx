@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Card,
@@ -35,127 +35,153 @@ export default function SzakképzésiMunkaszerződésArány() {
 
   const selectedSchool = useSelector(selectSelectedSchool);
 
-  const { data } = useGetTanugyiAdatokQuery({
-    alapadatok_id: selectedSchool?.id,
-    ev: 2024,
-  });
-
   const { data: szmszData } = useGetAllSZMSZQuery({
     alapadatok_id: selectedSchool?.id,
     tanev: 2024,
   });
 
+  const { data } = useGetTanugyiAdatokQuery({
+    alapadatok_id: selectedSchool?.id,
+    ev: 2024,
+  });
+
   const [addSZMSZ, { isLoading: isAdding }] = useAddSZMSZMutation();
   const [updateSZMSZ, { isLoading: isUpdating }] = useUpdateSZMSZMutation();
 
-  function szakiranyok_szakmak(tipus) {
-    return (
-      selectedSchool?.alapadatok_szakirany
-        ?.map((szakiranyok) => {
-          const specializations =
-            szakiranyok?.szakirany?.szakma
-              ?.filter(
-                (item) =>
-                  item.szakma.tipus === tipus &&
-                  selectedSchool?.alapadatok_szakma.some(
-                    (item2) => item2.szakma.nev === item.szakma.nev
-                  )
-              )
-              ?.map((item) => item.szakma.nev) || [];
+  const szakiranyok_szakmak = useMemo(() => {
+    return (tipus) => {
+      return (
+        selectedSchool?.alapadatok_szakirany
+          ?.map((szakiranyok) => {
+            const specializations =
+              szakiranyok?.szakirany?.szakma
+                ?.filter(
+                  (item) =>
+                    item.szakma.tipus === tipus &&
+                    selectedSchool?.alapadatok_szakma.some(
+                      (item2) => item2.szakma.nev === item.szakma.nev
+                    )
+                )
+                ?.map((item) => item.szakma.nev) || [];
 
-          return {
-            name: szakiranyok.szakirany.nev,
-            specializations:
-              specializations.length > 0
-                ? [...specializations, "Nincs meghatározva"]
-                : specializations,
-          };
-        })
-        .filter((szakirany) => szakirany.specializations.length > 0) || []
-    );
-  }
+            return {
+              name: szakiranyok.szakirany.nev,
+              specializations:
+                specializations.length > 0
+                  ? [...specializations, "Nincs meghatározva"]
+                  : specializations,
+            };
+          })
+          .filter((szakirany) => szakirany.specializations.length > 0) || []
+      );
+    };
+  }, [selectedSchool]);
 
   // Define the institution types and specializations based on the attachment
-  const institutionStructure = [
-    {
-      category: "összesen",
-      subcategory: "technikum+szakképző iskola",
-      szakiranyok: [],
-    },
-    {
-      category: "intézménytípusonként",
-      subcategory: "ebből: technikum",
-      szakiranyok: szakiranyok_szakmak("Technikum"),
-    },
-    {
-      category: "intézménytípusonként",
-      subcategory: "ebből: szakképző iskola",
-      szakiranyok: szakiranyok_szakmak("Szakképző iskola"),
-    },
-  ].filter((institution) => {
-    // Always show the "összesen" category
-    if (institution.category === "összesen") {
-      return true;
-    }
-    // For institution types, only show if they have szakiranyok
-    return institution.szakiranyok && institution.szakiranyok.length > 0;
-  });
+  const institutionStructure = useMemo(
+    () =>
+      [
+        {
+          category: "összesen",
+          subcategory: "technikum+szakképző iskola",
+          szakiranyok: [],
+        },
+        {
+          category: "intézménytípusonként",
+          subcategory: "ebből: technikum",
+          szakiranyok: szakiranyok_szakmak("Technikum"),
+        },
+        {
+          category: "intézménytípusonként",
+          subcategory: "ebből: szakképző iskola",
+          szakiranyok: szakiranyok_szakmak("Szakképző iskola"),
+        },
+      ].filter((institution) => {
+        // Always show the "összesen" category
+        if (institution.category === "összesen") {
+          return true;
+        }
+        // For institution types, only show if they have szakiranyok
+        return institution.szakiranyok && institution.szakiranyok.length > 0;
+      }),
+    [szakiranyok_szakmak]
+  );
 
   // Initialize data structure for the three main sections with empty data first
-  const [szakképzésiData, setSzakképzésiData] = useState(() => {
-    const initialData = {
-      percentage: {},
-      contract_students: {},
-      total_students: {},
-    };
-
-    // Initialize all sections with empty data
-    Object.keys(initialData).forEach((section) => {
-      institutionStructure.forEach((institution, institutionIndex) => {
-        const key = `${institution.category}_${institutionIndex}`;
-        initialData[section][key] = {};
-
-        // Add subcategory
-        initialData[section][key][institution.subcategory] = {};
-        schoolYears.forEach((year) => {
-          initialData[section][key][institution.subcategory][year] = "0";
-        });
-
-        // Add szakiranyok and their specializations
-        if (institution.szakiranyok && institution.szakiranyok.length > 0) {
-          institution.szakiranyok.forEach((szakirany) => {
-            // Add szakirany itself
-            initialData[section][key][szakirany.name] = {};
-            schoolYears.forEach((year) => {
-              initialData[section][key][szakirany.name][year] = "0";
-            });
-
-            // Add specializations under szakirany with unique keys
-            szakirany.specializations.forEach((spec, specIndex) => {
-              const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
-              initialData[section][key][uniqueSpecKey] = {};
-              schoolYears.forEach((year) => {
-                initialData[section][key][uniqueSpecKey][year] = "0";
-              });
-            });
-          });
-        }
-      });
-    });
-
-    return initialData;
+  const [szakképzésiData, setSzakképzésiData] = useState({
+    percentage: {},
+    contract_students: {},
+    total_students: {},
   });
 
   const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
   const [hasInitializedFromAPI, setHasInitializedFromAPI] = useState(false);
+  const [initializedWithSZMSZ, setInitializedWithSZMSZ] = useState(false);
+  const [structureInitialized, setStructureInitialized] = useState(false);
+  const [shouldProcessAPIData, setShouldProcessAPIData] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
+  // Initialize the data structure when institutionStructure becomes available
+  useEffect(() => {
+    if (institutionStructure.length > 0 && !structureInitialized) {
+      console.log("Initializing data structure...");
+
+      const initialData = {
+        percentage: {},
+        contract_students: {},
+        total_students: {},
+      };
+
+      // Initialize all sections with empty data
+      Object.keys(initialData).forEach((section) => {
+        institutionStructure.forEach((institution, institutionIndex) => {
+          const key = `${institution.category}_${institutionIndex}`;
+          initialData[section][key] = {};
+
+          // Add subcategory
+          initialData[section][key][institution.subcategory] = {};
+          schoolYears.forEach((year) => {
+            initialData[section][key][institution.subcategory][year] = "0";
+          });
+
+          // Add szakiranyok and their specializations
+          if (institution.szakiranyok && institution.szakiranyok.length > 0) {
+            institution.szakiranyok.forEach((szakirany) => {
+              // Add szakirany itself
+              initialData[section][key][szakirany.name] = {};
+              schoolYears.forEach((year) => {
+                initialData[section][key][szakirany.name][year] = "0";
+              });
+
+              // Add specializations under szakirany with unique keys
+              szakirany.specializations.forEach((spec, specIndex) => {
+                const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
+                initialData[section][key][uniqueSpecKey] = {};
+                schoolYears.forEach((year) => {
+                  initialData[section][key][uniqueSpecKey][year] = "0";
+                });
+              });
+            });
+          }
+        });
+      });
+
+      setSzakképzésiData(initialData);
+      setStructureInitialized(true);
+    }
+  }, [institutionStructure, schoolYears, structureInitialized]);
+
   // Use useEffect to calculate data when API data becomes available
   useEffect(() => {
+    // Don't proceed if structure isn't initialized yet or if we shouldn't process API data
+    if (!structureInitialized || !shouldProcessAPIData) {
+      return;
+    }
+
     console.log(
       "useEffect triggered - data:",
       data?.length,
@@ -165,18 +191,36 @@ export default function SzakképzésiMunkaszerződésArány() {
       institutionStructure.length,
       "hasInitializedFromAPI:",
       hasInitializedFromAPI,
+      "initializedWithSZMSZ:",
+      initializedWithSZMSZ,
       "isModified:",
-      isModified
+      isModified,
+      "structureInitialized:",
+      structureInitialized,
+      "shouldProcessAPIData:",
+      shouldProcessAPIData
     );
 
-    // Only initialize from API if we haven't done it yet and user hasn't made changes
-    if (
-      ((szmszData && Array.isArray(szmszData) && szmszData.length > 0) ||
-        (data && Array.isArray(data) && data.length > 0)) &&
-      !hasInitializedFromAPI &&
-      !isModified
-    ) {
+    const hasSZMSZData =
+      szmszData && Array.isArray(szmszData) && szmszData.length > 0;
+    const hasStudentData = data && Array.isArray(data) && data.length > 0;
+
+    // Re-initialize conditions:
+    // 1. Never initialized before and have some data
+    // 2. Previously initialized with student data but now SZMSZ data is available
+    // 3. User hasn't made manual changes
+    const shouldInitialize =
+      !isModified &&
+      ((!hasInitializedFromAPI && (hasSZMSZData || hasStudentData)) ||
+        (hasInitializedFromAPI && !initializedWithSZMSZ && hasSZMSZData));
+
+    if (shouldInitialize) {
       console.log("Calculating data from API...");
+      if (hasSZMSZData && !initializedWithSZMSZ) {
+        console.log(
+          "Re-initializing with SZMSZ data (priority over student data)"
+        );
+      }
 
       // Function to calculate data from SZMSZ endpoint or fall back to student data
       const calculateDataFromAPI = () => {
@@ -223,6 +267,12 @@ export default function SzakképzésiMunkaszerződésArány() {
         // Check if we have SZMSZ data (saved data) to use first
         if (szmszData && Array.isArray(szmszData) && szmszData.length > 0) {
           console.log("Using SZMSZ saved data...");
+          console.log("🔍 DEBUG: Full szmszData structure:", szmszData);
+          console.log("🔍 DEBUG: Sample record:", szmszData[0]);
+          console.log(
+            "🔍 DEBUG: All available fields in first record:",
+            Object.keys(szmszData[0])
+          );
 
           // Process SZMSZ data
           schoolYears.forEach((schoolYear) => {
@@ -233,8 +283,20 @@ export default function SzakképzésiMunkaszerződésArány() {
               (record) => record.tanev_kezdete === yearStart
             );
 
+            console.log(
+              `🔍 DEBUG: Processing year ${schoolYear} (yearStart: ${yearStart}), found ${szmszForYear.length} SZMSZ records for this year`
+            );
+
             institutionStructure.forEach((institution, institutionIndex) => {
               const key = `${institution.category}_${institutionIndex}`;
+
+              console.log(
+                `🔍 DEBUG: Processing institution - category: ${
+                  institution.category
+                }, subcategory: ${
+                  institution.subcategory
+                }, szakiranyok count: ${institution.szakiranyok?.length || 0}`
+              );
 
               if (institution.category === "összesen") {
                 // Calculate totals for all institution types from SZMSZ data
@@ -242,9 +304,11 @@ export default function SzakképzésiMunkaszerződésArány() {
                 let totalStudents = 0;
 
                 szmszForYear.forEach((record) => {
+                  // Handle both nested object and flat string formats
+                  const recordType = record.szakma?.tipus || record.tipus;
                   if (
-                    record.szakma?.tipus === "Technikum" ||
-                    record.szakma?.tipus === "Szakképző iskola"
+                    recordType === "Technikum" ||
+                    recordType === "Szakképző iskola"
                   ) {
                     totalStudents += record.tanulok_osszeletszam || 0;
                     totalContractStudents +=
@@ -271,45 +335,77 @@ export default function SzakképzésiMunkaszerződésArány() {
                     let szakiranyContractStudents = 0;
                     let szakiranyTotalStudents = 0;
 
+                    console.log(
+                      `🔍 DEBUG: Processing technikum szakirany: ${
+                        szakirany.name
+                      }, specializations: ${JSON.stringify(
+                        szakirany.specializations
+                      )}`
+                    );
+
                     szakirany.specializations.forEach((spec, specIndex) => {
                       const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
                       let specContractStudents = 0;
                       let specTotalStudents = 0;
 
                       if (spec === "Nincs meghatározva") {
-                        // For "Nincs meghatározva", sum all records for this szakirany that don't match other specs
+                        // For "Nincs meghatározva", find records for this szakirany where szakma is null
+                        // Since we can't determine the type from a null szakma, we'll rely on the institution context
                         const szakiranyRecords = szmszForYear.filter(
-                          (record) =>
-                            record.szakma?.tipus === "Technikum" &&
-                            record.szakirany?.nev === szakirany.name
+                          (record) => {
+                            const recordSzakirany = record.szakirany?.nev;
+                            const hasNoSzakma = record.szakma === null;
+
+                            // For "Nincs meghatározva", we match by szakirany and null szakma
+                            // The institution type (Technikum vs Szakképző iskola) will be determined by context
+                            const isCorrectSzakirany =
+                              recordSzakirany === szakirany.name;
+
+                            console.log(
+                              `🔍 DEBUG: Checking "Nincs meghatározva" record for ${szakirany.name} (Technikum):`,
+                              {
+                                recordSzakirany,
+                                szakmaIsNull: record.szakma === null,
+                                isCorrectSzakirany,
+                                hasNoSzakma,
+                                match: isCorrectSzakirany && hasNoSzakma,
+                              }
+                            );
+
+                            return isCorrectSzakirany && hasNoSzakma;
+                          }
                         );
 
-                        const matchedSpecs = new Set();
-                        szakirany.specializations
-                          .slice(0, -1)
-                          .forEach((otherSpec) => {
-                            szakiranyRecords.forEach((record) => {
-                              if (record.szakma?.nev === otherSpec) {
-                                matchedSpecs.add(record.szakma.nev);
-                              }
-                            });
-                          });
-
                         szakiranyRecords.forEach((record) => {
-                          if (!matchedSpecs.has(record.szakma?.nev)) {
-                            specTotalStudents +=
-                              record.tanulok_osszeletszam || 0;
-                            specContractStudents +=
-                              record.munkaszerzodeses_tanulok_szama || 0;
-                          }
+                          specTotalStudents += record.tanulok_osszeletszam || 0;
+                          specContractStudents +=
+                            record.munkaszerzodeses_tanulok_szama || 0;
                         });
+
+                        console.log(
+                          `🔍 DEBUG: "Nincs meghatározva" for ${szakirany.name} (Technikum) - found ${szakiranyRecords.length} records, total: ${specTotalStudents}, contract: ${specContractStudents}`
+                        );
+
+                        // Additional debug: show the actual records found
+                        if (szakiranyRecords.length > 0) {
+                          console.log(
+                            `🔍 DEBUG: Actual records found:`,
+                            szakiranyRecords
+                          );
+                        }
                       } else {
                         // Find exact match for this specialization
                         const matchingRecords = szmszForYear.filter(
-                          (record) =>
-                            record.szakma?.tipus === "Technikum" &&
-                            record.szakirany?.nev === szakirany.name &&
-                            record.szakma?.nev === spec
+                          (record) => {
+                            const recordType = record.szakma?.tipus;
+                            const recordSzakirany = record.szakirany?.nev;
+                            const recordSzakma = record.szakma?.nev;
+                            return (
+                              recordType === "Technikum" &&
+                              recordSzakirany === szakirany.name &&
+                              recordSzakma === spec
+                            );
+                          }
                         );
 
                         matchingRecords.forEach((record) => {
@@ -362,45 +458,77 @@ export default function SzakképzésiMunkaszerződésArány() {
                     let szakiranyContractStudents = 0;
                     let szakiranyTotalStudents = 0;
 
+                    console.log(
+                      `🔍 DEBUG: Processing szakképző iskola szakirany: ${
+                        szakirany.name
+                      }, specializations: ${JSON.stringify(
+                        szakirany.specializations
+                      )}`
+                    );
+
                     szakirany.specializations.forEach((spec, specIndex) => {
                       const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
                       let specContractStudents = 0;
                       let specTotalStudents = 0;
 
                       if (spec === "Nincs meghatározva") {
-                        // For "Nincs meghatározva", sum all records for this szakirany that don't match other specs
+                        // For "Nincs meghatározva", find records for this szakirany where szakma is null
+                        // Since we can't determine the type from a null szakma, we'll rely on the institution context
                         const szakiranyRecords = szmszForYear.filter(
-                          (record) =>
-                            record.szakma?.tipus === "Szakképző iskola" &&
-                            record.szakirany?.nev === szakirany.name
+                          (record) => {
+                            const recordSzakirany = record.szakirany?.nev;
+                            const hasNoSzakma = record.szakma === null;
+
+                            // For "Nincs meghatározva", we match by szakirany and null szakma
+                            // The institution type (Technikum vs Szakképző iskola) will be determined by context
+                            const isCorrectSzakirany =
+                              recordSzakirany === szakirany.name;
+
+                            console.log(
+                              `🔍 DEBUG: Checking "Nincs meghatározva" record for ${szakirany.name} (Szakképző iskola):`,
+                              {
+                                recordSzakirany,
+                                szakmaIsNull: record.szakma === null,
+                                isCorrectSzakirany,
+                                hasNoSzakma,
+                                match: isCorrectSzakirany && hasNoSzakma,
+                              }
+                            );
+
+                            return isCorrectSzakirany && hasNoSzakma;
+                          }
                         );
 
-                        const matchedSpecs = new Set();
-                        szakirany.specializations
-                          .slice(0, -1)
-                          .forEach((otherSpec) => {
-                            szakiranyRecords.forEach((record) => {
-                              if (record.szakma?.nev === otherSpec) {
-                                matchedSpecs.add(record.szakma.nev);
-                              }
-                            });
-                          });
-
                         szakiranyRecords.forEach((record) => {
-                          if (!matchedSpecs.has(record.szakma?.nev)) {
-                            specTotalStudents +=
-                              record.tanulok_osszeletszam || 0;
-                            specContractStudents +=
-                              record.munkaszerzodeses_tanulok_szama || 0;
-                          }
+                          specTotalStudents += record.tanulok_osszeletszam || 0;
+                          specContractStudents +=
+                            record.munkaszerzodeses_tanulok_szama || 0;
                         });
+
+                        console.log(
+                          `🔍 DEBUG: "Nincs meghatározva" for ${szakirany.name} (Szakképző iskola) - found ${szakiranyRecords.length} records, total: ${specTotalStudents}, contract: ${specContractStudents}`
+                        );
+
+                        // Additional debug: show the actual records found
+                        if (szakiranyRecords.length > 0) {
+                          console.log(
+                            `🔍 DEBUG: Actual records found:`,
+                            szakiranyRecords
+                          );
+                        }
                       } else {
                         // Find exact match for this specialization
                         const matchingRecords = szmszForYear.filter(
-                          (record) =>
-                            record.szakma?.tipus === "Szakképző iskola" &&
-                            record.szakirany?.nev === szakirany.name &&
-                            record.szakma?.nev === spec
+                          (record) => {
+                            const recordType = record.szakma?.tipus;
+                            const recordSzakirany = record.szakirany?.nev;
+                            const recordSzakma = record.szakma?.nev;
+                            return (
+                              recordType === "Szakképző iskola" &&
+                              recordSzakirany === szakirany.name &&
+                              recordSzakma === spec
+                            );
+                          }
                         );
 
                         matchingRecords.forEach((record) => {
@@ -752,6 +880,15 @@ export default function SzakképzésiMunkaszerződésArány() {
       console.log("Calculated data:", calculatedData);
       setSzakképzésiData(calculatedData);
       setHasInitializedFromAPI(true);
+
+      // Track which data source we used for initialization
+      if (hasSZMSZData) {
+        setInitializedWithSZMSZ(true);
+        console.log("Initialized with SZMSZ data");
+      } else {
+        setInitializedWithSZMSZ(false);
+        console.log("Initialized with student data");
+      }
     }
   }, [
     data,
@@ -759,7 +896,10 @@ export default function SzakképzésiMunkaszerződésArány() {
     institutionStructure,
     schoolYears,
     hasInitializedFromAPI,
+    initializedWithSZMSZ,
     isModified,
+    structureInitialized,
+    shouldProcessAPIData,
   ]);
 
   // Enhanced handle data change that triggers auto-calculation
@@ -770,6 +910,9 @@ export default function SzakképzésiMunkaszerződésArány() {
     year,
     value
   ) => {
+    // Disable API data processing when user is making manual changes
+    setShouldProcessAPIData(false);
+
     // Update the data first
     setSzakképzésiData((prev) => {
       const newData = {
@@ -786,219 +929,152 @@ export default function SzakképzésiMunkaszerződésArány() {
         },
       };
 
-      // Calculate totals for categories and subcategories
-      institutionStructure.forEach((institution, institutionIndex) => {
-        const instKey = `${institution.category}_${institutionIndex}`;
+      // Only calculate percentage for the changed item if it's a specialization
+      if (subcategory.includes("_") && subcategory.split("_").length >= 3) {
+        const contractValue = parseFloat(
+          newData.contract_students[institutionKey]?.[subcategory]?.[year] || 0
+        );
+        const totalValue = parseFloat(
+          newData.total_students[institutionKey]?.[subcategory]?.[year] || 0
+        );
 
-        // Calculate subcategory totals (sum of szakiranyok and specializations)
-        if (institution.szakiranyok && institution.szakiranyok.length > 0) {
+        if (totalValue > 0) {
+          const percentage = Math.round((contractValue / totalValue) * 100);
+          if (
+            newData.percentage[institutionKey] &&
+            newData.percentage[institutionKey][subcategory]
+          ) {
+            newData.percentage[institutionKey][subcategory][year] =
+              percentage.toString();
+          }
+        } else {
+          if (
+            newData.percentage[institutionKey] &&
+            newData.percentage[institutionKey][subcategory]
+          ) {
+            newData.percentage[institutionKey][subcategory][year] = "0";
+          }
+        }
+
+        // Now recalculate totals efficiently - find the affected szakirany and institution
+        const parts = subcategory.split("_");
+        const szakiranyName = parts[0];
+
+        // Calculate szakirany total by summing all its specializations
+        let szakiranyTotal = 0;
+        Object.keys(newData[section][institutionKey]).forEach((key) => {
+          if (
+            key.startsWith(szakiranyName + "_") &&
+            key.split("_").length >= 3
+          ) {
+            szakiranyTotal += parseFloat(
+              newData[section][institutionKey][key][year] || 0
+            );
+          }
+        });
+
+        // Update szakirany total
+        if (newData[section][institutionKey][szakiranyName]) {
+          newData[section][institutionKey][szakiranyName][year] =
+            szakiranyTotal.toString();
+        }
+
+        // Find the institution subcategory and calculate its total
+        const currentInstitution = institutionStructure.find(
+          (inst, idx) => `${inst.category}_${idx}` === institutionKey
+        );
+
+        if (currentInstitution && currentInstitution.szakiranyok) {
           let subcategoryTotal = 0;
-
-          institution.szakiranyok.forEach((szakirany) => {
-            // Calculate szakirany total (sum of its specializations only)
-            let szakiranyTotal = 0;
-            szakirany.specializations.forEach((spec, specIndex) => {
-              const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
-              const specValue = parseFloat(
-                newData[section][instKey]?.[uniqueSpecKey]?.[year] || 0
-              );
-              szakiranyTotal += specValue;
-            });
-
-            // Update szakirany total
-            if (
-              newData[section][instKey] &&
-              newData[section][instKey][szakirany.name]
-            ) {
-              newData[section][instKey][szakirany.name][year] =
-                szakiranyTotal.toString();
-            }
-
-            // Add szakirany total to subcategory total
-            subcategoryTotal += szakiranyTotal;
+          currentInstitution.szakiranyok.forEach((szakirany) => {
+            const szakiranyValue = parseFloat(
+              newData[section][institutionKey][szakirany.name]?.[year] || 0
+            );
+            subcategoryTotal += szakiranyValue;
           });
 
           // Update subcategory total
           if (
-            newData[section][instKey] &&
-            newData[section][instKey][institution.subcategory]
+            newData[section][institutionKey][currentInstitution.subcategory]
           ) {
-            newData[section][instKey][institution.subcategory][year] =
-              subcategoryTotal.toString();
+            newData[section][institutionKey][currentInstitution.subcategory][
+              year
+            ] = subcategoryTotal.toString();
           }
         }
 
-        // Calculate "összesen" total (sum of all subcategories)
-        if (institution.category === "összesen") {
-          let totalSum = 0;
+        // Calculate "összesen" total if needed
+        const osszsenKey = institutionStructure.findIndex(
+          (inst) => inst.category === "összesen"
+        );
+        if (osszsenKey >= 0) {
+          const totalKey = `összesen_${osszsenKey}`;
+          let grandTotal = 0;
 
-          // Sum all other institution subcategories
-          institutionStructure.forEach((otherInst, otherIndex) => {
-            if (otherInst.category !== "összesen") {
-              const otherKey = `${otherInst.category}_${otherIndex}`;
-              const subcatValue = parseFloat(
-                newData[section][otherKey]?.[otherInst.subcategory]?.[year] || 0
+          institutionStructure.forEach((inst, idx) => {
+            if (inst.category !== "összesen") {
+              const instKey = `${inst.category}_${idx}`;
+              const instValue = parseFloat(
+                newData[section][instKey]?.[inst.subcategory]?.[year] || 0
               );
-              totalSum += subcatValue;
+              grandTotal += instValue;
             }
           });
 
-          // Update total
+          const totalSubcategory = institutionStructure[osszsenKey].subcategory;
           if (
-            newData[section][instKey] &&
-            newData[section][instKey][institution.subcategory]
+            newData[section][totalKey] &&
+            newData[section][totalKey][totalSubcategory]
           ) {
-            newData[section][instKey][institution.subcategory][year] =
-              totalSum.toString();
+            newData[section][totalKey][totalSubcategory][year] =
+              grandTotal.toString();
           }
         }
-      });
 
-      // If we're updating contract_students or total_students, recalculate percentage
-      if (section === "contract_students" || section === "total_students") {
-        // Recalculate percentages for all items after totals are updated
-        institutionStructure.forEach((institution, institutionIndex) => {
-          const instKey = `${institution.category}_${institutionIndex}`;
-
-          // Calculate percentage for subcategory
-          const contractStudents = parseFloat(
-            newData.contract_students[instKey]?.[institution.subcategory]?.[
-              year
-            ] || 0
-          );
-          const totalStudents = parseFloat(
-            newData.total_students[instKey]?.[institution.subcategory]?.[
-              year
-            ] || 0
-          );
-
-          if (totalStudents > 0) {
-            const percentage = Math.round(
-              (contractStudents / totalStudents) * 100
+        // Recalculate percentages for updated totals
+        [szakiranyName, currentInstitution?.subcategory].forEach((itemKey) => {
+          if (itemKey && newData.percentage[institutionKey]?.[itemKey]) {
+            const contractVal = parseFloat(
+              newData.contract_students[institutionKey]?.[itemKey]?.[year] || 0
             );
-            newData.percentage[instKey][institution.subcategory][year] =
-              percentage.toString();
-          } else {
-            newData.percentage[instKey][institution.subcategory][year] = "0";
-          }
+            const totalVal = parseFloat(
+              newData.total_students[institutionKey]?.[itemKey]?.[year] || 0
+            );
 
-          // Calculate percentages for szakiranyok and specializations
-          if (institution.szakiranyok && institution.szakiranyok.length > 0) {
-            institution.szakiranyok.forEach((szakirany) => {
-              // Szakirany percentage
-              const szakiranyContract = parseFloat(
-                newData.contract_students[instKey]?.[szakirany.name]?.[year] ||
-                  0
-              );
-              const szakiranyTotal = parseFloat(
-                newData.total_students[instKey]?.[szakirany.name]?.[year] || 0
-              );
-
-              if (szakiranyTotal > 0) {
-                const szakiranyPercentage = Math.round(
-                  (szakiranyContract / szakiranyTotal) * 100
-                );
-                newData.percentage[instKey][szakirany.name][year] =
-                  szakiranyPercentage.toString();
-              } else {
-                newData.percentage[instKey][szakirany.name][year] = "0";
-              }
-
-              // Specialization percentages
-              szakirany.specializations.forEach((spec, specIndex) => {
-                const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
-                const specContract = parseFloat(
-                  newData.contract_students[instKey]?.[uniqueSpecKey]?.[year] ||
-                    0
-                );
-                const specTotal = parseFloat(
-                  newData.total_students[instKey]?.[uniqueSpecKey]?.[year] || 0
-                );
-
-                if (specTotal > 0) {
-                  const specPercentage = Math.round(
-                    (specContract / specTotal) * 100
-                  );
-                  newData.percentage[instKey][uniqueSpecKey][year] =
-                    specPercentage.toString();
-                } else {
-                  newData.percentage[instKey][uniqueSpecKey][year] = "0";
-                }
-              });
-            });
+            if (totalVal > 0) {
+              const percentage = Math.round((contractVal / totalVal) * 100);
+              newData.percentage[institutionKey][itemKey][year] =
+                percentage.toString();
+            } else {
+              newData.percentage[institutionKey][itemKey][year] = "0";
+            }
           }
         });
-      }
 
-      // Always recalculate all percentages after any change to ensure consistency
-      institutionStructure.forEach((institution, institutionIndex) => {
-        const instKey = `${institution.category}_${institutionIndex}`;
+        // Update "összesen" percentage if needed
+        if (osszsenKey >= 0) {
+          const totalKey = `összesen_${osszsenKey}`;
+          const totalSubcategory = institutionStructure[osszsenKey].subcategory;
 
-        // Calculate percentage for subcategory
-        const subcatContract = parseFloat(
-          newData.contract_students[instKey]?.[institution.subcategory]?.[
-            year
-          ] || 0
-        );
-        const subcatTotal = parseFloat(
-          newData.total_students[instKey]?.[institution.subcategory]?.[year] ||
-            0
-        );
-
-        if (subcatTotal > 0) {
-          const subcatPercentage = Math.round(
-            (subcatContract / subcatTotal) * 100
-          );
-          newData.percentage[instKey][institution.subcategory][year] =
-            subcatPercentage.toString();
-        } else {
-          newData.percentage[instKey][institution.subcategory][year] = "0";
-        }
-
-        // Calculate percentages for szakiranyok and specializations
-        if (institution.szakiranyok && institution.szakiranyok.length > 0) {
-          institution.szakiranyok.forEach((szakirany) => {
-            // Szakirany percentage
-            const szakiranyContract = parseFloat(
-              newData.contract_students[instKey]?.[szakirany.name]?.[year] || 0
+          if (newData.percentage[totalKey]?.[totalSubcategory]) {
+            const contractVal = parseFloat(
+              newData.contract_students[totalKey]?.[totalSubcategory]?.[year] ||
+                0
             );
-            const szakiranyTotalStudents = parseFloat(
-              newData.total_students[instKey]?.[szakirany.name]?.[year] || 0
+            const totalVal = parseFloat(
+              newData.total_students[totalKey]?.[totalSubcategory]?.[year] || 0
             );
 
-            if (szakiranyTotalStudents > 0) {
-              const szakiranyPercentage = Math.round(
-                (szakiranyContract / szakiranyTotalStudents) * 100
-              );
-              newData.percentage[instKey][szakirany.name][year] =
-                szakiranyPercentage.toString();
+            if (totalVal > 0) {
+              const percentage = Math.round((contractVal / totalVal) * 100);
+              newData.percentage[totalKey][totalSubcategory][year] =
+                percentage.toString();
             } else {
-              newData.percentage[instKey][szakirany.name][year] = "0";
+              newData.percentage[totalKey][totalSubcategory][year] = "0";
             }
-
-            // Specialization percentages
-            szakirany.specializations.forEach((spec, specIndex) => {
-              const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
-              const specContract = parseFloat(
-                newData.contract_students[instKey]?.[uniqueSpecKey]?.[year] || 0
-              );
-              const specTotal = parseFloat(
-                newData.total_students[instKey]?.[uniqueSpecKey]?.[year] || 0
-              );
-
-              if (specTotal > 0) {
-                const specPercentage = Math.round(
-                  (specContract / specTotal) * 100
-                );
-                newData.percentage[instKey][uniqueSpecKey][year] =
-                  specPercentage.toString();
-              } else {
-                newData.percentage[instKey][uniqueSpecKey][year] = "0";
-              }
-            });
-          });
+          }
         }
-      });
+      }
 
       return newData;
     });
@@ -1038,54 +1114,83 @@ export default function SzakképzésiMunkaszerződésArány() {
             // Only save if there's actual data
             if (parseFloat(totalValue) > 0 || parseFloat(contractValue) > 0) {
               console.log(
-                `🔍 DEBUG: Processing specialization record - institutionKey: ${institutionKey}, itemKey: ${itemKey}, year: ${year}`
+                `🔍 DEBUG: Processing specialization record - institutionKey: ${institutionKey}, itemKey: ${itemKey}, year: ${year}, yearData: ${JSON.stringify(
+                  yearData
+                )}`
               );
 
               // Extract szakma from institution key
               const [szakmaFromInst] = institutionKey.split("_");
 
-              // Parse uniqueSpecKey format: "Gazdasági szakirány_0_Pénzügyi-számviteli ügyintéző"
               const parts = itemKey.split("_");
-              const szakiranyNev = parts[0]; // "Gazdasági szakirány"
-              const szakmaNev = parts.slice(2).join("_"); // "Pénzügyi-számviteli ügyintéző"
+              const szakiranyNev = parts[0];
+              const rawSzakmaNev = parts.slice(2).join("_");
+
+              // Handle "Nincs meghatározva" case - save as null in database
+              const szakmaNev =
+                rawSzakmaNev === "Nincs meghatározva" ? null : rawSzakmaNev;
 
               const yearStart = parseInt(year.split("/")[0]);
 
               console.log(`🔍 DEBUG: Extracted data:`);
               console.log(`  - szakmaFromInst: ${szakmaFromInst}`);
               console.log(`  - szakiranyNev: ${szakiranyNev}`);
-              console.log(`  - szakmaNev: ${szakmaNev}`);
+              console.log(`  - rawSzakmaNev: ${rawSzakmaNev}`);
+              console.log(`  - szakmaNev (for DB): ${szakmaNev}`);
               console.log(`  - yearStart: ${yearStart}`);
+
+              // Enhanced debugging for szmszData structure
+              console.log(`🔍 DEBUG: Available szmszData:`, szmszData);
+              if (szmszData && szmszData.length > 0) {
+                console.log(`🔍 DEBUG: First record structure:`, szmszData[0]);
+                console.log(
+                  `🔍 DEBUG: All record keys:`,
+                  Object.keys(szmszData[0])
+                );
+              }
 
               // Check if a record already exists for this combination
               const existingRecord = szmszData?.find((record) => {
-                // Try both nested object and flat string formats for API fields
-                const recordSzakma = record.szakma?.nev || record.szakma;
+                // Try multiple possible field name variations for API fields
+                const recordSzakma =
+                  record.szakmaNev ||
+                  record.szakma?.nev ||
+                  record.szakma ||
+                  record.szakkepzes_nev;
                 const recordSzakirany =
-                  record.szakirany?.nev || record.szakirany;
-                const recordSpecialization =
-                  record.szakkepzes_nev || record.specialization;
+                  record.szakiranyNev ||
+                  record.szakirany?.nev ||
+                  record.szakirany;
 
-                const szakmaMatch = recordSzakma === szakmaFromInst;
+                // Handle null matching for "Nincs meghatározva" cases
+                let szakmaMatch;
+                if (szakmaNev === null) {
+                  // Looking for null/undefined records
+                  szakmaMatch =
+                    !recordSzakma ||
+                    recordSzakma === null ||
+                    recordSzakma === undefined;
+                } else {
+                  // Looking for exact match
+                  szakmaMatch = recordSzakma === szakmaNev;
+                }
+
                 const szakiranyMatch = recordSzakirany === szakiranyNev;
                 const yearMatch = record.tanev_kezdete === yearStart;
-                const specMatch = recordSpecialization === szakmaNev;
 
                 console.log(`🔍 DEBUG: Checking record ${record.id}:`);
+                console.log(`  - available fields:`, Object.keys(record));
                 console.log(
-                  `  - szakma match: ${recordSzakma} === ${szakmaFromInst} -> ${szakmaMatch}`
+                  `  - recordSzakma: "${recordSzakma}" vs szakmaNev: "${szakmaNev}" -> ${szakmaMatch}`
                 );
                 console.log(
-                  `  - szakirany match: ${recordSzakirany} === ${szakiranyNev} -> ${szakiranyMatch}`
+                  `  - recordSzakirany: "${recordSzakirany}" vs szakiranyNev: "${szakiranyNev}" -> ${szakiranyMatch}`
                 );
                 console.log(
                   `  - year match: ${record.tanev_kezdete} === ${yearStart} -> ${yearMatch}`
                 );
-                console.log(
-                  `  - specialization match: ${recordSpecialization} === ${szakmaNev} -> ${specMatch}`
-                );
 
-                return szakmaMatch && szakiranyMatch && yearMatch && specMatch;
+                return szakmaMatch && szakiranyMatch && yearMatch;
               });
 
               console.log(
@@ -1102,6 +1207,8 @@ export default function SzakképzésiMunkaszerződésArány() {
                 munkaszerzodeses_tanulok_szama: parseInt(contractValue) || 0,
               };
 
+              console.log(`🔍 DEBUG: Record data to save:`, recordData);
+
               try {
                 if (existingRecord) {
                   // Update existing record
@@ -1111,19 +1218,19 @@ export default function SzakképzésiMunkaszerződésArány() {
                   }).unwrap();
                   updatedCount++;
                   console.log(
-                    `Updated SZMSZ record for ${szakmaNev} - ${szakiranyNev} - ${year}`
+                    `Updated SZMSZ record for ${rawSzakmaNev} - ${szakiranyNev} - ${year}`
                   );
                 } else {
                   // Create new record
                   await addSZMSZ(recordData).unwrap();
                   savedCount++;
                   console.log(
-                    `Created new SZMSZ record for ${szakmaNev} - ${szakiranyNev} - ${year}`
+                    `Created new SZMSZ record for ${rawSzakmaNev} - ${szakiranyNev} - ${year}`
                   );
                 }
               } catch (recordError) {
                 console.error(
-                  `Error saving SZMSZ record for ${szakmaNev} - ${szakiranyNev} - ${year}:`,
+                  `Error saving SZMSZ record for ${rawSzakmaNev} - ${szakiranyNev} - ${year}:`,
                   recordError
                 );
                 throw recordError; // Re-throw to be caught by outer catch
