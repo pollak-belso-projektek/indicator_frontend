@@ -26,10 +26,10 @@ import {
   MdEvent,
   MdTrendingUp,
   MdAccessible,
-  MdPeople,
   MdGavel,
   MdWork,
   MdClose,
+  MdSearch,
 } from "react-icons/md";
 
 import { useColorModeValue } from "./ui/color-mode";
@@ -101,14 +101,14 @@ const NavigationCategories = {
         tableName: "felvettek_szama",
       },
       {
-        name: "SNI tanulók aránya",
+        name: "Sajátos nevelésű",
         icon: MdAccessible,
         link: "/sajatos-nevelesi-igenyu-tanulok-aranya",
         tableName: "sajatos_nevelesi_igenyu_tanulok_aranya",
       },
       {
         name: "HH tanulók aránya",
-        icon: MdPeople,
+        icon: MdAccessible,
         link: "/hatranyos-helyezu-tanulok-aranya",
         tableName: "hatranyos_helyetu_tanulok_aranya",
       },
@@ -203,7 +203,7 @@ const NavigationCategories = {
         tableName: "felnottkepzes",
       },
       {
-        name: "Műhelyiskolai részszakmat",
+        name: "Műhelyiskola",
         icon: MdSchool,
         link: "/muhelyiskolai-reszszakmat",
         tableName: "muhelyiskolai_reszszakmat",
@@ -233,10 +233,16 @@ const NavigationCategories = {
         tableName: "szakmai_bemutatok_konferenciak",
       },
       {
-        name: "Oktató per diák",
+        name: "Egy oktatóra jutó diákok",
         icon: MdBookmark,
         link: "/oktato_per_diak",
         tableName: "oktato_per_diak",
+      },
+      {
+        name: "Oktatók egyéb tev.",
+        icon: MdWork,
+        link: "/oktatok-egyeb-tev",
+        tableName: "oktatok_egyeb_tev",
       },
     ],
   },
@@ -485,28 +491,33 @@ const SidebarContent = ({ onClose, ...rest }) => {
         </Flex>
 
         {/* Search */}
-        <VStack align="start" mx="8" my="4">
+        <VStack align="start" mx="4" my="4">
           <Box width="100%">
             <TextField
-              placeholder="Keresés..."
+              placeholder="Keresés a menüben..."
               value={itemSearch}
               onChange={(e) => setItemSearch(e.target.value)}
               size="small"
               fullWidth
               variant="outlined"
               InputProps={{
-                endAdornment: itemSearch && (
-                  <InputAdornment position="end">
-                    <MuiIconButton
-                      aria-label="Keresés törlése"
-                      onClick={() => setItemSearch("")}
-                      edge="end"
-                      size="small"
-                    >
-                      <MdClose />
-                    </MuiIconButton>
-                  </InputAdornment>
-                ),
+                endAdornment:
+                  itemSearch !== "" ? (
+                    <InputAdornment position="end">
+                      <MuiIconButton
+                        aria-label="Keresés törlése"
+                        onClick={() => setItemSearch("")}
+                        edge="end"
+                        size="small"
+                      >
+                        <MdClose />
+                      </MuiIconButton>
+                    </InputAdornment>
+                  ) : (
+                    <InputAdornment position="end">
+                      <MdSearch />
+                    </InputAdornment>
+                  ),
               }}
             />
           </Box>
@@ -570,6 +581,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
                     as={Link}
                     to={link.link}
                     onClick={() => onClose()}
+                    p="3"
                     pl="8"
                     fontSize="sm"
                   >
@@ -682,8 +694,9 @@ const SidebarContent = ({ onClose, ...rest }) => {
                             as={Link}
                             to={link.link}
                             onClick={() => onClose()}
-                            pl="8"
                             fontSize="sm"
+                            p="3"
+                            pl="8"
                           >
                             {link.name}
                           </NavItem>
@@ -1009,11 +1022,20 @@ const MobileNav = ({ onOpen, ...rest }) => {
               <Menu.Content
                 bg={useColorModeValue("white", "gray.900")}
                 borderColor={useColorModeValue("gray.200", "gray.700")}
+                _hover={{
+                  bg: useColorModeValue("gray.50", "gray.800"),
+                  cursor: "pointer",
+                }}
               >
-                <Menu.Item>Profile</Menu.Item>
-                <Menu.Item>Settings</Menu.Item>
-                <Menu.Separator />
-                <Menu.Item onClick={handleLogout}>Sign out</Menu.Item>
+                <Menu.Item
+                  _hover={{
+                    bg: useColorModeValue("gray.50", "gray.800"),
+                    cursor: "pointer",
+                  }}
+                  onClick={handleLogout}
+                >
+                  Kijelentkezés
+                </Menu.Item>
               </Menu.Content>
             </Menu.Positioner>
           </Menu.Root>

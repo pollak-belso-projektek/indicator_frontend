@@ -67,6 +67,9 @@ const SzakképzésiMunkaszerződésArányPage = lazy(() =>
 const OktatoPerDiak = lazy(() => import("../pages/tables/Oktatoperdiak.jsx"));
 const FelvettekPage = lazy(() => import("../pages/tables/FelvettekSzama.jsx"));
 const LogsPage = lazy(() => import("../pages/Logs.jsx"));
+const OktatokEgyebTevPage = lazy(() =>
+  import("../pages/Oktatok_egyeb_tev.jsx")
+);
 export default function Router() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   return (
@@ -336,6 +339,16 @@ export default function Router() {
                   <TableProtectedRoute>
                     <NavigationWithLoading>
                       <SzakképzésiMunkaszerződésArányPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/oktatok-egyeb-tev"
+                element={
+                  <TableProtectedRoute tableName="oktatok_egyeb_tev">
+                    <NavigationWithLoading>
+                      <OktatokEgyebTevPage />
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }

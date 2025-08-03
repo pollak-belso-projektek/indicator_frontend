@@ -311,7 +311,7 @@ export default function MuhelyiskolaiReszszakmat() {
       )}
 
       <Typography variant="h4" component="h1" gutterBottom>
-        21. Műhelyiskolában részszakmát szerzők aránya a képzésben résztvevők
+        Műhelyiskolában részszakmát szerzők aránya a képzésben résztvevők
         összlétszámához viszonyítva
       </Typography>
 

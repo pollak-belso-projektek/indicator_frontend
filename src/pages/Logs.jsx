@@ -206,78 +206,182 @@ export default function Logs() {
     }
   };
 
-  const renderLogDetails = (log) => (
-    <Box sx={{ p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
-          <Typography variant="subtitle2" gutterBottom>
-            Kérés részletei
-          </Typography>
-          <Typography variant="body2">
-            <strong>Útvonal:</strong> {log.path}
-          </Typography>
-          <Typography variant="body2">
-            <strong>IP cím:</strong> {log.ip}
-          </Typography>
-          <Typography variant="body2">
-            <strong>User Agent:</strong> {log.userAgent}
-          </Typography>
-          {log.user && (
-            <Typography variant="body2">
-              <strong>Felhasználó:</strong> {log.user.name} ({log.user.email})
+  const renderLogDetails = (log) => {
+    // Extract IP from various possible locations
+    const getIpAddress = () => {
+      if (log.ip) return log.ip;
+      if (log.headers?.host) {
+        const host = log.headers.host.split(":")[0];
+        if (host !== "localhost") return host;
+      }
+      return "localhost";
+    };
+
+    // Extract User Agent from headers
+    const getUserAgent = () => {
+      if (log.userAgent) return log.userAgent;
+      if (log.user_agent) return log.user_agent;
+      if (log.headers?.["sec-ch-ua"]) return log.headers["sec-ch-ua"];
+      return "N/A";
+    };
+
+    return (
+      <Box sx={{ p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={6}>
+            <Typography variant="subtitle2" gutterBottom>
+              Kérés részletei
             </Typography>
-          )}
-          {log.duration && (
             <Typography variant="body2">
-              <strong>Időtartam:</strong> {log.duration}ms
+              <strong>Útvonal:</strong> {log.path || "N/A"}
             </Typography>
-          )}
-          {log.statusCode && (
             <Typography variant="body2">
-              <strong>Státusz kód:</strong> {log.statusCode}
+              <strong>IP cím:</strong> {getIpAddress()}
             </Typography>
-          )}
-          {log.correlationId && (
             <Typography variant="body2">
-              <strong>Korrelációs ID:</strong> {log.correlationId}
+              <strong>User Agent:</strong> {getUserAgent()}
             </Typography>
-          )}
-        </Grid>
-        <Grid item xs={12} md={6}>
-          {log.query && Object.keys(log.query).length > 0 && (
+            <Typography variant="body2">
+              <strong>Host:</strong> {log.headers?.host || "N/A"}
+            </Typography>
+            {log.headers?.referer && (
+              <Typography variant="body2">
+                <strong>Referer:</strong> {log.headers.referer}
+              </Typography>
+            )}
+            {log.headers?.origin && (
+              <Typography variant="body2">
+                <strong>Origin:</strong> {log.headers.origin}
+              </Typography>
+            )}
+            {log.user && (
+              <Typography variant="body2">
+                <strong>Felhasználó:</strong> {log.user.name} ({log.user.email})
+              </Typography>
+            )}
+            {log.duration && (
+              <Typography variant="body2">
+                <strong>Időtartam:</strong> {log.duration}ms
+              </Typography>
+            )}
+            {log.statusCode && (
+              <Typography variant="body2">
+                <strong>Státusz kód:</strong> {log.statusCode}
+              </Typography>
+            )}
+            {log.correlationId && (
+              <Typography variant="body2">
+                <strong>Korrelációs ID:</strong> {log.correlationId}
+              </Typography>
+            )}
+            {log.message && (
+              <Typography variant="body2">
+                <strong>Üzenet:</strong> {log.message}
+              </Typography>
+            )}
+          </Grid>
+          <Grid item xs={12} md={6}>
+            {log.query &&
+              typeof log.query === "object" &&
+              Object.keys(log.query).length > 0 && (
+                <Box mb={2}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Query paraméterek
+                  </Typography>
+                  <pre
+                    style={{
+                      fontSize: "0.75rem",
+                      margin: 0,
+                      maxHeight: "200px",
+                      overflow: "auto",
+                    }}
+                  >
+                    {JSON.stringify(log.query, null, 2)}
+                  </pre>
+                </Box>
+              )}
+            {log.body &&
+              typeof log.body === "object" &&
+              Object.keys(log.body).length > 0 && (
+                <Box mb={2}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Kérés törzs
+                  </Typography>
+                  <pre
+                    style={{
+                      fontSize: "0.75rem",
+                      margin: 0,
+                      maxHeight: "200px",
+                      overflow: "auto",
+                    }}
+                  >
+                    {JSON.stringify(log.body, null, 2)}
+                  </pre>
+                </Box>
+              )}
+            {log.headers &&
+              typeof log.headers === "object" &&
+              Object.keys(log.headers).length > 0 && (
+                <Box mb={2}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Fejlécek
+                  </Typography>
+                  <pre
+                    style={{
+                      fontSize: "0.75rem",
+                      margin: 0,
+                      maxHeight: "200px",
+                      overflow: "auto",
+                    }}
+                  >
+                    {JSON.stringify(log.headers, null, 2)}
+                  </pre>
+                </Box>
+              )}
+            {log.error && (
+              <Box mb={2}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Hiba részletei
+                </Typography>
+                <pre
+                  style={{
+                    fontSize: "0.75rem",
+                    margin: 0,
+                    maxHeight: "200px",
+                    overflow: "auto",
+                    color: "red",
+                  }}
+                >
+                  {typeof log.error === "string"
+                    ? log.error
+                    : JSON.stringify(log.error, null, 2)}
+                </pre>
+              </Box>
+            )}
+            {/* Debug: Show all available log properties */}
             <Box mb={2}>
               <Typography variant="subtitle2" gutterBottom>
-                Query paraméterek
+                Összes elérhető adat (debug)
               </Typography>
-              <pre style={{ fontSize: "0.75rem", margin: 0 }}>
-                {JSON.stringify(log.query, null, 2)}
+              <pre
+                style={{
+                  fontSize: "0.65rem",
+                  margin: 0,
+                  maxHeight: "300px",
+                  overflow: "auto",
+                  background: "#f5f5f5",
+                  padding: "8px",
+                  borderRadius: "4px",
+                }}
+              >
+                {JSON.stringify(log, null, 2)}
               </pre>
             </Box>
-          )}
-          {log.body && Object.keys(log.body).length > 0 && (
-            <Box mb={2}>
-              <Typography variant="subtitle2" gutterBottom>
-                Kérés törzs
-              </Typography>
-              <pre style={{ fontSize: "0.75rem", margin: 0 }}>
-                {JSON.stringify(log.body, null, 2)}
-              </pre>
-            </Box>
-          )}
-          {log.headers && Object.keys(log.headers).length > 0 && (
-            <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Fejlécek
-              </Typography>
-              <pre style={{ fontSize: "0.75rem", margin: 0 }}>
-                {JSON.stringify(log.headers, null, 2)}
-              </pre>
-            </Box>
-          )}
+          </Grid>
         </Grid>
-      </Grid>
-    </Box>
-  );
+      </Box>
+    );
+  };
 
   return (
     <Box p={1}>
@@ -463,19 +567,19 @@ export default function Logs() {
                       <TableCell>{formatDate(log.createdAt)}</TableCell>
                       <TableCell>
                         <Chip
-                          label={log.level}
+                          label={log.level || "UNKNOWN"}
                           color={LOG_LEVEL_COLORS[log.level] || "default"}
                           size="small"
                         />
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={log.method}
+                          label={log.method || "N/A"}
                           color={HTTP_METHOD_COLORS[log.method] || "default"}
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>{log.path}</TableCell>
+                      <TableCell>{log.path || "N/A"}</TableCell>
                       <TableCell>
                         {log.user ? (
                           <div>
@@ -490,7 +594,7 @@ export default function Logs() {
                           log.userId || "N/A"
                         )}
                       </TableCell>
-                      <TableCell>{log.ip}</TableCell>
+                      <TableCell>{log.ip || "N/A"}</TableCell>
                       <TableCell>
                         {log.statusCode && (
                           <Chip
