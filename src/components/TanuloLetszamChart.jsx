@@ -80,7 +80,6 @@ const TanuloLetszamChart = ({ data, years }) => {
   const [selectedCategories, setSelectedCategories] = useState([
     "Tanulói jogviszony",
     "Felnőttképzési jogviszony",
-    "Összesen",
   ]);
   const [chartHeight, setChartHeight] = useState(500);
   const [chartType, setChartType] = useState("line");
@@ -102,29 +101,23 @@ const TanuloLetszamChart = ({ data, years }) => {
     return years.map((year) => {
       const yearData = { year: `${year}/${year + 1}`, yearNum: year };
 
-      data.forEach((agazat, index) => {
-        const yearCounts = agazat.yearCounts[year] || {};
+      data.forEach((programData) => {
+        const yearCounts = programData.yearCounts[year] || {};
 
-        // Only include selected agazatok if in selected mode
+        // Only include selected program types if in selected mode
         if (
           viewMode === "selected" &&
-          !selectedAgazatok.includes(agazat.name)
+          !selectedAgazatok.includes(programData.name)
         ) {
           return;
         }
 
         selectedCategories.forEach((category) => {
           let value = 0;
-          if (category === "Összesen") {
-            value =
-              (yearCounts["Tanulói jogviszony"] || 0) +
-              (yearCounts["Felnőttképzési jogviszony"] || 0) +
-              (yearCounts["Egyéb"] || 0);
-          } else {
-            value = yearCounts[category] || 0;
-          }
 
-          const key = `${agazat.name} - ${category}`;
+          value = yearCounts[category] || 0;
+
+          const key = `${programData.name} - ${category}`;
           yearData[key] = value;
         });
       });
@@ -164,33 +157,36 @@ const TanuloLetszamChart = ({ data, years }) => {
     return { total, average, max, min, growthRate };
   }, [chartData]);
 
-  // Get available agazatok
-  const availableAgazatok = useMemo(() => {
+  // Get available szakmák/programs
+  const availableProgramTypes = useMemo(() => {
     return data ? data.map((item) => item.name) : [];
   }, [data]);
 
   // Get all possible line keys for the chart
   const lineKeys = useMemo(() => {
     const keys = [];
-    const agazatokToShow =
-      viewMode === "selected" ? selectedAgazatok : availableAgazatok;
+    const programTypesToShow =
+      viewMode === "selected" ? selectedAgazatok : availableProgramTypes;
 
-    agazatokToShow.forEach((agazat) => {
+    programTypesToShow.forEach((programType) => {
       selectedCategories.forEach((category) => {
-        keys.push(`${agazat} - ${category}`);
+        keys.push(`${programType} - ${category}`);
       });
     });
     return keys;
-  }, [availableAgazatok, selectedAgazatok, selectedCategories, viewMode]);
+  }, [availableProgramTypes, selectedAgazatok, selectedCategories, viewMode]);
 
-  // Initialize selected agazatok if empty
+  // Initialize selected program types if empty
   React.useEffect(() => {
-    if (selectedAgazatok.length === 0 && availableAgazatok.length > 0) {
+    if (selectedAgazatok.length === 0 && availableProgramTypes.length > 0) {
       setSelectedAgazatok(
-        availableAgazatok.slice(0, Math.min(3, availableAgazatok.length))
+        availableProgramTypes.slice(
+          0,
+          Math.min(3, availableProgramTypes.length)
+        )
       );
     }
-  }, [availableAgazatok, selectedAgazatok]);
+  }, [availableProgramTypes, selectedAgazatok]);
 
   // Y-axis domain calculation
   const yDomain = useMemo(() => {
@@ -240,11 +236,7 @@ const TanuloLetszamChart = ({ data, years }) => {
     setViewMode("all");
     setAnimationDuration(1000);
     setYAxisDomain("auto");
-    setSelectedCategories([
-      "Tanulói jogviszony",
-      "Felnőttképzési jogviszony",
-      "Összesen",
-    ]);
+    setSelectedCategories(["Tanulói jogviszony", "Felnőttképzési jogviszony"]);
   };
 
   const renderChart = () => {
@@ -478,7 +470,7 @@ const TanuloLetszamChart = ({ data, years }) => {
                       variant={viewMode === "all" ? "contained" : "outlined"}
                       color={viewMode === "all" ? "primary" : "inherit"}
                     >
-                      Összes ágazat ({availableAgazatok.length})
+                      Összes szakma/program ({availableProgramTypes.length})
                     </Button>
                     <Button
                       onClick={() => setViewMode("selected")}
@@ -487,32 +479,34 @@ const TanuloLetszamChart = ({ data, years }) => {
                       }
                       color={viewMode === "selected" ? "primary" : "inherit"}
                     >
-                      Kiválasztott ágazatok ({selectedAgazatok.length})
+                      Kiválasztott szakmák/programok ({selectedAgazatok.length})
                     </Button>
                   </ButtonGroup>
                 </Stack>
-                {/* Agazat Selection */}
+                {/* Program Type Selection */}
                 {viewMode === "selected" && (
                   <FormControl>
-                    <FormLabel>Ágazatok kiválasztása:</FormLabel>
+                    <FormLabel>Szakmák/programok kiválasztása:</FormLabel>
                     <FormGroup>
                       <Grid container spacing={1}>
-                        {availableAgazatok.map((agazat) => (
-                          <Grid item xs={12} sm={6} md={4} key={agazat}>
+                        {availableProgramTypes.map((programType) => (
+                          <Grid item xs={12} sm={6} md={4} key={programType}>
                             <FormControlLabel
                               control={
                                 <Checkbox
-                                  checked={selectedAgazatok.includes(agazat)}
+                                  checked={selectedAgazatok.includes(
+                                    programType
+                                  )}
                                   onChange={(e) => {
                                     if (e.target.checked) {
                                       setSelectedAgazatok([
                                         ...selectedAgazatok,
-                                        agazat,
+                                        programType,
                                       ]);
                                     } else {
                                       setSelectedAgazatok(
                                         selectedAgazatok.filter(
-                                          (a) => a !== agazat
+                                          (a) => a !== programType
                                         )
                                       );
                                     }
@@ -522,7 +516,7 @@ const TanuloLetszamChart = ({ data, years }) => {
                               }
                               label={
                                 <Typography variant="body2">
-                                  {agazat}
+                                  {programType}
                                 </Typography>
                               }
                             />
@@ -584,28 +578,6 @@ const TanuloLetszamChart = ({ data, years }) => {
                           />
                         }
                         label="Felnőttképzési jogviszony"
-                      />
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={selectedCategories.includes("Összesen")}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedCategories([
-                                  ...selectedCategories,
-                                  "Összesen",
-                                ]);
-                              } else {
-                                setSelectedCategories(
-                                  selectedCategories.filter(
-                                    (c) => c !== "Összesen"
-                                  )
-                                );
-                              }
-                            }}
-                          />
-                        }
-                        label="Összesen"
                       />
                     </Stack>
                   </FormGroup>
@@ -810,10 +782,10 @@ const TanuloLetszamChart = ({ data, years }) => {
                     size="small"
                   />
                   <Chip
-                    label={`Ágazatok: ${
+                    label={`Szakmák/programok: ${
                       viewMode === "selected"
                         ? selectedAgazatok.length
-                        : availableAgazatok.length
+                        : availableProgramTypes.length
                     }`}
                     color="secondary"
                     size="small"
