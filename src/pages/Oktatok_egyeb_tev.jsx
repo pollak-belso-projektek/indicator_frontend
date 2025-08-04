@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useSelector } from "react-redux";
 import {
   Box,
   Card,
@@ -21,15 +22,24 @@ import {
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
+import { selectSelectedSchool } from "../store/slices/authSlice";
+import TableLoadingOverlay from "../components/shared/TableLoadingOverlay";
+import {
+  useGetOktatokEgyebTevByAlapadatokQuery,
+  useAddOktatokEgyebTevMutation,
+  useUpdateOktatokEgyebTevMutation,
+} from "../store/api/oktatokEgyebTevSlice";
 
 export default function OktatokEgyebTev() {
-  const schoolYears = generateSchoolYears();
+  const schoolYears = useMemo(() => generateSchoolYears(), []);
+  const schoolYearsRef = useRef(schoolYears);
+  const selectedSchool = useSelector(selectSelectedSchool);
 
   // State for the form data
   const [data, setData] = useState({});
   const [isModified, setIsModified] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [modifiedCells, setModifiedCells] = useState(new Set());
 
   // UI state
   const [notification, setNotification] = useState({
@@ -38,83 +48,297 @@ export default function OktatokEgyebTev() {
     severity: "success",
   });
 
+  // API hooks - Use multiple individual hooks for each year (React allows this pattern)
+  // Since we know the years in advance, we can create fixed hooks
+  const currentYear = new Date().getFullYear();
+  const year1 = parseInt(schoolYears[0]?.split("/")[0]) || currentYear;
+  const year2 = parseInt(schoolYears[1]?.split("/")[0]) || currentYear - 1;
+  const year3 = parseInt(schoolYears[2]?.split("/")[0]) || currentYear - 2;
+  const year4 = parseInt(schoolYears[3]?.split("/")[0]) || currentYear - 3;
+
+  const query1 = useGetOktatokEgyebTevByAlapadatokQuery(
+    {
+      alapadatokId: selectedSchool?.id,
+      tanev: year1,
+    },
+    {
+      skip: !selectedSchool?.id,
+    }
+  );
+
+  const query2 = useGetOktatokEgyebTevByAlapadatokQuery(
+    {
+      alapadatokId: selectedSchool?.id,
+      tanev: year2,
+    },
+    {
+      skip: !selectedSchool?.id,
+    }
+  );
+
+  const query3 = useGetOktatokEgyebTevByAlapadatokQuery(
+    {
+      alapadatokId: selectedSchool?.id,
+      tanev: year3,
+    },
+    {
+      skip: !selectedSchool?.id,
+    }
+  );
+
+  const query4 = useGetOktatokEgyebTevByAlapadatokQuery(
+    {
+      alapadatokId: selectedSchool?.id,
+      tanev: year4,
+    },
+    {
+      skip: !selectedSchool?.id,
+    }
+  );
+
+  // Combine all API data
+  const allQueries = [query1, query2, query3, query4];
+  const isLoadingData = allQueries.some((query) => query.isLoading);
+  const apiError = allQueries.find((query) => query.error)?.error;
+  const apiData = allQueries
+    .map((query) => query.data)
+    .filter(Boolean)
+    .flat();
+
+  const refetch = () => {
+    allQueries.forEach((query) => query.refetch());
+  };
+
+  const [addOktatokEgyebTev, { isLoading: isAdding }] =
+    useAddOktatokEgyebTevMutation();
+  const [updateOktatokEgyebTev, { isLoading: isUpdating }] =
+    useUpdateOktatokEgyebTevMutation();
+
+  const isLoading = isLoadingData || isAdding || isUpdating;
+
   // Initialize data structure
-  useEffect(() => {
-    const initialData = {};
-    schoolYears.forEach((year) => {
-      initialData[year] = {
+  const initialData = useMemo(() => {
+    const data = {};
+    schoolYearsRef.current.forEach((year) => {
+      data[year] = {
         // Szakértői tevékenység
         szakertoi_tevekenyseg: {
-          vizsgabiztossag: "",
-          erettsegi_biztossag: "",
-          szaktanacso: "",
-          tantargyi_szakerto: "",
-          kollegium_tag: "",
-          egyeb_szakertoi: "",
+          szakkepzesi_szakerto: "",
+          koznevelesi_szakerto: "",
+          koznevelesi_szaktanacsado: "",
         },
-        // Oktatási és képzési tevékenység
-        oktatas_kepzes: {
-          felnottkepzes_oktato: "",
-          esti_levelzo_oktato: "",
-          tanfolyam_vezeto: "",
-          korrepetitor: "",
-          magantanar: "",
-          egyeb_oktatas: "",
+        // Szakmai vizsga
+        szakmai_vizsga: {
+          vizsgafelugyelo: "",
+          agazati_alapvizsgan_elnok: "",
+          feladatkeszito_lektor: "",
         },
-        // Kutatási és fejlesztési tevékenység
-        kutatas_fejlesztes: {
-          tankonyviro: "",
-          curriculum_fejleszto: "",
-          szoftver_fejleszto: "",
-          projekt_vezeto: "",
-          palyazat_iro: "",
-          egyeb_kutatas: "",
+        // Érettségi vizsga
+        erettsegi_vizsga: {
+          erettsegi_elnok: "",
+          emelt_erettsegi_vb_tag: "",
+          emelt_erettsegi_vb_elnok: "",
+          erettsegi_vizsgaztato: "",
         },
-        // Adminisztratív és vezetési tevékenység
-        admin_vezetes: {
-          intezmenyvezeto: "",
-          hetvezeto: "",
-          munkakornyivezeto: "",
-          koordinator: "",
-          bizottsag_tag: "",
-          egyeb_admin: "",
-        },
-        // Társadalmi és szakmai szervezetekben való részvétel
-        tarsadalmi_szakmai: {
-          kamara_tag: "",
-          szakmai_szervezet_tag: "",
-          civil_szervezet_tag: "",
-          onkormanyzati_tag: "",
-          szakmai_testület_tag: "",
-          egyeb_tarsadalmi: "",
-        },
+        // Egyéb tevékenységek
+        tanterviro: "",
+        tananyagfejleszto: "",
+        tankonyv_jegyzetiro: "",
+        szakmai_tisztsegviselo: "",
+        // Oktatók létszáma - backend-ből jön
+        oktatok_letszama: "",
       };
     });
-    setData(initialData);
-  }, [schoolYears]);
+    return data;
+  }, []); // Empty deps array to make it stable
+
+  // Track if data has been initialized from API
+  const [isDataInitialized, setIsDataInitialized] = useState(false);
+
+  // Transform frontend data to API format
+  const transformFrontendDataToApi = (frontendData, year) => {
+    const yearStart = parseInt(year.split("/")[0]);
+    const yearData = frontendData[year];
+
+    return {
+      alapadatok_id: selectedSchool?.id,
+      tanev_kezdete: yearStart,
+      // Szakértői tevékenység
+      szakkepzesi_szakerto:
+        parseInt(yearData?.szakertoi_tevekenyseg?.szakkepzesi_szakerto) || 0,
+      koznevelesi_szakerto:
+        parseInt(yearData?.szakertoi_tevekenyseg?.koznevelesi_szakerto) || 0,
+      koznevelesi_szaktanacsado:
+        parseInt(yearData?.szakertoi_tevekenyseg?.koznevelesi_szaktanacsado) ||
+        0,
+      // Vizsgák
+      vizsgafelugyelo: parseInt(yearData?.szakmai_vizsga?.vizsgafelugyelo) || 0,
+      agazati_alapvizsgan_elnok:
+        parseInt(yearData?.szakmai_vizsga?.agazati_alapvizsgan_elnok) || 0,
+      feladatkeszito_lektor:
+        parseInt(yearData?.szakmai_vizsga?.feladatkeszito_lektor) || 0,
+      // Érettségi vizsga
+      erettsegi_elnok:
+        parseInt(yearData?.erettsegi_vizsga?.erettsegi_elnok) || 0,
+      emelt_erettsegi_vb_tag:
+        parseInt(yearData?.erettsegi_vizsga?.emelt_erettsegi_vb_tag) || 0,
+      emelt_erettsegi_vb_elnok:
+        parseInt(yearData?.erettsegi_vizsga?.emelt_erettsegi_vb_elnok) || 0,
+      erettsegi_vizsgaztato:
+        parseInt(yearData?.erettsegi_vizsga?.erettsegi_vizsgaztato) || 0,
+      // Egyéb
+      tanterviro: parseInt(yearData?.tanterviro) || 0,
+      tananyagfejleszto: parseInt(yearData?.tananyagfejleszto) || 0,
+      tankonyv_jegyzetiro: parseInt(yearData?.tankonyv_jegyzetiro) || 0,
+      szakmai_tisztsegviselo: parseInt(yearData?.szakmai_tisztsegviselo) || 0,
+      createBy: "frontend_user", // TODO: get from auth context
+    };
+  };
+
+  // Initialize data on mount and when API data changes
+  useEffect(() => {
+    if (
+      apiData &&
+      Array.isArray(apiData) &&
+      apiData.length > 0 &&
+      !isDataInitialized
+    ) {
+      // Use API data if available
+      const frontendData = {};
+      schoolYearsRef.current.forEach((year) => {
+        const yearStart = parseInt(year.split("/")[0]);
+        const record = apiData.find((r) => r.tanev_kezdete === yearStart);
+
+        frontendData[year] = {
+          szakertoi_tevekenyseg: {
+            szakkepzesi_szakerto:
+              record?.szakkepzesi_szakerto?.toString() || "",
+            koznevelesi_szakerto:
+              record?.koznevelesi_szakerto?.toString() || "",
+            koznevelesi_szaktanacsado:
+              record?.koznevelesi_szaktanacsado?.toString() || "",
+          },
+          szakmai_vizsga: {
+            vizsgafelugyelo: record?.vizsgafelugyelo?.toString() || "",
+            agazati_alapvizsgan_elnok:
+              record?.agazati_alapvizsgan_elnok?.toString() || "",
+            feladatkeszito_lektor:
+              record?.feladatkeszito_lektor?.toString() || "",
+          },
+          erettsegi_vizsga: {
+            erettsegi_elnok: record?.erettsegi_elnok?.toString() || "",
+            emelt_erettsegi_vb_tag:
+              record?.emelt_erettsegi_vb_tag?.toString() || "",
+            emelt_erettsegi_vb_elnok:
+              record?.emelt_erettsegi_vb_elnok?.toString() || "",
+            erettsegi_vizsgaztato:
+              record?.erettsegi_vizsgaztato?.toString() || "",
+          },
+          tanterviro: record?.tanterviro?.toString() || "",
+          tananyagfejleszto: record?.tananyagfejleszto?.toString() || "",
+          tankonyv_jegyzetiro: record?.tankonyv_jegyzetiro?.toString() || "",
+          szakmai_tisztsegviselo:
+            record?.szakmai_tisztsegviselo?.toString() || "",
+          oktatok_letszama: record?.oktatok_letszama?.toString() || "",
+          _recordId: record?.id,
+        };
+      });
+      setData(frontendData);
+      setIsModified(false);
+      setIsDataInitialized(true);
+    }
+  }, [apiData, isDataInitialized]); // Removed schoolYears from deps
+
+  // Initialize empty data structure once on mount if no API data
+  useEffect(() => {
+    if (
+      !isLoadingData &&
+      !isDataInitialized &&
+      (!apiData || apiData.length === 0)
+    ) {
+      setData(initialData);
+      setIsDataInitialized(true);
+    }
+  }, [isLoadingData, isDataInitialized, apiData]); // Removed initialData from deps
+
+  // Handle API errors
+  useEffect(() => {
+    if (apiError) {
+      setError("Hiba történt az adatok betöltése során!");
+    } else {
+      setError(null);
+    }
+  }, [apiError]);
+
+  // Reset data when school changes
+  useEffect(() => {
+    setIsDataInitialized(false);
+    setData({});
+    setIsModified(false);
+    setModifiedCells(new Set()); // Clear modified cells
+  }, [selectedSchool?.id]);
 
   // Handle input changes
-  const handleInputChange = (year, category, field, value) => {
-    setData((prevData) => ({
-      ...prevData,
-      [year]: {
-        ...prevData[year],
-        [category]: {
-          ...prevData[year]?.[category],
-          [field]: value,
+  const handleInputChange = (category, field, year, value) => {
+    // Create a unique key for the cell
+    const cellKey = field
+      ? `${year}-${category}-${field}`
+      : `${year}-${category}`;
+
+    if (category === "oktatok_letszama") {
+      // Handle oktatok_letszama directly
+      setData((prevData) => ({
+        ...prevData,
+        [year]: {
+          ...prevData[year],
+          oktatok_letszama: value,
         },
-      },
-    }));
+      }));
+    } else if (
+      typeof data[year]?.[category] === "object" &&
+      data[year][category] !== null
+    ) {
+      // Handle nested objects (like szakertoi_tevekenyseg, szakmai_vizsga, etc.)
+      setData((prevData) => ({
+        ...prevData,
+        [year]: {
+          ...prevData[year],
+          [category]: {
+            ...prevData[year]?.[category],
+            [field]: value,
+          },
+        },
+      }));
+    } else {
+      // Handle direct fields (like tanterviro, tananyagfejleszto, etc.)
+      setData((prevData) => ({
+        ...prevData,
+        [year]: {
+          ...prevData[year],
+          [category]: value,
+        },
+      }));
+    }
+
+    // Mark cell as modified
+    setModifiedCells((prev) => new Set(prev).add(cellKey));
     setIsModified(true);
   };
 
   // Calculate totals for each category
   const calculateCategoryTotal = (yearData, category) => {
     if (!yearData || !yearData[category]) return 0;
-    return Object.values(yearData[category]).reduce((sum, value) => {
-      const num = parseInt(value) || 0;
-      return sum + num;
-    }, 0);
+
+    if (typeof yearData[category] === "object" && yearData[category] !== null) {
+      // For nested objects, sum all values
+      return Object.values(yearData[category]).reduce((sum, value) => {
+        const num = parseInt(value) || 0;
+        return sum + num;
+      }, 0);
+    } else {
+      // For direct values
+      return parseInt(yearData[category]) || 0;
+    }
   };
 
   // Calculate overall total for a year
@@ -122,99 +346,195 @@ export default function OktatokEgyebTev() {
     if (!yearData) return 0;
     const categories = [
       "szakertoi_tevekenyseg",
-      "oktatas_kepzes",
-      "kutatas_fejlesztes",
-      "admin_vezetes",
-      "tarsadalmi_szakmai",
+      "szakmai_vizsga",
+      "erettsegi_vizsga",
+      "tanterviro",
+      "tananyagfejleszto",
+      "tankonyv_jegyzetiro",
+      "szakmai_tisztsegviselo",
     ];
     return categories.reduce((sum, category) => {
       return sum + calculateCategoryTotal(yearData, category);
     }, 0);
   };
 
+  // Calculate percentage for szakertoi tevekenyseg
+  const calculateSzakertoimPercentage = (yearData) => {
+    if (!yearData) return 0;
+    const oktAtokLetszama = parseInt(yearData.oktatok_letszama) || 0;
+    const osszesenTevekenyseg = calculateYearTotal(yearData);
+
+    if (oktAtokLetszama === 0) return 0;
+    return ((osszesenTevekenyseg / oktAtokLetszama) * 100).toFixed(1);
+  };
+
+  // Check if a cell is modified
+  const isCellModified = (category, field, year) => {
+    const cellKey = field
+      ? `${year}-${category}-${field}`
+      : `${year}-${category}`;
+    return modifiedCells.has(cellKey);
+  };
+
   // Handle save
   const handleSave = async () => {
-    setIsLoading(true);
+    if (!selectedSchool?.id) {
+      setNotification({
+        open: true,
+        message: "Nincs kiválasztott intézmény!",
+        severity: "error",
+      });
+      return;
+    }
+
+    if (modifiedCells.size === 0) {
+      setNotification({
+        open: true,
+        message: "Nincs módosított adat a mentéshez!",
+        severity: "info",
+      });
+      return;
+    }
+
     try {
-      // API call would go here when backend is implemented
-      // await saveOktatokEgyebTevData(data);
+      // Only save years that have modified cells
+      const modifiedYears = new Set();
+      modifiedCells.forEach((cellKey) => {
+        const year = cellKey.split("-")[0];
+        modifiedYears.add(year);
+      });
+
+      const savePromises = Array.from(modifiedYears).map(async (year) => {
+        const apiPayload = transformFrontendDataToApi(data, year);
+        const recordId = data[year]?._recordId;
+
+        if (recordId) {
+          // Update existing record
+          return updateOktatokEgyebTev({
+            id: recordId,
+            ...apiPayload,
+          });
+        } else {
+          // Create new record
+          return addOktatokEgyebTev(apiPayload);
+        }
+      });
+
+      await Promise.all(savePromises);
+
+      setIsModified(false);
+      setModifiedCells(new Set()); // Clear modified cells
 
       setNotification({
         open: true,
         message: "Az adatok sikeresen mentve lettek!",
         severity: "success",
       });
-      setIsModified(false);
+
+      // Refresh data from server to ensure consistency
+      refetch();
     } catch (error) {
+      console.error("Save error:", error);
       setNotification({
         open: true,
         message: "Hiba történt a mentés során!",
         severity: "error",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   // Handle reset
   const handleReset = () => {
-    // Reset to original data when API is implemented
-    setIsModified(false);
-    setNotification({
-      open: true,
-      message: "Az adatok visszaállítva!",
-      severity: "info",
-    });
+    if (apiData && Array.isArray(apiData) && apiData.length > 0) {
+      // Recreate data from API if available
+      const frontendData = {};
+      schoolYearsRef.current.forEach((year) => {
+        const yearStart = parseInt(year.split("/")[0]);
+        const record = apiData.find((r) => r.tanev_kezdete === yearStart);
+
+        frontendData[year] = {
+          szakertoi_tevekenyseg: {
+            szakkepzesi_szakerto:
+              record?.szakkepzesi_szakerto?.toString() || "",
+            koznevelesi_szakerto:
+              record?.koznevelesi_szakerto?.toString() || "",
+            koznevelesi_szaktanacsado:
+              record?.koznevelesi_szaktanacsado?.toString() || "",
+          },
+          szakmai_vizsga: {
+            vizsgafelugyelo: record?.vizsgafelugyelo?.toString() || "",
+            agazati_alapvizsgan_elnok:
+              record?.agazati_alapvizsgan_elnok?.toString() || "",
+            feladatkeszito_lektor:
+              record?.feladatkeszito_lektor?.toString() || "",
+          },
+          erettsegi_vizsga: {
+            erettsegi_elnok: record?.erettsegi_elnok?.toString() || "",
+            emelt_erettsegi_vb_tag:
+              record?.emelt_erettsegi_vb_tag?.toString() || "",
+            emelt_erettsegi_vb_elnok:
+              record?.emelt_erettsegi_vb_elnok?.toString() || "",
+            erettsegi_vizsgaztato:
+              record?.erettsegi_vizsgaztato?.toString() || "",
+          },
+          tanterviro: record?.tanterviro?.toString() || "",
+          tananyagfejleszto: record?.tananyagfejleszto?.toString() || "",
+          tankonyv_jegyzetiro: record?.tankonyv_jegyzetiro?.toString() || "",
+          szakmai_tisztsegviselo:
+            record?.szakmai_tisztsegviselo?.toString() || "",
+          oktatok_letszama: record?.oktatok_letszama?.toString() || "",
+          _recordId: record?.id,
+        };
+      });
+      setData(frontendData);
+      setIsModified(false);
+      setIsDataInitialized(true);
+      setModifiedCells(new Set()); // Clear modified cells
+      setNotification({
+        open: true,
+        message: "Az adatok visszaállítva!",
+        severity: "info",
+      });
+    } else {
+      setData(initialData);
+      setIsModified(false);
+      setIsDataInitialized(true);
+      setModifiedCells(new Set()); // Clear modified cells
+      setNotification({
+        open: true,
+        message: "Az adatok visszaállítva!",
+        severity: "info",
+      });
+    }
   };
 
   const categoryLabels = {
     szakertoi_tevekenyseg: "Szakértői tevékenység",
-    oktatas_kepzes: "Oktatási és képzési tevékenység",
-    kutatas_fejlesztes: "Kutatási és fejlesztési tevékenység",
-    admin_vezetes: "Adminisztratív és vezetési tevékenység",
-    tarsadalmi_szakmai: "Társadalmi és szakmai szervezetekben való részvétel",
+    szakmai_vizsga: "Szakmai vizsga",
+    erettsegi_vizsga: "Érettségi vizsga",
+    tanterviro: "Tantervíró",
+    tananyagfejleszto: "Tananyag fejlesztő",
+    tankonyv_jegyzetiro: "Tankönyv, jegyzet író",
+    szakmai_tisztsegviselo: "Szakmai tisztségviselő",
+    oktatok_letszama: "Oktatók létszáma (fő)",
   };
 
   const fieldLabels = {
     // Szakértői tevékenység
-    vizsgabiztossag: "Vizsgabizottság tag",
-    erettsegi_biztossag: "Érettségi bizottság tag",
-    szaktanacso: "Szaktanácsadó",
-    tantargyi_szakerto: "Tantárgyi szakértő",
-    kollegium_tag: "Kollégium tag",
-    egyeb_szakertoi: "Egyéb szakértői",
+    szakkepzesi_szakerto: "Szakképzési szakértő",
+    koznevelesi_szakerto: "Köznevelsési szakértő",
+    koznevelesi_szaktanacsado: "Köznevelsési szaktanácsadó",
 
-    // Oktatási és képzési tevékenység
-    felnottkepzes_oktato: "Felnőttképzés oktató",
-    esti_levelzo_oktato: "Esti/levelező oktató",
-    tanfolyam_vezeto: "Tanfolyam vezető",
-    korrepetitor: "Korrepetitor",
-    magantanar: "Magántanár",
-    egyeb_oktatas: "Egyéb oktatási",
+    // Szakmai vizsga
+    vizsgafelugyelo: "Vizsgafelügyelő",
+    agazati_alapvizsgan_elnok: "Ágazati alapvizsgán elnök",
+    feladatkeszito_lektor: "Feladatkészítő, lektor",
 
-    // Kutatási és fejlesztési tevékenység
-    tankonyviro: "Tankönyvíró",
-    curriculum_fejleszto: "Curriculum fejlesztő",
-    szoftver_fejleszto: "Szoftver fejlesztő",
-    projekt_vezeto: "Projekt vezető",
-    palyazat_iro: "Pályázat író",
-    egyeb_kutatas: "Egyéb kutatási",
-
-    // Adminisztratív és vezetési tevékenység
-    intezmenyvezeto: "Intézményvezető",
-    hetvezeto: "Hét vezető",
-    munkakornyivezeto: "Munkakörnyí vezető",
-    koordinator: "Koordinátor",
-    bizottsag_tag: "Bizottság tag",
-    egyeb_admin: "Egyéb adminisztratív",
-
-    // Társadalmi és szakmai szervezetekben való részvétel
-    kamara_tag: "Kamara tag",
-    szakmai_szervezet_tag: "Szakmai szervezet tag",
-    civil_szervezet_tag: "Civil szervezet tag",
-    onkormanyzati_tag: "Önkormányzati tag",
-    szakmai_testület_tag: "Szakmai testület tag",
-    egyeb_tarsadalmi: "Egyéb társadalmi",
+    // Érettségi vizsga
+    erettsegi_elnok: "Érettségi elnök",
+    emelt_erettsegi_vb_tag: "Emelt szintű érettségi bizottság tag",
+    emelt_erettsegi_vb_elnok: "Emelt szintű érettségi bizottság elnök",
+    erettsegi_vizsgaztato: "Érettségi vizsgáztató",
   };
 
   return (
@@ -227,6 +547,11 @@ export default function OktatokEgyebTev() {
         Ez az oldal az oktatók iskolarendszeren kívüli egyéb tevékenységeit
         gyűjti össze különböző kategóriákban. Minden kategóriában megadható,
         hogy hány oktató végez ilyen jellegű tevékenységet.
+      </Typography>
+
+      <Typography variant="body2" color="text.secondary" paragraph>
+        💡 A módosított cellák sárga háttérrel vannak jelölve. Csak a módosított
+        adatok kerülnek mentésre.
       </Typography>
 
       {/* Action buttons */}
@@ -263,7 +588,11 @@ export default function OktatokEgyebTev() {
       )}
 
       {/* Data table */}
-      <Card>
+      <Card sx={{ position: "relative" }}>
+        <TableLoadingOverlay
+          isLoading={isLoading}
+          message="Adatok mentése folyamatban, kérjük várjon..."
+        />
         <CardContent>
           <Typography variant="h6" gutterBottom>
             Oktatók egyéb tevékenységei tanévenkénti bontásban
@@ -289,44 +618,116 @@ export default function OktatokEgyebTev() {
               </TableHead>
               <TableBody>
                 {Object.entries(categoryLabels).map(
-                  ([categoryKey, categoryLabel]) => [
-                    // Category header row
-                    <TableRow key={`${categoryKey}-header`}>
-                      <TableCell
-                        colSpan={schoolYears.length + 1}
-                        sx={{
-                          backgroundColor: "primary.light",
-                          color: "primary.contrastText",
-                          fontWeight: "bold",
-                          textAlign: "center",
-                        }}
-                      >
-                        {categoryLabel}
-                      </TableCell>
-                    </TableRow>,
-                    // Field rows for this category
-                    ...Object.entries(fieldLabels)
-                      .filter(([fieldKey]) =>
-                        data[schoolYears[0]]?.[categoryKey]?.hasOwnProperty(
-                          fieldKey
-                        )
-                      )
-                      .map(([fieldKey, fieldLabel]) => (
-                        <TableRow key={`${categoryKey}-${fieldKey}`}>
-                          <TableCell sx={{ pl: 3 }}>{fieldLabel}</TableCell>
+                  ([categoryKey, categoryLabel]) => {
+                    const isObjectCategory =
+                      typeof data[schoolYears[0]]?.[categoryKey] === "object" &&
+                      data[schoolYears[0]]?.[categoryKey] !== null;
+
+                    if (isObjectCategory) {
+                      // Handle nested objects
+                      return [
+                        // Category header row
+                        <TableRow key={`${categoryKey}-header`}>
+                          <TableCell
+                            colSpan={schoolYears.length + 1}
+                            sx={{
+                              backgroundColor: "primary.light",
+                              color: "primary.contrastText",
+                              fontWeight: "bold",
+                              textAlign: "center",
+                            }}
+                          >
+                            {categoryLabel}
+                          </TableCell>
+                        </TableRow>,
+                        // Field rows for this category
+                        ...Object.entries(fieldLabels)
+                          .filter(([fieldKey]) =>
+                            data[schoolYears[0]]?.[categoryKey]?.hasOwnProperty(
+                              fieldKey
+                            )
+                          )
+                          .map(([fieldKey, fieldLabel]) => (
+                            <TableRow key={`${categoryKey}-${fieldKey}`}>
+                              <TableCell sx={{ pl: 3 }}>{fieldLabel}</TableCell>
+                              {schoolYears.map((year) => (
+                                <TableCell key={year} align="center">
+                                  <TextField
+                                    size="small"
+                                    type="number"
+                                    value={
+                                      data[year]?.[categoryKey]?.[fieldKey] ||
+                                      ""
+                                    }
+                                    onChange={(e) =>
+                                      handleInputChange(
+                                        categoryKey,
+                                        fieldKey,
+                                        year,
+                                        e.target.value
+                                      )
+                                    }
+                                    inputProps={{
+                                      min: 0,
+                                      style: { textAlign: "center" },
+                                    }}
+                                    sx={{
+                                      width: 80,
+                                      borderRadius: 2,
+                                      border: isCellModified(
+                                        categoryKey,
+                                        fieldKey,
+                                        year
+                                      )
+                                        ? "2px solid orange"
+                                        : "2px solid transparent",
+                                    }}
+                                  />
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          )),
+                        // Category total row
+                        <TableRow key={`${categoryKey}-total`}>
+                          <TableCell
+                            sx={{
+                              fontWeight: "bold",
+                              backgroundColor: "grey.100",
+                              pl: 3,
+                            }}
+                          >
+                            {categoryLabel} - Összesen
+                          </TableCell>
+                          {schoolYears.map((year) => (
+                            <TableCell
+                              key={year}
+                              align="center"
+                              sx={{
+                                fontWeight: "bold",
+                                backgroundColor: "grey.100",
+                              }}
+                            >
+                              {calculateCategoryTotal(data[year], categoryKey)}
+                            </TableCell>
+                          ))}
+                        </TableRow>,
+                      ];
+                    } else {
+                      // Handle direct fields
+                      return (
+                        <TableRow key={categoryKey}>
+                          <TableCell>{categoryLabel}</TableCell>
                           {schoolYears.map((year) => (
                             <TableCell key={year} align="center">
                               <TextField
                                 size="small"
                                 type="number"
-                                value={
-                                  data[year]?.[categoryKey]?.[fieldKey] || ""
-                                }
+                                value={data[year]?.[categoryKey] || ""}
                                 onChange={(e) =>
                                   handleInputChange(
-                                    year,
                                     categoryKey,
-                                    fieldKey,
+                                    null,
+                                    year,
                                     e.target.value
                                   )
                                 }
@@ -334,37 +735,24 @@ export default function OktatokEgyebTev() {
                                   min: 0,
                                   style: { textAlign: "center" },
                                 }}
-                                sx={{ width: 80 }}
+                                sx={{
+                                  width: 80,
+                                  borderRadius: 2,
+                                  border: isCellModified(
+                                    categoryKey,
+                                    null,
+                                    year
+                                  )
+                                    ? "2px solid orange"
+                                    : "2px solid transparent",
+                                }}
                               />
                             </TableCell>
                           ))}
                         </TableRow>
-                      )),
-                    // Category total row
-                    <TableRow key={`${categoryKey}-total`}>
-                      <TableCell
-                        sx={{
-                          fontWeight: "bold",
-                          backgroundColor: "grey.100",
-                          pl: 3,
-                        }}
-                      >
-                        {categoryLabel} - Összesen
-                      </TableCell>
-                      {schoolYears.map((year) => (
-                        <TableCell
-                          key={year}
-                          align="center"
-                          sx={{
-                            fontWeight: "bold",
-                            backgroundColor: "grey.100",
-                          }}
-                        >
-                          {calculateCategoryTotal(data[year], categoryKey)}
-                        </TableCell>
-                      ))}
-                    </TableRow>,
-                  ]
+                      );
+                    }
+                  }
                 )}
 
                 {/* Overall total row */}
@@ -372,11 +760,11 @@ export default function OktatokEgyebTev() {
                   <TableCell
                     sx={{
                       fontWeight: "bold",
-                      backgroundColor: "primary.main",
+                      backgroundColor: "orange",
                       color: "primary.contrastText",
                     }}
                   >
-                    MINDÖSSZESEN
+                    ÖSSZESEN
                   </TableCell>
                   {schoolYears.map((year) => (
                     <TableCell
@@ -384,11 +772,90 @@ export default function OktatokEgyebTev() {
                       align="center"
                       sx={{
                         fontWeight: "bold",
-                        backgroundColor: "primary.main",
+                        backgroundColor: "orange",
                         color: "primary.contrastText",
                       }}
                     >
                       {calculateYearTotal(data[year])}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* Oktatók létszáma */}
+                <TableRow
+                  sx={{
+                    backgroundColor: "lightgray",
+                    fontWeight: "bold",
+                  }}
+                >
+                  <TableCell
+                    sx={{
+                      fontWeight: "bold",
+                      borderTop: "2px solid #333",
+                    }}
+                  >
+                    {categoryLabels.oktatok_letszama}
+                  </TableCell>
+                  {schoolYears.map((year) => (
+                    <TableCell
+                      key={year}
+                      sx={{
+                        borderTop: "2px solid #333",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      <TextField
+                        size="small"
+                        type="number"
+                        value={data[year]?.oktatok_letszama || ""}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "oktatok_letszama",
+                            null,
+                            year,
+                            e.target.value
+                          )
+                        }
+                        sx={{
+                          "& .MuiInputBase-input": {
+                            textAlign: "center",
+                            fontWeight: "bold",
+                          },
+                          backgroundColor: isCellModified(
+                            "oktatok_letszama",
+                            null,
+                            year
+                          )
+                            ? "yellow"
+                            : "transparent",
+                        }}
+                      />
+                    </TableCell>
+                  ))}
+                </TableRow>
+
+                {/* Szakértői tevékenységet folytató oktatók aránya */}
+                <TableRow
+                  sx={{
+                    backgroundColor: "lightblue",
+                    fontWeight: "bold",
+                  }}
+                >
+                  <TableCell
+                    sx={{
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Szakértői tevékenységet folytató oktatók aránya (%)
+                  </TableCell>
+                  {schoolYears.map((year) => (
+                    <TableCell
+                      key={year}
+                      sx={{
+                        textAlign: "center",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {calculateSzakertoimPercentage(data[year])}%
                     </TableCell>
                   ))}
                 </TableRow>

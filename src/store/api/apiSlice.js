@@ -34,6 +34,7 @@ export const indicatorApi = createApi({
     "IntezmenyiNeveltseg",
     "Dobbanto",
     "Logs",
+    "OktatokEgyebTev",
   ],
   endpoints: (build) => ({
     // Authentication endpoints

@@ -10,6 +10,7 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import { Provider as ChakraProvider } from "./components/ui/provider.jsx";
 import configureAppStore from "./store/configureStore.js";
+import "./store/api/oktatokEgyebTevSlice.js"; // Import to register the API slice
 import { setupListeners } from "@reduxjs/toolkit/query";
 import Router from "./router/router.jsx";
 // Import Tailwind CSS LAST to give it highest priority
