@@ -405,7 +405,7 @@ export default function OktatokEgyebTev() {
       });
 
       const savePromises = Array.from(modifiedYears).map(async (year) => {
-        const apiPayload = transformFrontendDataToApi(data, year);
+        const apiPayload = transformFrontendDataToApi(data, 2024);
         const recordId = data[year]?._recordId;
 
         if (recordId) {

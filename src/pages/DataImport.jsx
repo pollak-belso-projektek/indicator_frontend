@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { fields } from "../tableData/tanuloTanugyiData";
-import { employeeFields } from "../tableData/alkalmazottMunkaugyiData";
+import { mapEmployeeData } from "../tableData/alkalmazottMunkaugyiData";
 import {
   useAddTanugyiAdatokMutation,
   useGetTanugyiAdatokQuery,
@@ -20,11 +20,15 @@ import {
   Chip,
 } from "@mui/material";
 import { CustomSheetUploader } from "../components/CustomSheetUploader";
+import { useSelector } from "react-redux";
+import { selectSelectedSchool } from "../store/slices/authSlice";
 
 export default function DataImport() {
   const [tanugyiData, setTanugyiData] = useState(null);
   const [alkalmazottData, setAlkalmazottData] = useState(null);
   const [tabValue, setTabValue] = useState(0);
+
+  const selectedSchool = useSelector(selectSelectedSchool);
 
   // Tanügyi adatok API hooks
   const [addTanugyiAdatok, tanugyiResult] = useAddTanugyiAdatokMutation();
@@ -33,8 +37,8 @@ export default function DataImport() {
     error: tanugyiError,
     isLoading: tanugyiLoading,
   } = useGetTanugyiAdatokQuery({
-    alapadatok_id: "2e31291b-7c2d-4bd8-bdca-de8580136874",
-    ev: 2024,
+    alapadatok_id: selectedSchool?.id,
+    tanev_kezdete: 2024,
   });
 
   // Alkalmazott adatok API hooks
@@ -45,8 +49,8 @@ export default function DataImport() {
     error: alkalmazottError,
     isLoading: alkalmazottLoading,
   } = useGetAlkalmazottAdatokQuery({
-    alapadatok_id: "2e31291b-7c2d-4bd8-bdca-de8580136874",
-    ev: 2024,
+    alapadatok_id: selectedSchool?.id,
+    tanev_kezdete: 2024,
   });
 
   // Tanügyi adatok effect
@@ -54,7 +58,8 @@ export default function DataImport() {
     console.log(tanugyiData);
     if (tanugyiData) {
       addTanugyiAdatok({
-        alapadatok_id: "2e31291b-7c2d-4bd8-bdca-de8580136874",
+        alapadatok_id: selectedSchool?.id,
+        tanev_kezdete: 2024,
         tanugyi_adatok: tanugyiData,
       });
     }
@@ -64,11 +69,14 @@ export default function DataImport() {
   useEffect(() => {
     console.log(alkalmazottData);
     if (alkalmazottData) {
-      // Szűrés: csak azok, akiknek munkakörében szerepel az "oktató" szó
-      const oktatokData = alkalmazottData.filter(
-        (item) =>
-          item.munkakor && item.munkakor.toLowerCase().includes("oktató")
-      );
+      // Szűrés: csak azok, akiknek munkakörében szerepel az "oktató" vagy "tanár" szó
+      const oktatokData = alkalmazottData.filter((item) => {
+        const munkakor = item.Munkakor || item.munkakor || "";
+        return (
+          munkakor.toLowerCase().includes("oktató") ||
+          munkakor.toLowerCase().includes("tanár")
+        );
+      });
 
       console.log(
         "Oktatók száma:",
@@ -79,9 +87,57 @@ export default function DataImport() {
       );
 
       if (oktatokData.length > 0) {
+        // Adatok transzformálása a backend API formátumához
+        const transformedData = oktatokData.map((item) => {
+          const transformedItem = { ...item };
+
+          // Integer mezők konverziója
+          if (transformedItem.TanevKezdete) {
+            transformedItem.TanevKezdete =
+              parseInt(transformedItem.TanevKezdete) || 2024;
+          } else {
+            transformedItem.TanevKezdete = 2024;
+          }
+
+          if (transformedItem.KotelezoOraszama) {
+            transformedItem.KotelezoOraszama =
+              parseInt(String(transformedItem.KotelezoOraszama).trim()) || 0;
+          } else {
+            transformedItem.KotelezoOraszama = 0;
+          }
+
+          // Decimal mezők konverziója
+          if (transformedItem.Oraszam) {
+            transformedItem.Oraszam =
+              parseFloat(String(transformedItem.Oraszam).trim()) || 0.0;
+          } else {
+            transformedItem.Oraszam = 0.0;
+          }
+
+          if (transformedItem.FeladattalTerheltOraszam) {
+            transformedItem.FeladattalTerheltOraszam =
+              parseFloat(
+                String(transformedItem.FeladattalTerheltOraszam).trim()
+              ) || 0.0;
+          } else {
+            transformedItem.FeladattalTerheltOraszam = 0.0;
+          }
+
+          if (transformedItem.PedagogusHetiOraszama) {
+            transformedItem.PedagogusHetiOraszama =
+              parseFloat(
+                String(transformedItem.PedagogusHetiOraszama).trim()
+              ) || 0.0;
+          } else {
+            transformedItem.PedagogusHetiOraszama = 0.0;
+          }
+
+          return transformedItem;
+        });
+
         addAlkalmazottAdatok({
-          alapadatok_id: "2e31291b-7c2d-4bd8-bdca-de8580136874",
-          alkalmazott_adatok: oktatokData,
+          alapadatok_id: selectedSchool?.id,
+          alkalmazottak_munkaugy: transformedData,
         });
       }
     }
@@ -223,7 +279,7 @@ export default function DataImport() {
                 <Alert severity="info" sx={{ mb: 3 }}>
                   <AlertTitle>Fontos tudnivaló</AlertTitle>
                   Csak azok az alkalmazottak kerülnek feltöltésre, akiknek a
-                  munkakör oszlopában szerepel az "oktató" szó.
+                  munkakör oszlopában szerepel az "oktató" vagy "tanár" szó.
                 </Alert>
 
                 <Box sx={{ mb: 3 }}>
@@ -265,14 +321,9 @@ export default function DataImport() {
                       console.log("Alkalmazott - Adatok:", data);
 
                       // Átalakítás a megfelelő formátumra
-                      const mappedData = data.map((item) => {
-                        const newItem = {};
-                        employeeFields.forEach((field) => {
-                          newItem[field.key] = item[field.label] || "";
-                        });
-                        return newItem;
-                      });
+                      const mappedData = mapEmployeeData(data);
 
+                      console.log("Alkalmazott - Mapped Data:", mappedData);
                       setAlkalmazottData(mappedData);
                     }}
                     onError={(error) => {
@@ -292,23 +343,28 @@ export default function DataImport() {
                         {alkalmazottData.length} alkalmazotti adat lett
                         feldolgozva.
                       </Alert>
-                      {alkalmazottData.filter(
-                        (item) =>
-                          item.munkakor &&
-                          item.munkakor.toLowerCase().includes("oktató")
-                      ).length !== alkalmazottData.length && (
+                      {alkalmazottData.filter((item) => {
+                        const munkakor = item.Munkakor || item.munkakor || "";
+                        return (
+                          munkakor.toLowerCase().includes("oktató") ||
+                          munkakor.toLowerCase().includes("tanár")
+                        );
+                      }).length !== alkalmazottData.length && (
                         <Alert severity="warning" sx={{ mt: 1 }}>
                           <AlertTitle>Szűrés alkalmazva</AlertTitle>
                           Csak{" "}
                           {
-                            alkalmazottData.filter(
-                              (item) =>
-                                item.munkakor &&
-                                item.munkakor.toLowerCase().includes("oktató")
-                            ).length
+                            alkalmazottData.filter((item) => {
+                              const munkakor =
+                                item.Munkakor || item.munkakor || "";
+                              return (
+                                munkakor.toLowerCase().includes("oktató") ||
+                                munkakor.toLowerCase().includes("tanár")
+                              );
+                            }).length
                           }{" "}
-                          oktató kerül feltöltésre a {alkalmazottData.length}{" "}
-                          alkalmazottból.
+                          oktató/tanár kerül feltöltésre a{" "}
+                          {alkalmazottData.length} alkalmazottból.
                         </Alert>
                       )}
                     </Box>

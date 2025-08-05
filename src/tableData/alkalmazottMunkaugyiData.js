@@ -1,12 +1,22 @@
 export const employeeFields = [
   {
-    label: "Vezetéknév",
-    key: "vezeteknev",
-    alternateMatches: ["Vezetéknév", "vezeteknev", "Családnév"],
+    label: "Előtag",
+    key: "Elotag",
+    alternateMatches: ["Előtag", "Elotag", "Titulus"],
     fieldType: {
       type: "input",
     },
-    example: "Kovács",
+    example: "Dr.",
+    validations: [],
+  },
+  {
+    label: "Vezetéknév",
+    key: "Vezeteknev",
+    alternateMatches: ["Vezetéknév", "Vezeteknev", "Családnév"],
+    fieldType: {
+      type: "input",
+    },
+    example: "Nagy",
     validations: [
       {
         rule: "required",
@@ -15,34 +25,87 @@ export const employeeFields = [
     ],
   },
   {
-    label: "Keresztnév",
-    key: "keresztnev",
-    alternateMatches: ["Keresztnév", "keresztnev", "Utónév", "utonev"],
+    label: "Utónév",
+    key: "Utonev",
+    alternateMatches: ["Utónév", "Utonev", "Keresztnév"],
     fieldType: {
       type: "input",
     },
-    example: "Anna",
+    example: "János",
     validations: [
       {
         rule: "required",
-        errorMessage: "A Keresztnév kötelező",
+        errorMessage: "Az Utónév kötelező",
       },
     ],
   },
   {
-    label: "Munkakör",
-    key: "munkakor",
+    label: "Alkalmazott teljes neve",
+    key: "AlkalmazottTeljesNeve",
     alternateMatches: [
-      "Munkakör",
-      "munkakor",
-      "Beosztás",
-      "beosztás",
-      "Pozíció",
+      "Alkalmazott teljes neve",
+      "AlkalmazottTeljesNeve",
+      "Teljes név",
     ],
     fieldType: {
       type: "input",
     },
-    example: "oktató",
+    example: "Dr. Nagy János",
+    validations: [],
+  },
+  {
+    label: "Pedagógus oktatási azonosító",
+    key: "PedagogusOkatatasiAzonosito",
+    alternateMatches: [
+      "Pedagógus oktatási azonosító",
+      "PedagogusOkatatasiAzonosito",
+      "POA",
+    ],
+    fieldType: {
+      type: "input",
+    },
+    example: "PED123456",
+    validations: [],
+  },
+  {
+    label: "Tanév kezdete",
+    key: "TanevKezdete",
+    alternateMatches: ["Tanév kezdete", "TanevKezdete", "Tanév"],
+    fieldType: {
+      type: "input",
+    },
+    example: "2024",
+    validations: [
+      {
+        rule: "regex",
+        value: "^[0-9]{4}$",
+        errorMessage: "A tanév kezdete YYYY formátumú legyen",
+      },
+    ],
+  },
+  {
+    label: "Pedagógus fokozat",
+    key: "PedagogusFokozat",
+    alternateMatches: ["Pedagógus fokozat", "PedagogusFokozat", "Fokozat"],
+    fieldType: {
+      type: "select",
+      options: [
+        { value: "Alapfokozat", label: "Alapfokozat" },
+        { value: "Mesterfokozat", label: "Mesterfokozat" },
+        { value: "Doktori fokozat", label: "Doktori fokozat" },
+      ],
+    },
+    example: "Mesterfokozat",
+    validations: [],
+  },
+  {
+    label: "Munkakör",
+    key: "Munkakor",
+    alternateMatches: ["Munkakör", "Munkakor", "Beosztás", "Pozíció"],
+    fieldType: {
+      type: "input",
+    },
+    example: "Tanár",
     validations: [
       {
         rule: "required",
@@ -51,32 +114,293 @@ export const employeeFields = [
     ],
   },
   {
-    label: "Munkakör jellege",
-    key: "munkakor_jellege",
+    label: "Foglalkoztatási jogviszony",
+    key: "FoglalkoztatasiJogviszony",
     alternateMatches: [
-      "Munkakör jellege",
-      "munkakor_jellege",
-      "Foglalkoztatás jellege",
+      "Foglalkoztatási jogviszony",
+      "FoglalkoztatasiJogviszony",
+      "Jogviszony",
     ],
     fieldType: {
       type: "select",
       options: [
-        { value: "teljes_idős", label: "Teljes idős" },
-        { value: "részmunkaidős", label: "Részmunkaidős" },
-        { value: "megbízásos", label: "Megbízásos" },
+        { value: "Határozatlan idejű", label: "Határozatlan idejű" },
+        { value: "Határozott idejű", label: "Határozott idejű" },
+        { value: "Megbízásos", label: "Megbízásos" },
       ],
     },
-    example: "teljes_idős",
+    example: "Határozatlan idejű",
     validations: [],
   },
   {
-    label: "Pedagógus szakvizsga",
-    key: "pedagogus_szakvizsga",
+    label: "Kötelező óraszáma",
+    key: "KotelezoOraszama",
     alternateMatches: [
-      "Pedagógus szakvizsga",
-      "pedagogus_szakvizsga",
-      "Szakvizsga",
+      "Kötelező óraszáma",
+      "KotelezoOraszama",
+      "Kötelező órák",
     ],
+    fieldType: {
+      type: "input",
+    },
+    example: "22",
+    validations: [
+      {
+        rule: "regex",
+        value: "^[0-9]+$",
+        errorMessage: "A kötelező óraszám csak szám lehet",
+      },
+    ],
+  },
+  {
+    label: "Óraszám",
+    key: "Oraszam",
+    alternateMatches: ["Óraszám", "Oraszam", "Tényleges óraszám"],
+    fieldType: {
+      type: "input",
+    },
+    example: "22.5",
+    validations: [
+      {
+        rule: "regex",
+        value: "^[0-9]+(\\.[0-9]+)?$",
+        errorMessage: "Az óraszám szám legyen (tizedesjegy is megengedett)",
+      },
+    ],
+  },
+  {
+    label: "Alkalmazás kezdete",
+    key: "AlkalmazasKezdete",
+    alternateMatches: [
+      "Alkalmazás kezdete",
+      "AlkalmazasKezdete",
+      "Munkaviszony kezdete",
+    ],
+    fieldType: {
+      type: "input",
+    },
+    example: "2024-09-01 vagy 2024-09-01T00:00:00Z",
+    validations: [
+      {
+        rule: "regex",
+        value:
+          "^([0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.?[0-9]+)?Z?)?|[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z)$",
+        errorMessage:
+          "A dátum formátuma YYYY-MM-DD vagy YYYY-MM-DDTHH:mm:ssZ legyen",
+      },
+    ],
+  },
+  {
+    label: "Alkalmazás vége",
+    key: "AlkalmazasVege",
+    alternateMatches: [
+      "Alkalmazás vége",
+      "AlkalmazasVege",
+      "Munkaviszony vége",
+    ],
+    fieldType: {
+      type: "input",
+    },
+    example: "2025-06-30 vagy 2025-06-30T00:00:00Z",
+    validations: [
+      {
+        rule: "regex",
+        value:
+          "^([0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.?[0-9]+)?Z?)?|[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z)$",
+        errorMessage:
+          "A dátum formátuma YYYY-MM-DD vagy YYYY-MM-DDTHH:mm:ssZ legyen",
+      },
+    ],
+  },
+  // Additional fields from Prisma model
+  {
+    label: "Utazó gyógypedagógus",
+    key: "UtazoGyogypedagogus",
+    alternateMatches: ["Utazó gyógypedagógus", "UtazoGyogypedagogus"],
+    fieldType: {
+      type: "select",
+      options: [
+        { value: "igen", label: "Igen" },
+        { value: "nem", label: "Nem" },
+      ],
+    },
+    example: "nem",
+    validations: [],
+  },
+  {
+    label: "Foglalkoztatás típusa",
+    key: "FoglalkoztatasTipusa",
+    alternateMatches: ["Foglalkoztatás típusa", "FoglalkoztatasTipusa"],
+    fieldType: {
+      type: "input",
+    },
+    example: "Teljes munkaidő",
+    validations: [],
+  },
+  {
+    label: "Vezetői óraszám oka",
+    key: "VezetoiOraszamOka",
+    alternateMatches: ["Vezetői óraszám oka", "VezetoiOraszamOka"],
+    fieldType: {
+      type: "input",
+    },
+    example: "",
+    validations: [],
+  },
+  {
+    label: "Feladattal terhelt óraszám",
+    key: "FeladattalTerheltOraszam",
+    alternateMatches: [
+      "Feladattal terhelt óraszám",
+      "FeladattalTerheltOraszam",
+    ],
+    fieldType: {
+      type: "input",
+    },
+    example: "0.00",
+    validations: [
+      {
+        rule: "regex",
+        value: "^[0-9]+(\\.[0-9]+)?$",
+        errorMessage: "Az óraszám szám legyen (tizedesjegy is megengedett)",
+      },
+    ],
+  },
+  {
+    label: "Pedagógus heti óraszáma",
+    key: "PedagogusHetiOraszama",
+    alternateMatches: ["Pedagógus heti óraszáma", "PedagogusHetiOraszama"],
+    fieldType: {
+      type: "input",
+    },
+    example: "0.00",
+    validations: [
+      {
+        rule: "regex",
+        value: "^[0-9]+(\\.[0-9]+)?$",
+        errorMessage: "Az óraszám szám legyen (tizedesjegy is megengedett)",
+      },
+    ],
+  },
+  {
+    label: "Csökkentett munkaidős",
+    key: "CsokkentettMunkaidos",
+    alternateMatches: ["Csökkentett munkaidős", "CsokkentettMunkaidos"],
+    fieldType: {
+      type: "select",
+      options: [
+        { value: "igen", label: "Igen" },
+        { value: "nem", label: "Nem" },
+      ],
+    },
+    example: "nem",
+    validations: [],
+  },
+  {
+    label: "Tartósan távollévő",
+    key: "TartosanTavollevo",
+    alternateMatches: ["Tartósan távollévő", "TartosanTavollevo"],
+    fieldType: {
+      type: "select",
+      options: [
+        { value: "igen", label: "Igen" },
+        { value: "nem", label: "Nem" },
+      ],
+    },
+    example: "nem",
+    validations: [],
+  },
+  {
+    label: "Nyugdíjas",
+    key: "Nyugdijas",
+    alternateMatches: ["Nyugdíjas", "Nyugdijas"],
+    fieldType: {
+      type: "select",
+      options: [
+        { value: "igen", label: "Igen" },
+        { value: "nem", label: "Nem" },
+      ],
+    },
+    example: "nem",
+    validations: [],
+  },
+  {
+    label: "Betöltetlen álláshely",
+    key: "BetoltetlenAllashely",
+    alternateMatches: ["Betöltetlen álláshely", "BetoltetlenAllashely"],
+    fieldType: {
+      type: "select",
+      options: [
+        { value: "igen", label: "Igen" },
+        { value: "nem", label: "Nem" },
+      ],
+    },
+    example: "nem",
+    validations: [],
+  },
+  {
+    label: "Külső alkalmazott",
+    key: "KulsoAlkalmazott",
+    alternateMatches: ["Külső alkalmazott", "KulsoAlkalmazott"],
+    fieldType: {
+      type: "select",
+      options: [
+        { value: "igen", label: "Igen" },
+        { value: "nem", label: "Nem" },
+      ],
+    },
+    example: "nem",
+    validations: [],
+  },
+  {
+    label: "Főállású",
+    key: "Foallasu",
+    alternateMatches: ["Főállású", "Foallasu"],
+    fieldType: {
+      type: "select",
+      options: [
+        { value: "igen", label: "Igen" },
+        { value: "nem", label: "Nem" },
+      ],
+    },
+    example: "igen",
+    validations: [],
+  },
+  {
+    label: "Szabad álláshely",
+    key: "SzabadAllashely",
+    alternateMatches: ["Szabad álláshely", "SzabadAllashely"],
+    fieldType: {
+      type: "select",
+      options: [
+        { value: "igen", label: "Igen" },
+        { value: "nem", label: "Nem" },
+      ],
+    },
+    example: "nem",
+    validations: [],
+  },
+  {
+    label: "Szakértői vagy vizsgaelnöki tevékenységű",
+    key: "SzakertoiVagyVizsgaelnokiTevekenysegu",
+    alternateMatches: [
+      "Szakértői vagy vizsgaelnöki tevékenységű",
+      "SzakertoiVagyVizsgaelnokiTevekenysegu",
+    ],
+    fieldType: {
+      type: "select",
+      options: [
+        { value: "igen", label: "Igen" },
+        { value: "nem", label: "Nem" },
+      ],
+    },
+    example: "nem",
+    validations: [],
+  },
+  {
+    label: "Szakvizsga",
+    key: "Szakvizsga",
+    alternateMatches: ["Szakvizsga", "Szakvizsga"],
     fieldType: {
       type: "select",
       options: [
@@ -85,164 +409,132 @@ export const employeeFields = [
         { value: "folyamatban", label: "Folyamatban" },
       ],
     },
-    example: "igen",
+    example: "nem",
     validations: [],
   },
   {
-    label: "Legmagasabb iskolai végzettség",
-    key: "legmagasabb_vegzettseg",
+    label: "Szakértő szaktanácsadó",
+    key: "SzakertoSzaktanacsado",
+    alternateMatches: ["Szakértő szaktanácsadó", "SzakertoSzaktanacsado"],
+    fieldType: {
+      type: "select",
+      options: [
+        { value: "igen", label: "Igen" },
+        { value: "nem", label: "Nem" },
+      ],
+    },
+    example: "nem",
+    validations: [],
+  },
+  {
+    label: "SZTSZ szám",
+    key: "SZTSZSzam",
+    alternateMatches: ["SZTSZ szám", "SZTSZSzam"],
+    fieldType: {
+      type: "input",
+    },
+    example: "",
+    validations: [],
+  },
+  {
+    label: "Feladatellátási hely",
+    key: "FeladatellatasiHely",
+    alternateMatches: ["Feladatellátási hely", "FeladatellatasiHely"],
+    fieldType: {
+      type: "input",
+    },
+    example: "",
+    validations: [],
+  },
+  {
+    label: "Képesítés",
+    key: "Kepesites",
+    alternateMatches: ["Képesítés", "Kepesites"],
+    fieldType: {
+      type: "input",
+    },
+    example: "",
+    validations: [],
+  },
+  {
+    label: "Internetet oktatási célra használ",
+    key: "InternetetOktatasiCelraHsznal",
     alternateMatches: [
-      "Legmagasabb iskolai végzettség",
-      "legmagasabb_vegzettseg",
-      "Végzettség",
-      "Iskolai végzettség",
+      "Internetet oktatási célra használ",
+      "InternetetOktatasiCelraHsznal",
     ],
     fieldType: {
       type: "select",
       options: [
-        { value: "alapfokú", label: "Alapfokú" },
-        { value: "középfokú", label: "Középfokú" },
-        { value: "felsőfokú", label: "Felsőfokú" },
-        { value: "doktori", label: "Doktori" },
+        { value: "igen", label: "Igen" },
+        { value: "nem", label: "Nem" },
       ],
     },
-    example: "felsőfokú",
+    example: "nem",
     validations: [],
   },
   {
-    label: "Szakirányú végzettség",
-    key: "szakiranyu_vegzettseg",
+    label: "Informatikai képesítéssel/ismeretekkel rendelkezik",
+    key: "InformatikaiKepesitesselIsmeretekkelRendelkezik",
     alternateMatches: [
-      "Szakirányú végzettség",
-      "szakiranyu_vegzettseg",
-      "Szakképzettség",
+      "Informatikai képesítéssel/ismeretekkel rendelkezik",
+      "InformatikaiKepesitesselIsmeretekkelRendelkezik",
     ],
-    fieldType: {
-      type: "input",
-    },
-    example: "Tanári végzettség",
-    validations: [],
-  },
-  {
-    label: "Tantárgy",
-    key: "tantargy",
-    alternateMatches: ["Tantárgy", "tantargy", "Szaktárgy"],
-    fieldType: {
-      type: "input",
-    },
-    example: "Matematika",
-    validations: [],
-  },
-  {
-    label: "Tapasztalat (év)",
-    key: "tapasztalat_ev",
-    alternateMatches: [
-      "Tapasztalat (év)",
-      "tapasztalat_ev",
-      "Szolgálati idő",
-      "Munkatapasztalat",
-    ],
-    fieldType: {
-      type: "input",
-    },
-    example: "15",
-    validations: [
-      {
-        rule: "regex",
-        value: "^[0-9]+$",
-        errorMessage: "A tapasztalat csak szám lehet",
-      },
-    ],
-  },
-  {
-    label: "Születési dátum",
-    key: "szuletesi_datum",
-    alternateMatches: ["Születési dátum", "szuletesi_datum", "Születési idő"],
-    fieldType: {
-      type: "input",
-    },
-    example: "1985-06-15",
-    validations: [
-      {
-        rule: "regex",
-        value: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
-        errorMessage: "A dátum formátuma YYYY-MM-DD legyen",
-      },
-    ],
-  },
-  {
-    label: "Belépés dátuma",
-    key: "belepes_datuma",
-    alternateMatches: [
-      "Belépés dátuma",
-      "belepes_datuma",
-      "Munkaviszony kezdete",
-    ],
-    fieldType: {
-      type: "input",
-    },
-    example: "2020-09-01",
-    validations: [
-      {
-        rule: "regex",
-        value: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
-        errorMessage: "A dátum formátuma YYYY-MM-DD legyen",
-      },
-    ],
-  },
-  {
-    label: "Státusz",
-    key: "statusz",
-    alternateMatches: ["Státusz", "statusz", "Állapot"],
     fieldType: {
       type: "select",
       options: [
-        { value: "aktív", label: "Aktív" },
-        { value: "inaktív", label: "Inaktív" },
-        { value: "szüneten", label: "Szüneten" },
-        { value: "kilépett", label: "Kilépett" },
+        { value: "igen", label: "Igen" },
+        { value: "nem", label: "Nem" },
       ],
     },
-    example: "aktív",
+    example: "nem",
     validations: [],
   },
   {
-    label: "Email cím",
-    key: "email_cim",
-    alternateMatches: ["Email cím", "email_cim", "E-mail", "Email"],
-    fieldType: {
-      type: "input",
-    },
-    example: "kovacs.anna@iskola.hu",
-    validations: [
-      {
-        rule: "regex",
-        value: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
-        errorMessage: "Érvényes email címet adjon meg",
-      },
+    label: "IKT eszközöket a tanórája legalább 40%-ában használja",
+    key: "IKTEszkozoketATanorajaLegalabb40abanHasznalja",
+    alternateMatches: [
+      "IKT eszközöket a tanórája legalább 40%-ában használja",
+      "IKTEszkozoketATanorajaLegalabb40abanHasznalja",
     ],
+    fieldType: {
+      type: "select",
+      options: [
+        { value: "igen", label: "Igen" },
+        { value: "nem", label: "Nem" },
+      ],
+    },
+    example: "nem",
+    validations: [],
   },
   {
-    label: "Telefon",
-    key: "telefon",
-    alternateMatches: ["Telefon", "telefon", "Telefonszám"],
+    label: "Apáczai mentor",
+    key: "ApaczaiMentor",
+    alternateMatches: ["Apáczai mentor", "ApaczaiMentor"],
     fieldType: {
-      type: "input",
+      type: "select",
+      options: [
+        { value: "igen", label: "Igen" },
+        { value: "nem", label: "Nem" },
+      ],
     },
-    example: "+36 30 123 4567",
+    example: "nem",
     validations: [],
   },
 ];
 
 /**
- * Filters employee data to include only records where job title contains "oktató"
+ * Filters employee data to include only records where job title contains "oktató" or "tanár"
  * @param {Array} data - Raw employee data
  * @returns {Array} - Filtered data containing only teachers
  */
 export const filterTeacherData = (data) => {
   return data.filter((employee) => {
-    const jobTitle = employee.munkakor || employee.Munkakör || "";
-    return jobTitle.toLowerCase().includes("oktató");
+    const jobTitle = employee.Munkakor || employee.munkakor || "";
+    return (
+      jobTitle.toLowerCase().includes("oktató") ||
+      jobTitle.toLowerCase().includes("tanár")
+    );
   });
 };
 
@@ -255,8 +547,101 @@ export const mapEmployeeData = (uploadedData) => {
   return uploadedData.map((item) => {
     const newItem = {};
     employeeFields.forEach((field) => {
-      newItem[field.key] = item[field.label] || "";
+      // Próbáljuk megtalálni az értéket a különböző lehetséges kulcsokkal
+      let value = item[field.label];
+      if (!value) {
+        // Ha a label alapján nem található, próbáljuk az alternateMatches-eket
+        for (const altMatch of field.alternateMatches) {
+          if (item[altMatch]) {
+            value = item[altMatch];
+            break;
+          }
+        }
+      }
+      newItem[field.key] = value || "";
     });
+
+    // Típus konverziók a Prisma model alapján
+
+    // Integer mezők konverziója
+    if (newItem.TanevKezdete) {
+      newItem.TanevKezdete = parseInt(newItem.TanevKezdete) || 2024;
+    } else {
+      newItem.TanevKezdete = 2024;
+    }
+
+    if (newItem.KotelezoOraszama) {
+      // Eltávolítjuk a whitespace-eket és konvertáljuk
+      newItem.KotelezoOraszama =
+        parseInt(String(newItem.KotelezoOraszama).trim()) || 0;
+    } else {
+      newItem.KotelezoOraszama = 0;
+    }
+
+    // Decimal mezők konverziója
+    if (newItem.Oraszam) {
+      newItem.Oraszam = parseFloat(String(newItem.Oraszam).trim()) || 0.0;
+    } else {
+      newItem.Oraszam = 0.0;
+    }
+
+    if (newItem.FeladattalTerheltOraszam) {
+      newItem.FeladattalTerheltOraszam =
+        parseFloat(String(newItem.FeladattalTerheltOraszam).trim()) || 0.0;
+    } else {
+      newItem.FeladattalTerheltOraszam = 0.0;
+    }
+
+    if (newItem.PedagogusHetiOraszama) {
+      newItem.PedagogusHetiOraszama =
+        parseFloat(String(newItem.PedagogusHetiOraszama).trim()) || 0.0;
+    } else {
+      newItem.PedagogusHetiOraszama = 0.0;
+    }
+
+    // Dátum mezők konverziója és alapértelmezése
+    if (newItem.AlkalmazasKezdete) {
+      // Ha csak dátum formátum (YYYY-MM-DD), akkor kiegészítjük idővel és timezone-nal
+      if (/^\d{4}-\d{2}-\d{2}$/.test(newItem.AlkalmazasKezdete)) {
+        newItem.AlkalmazasKezdete = newItem.AlkalmazasKezdete + "T00:00:00Z";
+      }
+      // Ha már teljes ISO formátum, de nincs Z a végén, hozzáadjuk
+      else if (
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(newItem.AlkalmazasKezdete)
+      ) {
+        newItem.AlkalmazasKezdete = newItem.AlkalmazasKezdete + "Z";
+      }
+      // Ellenőrizzük, hogy valid ISO dátum-e
+      try {
+        new Date(newItem.AlkalmazasKezdete).toISOString();
+      } catch (e) {
+        newItem.AlkalmazasKezdete = new Date().toISOString();
+      }
+    } else {
+      newItem.AlkalmazasKezdete = new Date().toISOString();
+    }
+
+    if (newItem.AlkalmazasVege) {
+      // Ha csak dátum formátum (YYYY-MM-DD), akkor kiegészítjük idővel és timezone-nal
+      if (/^\d{4}-\d{2}-\d{2}$/.test(newItem.AlkalmazasVege)) {
+        newItem.AlkalmazasVege = newItem.AlkalmazasVege + "T23:59:59Z";
+      }
+      // Ha már teljes ISO formátum, de nincs Z a végén, hozzáadjuk
+      else if (
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(newItem.AlkalmazasVege)
+      ) {
+        newItem.AlkalmazasVege = newItem.AlkalmazasVege + "Z";
+      }
+      // Ellenőrizzük, hogy valid ISO dátum-e
+      try {
+        new Date(newItem.AlkalmazasVege).toISOString();
+      } catch (e) {
+        newItem.AlkalmazasVege = new Date().toISOString();
+      }
+    } else {
+      newItem.AlkalmazasVege = new Date().toISOString();
+    }
+
     return newItem;
   });
 };

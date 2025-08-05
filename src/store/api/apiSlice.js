@@ -197,22 +197,22 @@ export const indicatorApi = createApi({
     }),
     addAlkalmazottAdatok: build.mutation({
       query: (params) => ({
-        url: "alkalmazott_adatok/",
+        url: "alkalmazottak_munkaugy/",
         method: "POST",
         body: {
           alapadatok_id: params.alapadatok_id,
-          alkalmazott_adatok: params.alkalmazott_adatok,
+          alkalmazottak_munkaugy: params.alkalmazottak_munkaugy,
         },
       }),
       invalidatesTags: ["AlkalmazottAdatok"],
     }),
     getAlkalmazottAdatok: build.query({
       query: (params) =>
-        `alkalmazott_adatok/${params.alapadatok_id}/${params.ev}`,
+        `alkalmazottak_munkaugy/${params.alapadatok_id}/${params.tanev_kezdete}`,
       providesTags: (result, error, params) => [
         {
           type: "AlkalmazottAdatok",
-          id: `${params.alapadatok_id}_${params.ev}`,
+          id: `${params.alapadatok_id}_${params.tanev_kezdete}`,
         },
       ],
     }),
