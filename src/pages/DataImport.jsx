@@ -22,11 +22,18 @@ import {
 import { CustomSheetUploader } from "../components/CustomSheetUploader";
 import { useSelector } from "react-redux";
 import { selectSelectedSchool } from "../store/slices/authSlice";
+import {
+  validateTanugyiFile,
+  validateAlkalmazottFile,
+} from "../utils/fileValidation";
 
 export default function DataImport() {
   const [tanugyiData, setTanugyiData] = useState(null);
   const [alkalmazottData, setAlkalmazottData] = useState(null);
   const [tabValue, setTabValue] = useState(0);
+  const [tanugyiValidationError, setTanugyiValidationError] = useState(null);
+  const [alkalmazottValidationError, setAlkalmazottValidationError] =
+    useState(null);
 
   const selectedSchool = useSelector(selectSelectedSchool);
 
@@ -56,19 +63,19 @@ export default function DataImport() {
   // Tanügyi adatok effect
   useEffect(() => {
     console.log(tanugyiData);
-    if (tanugyiData) {
+    if (tanugyiData && !tanugyiValidationError) {
       addTanugyiAdatok({
         alapadatok_id: selectedSchool?.id,
         tanev_kezdete: 2024,
         tanugyi_adatok: tanugyiData,
       });
     }
-  }, [tanugyiData, addTanugyiAdatok]);
+  }, [tanugyiData, addTanugyiAdatok, tanugyiValidationError]);
 
   // Alkalmazott adatok effect - csak oktatókat szűrve
   useEffect(() => {
     console.log(alkalmazottData);
-    if (alkalmazottData) {
+    if (alkalmazottData && !alkalmazottValidationError) {
       // Szűrés: csak azok, akiknek munkakörében szerepel az "oktató" vagy "tanár" szó
       const oktatokData = alkalmazottData.filter((item) => {
         const munkakor = item.Munkakor || item.munkakor || "";
@@ -141,7 +148,7 @@ export default function DataImport() {
         });
       }
     }
-  }, [alkalmazottData, addAlkalmazottAdatok]);
+  }, [alkalmazottData, addAlkalmazottAdatok, alkalmazottValidationError]);
 
   useEffect(() => {
     console.log("Tanügyi eredmény:", tanugyiResult);
@@ -153,6 +160,9 @@ export default function DataImport() {
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+    // Validációs hibák törlése tab váltáskor
+    setTanugyiValidationError(null);
+    setAlkalmazottValidationError(null);
   };
 
   const formatDate = (dateString) => {
@@ -203,6 +213,16 @@ export default function DataImport() {
                   Tanügyi Adatok Feltöltése
                 </Typography>
 
+                <Alert severity="info" sx={{ mb: 3 }}>
+                  <AlertTitle>Tanügyi fájl követelmények</AlertTitle>A fájlnak
+                  tartalmaznia kell legalább egyet az alábbi oszlopok közül:
+                  <strong>
+                    {" "}
+                    Oktatási azonosítója, Osztály, Bejáró, Tankötelezettséget
+                    teljesítő
+                  </strong>
+                </Alert>
+
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="body1" color="text.secondary">
                     <strong>Legutóbb betöltött adatok:</strong>{" "}
@@ -235,9 +255,35 @@ export default function DataImport() {
                 </Box>
 
                 <Paper variant="outlined" sx={{ p: 3 }}>
+                  {tanugyiValidationError && (
+                    <Alert severity="error" sx={{ mb: 3 }}>
+                      <AlertTitle>Hibás fájltípus!</AlertTitle>
+                      {tanugyiValidationError}
+                    </Alert>
+                  )}
+
                   <CustomSheetUploader
                     onFileUpload={async (data, file) => {
                       console.log("Tanügyi - Feltöltött fájl:", file.name);
+
+                      // Fejlécek kinyerése (első sor)
+                      const headers =
+                        data.length > 0 ? Object.keys(data[0]) : [];
+                      console.log("Tanügyi - Fejlécek:", headers);
+
+                      // Fájl validáció
+                      const validation = validateTanugyiFile(headers);
+                      console.log("Tanügyi - Validáció eredménye:", validation);
+
+                      if (!validation.isValid) {
+                        setTanugyiValidationError(validation.error);
+                        setTanugyiData(null);
+                        return;
+                      }
+
+                      // Ha sikerült a validáció, töröljük a hibát
+                      setTanugyiValidationError(null);
+
                       console.log("Tanügyi - Adatok:", data);
                       setTanugyiData(
                         data.map((item) => {
@@ -251,6 +297,9 @@ export default function DataImport() {
                     }}
                     onError={(error) => {
                       console.error("Tanügyi uploader hiba:", error);
+                      setTanugyiValidationError(
+                        `Fájl beolvasási hiba: ${error.message || error}`
+                      );
                     }}
                     maxFileSize={5 * 1024 * 1024}
                     showPreview={true}
@@ -259,7 +308,7 @@ export default function DataImport() {
                     loadingMessage="Tanügyi fájl feldolgozása..."
                   />
 
-                  {tanugyiData && (
+                  {tanugyiData && !tanugyiValidationError && (
                     <Alert severity="success" sx={{ mt: 2 }}>
                       <AlertTitle>Sikeresen feldolgozva!</AlertTitle>
                       {tanugyiData.length} tanügyi adat lett feldolgozva.
@@ -277,9 +326,16 @@ export default function DataImport() {
                 </Typography>
 
                 <Alert severity="info" sx={{ mb: 3 }}>
-                  <AlertTitle>Fontos tudnivaló</AlertTitle>
-                  Csak azok az alkalmazottak kerülnek feltöltésre, akiknek a
+                  <AlertTitle>Fontos tudnivalók</AlertTitle>
+                  • Csak azok az alkalmazottak kerülnek feltöltésre, akiknek a
                   munkakör oszlopában szerepel az "oktató" vagy "tanár" szó.
+                  <br />• A fájlnak tartalmaznia kell legalább egyet az alábbi
+                  oszlopok közül:
+                  <strong>
+                    {" "}
+                    Munkakör, Pedagógus fokozat, Foglalkoztatási jogviszony,
+                    Pedagógus oktatási azonosító
+                  </strong>
                 </Alert>
 
                 <Box sx={{ mb: 3 }}>
@@ -315,9 +371,38 @@ export default function DataImport() {
                 </Box>
 
                 <Paper variant="outlined" sx={{ p: 3 }}>
+                  {alkalmazottValidationError && (
+                    <Alert severity="error" sx={{ mb: 3 }}>
+                      <AlertTitle>Hibás fájltípus!</AlertTitle>
+                      {alkalmazottValidationError}
+                    </Alert>
+                  )}
+
                   <CustomSheetUploader
                     onFileUpload={async (data, file) => {
                       console.log("Alkalmazott - Feltöltött fájl:", file.name);
+
+                      // Fejlécek kinyerése (első sor)
+                      const headers =
+                        data.length > 0 ? Object.keys(data[0]) : [];
+                      console.log("Alkalmazott - Fejlécek:", headers);
+
+                      // Fájl validáció
+                      const validation = validateAlkalmazottFile(headers);
+                      console.log(
+                        "Alkalmazott - Validáció eredménye:",
+                        validation
+                      );
+
+                      if (!validation.isValid) {
+                        setAlkalmazottValidationError(validation.error);
+                        setAlkalmazottData(null);
+                        return;
+                      }
+
+                      // Ha sikerült a validáció, töröljük a hibát
+                      setAlkalmazottValidationError(null);
+
                       console.log("Alkalmazott - Adatok:", data);
 
                       // Átalakítás a megfelelő formátumra
@@ -328,6 +413,9 @@ export default function DataImport() {
                     }}
                     onError={(error) => {
                       console.error("Alkalmazott uploader hiba:", error);
+                      setAlkalmazottValidationError(
+                        `Fájl beolvasási hiba: ${error.message || error}`
+                      );
                     }}
                     maxFileSize={5 * 1024 * 1024}
                     showPreview={true}
@@ -336,7 +424,7 @@ export default function DataImport() {
                     loadingMessage="Alkalmazotti fájl feldolgozása..."
                   />
 
-                  {alkalmazottData && (
+                  {alkalmazottData && !alkalmazottValidationError && (
                     <Box sx={{ mt: 2 }}>
                       <Alert severity="success">
                         <AlertTitle>Sikeresen feldolgozva!</AlertTitle>
