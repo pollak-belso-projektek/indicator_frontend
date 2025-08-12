@@ -63,6 +63,13 @@ export const indicatorApi = createApi({
       query: () => "users/",
       providesTags: ["User"],
     }),
+    getFilteredUsers: build.query({
+      query: () => "users/filtered",
+      providesTags: (result) =>
+        result
+          ? [...result.map(({ id }) => ({ type: "User", id })), "User"]
+          : ["User"],
+    }),
     getUserById: build.query({
       query: (id) => `users/${id}`,
       providesTags: (result, error, id) => [{ type: "User", id }],
@@ -429,7 +436,7 @@ export const indicatorApi = createApi({
     }),
     addHHesHHHNevelesuTanulok: build.mutation({
       query: (data) => ({
-        url: "hh_es_hhh_nevelesu_tanulok",
+        url: `hh_es_hhh`,
         method: "POST",
         body: data,
       }),
@@ -871,6 +878,7 @@ export const {
   useUpdateTanuloLetszamMutation,
   useDeleteTanuloLetszamMutation,
   useGetUsersQuery,
+  useGetFilteredUsersQuery,
   useGetUserByIdQuery,
   useAddUserMutation,
   useUpdateUserMutation,

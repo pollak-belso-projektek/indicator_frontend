@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -43,6 +43,7 @@ import {
   useGetLogsQuery,
   useGetLogByIdQuery,
   useDeleteLogsMutation,
+  useGetFilteredUsersQuery,
 } from "../store/api/apiSlice";
 import { selectUserPermissions } from "../store/slices/authSlice";
 import { toaster } from "../components/ui/toaster";
@@ -84,6 +85,12 @@ export default function Logs() {
     level: "",
     method: "",
   });
+
+  const { data: userData } = useGetFilteredUsersQuery();
+
+  useEffect(() => {
+    console.log("User Data:", userData);
+  }, [userData]);
 
   const userPermissions = useSelector(selectUserPermissions);
 

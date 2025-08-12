@@ -422,7 +422,6 @@ const Schools = () => {
                                         <ListItem key={szakmaData.szakma.id}>
                                           <ListItemText
                                             primary={szakmaData.szakma.nev}
-                                            secondary={`ID: ${szakmaData.szakma.id}`}
                                           />
                                         </ListItem>
                                       )
@@ -703,7 +702,6 @@ const Schools = () => {
                                     >
                                       <ListItemText
                                         primary={szakmaData.szakma.nev}
-                                        secondary={`ID: ${szakmaData.szakma.id}`}
                                       />
                                     </ListItem>
                                   )

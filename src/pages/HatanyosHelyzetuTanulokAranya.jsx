@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
 import {
   Box,
   Card,
@@ -15,42 +16,93 @@ import {
   Button,
   Stack,
   Alert,
-  Chip,
 } from "@mui/material";
+import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import { generateSchoolYears } from "../utils/schoolYears";
+import { selectSelectedSchool } from "../store/slices/authSlice";
 import {
-  Save as SaveIcon,
-  Refresh as RefreshIcon,
-  Calculate as CalculateIcon,
-} from "@mui/icons-material";
+  useGetTanuloLetszamQuery,
+  useGetHHesHHHNevelesuTanulokByYearQuery,
+  useAddHHesHHHNevelesuTanulokMutation,
+  useUpdateHHesHHHNevelesuTanulokMutation,
+} from "../store/api/apiSlice";
 
 export default function HatanyosHelyzetuTanulokAranya() {
-  const schoolYears = ["2021/2022.", "2022/2023.", "2023/2024.", "2024/2025."];
-  const schoolTypes = ["összesen", "technikum+szakképző iskola"];
-  const legalStatuses = [
-    "tanulói + felnőttképzési jogviszony",
-    "Tanulói jogviszony",
-    "Felnőttképzési jogviszony",
-  ];
+  const schoolYears = useMemo(() => generateSchoolYears(), []);
+  const selectedSchool = useSelector(selectSelectedSchool);
 
-  // Data structure for the main sections
-  const [hhData, setHhData] = useState(() => {
-    const initialData = {
-      hh_percentage: {},
-      hh_students: {},
-      total_students: {},
-    };
+  // Get current school year for HH data fetching
+  const currentSchoolYear = useMemo(() => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+    return currentMonth >= 9 ? currentYear : currentYear - 1;
+  }, []);
 
-    // Initialize all sections
-    Object.keys(initialData).forEach((section) => {
-      schoolTypes.forEach((type) => {
-        initialData[section][type] = {};
-        legalStatuses.forEach((status) => {
-          initialData[section][type][status] = {};
-          schoolYears.forEach((year) => {
-            initialData[section][type][status][year] = "0";
-          });
-        });
-      });
+  // API hook to get student count data
+  const {
+    data: apiStudentData,
+    error: fetchError,
+    isLoading: isFetching,
+  } = useGetTanuloLetszamQuery(
+    { alapadatok_id: selectedSchool?.id },
+    { skip: !selectedSchool?.id }
+  );
+
+  // API hook to get existing HH data
+  const {
+    data: hhApiData,
+    error: hhFetchError,
+    isLoading: isHhFetching,
+  } = useGetHHesHHHNevelesuTanulokByYearQuery(currentSchoolYear, {
+    skip: !selectedSchool?.id,
+  });
+
+  // API mutations for saving HH data
+  const [addHHData, { isLoading: isAdding }] =
+    useAddHHesHHHNevelesuTanulokMutation();
+  const [updateHHData, { isLoading: isUpdating }] =
+    useUpdateHHesHHHNevelesuTanulokMutation();
+
+  // HH Students count - this is what users will input
+  const [hhStudentsCount, setHhStudentsCount] = useState(() => {
+    const initialData = {};
+
+    // Initialize for daytime students (tanulói jogviszony)
+    initialData.daytime = {};
+    schoolYears.forEach((year) => {
+      initialData.daytime[year] = "";
+    });
+
+    // Initialize for adult education (felnőttképzési jogviszony)
+    initialData.adult = {};
+    schoolYears.forEach((year) => {
+      initialData.adult[year] = "";
+    });
+
+    return initialData;
+  });
+
+  // Total students data from API
+  const [totalStudents, setTotalStudents] = useState(() => {
+    const initialData = {};
+
+    // Daytime students totals
+    initialData.daytime = {};
+    schoolYears.forEach((year) => {
+      initialData.daytime[year] = 0;
+    });
+
+    // Adult education totals
+    initialData.adult = {};
+    schoolYears.forEach((year) => {
+      initialData.adult[year] = 0;
+    });
+
+    // Combined totals (calculated automatically)
+    initialData.combined = {};
+    schoolYears.forEach((year) => {
+      initialData.combined[year] = 0;
     });
 
     return initialData;
@@ -59,347 +111,728 @@ export default function HatanyosHelyzetuTanulokAranya() {
   const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
 
-  // Handle data changes
-  const handleDataChange = (section, type, status, year, value) => {
-    setHhData((prev) => ({
+  // Handle HH student count changes
+  const handleHhStudentsChange = (category, year, value) => {
+    setHhStudentsCount((prev) => ({
       ...prev,
-      [section]: {
-        ...prev[section],
-        [type]: {
-          ...prev[section][type],
-          [status]: {
-            ...prev[section][type][status],
-            [year]: value,
-          },
-        },
+      [category]: {
+        ...prev[category],
+        [year]: value,
       },
     }));
     setIsModified(true);
   };
 
-  // Calculate percentage automatically
-  const calculatePercentage = (type, status, year) => {
-    const hhStudents = parseFloat(hhData.hh_students[type][status][year] || 0);
-    const total = parseFloat(hhData.total_students[type][status][year] || 0);
+  // Calculate percentage automatically from HH students count and total
+  const calculatePercentage = (category, year) => {
+    const hhCount = parseFloat(hhStudentsCount[category][year] || 0);
+    const total = totalStudents[category][year] || 0;
 
-    if (total > 0) {
-      const percentage = ((hhStudents / total) * 100).toFixed(2);
-      handleDataChange("hh_percentage", type, status, year, percentage);
+    if (hhCount > 0 && total > 0) {
+      return ((hhCount / total) * 100).toFixed(2);
     }
+    return "0.00";
   };
 
-  const handleSave = () => {
-    setSavedData(JSON.parse(JSON.stringify(hhData)));
-    setIsModified(false);
-    console.log("Saving HH students data:", hhData);
+  // Calculate combined values
+  const getCombinedHhStudents = (year) => {
+    const daytime = parseFloat(hhStudentsCount.daytime[year] || 0);
+    const adult = parseFloat(hhStudentsCount.adult[year] || 0);
+    return daytime + adult;
+  };
+
+  const getCombinedTotalStudents = (year) => {
+    const daytime = totalStudents.daytime[year] || 0;
+    const adult = totalStudents.adult[year] || 0;
+    return daytime + adult;
+  };
+
+  const getCombinedPercentage = (year) => {
+    const combinedHh = getCombinedHhStudents(year);
+    const combinedTotal = getCombinedTotalStudents(year);
+
+    if (combinedHh > 0 && combinedTotal > 0) {
+      return ((combinedHh / combinedTotal) * 100).toFixed(2);
+    }
+    return "0.00";
+  };
+
+  const handleSave = async () => {
+    if (!selectedSchool) {
+      console.error("No school selected");
+      return;
+    }
+
+    try {
+      console.log("Saving HH students count data:", hhStudentsCount);
+
+      // Prepare data for API based on the expected structure
+      const dataToSave = [];
+
+      schoolYears.forEach((year) => {
+        const yearStart = parseInt(year.split("/")[0]);
+
+        // Save daytime HH students if value exists
+        const daytimeCount = parseInt(hhStudentsCount.daytime[year] || 0);
+        if (daytimeCount > 0) {
+          dataToSave.push({
+            alapadatok_id: selectedSchool.id,
+            tanev_kezdete: yearStart,
+            hh_tanulo_letszam: daytimeCount,
+            tanuloi_osszletszam: totalStudents.daytime[year] || 0,
+            // Add other required fields based on API schema
+          });
+        }
+
+        // Save adult education HH students if value exists
+        const adultCount = parseInt(hhStudentsCount.adult[year] || 0);
+        if (adultCount > 0) {
+          dataToSave.push({
+            alapadatok_id: selectedSchool.id,
+            tanev_kezdete: yearStart,
+            hh_tanulo_letszam: adultCount,
+            tanuloi_osszletszam: totalStudents.adult[year] || 0,
+            // Add a flag to distinguish adult education vs daytime
+            // You may need to adjust this based on actual API requirements
+          });
+        }
+      });
+
+      if (dataToSave.length > 0) {
+        // For now, we'll use the add mutation - you may need to implement update logic
+        // based on whether the record already exists
+        for (const record of dataToSave) {
+          await addHHData(record).unwrap();
+        }
+
+        setSavedData(JSON.parse(JSON.stringify(hhStudentsCount)));
+        setIsModified(false);
+
+        // Show success message (you may want to add a snackbar for this)
+        console.log("HH data saved successfully");
+      }
+    } catch (error) {
+      console.error("Error saving HH data:", error);
+      // Handle error (you may want to show an error message)
+    }
   };
 
   const handleReset = () => {
     if (savedData) {
-      setHhData(JSON.parse(JSON.stringify(savedData)));
+      setHhStudentsCount(JSON.parse(JSON.stringify(savedData)));
       setIsModified(false);
     }
   };
 
-  // Render a complex table section
-  const renderTableSection = (
-    sectionKey,
-    title,
-    subtitle,
-    unit,
-    bgColor = "#f5f5f5"
-  ) => {
-    return (
+  // Process API data to populate totalStudents
+  useEffect(() => {
+    if (
+      apiStudentData &&
+      Array.isArray(apiStudentData) &&
+      apiStudentData.length > 0
+    ) {
+      console.log("Processing API student data:", apiStudentData);
+
+      const newTotalStudents = {
+        daytime: {},
+        adult: {},
+        combined: {},
+      };
+
+      // Initialize all years to 0
+      schoolYears.forEach((year) => {
+        newTotalStudents.daytime[year] = 0;
+        newTotalStudents.adult[year] = 0;
+        newTotalStudents.combined[year] = 0;
+      });
+
+      // Process the API data to sum up student counts by year
+      apiStudentData.forEach((record) => {
+        const yearKey = `${record.tanev_kezdete}/${record.tanev_kezdete + 1}`;
+        const letszam = parseInt(record.letszam) || 0;
+
+        if (schoolYears.includes(yearKey)) {
+          // jogv_tipus: 0 = nappali (daytime), 1 = felnőttképzési (adult education)
+          if (record.jogv_tipus === 0) {
+            // Daytime students (tanulói jogviszony)
+            newTotalStudents.daytime[yearKey] += letszam;
+          } else if (record.jogv_tipus === 1) {
+            // Adult education students (felnőttképzési jogviszony)
+            newTotalStudents.adult[yearKey] += letszam;
+          }
+        }
+      });
+
+      // Calculate combined totals
+      schoolYears.forEach((year) => {
+        newTotalStudents.combined[year] =
+          newTotalStudents.daytime[year] + newTotalStudents.adult[year];
+      });
+
+      console.log("Processed total students:", newTotalStudents);
+
+      // Only update if the data has actually changed
+      setTotalStudents((prevTotalStudents) => {
+        // Simple comparison - you could make this more sophisticated
+        const hasChanged =
+          JSON.stringify(prevTotalStudents) !==
+          JSON.stringify(newTotalStudents);
+        return hasChanged ? newTotalStudents : prevTotalStudents;
+      });
+    }
+  }, [apiStudentData]); // Removed schoolYears from dependency array since it's memoized
+
+  // Load existing HH data from API
+  useEffect(() => {
+    if (
+      hhApiData &&
+      Array.isArray(hhApiData) &&
+      hhApiData.length > 0 &&
+      selectedSchool
+    ) {
+      console.log("Loading existing HH data:", hhApiData);
+
+      const loadedHhData = {
+        daytime: {},
+        adult: {},
+      };
+
+      // Initialize all years
+      schoolYears.forEach((year) => {
+        loadedHhData.daytime[year] = "";
+        loadedHhData.adult[year] = "";
+      });
+
+      // Process existing HH data
+      hhApiData.forEach((record) => {
+        if (record.alapadatok_id === selectedSchool.id) {
+          const yearKey = `${record.tanev_kezdete}/${record.tanev_kezdete + 1}`;
+
+          if (schoolYears.includes(yearKey)) {
+            // Separate by student type - assuming similar structure to student data
+            const count =
+              record.hh_tanulo_letszam || record.tanuloi_osszletszam || 0;
+
+            // You may need to adjust this based on actual HH API data structure
+            // For now, assuming all HH data goes to daytime category
+            loadedHhData.daytime[yearKey] = count.toString();
+          }
+        }
+      });
+
+      setHhStudentsCount(loadedHhData);
+      setSavedData(JSON.parse(JSON.stringify(loadedHhData)));
+      setIsModified(false);
+    }
+  }, [hhApiData, selectedSchool, schoolYears]);
+
+  return (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Hátrányos helyzetű tanulók aránya
+      </Typography>
+
+      {/* School Selection Info */}
+      {selectedSchool && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
+        </Alert>
+      )}
+
+      {!selectedSchool && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Nincs iskola kiválasztva - az összes iskola adatait összegzi a
+          rendszer.
+        </Alert>
+      )}
+
+      {/* Loading State */}
+      {(isFetching || isHhFetching) && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          {isFetching && isHhFetching
+            ? "Tanulólétszám és HH adatok betöltése folyamatban..."
+            : isFetching
+            ? "Tanulólétszám adatok betöltése folyamatban..."
+            : "HH adatok betöltése folyamatban..."}
+        </Alert>
+      )}
+
+      {/* Error State */}
+      {(fetchError || hhFetchError) && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Hiba történt az adatok betöltésekor:
+          {fetchError && " Tanulólétszám adatok"}
+          {fetchError && hhFetchError && ","}
+          {hhFetchError && " HH adatok"}
+        </Alert>
+      )}
+
+      {/* 1. HH tanulók aránya - AUTO CALCULATED PERCENTAGES */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography
             variant="h6"
-            component="h2"
             gutterBottom
-            sx={{
-              color: sectionKey === "hh_percentage" ? "#d32f2f" : "#1976d2",
-              fontWeight: "bold",
-              textAlign: "center",
-            }}
+            sx={{ color: "#d32f2f", textAlign: "center", fontWeight: "bold" }}
           >
-            {title}
+            1. HH tanulók aránya
           </Typography>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mb: 2, textAlign: "center" }}
-          >
-            {subtitle}
-          </Typography>
-
-          <TableContainer
-            component={Paper}
-            variant="outlined"
-            sx={{ overflowX: "auto" }}
-          >
+          <TableContainer component={Paper} variant="outlined">
             <Table size="small">
               <TableHead>
-                <TableRow sx={{ backgroundColor: bgColor }}>
+                <TableRow sx={{ backgroundColor: "#ffebee" }}>
                   <TableCell
-                    rowSpan={2}
+                    colSpan={4}
                     sx={{
                       fontWeight: "bold",
-                      verticalAlign: "middle",
-                      minWidth: 200,
                       textAlign: "center",
                       backgroundColor: "#ffcdd2",
+                      color: "#d32f2f",
                     }}
                   >
-                    {/* Empty header cell */}
+                    (tanulói + felnőttképzési jogviszony) (%)
                   </TableCell>
                   <TableCell
-                    rowSpan={2}
+                    colSpan={4}
                     sx={{
                       fontWeight: "bold",
-                      verticalAlign: "middle",
-                      minWidth: 200,
                       textAlign: "center",
-                      backgroundColor: "#ffcdd2",
+                      backgroundColor: "#e3f2fd",
+                      color: "#1976d2",
                     }}
                   >
-                    {/* Empty header cell */}
+                    Tanulói jogviszony (%)
                   </TableCell>
+                  <TableCell
+                    colSpan={4}
+                    sx={{
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      backgroundColor: "#f3e5f5",
+                      color: "#7b1fa2",
+                    }}
+                  >
+                    Felnőttképzési jogviszony (%)
+                  </TableCell>
+                </TableRow>
+                <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                  {/* Combined percentages headers */}
                   {schoolYears.map((year) => (
                     <TableCell
-                      key={year}
+                      key={`combined-header-${year}`}
                       align="center"
                       sx={{
                         fontWeight: "bold",
-                        minWidth: 100,
-                        backgroundColor: "#e8f4fd",
+                        backgroundColor: "#ffcdd2",
+                        fontSize: "0.75rem",
                       }}
                     >
-                      {year}
+                      {year.replace(".", "")}
+                    </TableCell>
+                  ))}
+                  {/* Daytime percentages headers */}
+                  {schoolYears.map((year) => (
+                    <TableCell
+                      key={`daytime-header-${year}`}
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        backgroundColor: "#e3f2fd",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {year.replace(".", "")}
+                    </TableCell>
+                  ))}
+                  {/* Adult education percentages headers */}
+                  {schoolYears.map((year) => (
+                    <TableCell
+                      key={`adult-header-${year}`}
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        backgroundColor: "#f3e5f5",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {year.replace(".", "")}
                     </TableCell>
                   ))}
                 </TableRow>
               </TableHead>
               <TableBody>
-                {schoolTypes.map((type) =>
-                  legalStatuses.map((status, statusIndex) => (
-                    <TableRow
-                      key={`${type}-${status}`}
-                      sx={{
-                        backgroundColor:
-                          type === "összesen" && statusIndex === 0
-                            ? "#ffcc02"
-                            : "#f9f9f9",
-                      }}
-                    >
-                      {statusIndex === 0 && (
-                        <TableCell
-                          rowSpan={legalStatuses.length}
-                          sx={{
-                            fontWeight: "bold",
-                            textAlign: "center",
-                            backgroundColor:
-                              type === "összesen" ? "#ffcc02" : "#f5f5f5",
-                            color: "#000",
-                            verticalAlign: "middle",
-                          }}
-                        >
-                          {type}
-                        </TableCell>
-                      )}
-                      <TableCell
+                <TableRow>
+                  {/* Combined percentages */}
+                  {schoolYears.map((year) => (
+                    <TableCell key={`combined-${year}`} align="center">
+                      <Typography
+                        variant="body2"
                         sx={{
                           fontWeight: "bold",
-                          textAlign: "left",
-                          backgroundColor: "#f5f5f5",
-                          fontSize: "0.8rem",
+                          color: "#d32f2f",
+                          backgroundColor: "#ffebee",
+                          padding: "8px",
+                          borderRadius: "4px",
                         }}
                       >
-                        {status}
-                      </TableCell>
-                      {schoolYears.map((year) => (
-                        <TableCell key={year} align="center">
-                          <TextField
-                            type="number"
-                            value={
-                              hhData[sectionKey][type]?.[status]?.[year] || "0"
-                            }
-                            onChange={(e) =>
-                              handleDataChange(
-                                sectionKey,
-                                type,
-                                status,
-                                year,
-                                e.target.value
-                              )
-                            }
-                            size="small"
-                            inputProps={{
-                              min: 0,
-                              max:
-                                sectionKey === "hh_percentage"
-                                  ? 100
-                                  : undefined,
-                              step: sectionKey === "hh_percentage" ? 0.01 : 1,
-                              style: { textAlign: "center" },
-                            }}
-                            sx={{ width: "80px" }}
-                            placeholder={
-                              sectionKey === "hh_percentage" ? "0-100" : "0"
-                            }
-                          />
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                )}
+                        {getCombinedPercentage(year)}%
+                      </Typography>
+                    </TableCell>
+                  ))}
+                  {/* Daytime percentages */}
+                  {schoolYears.map((year) => (
+                    <TableCell key={`daytime-${year}`} align="center">
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: "bold",
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                          padding: "8px",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        {calculatePercentage("daytime", year)}%
+                      </Typography>
+                    </TableCell>
+                  ))}
+                  {/* Adult education percentages */}
+                  {schoolYears.map((year) => (
+                    <TableCell key={`adult-${year}`} align="center">
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: "bold",
+                          color: "#7b1fa2",
+                          backgroundColor: "#f3e5f5",
+                          padding: "8px",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        {calculatePercentage("adult", year)}%
+                      </Typography>
+                    </TableCell>
+                  ))}
+                </TableRow>
               </TableBody>
             </Table>
           </TableContainer>
         </CardContent>
       </Card>
-    );
-  };
 
-  return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Hátrányos helyzetű tanulók aránya a teljes tanulói létszámhoz
-        viszonyítva
-      </Typography>
-
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Adott tanévben a jogviszonnyal rendelkező tanulói jogviszonyú tanulók
-        létszáma (tanulói összlétszám) 1024 fő.
-      </Typography>
-
-      {/* Instructions Card */}
-      <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
+      {/* 2. HH tanulók száma - EDITABLE INPUT */}
+      <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            ? Esetleg tanuló export
-          </Typography>
-          <Typography variant="body2" color="text.primary" sx={{ mb: 2 }}>
-            <strong>Példa:</strong>
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            Adott tanévben a jogviszonnyal rendelkező tanulói jogviszonyú
-            tanulók létszáma (tanulói összlétszám) 1024 fő.
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            A hátrányos helyzetű tanulók száma ugyanebben a tanévben 77 fő.
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            A mutató számítása tehát: (77 fő / 1024 fő) * 100 = 7,52%.
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            <strong>Megjegyzés:</strong> Elágendő lenne a H-K oszlopokban lévő
-            érték ehhez az indikátorral, azonban a Centrum vizsgálja a
-            felnőttképzési jogviszonyú is
-          </Typography>
-
-          <Box
-            sx={{
-              p: 2,
-              backgroundColor: "#f0f8ff",
-              borderRadius: 1,
-              border: "1px solid #90caf9",
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-            }}
+          <Typography
+            variant="h6"
+            gutterBottom
+            sx={{ color: "#1976d2", textAlign: "center", fontWeight: "bold" }}
           >
-            <Typography variant="body2" sx={{ fontStyle: "italic", flex: 1 }}>
-              <strong>Számítási képlet:</strong>
-              <br />
-              (HH tanulói jogviszonyú tanulók száma / tanulói jogviszonyú
-              tanulók összlétszáma) × 100
-            </Typography>
-            <Box
-              sx={{
-                fontSize: "2rem",
-                fontWeight: "bold",
-                color: "#1976d2",
-                textAlign: "center",
-                minWidth: "100px",
-              }}
-            >
-              = %
-            </Box>
-          </Box>
+            2. HH tanulók száma
+          </Typography>
+          <TableContainer component={Paper} variant="outlined">
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+                  <TableCell
+                    colSpan={4}
+                    sx={{
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      backgroundColor: "#ffcdd2",
+                      color: "#d32f2f",
+                    }}
+                  >
+                    (tanulói + felnőttképzési jogviszony) (fő)
+                  </TableCell>
+                  <TableCell
+                    colSpan={4}
+                    sx={{
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      backgroundColor: "#e3f2fd",
+                      color: "#1976d2",
+                    }}
+                  >
+                    Tanulói jogviszony (fő)
+                  </TableCell>
+                  <TableCell
+                    colSpan={4}
+                    sx={{
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      backgroundColor: "#f3e5f5",
+                      color: "#7b1fa2",
+                    }}
+                  >
+                    Felnőttképzési jogviszony (fő)
+                  </TableCell>
+                </TableRow>
+                <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                  {/* Combined count headers */}
+                  {schoolYears.map((year) => (
+                    <TableCell
+                      key={`combined-count-header-${year}`}
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        backgroundColor: "#ffcdd2",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {year.replace(".", "")}
+                    </TableCell>
+                  ))}
+                  {/* Daytime count headers */}
+                  {schoolYears.map((year) => (
+                    <TableCell
+                      key={`daytime-count-header-${year}`}
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        backgroundColor: "#e3f2fd",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {year.replace(".", "")}
+                    </TableCell>
+                  ))}
+                  {/* Adult education count headers */}
+                  {schoolYears.map((year) => (
+                    <TableCell
+                      key={`adult-count-header-${year}`}
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        backgroundColor: "#f3e5f5",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {year.replace(".", "")}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  {/* Combined counts - auto calculated */}
+                  {schoolYears.map((year) => (
+                    <TableCell key={`combined-count-${year}`} align="center">
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: "bold",
+                          color: "#d32f2f",
+                          backgroundColor: "#ffebee",
+                          padding: "8px",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        {getCombinedHhStudents(year)}
+                      </Typography>
+                    </TableCell>
+                  ))}
+                  {/* Daytime counts - editable */}
+                  {schoolYears.map((year) => (
+                    <TableCell key={`daytime-input-${year}`} align="center">
+                      <TextField
+                        type="number"
+                        value={hhStudentsCount.daytime[year] || ""}
+                        onChange={(e) =>
+                          handleHhStudentsChange(
+                            "daytime",
+                            year,
+                            e.target.value
+                          )
+                        }
+                        size="small"
+                        inputProps={{
+                          min: 0,
+                          step: 1,
+                          style: { textAlign: "center" },
+                        }}
+                        sx={{ width: "80px" }}
+                        placeholder="0"
+                      />
+                    </TableCell>
+                  ))}
+                  {/* Adult education counts - editable */}
+                  {schoolYears.map((year) => (
+                    <TableCell key={`adult-input-${year}`} align="center">
+                      <TextField
+                        type="number"
+                        value={hhStudentsCount.adult[year] || ""}
+                        onChange={(e) =>
+                          handleHhStudentsChange("adult", year, e.target.value)
+                        }
+                        size="small"
+                        inputProps={{
+                          min: 0,
+                          step: 1,
+                          style: { textAlign: "center" },
+                        }}
+                        sx={{ width: "80px" }}
+                        placeholder="0"
+                      />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
         </CardContent>
       </Card>
 
-      {/* HH Students Percentage Tables */}
-      {renderTableSection(
-        "hh_percentage",
-        "HH tanulók aránya",
-        "Tanulói jogviszony (%)",
-        "%",
-        "#ffebee"
-      )}
-
-      {/* HH Students Count Tables */}
-      {renderTableSection(
-        "hh_students",
-        "HH tanulók száma",
-        "Tanulói jogviszony (fő)",
-        "fő",
-        "#e3f2fd"
-      )}
-
-      {/* Total Students Tables */}
-      {renderTableSection(
-        "total_students",
-        "tanulói összlétszám",
-        "Tanulói jogviszony (fő)",
-        "fő",
-        "#e8f5e8"
-      )}
-
-      {/* Calculation Helper */}
-      <Card sx={{ mb: 3, backgroundColor: "#f0f8ff" }}>
+      {/* 3. Tanulói összlétszám - FROM API */}
+      <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Automatikus számítás
+          <Typography
+            variant="h6"
+            gutterBottom
+            sx={{ color: "#2e7d32", textAlign: "center", fontWeight: "bold" }}
+          >
+            3. Tanulói összlétszám (Alapadatokból)
           </Typography>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Kattintson a számítás gombra az automatikus százalékszámításhoz:
-          </Typography>
-          {schoolTypes.map((type) => (
-            <Box key={type} sx={{ mb: 3 }}>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: "bold" }}>
-                {type}:
-              </Typography>
-              {legalStatuses.map((status) => (
-                <Box key={status} sx={{ mb: 2, ml: 2 }}>
-                  <Typography
-                    variant="body2"
-                    sx={{ mb: 1, fontSize: "0.9rem" }}
+          <TableContainer component={Paper} variant="outlined">
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: "#e8f5e8" }}>
+                  <TableCell
+                    colSpan={4}
+                    sx={{
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      backgroundColor: "#ffcdd2",
+                      color: "#d32f2f",
+                    }}
                   >
-                    {status}:
-                  </Typography>
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    sx={{ flexWrap: "wrap", ml: 2 }}
+                    (tanulói + felnőttképzési jogviszony) (fő)
+                  </TableCell>
+                  <TableCell
+                    colSpan={4}
+                    sx={{
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      backgroundColor: "#e3f2fd",
+                      color: "#1976d2",
+                    }}
                   >
-                    {schoolYears.map((year) => (
-                      <Button
-                        key={year}
-                        variant="outlined"
-                        startIcon={<CalculateIcon />}
-                        onClick={() => calculatePercentage(type, status, year)}
-                        size="small"
-                        sx={{ fontSize: "0.7rem" }}
+                    Tanulói jogviszony (fő)
+                  </TableCell>
+                  <TableCell
+                    colSpan={4}
+                    sx={{
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      backgroundColor: "#f3e5f5",
+                      color: "#7b1fa2",
+                    }}
+                  >
+                    Felnőttképzési jogviszony (fő)
+                  </TableCell>
+                </TableRow>
+                <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                  {/* Combined total headers */}
+                  {schoolYears.map((year) => (
+                    <TableCell
+                      key={`combined-total-header-${year}`}
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        backgroundColor: "#ffcdd2",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {year.replace(".", "")}
+                    </TableCell>
+                  ))}
+                  {/* Daytime total headers */}
+                  {schoolYears.map((year) => (
+                    <TableCell
+                      key={`daytime-total-header-${year}`}
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        backgroundColor: "#e3f2fd",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {year.replace(".", "")}
+                    </TableCell>
+                  ))}
+                  {/* Adult education total headers */}
+                  {schoolYears.map((year) => (
+                    <TableCell
+                      key={`adult-total-header-${year}`}
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        backgroundColor: "#f3e5f5",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {year.replace(".", "")}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  {/* Combined totals */}
+                  {schoolYears.map((year) => (
+                    <TableCell key={`combined-total-${year}`} align="center">
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: "bold",
+                          color: "#d32f2f",
+                          backgroundColor: "#ffebee",
+                          padding: "8px",
+                          borderRadius: "4px",
+                        }}
                       >
-                        {year}
-                      </Button>
-                    ))}
-                  </Stack>
-                </Box>
-              ))}
-            </Box>
-          ))}
+                        {getCombinedTotalStudents(year)}
+                      </Typography>
+                    </TableCell>
+                  ))}
+                  {/* Daytime totals */}
+                  {schoolYears.map((year) => (
+                    <TableCell key={`daytime-total-${year}`} align="center">
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: "bold",
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                          padding: "8px",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        {totalStudents.daytime[year] || 0}
+                      </Typography>
+                    </TableCell>
+                  ))}
+                  {/* Adult education totals */}
+                  {schoolYears.map((year) => (
+                    <TableCell key={`adult-total-${year}`} align="center">
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: "bold",
+                          color: "#7b1fa2",
+                          backgroundColor: "#f3e5f5",
+                          padding: "8px",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        {totalStudents.adult[year] || 0}
+                      </Typography>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
         </CardContent>
       </Card>
 
@@ -409,15 +842,15 @@ export default function HatanyosHelyzetuTanulokAranya() {
           variant="contained"
           startIcon={<SaveIcon />}
           onClick={handleSave}
-          disabled={!isModified}
+          disabled={!isModified || isAdding || isUpdating}
         >
-          Mentés
+          {isAdding || isUpdating ? "Mentés..." : "Mentés"}
         </Button>
         <Button
           variant="outlined"
           startIcon={<RefreshIcon />}
           onClick={handleReset}
-          disabled={!isModified || !savedData}
+          disabled={!isModified || !savedData || isAdding || isUpdating}
         >
           Visszaállítás
         </Button>
@@ -436,158 +869,6 @@ export default function HatanyosHelyzetuTanulokAranya() {
           Az adatok sikeresen mentve!
         </Alert>
       )}
-
-      {/* HH/HHH Information */}
-      <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Hátrányos és halmozottan hátrányos helyzet kategóriák
-          </Typography>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2 }}>
-            <Chip
-              label="HH - Hátrányos helyzetű"
-              color="primary"
-              variant="outlined"
-            />
-            <Chip
-              label="HHH - Halmozottan hátrányos helyzetű"
-              color="secondary"
-              variant="outlined"
-            />
-            <Chip
-              label="Alacsony jövedelem"
-              color="success"
-              variant="outlined"
-            />
-            <Chip
-              label="Alacsony iskolázottság"
-              color="info"
-              variant="outlined"
-            />
-            <Chip label="Munkanélküliség" color="warning" variant="outlined" />
-            <Chip
-              label="Lakhatási problémák"
-              color="error"
-              variant="outlined"
-            />
-          </Box>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            <strong>Hátrányos helyzetű (HH):</strong> A tanuló olyan családban
-            él, ahol legalább az egyik feltétel teljesül a jogszabályban
-            meghatározottak szerint.
-          </Typography>
-          <Typography variant="body2">
-            <strong>Halmozottan hátrányos helyzetű (HHH):</strong> A tanuló
-            olyan családban él, ahol több hátrányos feltétel együttesen van
-            jelen.
-          </Typography>
-        </CardContent>
-      </Card>
-
-      {/* Legal Framework */}
-      <Card sx={{ mt: 3, backgroundColor: "#f0f8ff" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Jogszabályi háttér
-          </Typography>
-          <Box component="ul" sx={{ pl: 3, mb: 2 }}>
-            <li>
-              <Typography variant="body2">
-                <strong>Hátrányos helyzet megállapítása:</strong> A jegyző
-                hatáskörébe tartozó eljárás alapján
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Feltételek:</strong> Alacsony jövedelem, alacsony
-                iskolázottság, kedvezőtlen lakókörnyezet
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Támogatások:</strong> Különböző szociális és oktatási
-                támogatási formák
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Nyilvántartás:</strong> Kötelező a hátrányos helyzet
-                nyilvántartása és dokumentálása
-              </Typography>
-            </li>
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* Support Programs */}
-      <Card sx={{ mt: 3, backgroundColor: "#f8fff8" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Támogatási programok
-          </Typography>
-          <Box component="ul" sx={{ pl: 3, mb: 2 }}>
-            <li>
-              <Typography variant="body2">
-                <strong>Tankönyv- és tanszertámogatás:</strong> Ingyenes vagy
-                kedvezményes taneszközök biztosítása
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Étkezési támogatás:</strong> Ingyenes vagy kedvezményes
-                étkezés biztosítása
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Felzárkóztató programok:</strong> Speciális fejlesztő és
-                támogató foglalkozások
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Mentorálás:</strong> Egyéni támogatás és útmutatás
-                biztosítása
-              </Typography>
-            </li>
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* Data Quality Guidelines */}
-      <Card sx={{ mt: 3, backgroundColor: "#fff8f0" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Adatminőség irányelvek
-          </Typography>
-          <Box component="ul" sx={{ pl: 3 }}>
-            <li>
-              <Typography variant="body2">
-                <strong>HH/HHH státusz:</strong> Csak hivatalosan megállapított
-                státusz alapján lehet számítani
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Jogviszony típusok:</strong> Tanulói és felnőttképzési
-                jogviszony külön kezelendő
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Iskola típusok:</strong> Összesen és technikum+szakképző
-                iskola külön kategóriában
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Adatvédelem:</strong> Különös figyelmet kell fordítani a
-                személyes adatok védelmére
-              </Typography>
-            </li>
-          </Box>
-        </CardContent>
-      </Card>
     </Box>
   );
 }
