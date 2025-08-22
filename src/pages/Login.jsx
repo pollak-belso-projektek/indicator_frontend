@@ -49,7 +49,7 @@ export default function Login() {
   useEffect(() => {
     if (loading) {
       const timeout = setTimeout(() => {
-        dispatch(loginFailure("Request timed out. Please try again."));
+        dispatch(loginFailure("Bejelentkezés időtúllépés miatt sikertelen"));
       }, 10000); // 10 second timeout
 
       return () => clearTimeout(timeout);
@@ -77,7 +77,7 @@ export default function Login() {
     e.preventDefault();
 
     if (!email || !password) {
-      dispatch(loginFailure("Email and password are required"));
+      dispatch(loginFailure("Email és jelszó megadása kötelező"));
       return;
     }
 
@@ -91,7 +91,11 @@ export default function Login() {
       dispatch(loginSuccess(result));
     } catch (err) {
       dispatch(
-        loginFailure(err?.data?.message || err?.message || "Login failed")
+        loginFailure(
+          err?.data?.message ||
+            err?.message ||
+            "Hiba történt a bejelentkezés során"
+        )
       );
     }
   };
