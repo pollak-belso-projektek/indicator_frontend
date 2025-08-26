@@ -6,6 +6,7 @@ import {
   selectUserTableAccess,
   selectUserPermissions,
   selectIsTokenExpired,
+  selectUser,
 } from "../store/slices/authSlice";
 import { getTableNameFromRoute, hasTableAccess } from "../utils/tableValues";
 import { useTokenRefresh } from "../hooks/useTokenRefresh";
@@ -19,6 +20,8 @@ export default function ProtectedRoute({
   const tableAccess = useSelector(selectUserTableAccess);
   const userPermissions = useSelector(selectUserPermissions);
   const isTokenExpired = useSelector(selectIsTokenExpired);
+
+  const user = useSelector(selectUser);
   const location = useLocation();
   const { manualRefresh, hasValidRefreshToken, isRefreshInProgress } =
     useTokenRefresh();
@@ -63,6 +66,11 @@ export default function ProtectedRoute({
       refreshAttempted.current = false;
     }
   }, [isTokenExpired]);
+
+
+ useEffect(() => {
+  console.log(user);
+ }, [user]);
 
   // If not authenticated, redirect to login
   if (!isAuthenticated) {

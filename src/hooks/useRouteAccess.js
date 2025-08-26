@@ -55,6 +55,7 @@ export const useRouteAccess = () => {
       [
         "/dashboard",
         "/adat-import",
+        "/table-management",
         "/alapadatok",
         "/tanulo_letszam",
         "/kompetencia",

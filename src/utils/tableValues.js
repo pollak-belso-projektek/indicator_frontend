@@ -87,7 +87,7 @@ export const hasRouteAccess = (tableAccess, route, isSuperadmin = false) => {
   }
 
   // Routes that don't require table access
-  const publicRoutes = ["/dashboard", "/adat-import"];
+  const publicRoutes = ["/dashboard", "/adat-import", "/table-management"];
 
   if (publicRoutes.includes(route)) {
     return true;
@@ -114,6 +114,7 @@ export const getAccessibleRoutes = (
     return [
       "/dashboard",
       "/adat-import",
+      "/table-management",
       "/alapadatok",
       "/tanulo_letszam",
       "/kompetencia",
@@ -126,7 +127,7 @@ export const getAccessibleRoutes = (
   }
 
   const allRoutes = Object.keys(routeToTableMapping);
-  const publicRoutes = ["/dashboard", "/adat-import"];
+  const publicRoutes = ["/dashboard", "/adat-import", "/table-management"];
 
   const accessibleRoutes = allRoutes.filter((route) => {
     const tableName = getTableNameFromRoute(route);

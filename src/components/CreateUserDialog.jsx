@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -23,10 +23,13 @@ import {
   CardContent,
   Grid,
 } from "@mui/material";
+import NotificationSnackbar from "./shared/NotificationSnackbar";
 import { getHierarchyLevel, getUserTypeLabel } from "../utils/userHierarchy";
-import { useGetTableListQuery } from "../store/api/apiSlice";
 import {
-  TABLE_ACCESS_LEVELS,
+  useGetTableListQuery,
+  useGetAllAlapadatokQuery,
+} from "../store/api/apiSlice";
+import {
   getAvailableTables,
   getPermissionOptions,
   calculateAccessLevel,
@@ -37,10 +40,9 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
-    password: "",
     permissions: 1, // Default to iskolai_general (level 1)
     tableAccess: [], // Default empty table access
-    alapadatok_id: null, // Will be set based on user context
+    alapadatokId: null, // Will be set based on user context
     active: true,
   });
   const [userType, setUserType] = useState("iskolai_general");
@@ -48,10 +50,29 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
   const [tablePermissions, setTablePermissions] = useState({}); // Store permissions for each table
   const availableUserTypes = userPermissions?.getAvailableUserTypes() || [];
 
+  // Notification state
+  const [notification, setNotification] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const showNotification = (message, severity = "success") => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const closeNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
+
   // Fetch available tables
   const { data: tableList = [], isLoading: tablesLoading } =
     useGetTableListQuery();
   const permissionOptions = getPermissionOptions();
+
+  // Fetch available schools for selection
+  const { data: schoolsData = [], isLoading: schoolsLoading } =
+    useGetAllAlapadatokQuery();
 
   const handleUserTypeChange = (type) => {
     setUserType(type);
@@ -119,18 +140,22 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
 
   const handleSave = () => {
     if (!newUser.name || !newUser.email || !newUser.password) {
-      alert("Kérjük töltse ki az összes kötelező mezőt!");
+      showNotification("Kérjük töltse ki az összes kötelező mezőt!", "error");
       return;
     }
 
     if (!userPermissions.canCreateUser(userType)) {
-      alert("Nincs jogosultsága ilyen típusú felhasználó létrehozásához!");
+      showNotification(
+        "Nincs jogosultsága ilyen típusú felhasználó létrehozásához!",
+        "error"
+      );
       return;
     }
 
     onSave(newUser);
     handleClose();
   };
+
   const handleClose = () => {
     setNewUser({
       name: "",
@@ -138,7 +163,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
       password: "",
       permissions: 1, // Reset to iskolai_general
       tableAccess: [],
-      alapadatok_id: null,
+      alapadatokId: null,
       active: true,
     });
     setUserType("iskolai_general");
@@ -181,6 +206,68 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
           />
           <Divider sx={{ my: 3 }} />
           <Typography variant="h6" gutterBottom>
+            Iskola hozzárendelés
+          </Typography>
+          <Autocomplete
+            id="school-select"
+            options={schoolsData}
+            getOptionLabel={(option) => option.iskola_neve || ""}
+            value={
+              schoolsData.find(
+                (school) => school.id === newUser.alapadatokId
+              ) || null
+            }
+            onChange={(event, newValue) =>
+              handleInputChange("alapadatokId", newValue ? newValue.id : null)
+            }
+            loading={schoolsLoading}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Iskola kiválasztása"
+                placeholder="Válasszon iskolát..."
+                helperText="Válassza ki azt az iskolát, amelyhez a felhasználó tartozik (opcionális)"
+              />
+            )}
+            renderOption={(props, option) => (
+              <Box component="li" {...props}>
+                <Box>
+                  <Typography variant="body1">{option.iskola_neve}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {option.intezmeny_tipus}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+            sx={{ mt: 2 }}
+          />
+          {newUser.alapadatokId && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                Kiválasztott iskola:
+              </Typography>
+              <Box sx={{ ml: 2, mt: 1 }}>
+                <Typography variant="body2">
+                  • Iskola:{" "}
+                  {
+                    schoolsData.find(
+                      (school) => school.id === newUser.alapadatokId
+                    )?.iskola_neve
+                  }
+                </Typography>
+                <Typography variant="body2">
+                  • Típus:{" "}
+                  {
+                    schoolsData.find(
+                      (school) => school.id === newUser.alapadatokId
+                    )?.intezmeny_tipus
+                  }
+                </Typography>
+              </Box>
+            </Box>
+          )}
+          <Divider sx={{ my: 3 }} />
+          <Typography variant="h6" gutterBottom>
             Felhasználó típusa
           </Typography>
           <FormControl fullWidth margin="normal">
@@ -205,9 +292,6 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
               <Typography variant="body2">
                 • Típus: {getUserTypeLabel(userType)}
               </Typography>
-              <Typography variant="body2">
-                • Hierarchia szint: {newUser.permissions}
-              </Typography>
             </Box>
           </Box>
           <FormControlLabel
@@ -217,6 +301,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
                 onChange={(e) => handleInputChange("active", e.target.checked)}
               />
             }
+            disabled
             label="Aktív felhasználó"
             sx={{ mt: 2 }}
           />
@@ -226,9 +311,10 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
           </Typography>
           <Autocomplete
             multiple
+            disableCloseOnSelect
             id="table-access-select"
             options={getAvailableTables(tableList)}
-            getOptionLabel={(option) => option.name}
+            getOptionLabel={(option) => option.alias}
             value={selectedTables}
             onChange={(event, newValue) => handleTableAccessChange(newValue)}
             loading={tablesLoading}
@@ -236,7 +322,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
               value.map((option, index) => (
                 <Chip
                   variant="outlined"
-                  label={option.name}
+                  label={option.alias}
                   {...getTagProps({ index })}
                   key={option.id}
                 />
@@ -262,7 +348,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
                   <Card key={table.id} variant="outlined" sx={{ mb: 2 }}>
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
-                        {table.name}
+                        {table.alias}
                       </Typography>
                       <FormGroup>
                         <Typography variant="body2" sx={{ mb: 1 }}>
@@ -344,6 +430,12 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
           Létrehozás
         </Button>
       </DialogActions>
+      <NotificationSnackbar
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={closeNotification}
+      />
     </Dialog>
   );
 };

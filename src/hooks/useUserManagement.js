@@ -8,7 +8,6 @@ import {
 } from "@tanstack/react-table";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { fetchUsersData } from "../utils/userUtils";
 import { createUserColumns } from "../components/UserTable";
 import { useUserPermissions } from "./useUserPermissions";
 import { getUserTypeFromLevel } from "../utils/userHierarchy";
@@ -25,10 +24,16 @@ export const useUserManagement = () => {
   const [open, setOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [columnVisibility, setColumnVisibility] = useState({});
+  const [columnSizing, setColumnSizing] = useState({});
+  const [density, setDensity] = useState(
+    localStorage.getItem("tableDensity") || "normal"
+  );
+  const [width, setWidth] = useState(
+    localStorage.getItem("tableWidth") || "normal"
+  );
   const [hiddenColumns, setHiddenColumns] = useState([
     localStorage.getItem("hiddenColumns") || "tableAccess",
     "permissionsDetails",
-    "alapadatokId",
   ]);
 
   const theme = useTheme();
@@ -46,61 +51,93 @@ export const useUserManagement = () => {
   }, [hiddenColumns]);
 
   useEffect(() => {
+    localStorage.setItem("tableDensity", density);
+  }, [density]);
+
+  useEffect(() => {
+    localStorage.setItem("tableWidth", width);
+  }, [width]);
+
+  useEffect(() => {
+    localStorage.setItem("columnSizing", JSON.stringify(columnSizing));
+  }, [columnSizing]);
+
+  useEffect(() => {
     const storedHiddenColumns = localStorage.getItem("hiddenColumns");
     if (storedHiddenColumns) {
       setHiddenColumns(storedHiddenColumns.split(","));
+    }
+
+    const storedDensity = localStorage.getItem("tableDensity");
+    if (storedDensity) {
+      setDensity(storedDensity);
+    }
+
+    const storedWidth = localStorage.getItem("tableWidth");
+    if (storedWidth) {
+      setWidth(storedWidth);
+    }
+
+    const storedColumnSizing = localStorage.getItem("columnSizing");
+    if (storedColumnSizing) {
+      try {
+        setColumnSizing(JSON.parse(storedColumnSizing));
+      } catch (error) {
+        console.warn("Failed to parse stored column sizing:", error);
+      }
     }
   }, []);
 
   const handleEdit = (user) => {
     if (!userPermissions.canModifyUser()) {
-      alert("Nincs jogosultsága felhasználók módosításához!");
-      return;
+      return { error: "Nincs jogosultsága felhasználók módosításához!" };
     }
     setSelectedUser(user);
     setOpenModify(true);
+    return { success: true };
   };
 
   const handleCreate = () => {
     if (userPermissions.getAvailableUserTypes().length === 0) {
-      alert("Nincs jogosultsága felhasználók létrehozásához!");
-      return;
+      return { error: "Nincs jogosultsága felhasználók létrehozásához!" };
     }
     setSelectedUser(null);
     setOpenCreate(true);
+    return { success: true };
   };
 
   const handleDeactivate = (user) => {
     if (!userPermissions.canDeactivateUser()) {
-      alert("Nincs jogosultsága felhasználók inaktiválásához!");
-      return;
+      return { error: "Nincs jogosultsága felhasználók inaktiválásához!" };
     }
     setSelectedUser(user);
     setOpen(true);
+    return { success: true };
   };
   const handleModify = async (modifiedUser) => {
     try {
       // Check if user can modify this type of user
       const userType = getUserTypeFromLevel(modifiedUser.permissions);
       if (!userPermissions.canCreateUser(userType)) {
-        alert("Nincs jogosultsága ilyen típusú felhasználó módosításához!");
-        return;
+        return {
+          error: "Nincs jogosultsága ilyen típusú felhasználó módosításához!",
+        };
       }
 
       // Ensure ID is properly attached for the PUT request
       const { id, ...userData } = modifiedUser;
       if (!id) {
-        alert("Felhasználó azonosító hiányzik!");
-        return;
+        return { error: "Felhasználó azonosító hiányzik!" };
       }
 
       await updateUser({ id, ...userData }).unwrap();
       console.log(`User modified: ${modifiedUser.name}`);
       refetch();
       setOpenModify(false);
+      return { success: true, message: "Felhasználó sikeresen módosítva!" };
     } catch (error) {
       console.error("Error modifying user:", error);
-      alert("Hiba történt a felhasználó módosítása során!");
+      return { error: "Hiba történt a felhasználó módosítása során!" };
     }
   };
   const handleCreateUser = async (newUser) => {
@@ -108,17 +145,19 @@ export const useUserManagement = () => {
       // Check if user can create this type of user
       const userType = getUserTypeFromLevel(newUser.permissions);
       if (!userPermissions.canCreateUser(userType)) {
-        alert("Nincs jogosultsága ilyen típusú felhasználó létrehozásához!");
-        return;
+        return {
+          error: "Nincs jogosultsága ilyen típusú felhasználó létrehozásához!",
+        };
       }
 
       await addUser(newUser).unwrap();
       console.log(`User created: ${newUser.name}`);
       refetch();
       setOpenCreate(false);
+      return { success: true, message: "Felhasználó sikeresen létrehozva!" };
     } catch (error) {
       console.error("Error creating user:", error);
-      alert("Hiba történt a felhasználó létrehozása során!");
+      return { error: "Hiba történt a felhasználó létrehozása során!" };
     }
   };
   const handleDeactivateConfirm = async () => {
@@ -128,17 +167,17 @@ export const useUserManagement = () => {
       const { id, ...userData } = deactivatedUser;
 
       if (!id) {
-        alert("Felhasználó azonosító hiányzik!");
-        return;
+        return { error: "Felhasználó azonosító hiányzik!" };
       }
 
       await updateUser({ id, ...userData }).unwrap();
       console.log(`User deactivated: ${selectedUser.name}`);
       refetch();
       setOpen(false);
+      return { success: true, message: "Felhasználó sikeresen inaktiválva!" };
     } catch (error) {
       console.error("Error deactivating user:", error);
-      alert("Hiba történt a felhasználó inaktiválása során!");
+      return { error: "Hiba történt a felhasználó inaktiválása során!" };
     }
   };
   // Helper function to determine user type from permissions level
@@ -149,6 +188,11 @@ export const useUserManagement = () => {
     setOpen(false);
     setOpenModify(false);
     setOpenCreate(false);
+  };
+
+  const handleResetColumnSizing = () => {
+    setColumnSizing({});
+    localStorage.removeItem("columnSizing");
   };
 
   const columns = useMemo(
@@ -164,11 +208,15 @@ export const useUserManagement = () => {
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     globalFilterFn: "includesString",
+    enableColumnResizing: true,
+    columnResizeMode: "onChange",
     state: {
       globalFilter,
       columnVisibility,
+      columnSizing,
     },
     onColumnVisibilityChange: setColumnVisibility,
+    onColumnSizingChange: setColumnSizing,
     onGlobalFilterChange: setGlobalFilter,
     initialState: {
       pagination: {
@@ -193,6 +241,12 @@ export const useUserManagement = () => {
     fullScreen,
     hiddenColumns,
     setHiddenColumns,
+    density,
+    setDensity,
+    width,
+    setWidth,
+    columnSizing,
+    setColumnSizing,
     isLoading,
     userPermissions,
     handleModify,
@@ -200,5 +254,6 @@ export const useUserManagement = () => {
     handleCreate,
     handleDeactivateConfirm,
     handleClose,
+    handleResetColumnSizing,
   };
 };

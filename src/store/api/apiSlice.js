@@ -97,6 +97,18 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["User"],
     }),
+    changeUserPassword: build.mutation({
+      query: ({ id, newPassword, newPasswordConfirm }) => ({
+        url: `users/${id}/password`,
+        method: "PUT",
+        body: {
+          id,
+          newPassword,
+          newPasswordConfirm,
+        },
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: "User", id }],
+    }),
     getTanugyiAdatok: build.query({
       query: (params) => `tanugyi_adatok/${params.alapadatok_id}/${params.ev}`,
       providesTags: (result, error, params) => [
@@ -245,6 +257,22 @@ export const indicatorApi = createApi({
     getTableList: build.query({
       query: () => "tablelist",
       providesTags: ["TableList"],
+    }),
+    createTable: build.mutation({
+      query: (newTable) => ({
+        url: "tablelist",
+        method: "POST",
+        body: newTable,
+      }),
+      invalidatesTags: ["TableList"],
+    }),
+    updateTable: build.mutation({
+      query: ({ id, ...updatedTable }) => ({
+        url: `tablelist/${id}`,
+        method: "PUT",
+        body: updatedTable,
+      }),
+      invalidatesTags: ["TableList"],
     }),
 
     // ========== Educational Indicators Endpoints ==========
@@ -883,10 +911,13 @@ export const {
   useAddUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useChangeUserPasswordMutation,
   useLoginMutation,
   useLogoutMutation,
   useRefreshTokenMutation,
   useGetTableListQuery,
+  useCreateTableMutation,
+  useUpdateTableMutation,
   // Educational Indicators hooks
   useGetElhelyezkedesByYearQuery,
   useGetElhelyezkedesBySchoolAndYearQuery,
