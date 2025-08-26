@@ -36,28 +36,19 @@ import { useColorModeValue } from "./ui/color-mode";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  useGetAllAlapadatokQuery,
-  useLogoutMutation,
-  indicatorApi,
-} from "../store/api/apiSlice";
+import { useLogoutMutation, indicatorApi } from "../store/api/apiSlice";
 import {
   logout,
   selectUser,
   selectUserRole,
   selectUserPermissions,
   selectUserTableAccess,
-  selectSelectedSchool,
-  setSelectedSchool,
 } from "../store/slices/authSlice";
 import { FiChevronDown } from "react-icons/fi";
 import UserRoleBadge from "./UserRoleBadge";
+import SchoolSelector from "./SchoolSelector";
 import { toaster } from "./ui/toaster";
 import {
-  FormControl,
-  OutlinedInput,
-  MenuItem,
-  Select,
   TextField,
   InputAdornment,
   IconButton as MuiIconButton,
@@ -263,6 +254,12 @@ const NavigationCategories = {
         tableName: "users",
       },
       {
+        name: "Tábla kezelés",
+        icon: MdSettings,
+        link: "/table-management",
+        tableName: null,
+      },
+      {
         name: "Rendszer naplók",
         icon: MdBookmark,
         link: "/logs",
@@ -410,7 +407,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
         [activeCategoryKey]: true,
       }));
     }
-  }, [location.pathname, fixedItems]);
+  }, [location.pathname]); // Removed fixedItems from dependency array
 
   // Helper function to check if a category contains the active page
   const isCategoryActive = (categoryKey) => {
@@ -799,18 +796,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
   const user = useSelector(selectUser);
   const userRole = useSelector(selectUserRole);
   const userPermissions = useSelector(selectUserPermissions);
-  const selectedSchool = useSelector(selectSelectedSchool);
-  const [logoutMutation] = useLogoutMutation();
-
-  const { data: schoolsData } = useGetAllAlapadatokQuery();
-
-  useEffect(() => {
-    if (schoolsData) {
-      console.log("Schools data:", schoolsData);
-    }
-  }, [schoolsData]);
-
-  // Emergency logout handler (bypasses API call)
+  const [logoutMutation] = useLogoutMutation(); // Emergency logout handler (bypasses API call)
   const handleEmergencyLogout = () => {
     console.log("Emergency logout triggered - bypassing API call");
 
@@ -843,14 +829,6 @@ const MobileNav = ({ onOpen, ...rest }) => {
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, []);
-
-  const schools = {
-    items:
-      schoolsData?.map((item) => ({
-        label: item.iskola_neve,
-        value: item.id.toString(),
-      })) || [],
-  };
 
   const handleLogout = async () => {
     // Show loading toast
@@ -919,23 +897,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
       }, 1000); // Small delay to show the toast
     }
   };
-  const handleChange = (event) => {
-    const selectedValue = event.target.value;
-    const selectedSchoolData = schoolsData?.find(
-      (school) => school.id.toString() === selectedValue
-    );
 
-    // Debug logging
-    console.log("School selection change:");
-    console.log("- Selected value:", selectedValue);
-    console.log("- Available schools:", schools.items);
-    console.log("- Found school data:", selectedSchoolData);
-
-    // Dispatch the selected school to Redux store
-    dispatch(setSelectedSchool(selectedSchoolData || null));
-
-    console.log("Selected school:", selectedSchoolData);
-  };
   return (
     <Flex
       ml={{ base: 0, md: 60 }}
@@ -958,33 +920,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
       </IconButton>
 
       <Box flex="1" flexGrow={1} justifyContent="center">
-        <HStack spacing={2} alignItems="center">
-          <FormControl variant="outlined" size="small" width="200px">
-            <Select
-              value={selectedSchool?.id?.toString() || ""}
-              onChange={handleChange}
-              displayEmpty
-              input={<OutlinedInput />}
-              renderValue={(value) => {
-                if (!value) return "Válassz iskolát";
-                const found = schools.items.find(
-                  (item) => item.value === value
-                );
-                return found ? found.label : "Ismeretlen iskola";
-              }}
-            >
-              <MenuItem value="">Válassz iskolát</MenuItem>
-              {schools.items.map((school) => (
-                <MenuItem key={school.value} value={school.value}>
-                  {school.label}
-                </MenuItem>
-              ))}
-              {schools.items.length === 0 && (
-                <MenuItem disabled>Nincs elérhető iskola</MenuItem>
-              )}
-            </Select>
-          </FormControl>
-        </HStack>
+        <SchoolSelector />
       </Box>
 
       <HStack spacing={{ base: "0", md: "6" }}>

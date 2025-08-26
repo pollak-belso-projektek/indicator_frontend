@@ -144,6 +144,14 @@ export default function Dashboard() {
       });
 
       items.push({
+        title: "Táblák",
+        description: "Adatbázis táblák kezelése",
+        icon: <SettingsIcon />,
+        color: "secondary",
+        route: "/table-management",
+      });
+
+      items.push({
         title: "Iskolák",
         description: "Összes iskola megtekintése és kezelése",
         icon: <SchoolIcon />,

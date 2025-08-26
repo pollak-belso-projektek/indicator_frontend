@@ -45,10 +45,10 @@ import {
   MdAreaChart,
   MdDownload,
   MdRefresh,
-  MdSettings,
   MdVisibility,
   MdVisibilityOff,
 } from "react-icons/md";
+import NotificationSnackbar from "./shared/NotificationSnackbar";
 
 // Color palette for different lines
 const COLORS = [
@@ -93,6 +93,17 @@ const TanuloLetszamChart = ({ data, years }) => {
   const [yAxisDomain, setYAxisDomain] = useState("auto"); // 'auto', 'dataMin', 'custom'
   const [customYMin, setCustomYMin] = useState(0);
   const [customYMax, setCustomYMax] = useState(100);
+
+  // Notification state
+  const [notification, setNotification] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const closeNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
 
   // Transform data for the chart
   const chartData = useMemo(() => {
@@ -223,7 +234,12 @@ const TanuloLetszamChart = ({ data, years }) => {
   const downloadChart = () => {
     // This would implement chart download functionality
     console.log("Download chart data:", chartData);
-    alert("Letöltés funkció fejlesztés alatt!");
+    // TODO: Implement proper download functionality
+    setNotification({
+      open: true,
+      message: "Letöltés funkció fejlesztés alatt!",
+      severity: "info",
+    });
   };
 
   const resetSettings = () => {
@@ -801,6 +817,12 @@ const TanuloLetszamChart = ({ data, years }) => {
           </Stack>
         </CardContent>
       </Card>
+      <NotificationSnackbar
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={closeNotification}
+      />
     </Box>
   );
 };

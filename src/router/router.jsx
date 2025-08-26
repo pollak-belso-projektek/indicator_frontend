@@ -19,6 +19,9 @@ const TanuloletszamPage = lazy(() => import("../pages/Tanuloletszam.jsx"));
 const KompetenciaPage = lazy(() => import("../pages/Kompetencia.jsx"));
 const VersenyekPage = lazy(() => import("../pages/Versenyek.jsx"));
 const UsersPage = lazy(() => import("../pages/Users.jsx"));
+const TableManagementPage = lazy(() =>
+  import("../pages/TableManagementPage.jsx")
+);
 const SchoolsPage = lazy(() => import("../pages/Schools.jsx"));
 const FelnottkepzesPage = lazy(() => import("../pages/Felnottkepzes.jsx"));
 const OrszagosKompetenciameresPage = lazy(() =>
@@ -159,6 +162,16 @@ export default function Router() {
                   <TableProtectedRoute>
                     <NavigationWithLoading>
                       <UsersPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/table-management"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      <TableManagementPage />
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }

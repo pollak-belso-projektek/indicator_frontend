@@ -4,6 +4,8 @@
 
 The table access system uses bitwise operations to manage granular permissions for each table. Each permission has a specific bit value that can be combined to create different access levels.
 
+**Related Documentation**: See [TABLE_MANAGEMENT_README.md](./TABLE_MANAGEMENT_README.md) for information about creating and managing tables.
+
 ## Permission Values
 
 ```javascript
@@ -160,6 +162,15 @@ const newUser = {
 3. **Default to minimal permissions** (READ only) for new tables
 4. **Provide clear UI feedback** showing current permission levels
 5. **Log permission changes** for audit purposes
+
+## Table Management Integration
+
+Tables are managed through the **Table Management System** (`/table-management`):
+
+- **Superadmins** can create new tables via the admin interface
+- Tables created there automatically appear in user permission dialogs
+- Table availability can be toggled without affecting existing permissions
+- Real-time integration between table creation and user assignment
 
 ## Security Considerations
 

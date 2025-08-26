@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogActions,
@@ -25,12 +25,17 @@ import {
   DialogContentText,
   CircularProgress,
 } from "@mui/material";
+import NotificationSnackbar from "../shared/NotificationSnackbar";
 import {
   getHierarchyLevel,
   getUserTypeLabel,
   getUserTypeFromLevel,
 } from "../../utils/userHierarchy";
-import { useGetTableListQuery, useChangeUserPasswordMutation } from "../../store/api/apiSlice";
+import {
+  useGetTableListQuery,
+  useChangeUserPasswordMutation,
+  useGetAllAlapadatokQuery,
+} from "../../store/api/apiSlice";
 import {
   TABLE_ACCESS_LEVELS,
   getAvailableTables,
@@ -53,6 +58,7 @@ export const EditUserDialog = ({
     email: "",
     permissions: 1,
     tableAccess: [],
+    alapadatokId: null,
     active: true,
   });
   const [userType, setUserType] = useState("iskolai_general");
@@ -62,8 +68,24 @@ export const EditUserDialog = ({
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
 
+  // Notification state
+  const [notification, setNotification] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const showNotification = (message, severity = "success") => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const closeNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
+
   // Get the password change mutation
-  const [changeUserPassword, { isLoading: isChangingPassword }] = useChangeUserPasswordMutation();
+  const [changeUserPassword, { isLoading: isChangingPassword }] =
+    useChangeUserPasswordMutation();
 
   // Get available user types that current user can assign (not higher than their own level)
   const availableUserTypes = userPermissions?.getAvailableUserTypes() || [];
@@ -72,6 +94,10 @@ export const EditUserDialog = ({
   const { data: tableList = [], isLoading: tablesLoading } =
     useGetTableListQuery();
   const permissionOptions = getPermissionOptions();
+
+  // Fetch available schools for selection
+  const { data: schoolsData = [], isLoading: schoolsLoading } =
+    useGetAllAlapadatokQuery();
 
   // Initialize form when user data changes
   useEffect(() => {
@@ -82,6 +108,7 @@ export const EditUserDialog = ({
         email: user.email || "",
         permissions: user.permissions || 1,
         tableAccess: user.tableAccess || [],
+        alapadatokId: user.alapadatokId || null,
         active: user.active !== false, // Default to true if undefined
       });
 
@@ -187,30 +214,33 @@ export const EditUserDialog = ({
   };
   const handleSave = async () => {
     if (!editedUser.name || !editedUser.email) {
-      alert("Kérjük töltse ki az összes kötelező mezőt!");
+      showNotification("Kérjük töltse ki az összes kötelező mezőt!", "error");
       return;
     }
 
     // Check if current user can assign this user type
     if (!userPermissions.canCreateUser(userType)) {
-      alert("Nincs jogosultsága ilyen típusú felhasználó szerkesztéséhez!");
+      showNotification(
+        "Nincs jogosultsága ilyen típusú felhasználó szerkesztéséhez!",
+        "error"
+      );
       return;
     }
 
     // Ensure ID is present
     if (!editedUser.id) {
-      alert("Felhasználó azonosító hiányzik!");
+      showNotification("Felhasználó azonosító hiányzik!", "error");
       return;
     }
 
     // Validate password if changing
     if (showPasswordField) {
       if (!newPassword.trim()) {
-        alert("Az új jelszó nem lehet üres!");
+        showNotification("Az új jelszó nem lehet üres!", "error");
         return;
       }
       if (newPassword !== newPasswordConfirm) {
-        alert("A jelszavak nem egyeznek!");
+        showNotification("A jelszavak nem egyeznek!", "error");
         return;
       }
     }
@@ -228,16 +258,19 @@ export const EditUserDialog = ({
           newPassword,
           newPasswordConfirm,
         }).unwrap();
-        
-        alert("Felhasználó és jelszó sikeresen frissítve!");
+
+        showNotification("Felhasználó és jelszó sikeresen frissítve!");
       } else {
-        alert("Felhasználó sikeresen frissítve!");
+        showNotification("Felhasználó sikeresen frissítve!");
       }
 
       handleClose();
     } catch (error) {
       console.error("Error saving user:", error);
-      alert("Hiba történt a mentés során: " + (error.message || "Ismeretlen hiba"));
+      showNotification(
+        "Hiba történt a mentés során: " + (error.message || "Ismeretlen hiba"),
+        "error"
+      );
     }
   };
 
@@ -318,9 +351,13 @@ export const EditUserDialog = ({
                   onChange={(e) => setNewPasswordConfirm(e.target.value)}
                   margin="normal"
                   required
-                  error={newPassword !== newPasswordConfirm && newPasswordConfirm.length > 0}
+                  error={
+                    newPassword !== newPasswordConfirm &&
+                    newPasswordConfirm.length > 0
+                  }
                   helperText={
-                    newPassword !== newPasswordConfirm && newPasswordConfirm.length > 0
+                    newPassword !== newPasswordConfirm &&
+                    newPasswordConfirm.length > 0
                       ? "A jelszavak nem egyeznek"
                       : "Írja be újra az új jelszót a megerősítéshez"
                   }
@@ -328,7 +365,70 @@ export const EditUserDialog = ({
               </Box>
             )}
           </Box>
+          <Divider sx={{ my: 3 }} />
 
+          <Typography variant="h6" gutterBottom>
+            Iskola hozzárendelés
+          </Typography>
+          <Autocomplete
+            id="school-edit-select"
+            options={schoolsData}
+            getOptionLabel={(option) => option.iskola_neve || ""}
+            value={
+              schoolsData.find(
+                (school) => school.id === editedUser.alapadatokId
+              ) || null
+            }
+            onChange={(event, newValue) =>
+              handleInputChange("alapadatokId", newValue ? newValue.id : null)
+            }
+            loading={schoolsLoading}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Iskola kiválasztása"
+                placeholder="Válasszon iskolát..."
+                helperText="Válassza ki azt az iskolát, amelyhez a felhasználó tartozik (opcionális)"
+              />
+            )}
+            renderOption={(props, option) => (
+              <Box component="li" {...props}>
+                <Box>
+                  <Typography variant="body1">{option.iskola_neve}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {option.intezmeny_tipus}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+            sx={{ mt: 2 }}
+          />
+
+          {editedUser.alapadatokId && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                Kiválasztott iskola:
+              </Typography>
+              <Box sx={{ ml: 2, mt: 1 }}>
+                <Typography variant="body2">
+                  • Iskola:{" "}
+                  {
+                    schoolsData.find(
+                      (school) => school.id === editedUser.alapadatokId
+                    )?.iskola_neve
+                  }
+                </Typography>
+                <Typography variant="body2">
+                  • Típus:{" "}
+                  {
+                    schoolsData.find(
+                      (school) => school.id === editedUser.alapadatokId
+                    )?.intezmeny_tipus
+                  }
+                </Typography>
+              </Box>
+            </Box>
+          )}
           <Divider sx={{ my: 3 }} />
 
           <Typography variant="h6" gutterBottom>
@@ -381,9 +481,10 @@ export const EditUserDialog = ({
           </Typography>
           <Autocomplete
             multiple
+            disableCloseOnSelect
             id="table-access-edit"
             options={tableOptions}
-            getOptionLabel={(option) => option.name}
+            getOptionLabel={(option) => option.alias}
             value={selectedTables}
             onChange={(event, newValue) => handleTableAccessChange(newValue)}
             loading={tablesLoading}
@@ -496,8 +597,8 @@ export const EditUserDialog = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Mégse</Button>
-        <Button 
-          onClick={handleSave} 
+        <Button
+          onClick={handleSave}
           variant="contained"
           disabled={isChangingPassword}
           startIcon={isChangingPassword ? <CircularProgress size={20} /> : null}
@@ -505,6 +606,12 @@ export const EditUserDialog = ({
           {isChangingPassword ? "Mentés..." : "Mentés"}
         </Button>
       </DialogActions>
+      <NotificationSnackbar
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={closeNotification}
+      />
     </Dialog>
   );
 };

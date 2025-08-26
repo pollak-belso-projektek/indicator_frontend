@@ -1,60 +1,117 @@
-import React from "react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { HStack, Badge, Button, VStack, Text } from "@chakra-ui/react";
 import { FiEdit2 } from "react-icons/fi";
-import { MdDelete } from "react-icons/md";
 import { TbHandStop } from "react-icons/tb";
 import { formatAccessLevel } from "../../utils/tableAccessUtils";
-import { Tooltip } from "@mui/material";
+import { Grid, Tooltip } from "@mui/material";
 const columnHelper = createColumnHelper();
 
 export const createUserColumns = (onEdit, onDelete) => [
   columnHelper.accessor("name", {
     header: "Név",
     cell: (info) => info.getValue(),
+    size: 150,
+    minSize: 100,
+    maxSize: 300,
   }),
   columnHelper.accessor("email", {
     header: "Email",
     cell: (info) => info.getValue(),
+    size: 200,
+    minSize: 150,
+    maxSize: 400,
+  }),
+  columnHelper.accessor("alapadatokId", {
+    header: "Iskola",
+    cell: (info) => {
+      const schoolId = info.getValue();
+      const schoolData = info.row.original.alapadatok;
+
+      if (!schoolId) {
+        return <Text color="gray.500">Nincs hozzárendelve</Text>;
+      }
+
+      if (schoolData) {
+        return (
+          <VStack spacing={0} align="start">
+            <Text fontWeight="medium" fontSize="sm">
+              {schoolData.iskola_neve}
+            </Text>
+            <Text fontSize="xs" color="gray.500">
+              {schoolData.intezmeny_tipus}
+            </Text>
+          </VStack>
+        );
+      }
+
+      return <Text color="gray.500">ID: {schoolId}</Text>;
+    },
+    size: 250,
+    minSize: 150,
+    maxSize: 400,
   }),
   columnHelper.accessor("createdAt", {
     header: "Létrehozva",
     cell: (info) => new Date(info.getValue()).toLocaleDateString(),
+    size: 120,
+    minSize: 100,
+    maxSize: 150,
   }),
   columnHelper.accessor("updatedAt", {
     header: "Frissítve",
     cell: (info) =>
       info.getValue() ? new Date(info.getValue()).toLocaleDateString() : "-",
+    size: 120,
+    minSize: 100,
+    maxSize: 150,
   }),
   columnHelper.accessor("tableAccess", {
     header: "Táblák hozzáférése",
     cell: (info) => {
       const access = info.getValue();
+
       if (!access || access.length === 0) return "Nincs hozzáférés";
 
       return (
-        <VStack spacing={1} align="start">
-          {
-            //isHszc
-          }
-          {access.map((item) => {
+        <Grid
+          container
+          spacing={1}
+          alignItems="flex-start"
+          maxHeight="150px"
+          overflow="auto"
+        >
+          {console.log("Rendering access badges:", access)}
+          {access.map((item, index) => {
             const permissions = formatAccessLevel(item.access);
 
             return (
               <HStack key={item.tableName || item.id} spacing={2} align="start">
                 {permissions.length > 0 && (
                   <Tooltip title={permissions.join(", ")}>
-                    <Badge size="sm" variant="solid" colorPalette="blue">
-                      {item.tableName}
+                    <Badge
+                      size="sm"
+                      variant="solid"
+                      colorPalette={
+                        index % 2 === 0
+                          ? "blue"
+                          : index % 3 === 0
+                          ? "green"
+                          : "purple"
+                      }
+                    >
+                      {item.table.alias}
                     </Badge>
                   </Tooltip>
                 )}
               </HStack>
             );
           })}
-        </VStack>
+        </Grid>
       );
     },
+    size: 200,
+    minSize: 150,
+    maxSize: 350,
   }),
   columnHelper.accessor("permissionsDetails", {
     header: "Szerepkörök",
@@ -101,6 +158,9 @@ export const createUserColumns = (onEdit, onDelete) => [
         </HStack>
       );
     },
+    size: 180,
+    minSize: 120,
+    maxSize: 300,
   }),
   columnHelper.accessor("isActive", {
     header: "Aktív",
@@ -116,6 +176,9 @@ export const createUserColumns = (onEdit, onDelete) => [
         </Badge>
       );
     },
+    size: 80,
+    minSize: 60,
+    maxSize: 120,
   }),
   columnHelper.display({
     id: "actions",
@@ -139,5 +202,9 @@ export const createUserColumns = (onEdit, onDelete) => [
         </Button>
       </HStack>
     ),
+    size: 120,
+    minSize: 100,
+    maxSize: 150,
+    enableResizing: false,
   }),
 ];

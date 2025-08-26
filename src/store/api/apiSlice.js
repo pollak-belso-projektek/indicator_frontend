@@ -258,6 +258,22 @@ export const indicatorApi = createApi({
       query: () => "tablelist",
       providesTags: ["TableList"],
     }),
+    createTable: build.mutation({
+      query: (newTable) => ({
+        url: "tablelist",
+        method: "POST",
+        body: newTable,
+      }),
+      invalidatesTags: ["TableList"],
+    }),
+    updateTable: build.mutation({
+      query: ({ id, ...updatedTable }) => ({
+        url: `tablelist/${id}`,
+        method: "PUT",
+        body: updatedTable,
+      }),
+      invalidatesTags: ["TableList"],
+    }),
 
     // ========== Educational Indicators Endpoints ==========
 
@@ -900,6 +916,8 @@ export const {
   useLogoutMutation,
   useRefreshTokenMutation,
   useGetTableListQuery,
+  useCreateTableMutation,
+  useUpdateTableMutation,
   // Educational Indicators hooks
   useGetElhelyezkedesByYearQuery,
   useGetElhelyezkedesBySchoolAndYearQuery,
