@@ -23,13 +23,14 @@ import {
   CardContent,
   Grid,
   DialogContentText,
+  CircularProgress,
 } from "@mui/material";
 import {
   getHierarchyLevel,
   getUserTypeLabel,
   getUserTypeFromLevel,
 } from "../../utils/userHierarchy";
-import { useGetTableListQuery } from "../../store/api/apiSlice";
+import { useGetTableListQuery, useChangeUserPasswordMutation } from "../../store/api/apiSlice";
 import {
   TABLE_ACCESS_LEVELS,
   getAvailableTables,
@@ -59,6 +60,10 @@ export const EditUserDialog = ({
   const [tablePermissions, setTablePermissions] = useState({});
   const [showPasswordField, setShowPasswordField] = useState(false);
   const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
+
+  // Get the password change mutation
+  const [changeUserPassword, { isLoading: isChangingPassword }] = useChangeUserPasswordMutation();
 
   // Get available user types that current user can assign (not higher than their own level)
   const availableUserTypes = userPermissions?.getAvailableUserTypes() || [];
@@ -112,6 +117,7 @@ export const EditUserDialog = ({
 
       setShowPasswordField(false);
       setNewPassword("");
+      setNewPasswordConfirm("");
     }
   }, [user, open]);
 
@@ -179,7 +185,7 @@ export const EditUserDialog = ({
       [field]: value,
     }));
   };
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editedUser.name || !editedUser.email) {
       alert("Kérjük töltse ki az összes kötelező mezőt!");
       return;
@@ -191,27 +197,54 @@ export const EditUserDialog = ({
       return;
     }
 
-    const updatedUser = { ...editedUser };
-
     // Ensure ID is present
-    if (!updatedUser.id) {
+    if (!editedUser.id) {
       alert("Felhasználó azonosító hiányzik!");
       return;
     }
 
-    // Include password only if it was changed
-    if (showPasswordField && newPassword.trim()) {
-      updatedUser.password = newPassword;
+    // Validate password if changing
+    if (showPasswordField) {
+      if (!newPassword.trim()) {
+        alert("Az új jelszó nem lehet üres!");
+        return;
+      }
+      if (newPassword !== newPasswordConfirm) {
+        alert("A jelszavak nem egyeznek!");
+        return;
+      }
     }
 
-    console.log("Saving user with ID:", updatedUser.id, "Data:", updatedUser);
-    onSave(updatedUser);
-    handleClose();
+    try {
+      // Update user data (excluding password)
+      const updatedUser = { ...editedUser };
+      console.log("Saving user with ID:", updatedUser.id, "Data:", updatedUser);
+      await onSave(updatedUser);
+
+      // Change password separately if requested
+      if (showPasswordField && newPassword.trim()) {
+        await changeUserPassword({
+          id: editedUser.id,
+          newPassword,
+          newPasswordConfirm,
+        }).unwrap();
+        
+        alert("Felhasználó és jelszó sikeresen frissítve!");
+      } else {
+        alert("Felhasználó sikeresen frissítve!");
+      }
+
+      handleClose();
+    } catch (error) {
+      console.error("Error saving user:", error);
+      alert("Hiba történt a mentés során: " + (error.message || "Ismeretlen hiba"));
+    }
   };
 
   const handleClose = () => {
     setShowPasswordField(false);
     setNewPassword("");
+    setNewPasswordConfirm("");
     onClose();
   };
 
@@ -267,15 +300,32 @@ export const EditUserDialog = ({
               label="Jelszó módosítása"
             />
             {showPasswordField && (
-              <TextField
-                fullWidth
-                label="Új jelszó"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                margin="normal"
-                helperText="Hagyja üresen, ha nem szeretné módosítani a jelszót"
-              />
+              <Box sx={{ mt: 2 }}>
+                <TextField
+                  fullWidth
+                  label="Új jelszó"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  margin="normal"
+                  required
+                />
+                <TextField
+                  fullWidth
+                  label="Új jelszó megerősítése"
+                  type="password"
+                  value={newPasswordConfirm}
+                  onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                  margin="normal"
+                  required
+                  error={newPassword !== newPasswordConfirm && newPasswordConfirm.length > 0}
+                  helperText={
+                    newPassword !== newPasswordConfirm && newPasswordConfirm.length > 0
+                      ? "A jelszavak nem egyeznek"
+                      : "Írja be újra az új jelszót a megerősítéshez"
+                  }
+                />
+              </Box>
             )}
           </Box>
 
@@ -446,8 +496,13 @@ export const EditUserDialog = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Mégse</Button>
-        <Button onClick={handleSave} variant="contained">
-          Mentés
+        <Button 
+          onClick={handleSave} 
+          variant="contained"
+          disabled={isChangingPassword}
+          startIcon={isChangingPassword ? <CircularProgress size={20} /> : null}
+        >
+          {isChangingPassword ? "Mentés..." : "Mentés"}
         </Button>
       </DialogActions>
     </Dialog>

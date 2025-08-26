@@ -18,6 +18,7 @@ const decodeUserFromToken = (accessToken) => {
     return {
       email: decoded.email,
       name: decoded.name,
+      school: decoded.school,
       permissions: decoded.permissions,
       tableAccess: decoded.tableAccess,
       role: getHighestRole(decoded.permissions),
@@ -98,7 +99,10 @@ const authSlice = createSlice({
 
       // Decode JWT token to get user permissions and role
       const decodedUser = decodeUserFromToken(action.payload.accessToken);
-
+      
+              console.log("Decoded user from access token:");
+        console.log(decodedUser);
+        console.log(action.payload.accessToken);
       state.user = {
         id: action.payload.id,
         email: action.payload.email,
@@ -145,6 +149,7 @@ const authSlice = createSlice({
         //   action.payload.accessToken
         // );
         const decodedUser = decodeUserFromToken(action.payload.accessToken);
+
         if (decodedUser && state.user) {
           state.user = {
             ...state.user,

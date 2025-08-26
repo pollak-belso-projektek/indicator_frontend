@@ -37,7 +37,6 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
-    password: "",
     permissions: 1, // Default to iskolai_general (level 1)
     tableAccess: [], // Default empty table access
     alapadatok_id: null, // Will be set based on user context
@@ -205,9 +204,6 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
               <Typography variant="body2">
                 • Típus: {getUserTypeLabel(userType)}
               </Typography>
-              <Typography variant="body2">
-                • Hierarchia szint: {newUser.permissions}
-              </Typography>
             </Box>
           </Box>
           <FormControlLabel
@@ -217,6 +213,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
                 onChange={(e) => handleInputChange("active", e.target.checked)}
               />
             }
+            disabled
             label="Aktív felhasználó"
             sx={{ mt: 2 }}
           />
