@@ -3,6 +3,7 @@ import { persistStore } from "redux-persist";
 import monitorReducersEnhancer from "../enhancers/monitorReducer";
 import loggerMiddleware from "../middleware/logger";
 import { indicatorApi } from "./api/apiSlice";
+import { healthApi } from "./api/healthSlice";
 import authReducer from "./slices/authSlice";
 import { createPersistedReducer } from "./persistConfig";
 
@@ -11,6 +12,7 @@ export default function configureAppStore(preloadedState) {
   const rootReducer = combineReducers({
     auth: authReducer,
     [indicatorApi.reducerPath]: indicatorApi.reducer,
+    [healthApi.reducerPath]: healthApi.reducer,
   });
 
   // Create persisted reducer
@@ -30,7 +32,8 @@ export default function configureAppStore(preloadedState) {
         },
       })
         /*  .prepend(loggerMiddleware)*/
-        .concat(indicatorApi.middleware),
+        .concat(indicatorApi.middleware)
+        .concat(healthApi.middleware),
     preloadedState,
     enhancers: (getDefaultEnhancers) =>
       getDefaultEnhancers().concat(monitorReducersEnhancer),

@@ -4,7 +4,7 @@ import config from "../../config";
 
 // Base query with authentication and automatic token refresh
 const baseQuery = fetchBaseQuery({
-  baseUrl: config.apiBaseUrl,
+  baseUrl: config.apiBaseUrl+ "api/v1/",
   timeout: 10000, // 10 second timeout for all API calls
   prepareHeaders: (headers, { getState }) => {
     // Get the access token from the auth state
@@ -16,7 +16,6 @@ const baseQuery = fetchBaseQuery({
     } // Add cache control headers to prevent caching in development
     if (config.isDevelopment) {
       headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
-      headers.set("Pragma", "no-cache");
       headers.set("Expires", "0");
     }
 
