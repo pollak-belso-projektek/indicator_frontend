@@ -49,10 +49,14 @@ import {
 import CacheDebugPanel from "../components/CacheDebugPanel";
 
 import { useCheckHealthQuery } from "../store/api/healthSlice";
+import { useRedirectNotification } from "../hooks/useRedirectNotification";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [showDebugPanels, setShowDebugPanels] = useState(false);
+
+  // Use redirect notification hook to handle access denied notifications
+  useRedirectNotification();
 
   const user = useSelector(selectUser);
   const userPermissions = useSelector(selectUserPermissions);

@@ -13,6 +13,7 @@ import configureAppStore from "./store/configureStore.js";
 import "./store/api/oktatokEgyebTevSlice.js"; // Import to register the API slice
 import { setupListeners } from "@reduxjs/toolkit/query";
 import Router from "./router/router.jsx";
+import { AccessNotificationProvider } from "./contexts/AccessNotificationContext.jsx";
 // Import Tailwind CSS LAST to give it highest priority
 import "./index.css";
 
@@ -59,7 +60,9 @@ createRoot(document.getElementById("root")).render(
       <ChakraProvider>
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
-            <Router />
+            <AccessNotificationProvider>
+              <Router />
+            </AccessNotificationProvider>
           </PersistGate>
         </Provider>
       </ChakraProvider>

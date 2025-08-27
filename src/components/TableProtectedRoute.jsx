@@ -71,7 +71,15 @@ export default function TableProtectedRoute({ children, tableName = null }) {
       console.warn(
         `Access denied to logs - admin permissions required for route: ${location.pathname}`
       );
-      return <Navigate to="/dashboard" replace />;
+      return <Navigate 
+        to="/dashboard" 
+        state={{ 
+          redirectReason: 'insufficient_permissions',
+          fromRoute: location.pathname,
+          requiredRole: 'admin'
+        }} 
+        replace 
+      />;
     }
     return children;
   }
@@ -81,7 +89,15 @@ export default function TableProtectedRoute({ children, tableName = null }) {
     console.warn(
       `Access denied to table: ${targetTableName} for route: ${location.pathname}`
     );
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate 
+      to="/dashboard" 
+      state={{ 
+        redirectReason: 'table_access_denied',
+        fromRoute: location.pathname,
+        tableName: targetTableName
+      }} 
+      replace 
+    />;
   }
 
   return children;

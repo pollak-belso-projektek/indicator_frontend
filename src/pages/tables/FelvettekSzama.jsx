@@ -1032,7 +1032,7 @@ const FelvettekSzama = () => {
         severity={snackbarSeverity}
         onClose={handleSnackbarClose}
         autoHideDuration={6000}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       />
     </Box>
   );
