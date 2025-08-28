@@ -30,6 +30,7 @@ import {
   MdWork,
   MdClose,
   MdSearch,
+  MdInfo,
 } from "react-icons/md";
 
 import { useColorModeValue } from "./ui/color-mode";
@@ -52,7 +53,9 @@ import {
   TextField,
   InputAdornment,
   IconButton as MuiIconButton,
+  Tooltip,
 } from "@mui/material";
+import { useRecentPages } from "../hooks/useRecentPages";
 
 // Organized navigation items with categories
 const NavigationCategories = {
@@ -305,26 +308,31 @@ const getAccessibleNavItems = (tableAccess, userPermissions) => {
           userPermissions?.isAdmin ||
           userPermissions?.isSuperadmin ||
           accessibleTableNames.some((name) =>
-            ["alapadatok", "tanulo_letszam", "kompetencia", "tanugyi_adatok"].includes(name)
+            [
+              "alapadatok",
+              "tanulo_letszam",
+              "kompetencia",
+              "tanugyi_adatok",
+            ].includes(name)
           )
         );
       }
-      
+
       // Table management - only for superadmins
       if (item.link === "/table-management") {
         return userPermissions?.isSuperadmin;
       }
-      
+
       // Alapadatok - only if user has alapadatok table access
       if (item.link === "/alapadatok") {
         return accessibleTableNames.includes("alapadatok");
       }
-      
+
       // Schools - only if user has alapadatok table access
       if (item.link === "/schools") {
         return accessibleTableNames.includes("alapadatok");
       }
-      
+
       // For other items without tableName, don't show them unless explicitly handled above
       return false;
     }
@@ -382,6 +390,10 @@ const SidebarContent = ({ onClose, ...rest }) => {
     tableAccess,
     userPermissions
   );
+
+  // Initialize recent pages hook
+  const { recentPages, clearRecentPages, removeRecentPage } =
+    useRecentPages(NavigationCategories);
 
   // Separate fixed items (first 5) and scrollable items - memoized to prevent infinite re-renders
   const fixedItems = useMemo(() => {
@@ -547,6 +559,14 @@ const SidebarContent = ({ onClose, ...rest }) => {
           </Box>
         </VStack>
 
+        {/* Recent Pages Section 
+        <RecentPages
+          recentPages={recentPages}
+          onRemovePage={removeRecentPage}
+          onClearAll={clearRecentPages}
+          onClose={onClose}
+        />
+*/}
         {/* Fixed Navigation Items - Collapsible */}
         <Box mb="2">
           {/* Fixed Category Header */}
@@ -823,7 +843,11 @@ const MobileNav = ({ onOpen, ...rest }) => {
   const user = useSelector(selectUser);
   const userRole = useSelector(selectUserRole);
   const userPermissions = useSelector(selectUserPermissions);
-  const [logoutMutation] = useLogoutMutation(); // Emergency logout handler (bypasses API call)
+  const [logoutMutation] = useLogoutMutation();
+
+  // Initialize recent pages hook for mobile nav
+  const { recentPages, clearRecentPages, removeRecentPage } =
+    useRecentPages(NavigationCategories); // Emergency logout handler (bypasses API call)
   const handleEmergencyLogout = () => {
     console.log("Emergency logout triggered - bypassing API call");
 
@@ -937,21 +961,64 @@ const MobileNav = ({ onOpen, ...rest }) => {
       justifyContent={{ base: "space-between", md: "flex-end" }}
       {...rest}
     >
-      <IconButton
-        display={{ base: "flex", md: "none" }}
-        onClick={onOpen}
-        variant="outline"
-        aria-label="open menu"
-      >
-        <MdMenu />
-      </IconButton>
+      <Box position="relative">
+        <IconButton
+          display={{ base: "flex", md: "none" }}
+          onClick={onOpen}
+          variant="outline"
+          aria-label="open menu"
+        >
+          <MdMenu />
+        </IconButton>
+
+        {/* Recent pages indicator for mobile 
+        {recentPages && recentPages.length > 0 && (
+          <Box
+            position="absolute"
+            top="-1"
+            right="-1"
+            w="5"
+            h="5"
+            bg="blue.500"
+            borderRadius="full"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            fontSize="xs"
+            color="white"
+            fontWeight="bold"
+            border="2px solid white"
+          >
+            {recentPages.length}
+          </Box>
+        )}*/}
+      </Box>
 
       <Box flex="1" flexGrow={1} justifyContent="center">
         <SchoolSelector />
       </Box>
 
       <HStack spacing={{ base: "0", md: "6" }}>
+        {/* Recent Pages Dropdown - Desktop Only 
+
+        <Box display={{ base: "none", md: "block" }}>
+          <RecentPagesDropdown
+            recentPages={recentPages}
+            onRemovePage={removeRecentPage}
+            onClearAll={clearRecentPages}
+          />
+        </Box>
+*/}
+
         <Flex alignItems={"center"} gap={2}>
+          <Tooltip title="Az oldal fejlesztés alatt áll.">
+            <MdInfo
+              style={{ cursor: "pointer" }}
+              color={"orange"}
+              size={25}
+              className="animate-pulse"
+            />
+          </Tooltip>
           <Menu.Root>
             <Menu.Trigger
               py={2}
