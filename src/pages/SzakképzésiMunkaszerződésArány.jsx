@@ -55,13 +55,19 @@ export default function SzakképzésiMunkaszerződésArány() {
           ?.map((szakiranyok) => {
             const specializations =
               szakiranyok?.szakirany?.szakma
-                ?.filter(
-                  (item) =>
+                ?.filter((item) => {
+                  if (item.szakma.tipus == null) {
+                    return selectedSchool?.alapadatok_szakma.some(
+                      (item2) => item2.szakma.nev === item.szakma.nev
+                    );
+                  }
+                  return (
                     item.szakma.tipus === tipus &&
                     selectedSchool?.alapadatok_szakma.some(
                       (item2) => item2.szakma.nev === item.szakma.nev
                     )
-                )
+                  );
+                })
                 ?.map((item) => item.szakma.nev) || [];
 
             return {
