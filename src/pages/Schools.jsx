@@ -44,7 +44,11 @@ import {
   useAddAlapadatokMutation,
   useUpdateAlapadatokMutation,
   useDeleteAlapadatokMutation,
+  useGetSzakiranyListQuery,
+  useGetSzakmaListQuery,
 } from "../store/api/apiSlice";
+import CustomCreatableSelect from "../components/ui/CreatableSelect";
+import { useUserPermissions } from "../hooks/useUserPermissions";
 
 const Schools = () => {
   const [open, setOpen] = useState(false);
@@ -56,8 +60,8 @@ const Schools = () => {
     alapadatok_szakirany: [],
   });
   const [expandedSchool, setExpandedSchool] = useState(null);
-  const [newSzakiranyName, setNewSzakiranyName] = useState("");
-  const [newSzakmaNames, setNewSzakmaNames] = useState({});
+
+  const hasSuperAdminPermission = useUserPermissions("superadmin");
 
   // API hooks
   const {
@@ -66,6 +70,8 @@ const Schools = () => {
     isLoading,
     refetch,
   } = useGetAllAlapadatokQuery();
+  const { data: szakiranyOptions = [], isLoading: isSzakiranyLoading } = useGetSzakiranyListQuery();
+  const { data: szakmaOptions = [], isLoading: isSzakmaLoading } = useGetSzakmaListQuery();
   const [addSchool, { isLoading: isAdding }] = useAddAlapadatokMutation();
   const [updateSchool, { isLoading: isUpdating }] =
     useUpdateAlapadatokMutation();
@@ -80,8 +86,8 @@ const Schools = () => {
   ];
 
   // Add new szakirány to school
-  const addSzakirany = (szakiranyName) => {
-    if (!szakiranyName.trim()) return;
+  const addSzakirany = (selectedOption) => {
+    if (!selectedOption || !selectedOption.value) return;
 
     // Generate a temporary unique ID for new szakirány
     const tempId = `temp_${Date.now()}_${Math.random()
@@ -92,7 +98,7 @@ const Schools = () => {
       szakirany_id: tempId,
       alapadatok_id: selectedSchool?.id || "",
       szakirany: {
-        nev: szakiranyName.trim(),
+        nev: selectedOption.value,
         szakma: [],
       },
     };
@@ -101,8 +107,6 @@ const Schools = () => {
       ...prev,
       alapadatok_szakirany: [...prev.alapadatok_szakirany, newSzakiranyData],
     }));
-
-    setNewSzakiranyName("");
   };
 
   // Remove szakirány from school
@@ -116,8 +120,8 @@ const Schools = () => {
   };
 
   // Add szakma to szakirány
-  const addSzakmaToSzakirany = (szakiranyId, szakmaName) => {
-    if (!szakmaName.trim()) return;
+  const addSzakmaToSzakirany = (szakiranyId, selectedOption) => {
+    if (!selectedOption || !selectedOption.value) return;
 
     // Generate a temporary unique ID for new szakma
     const tempSzakmaId = `temp_szakma_${Date.now()}_${Math.random()
@@ -128,7 +132,7 @@ const Schools = () => {
       szakma_id: tempSzakmaId,
       szakirany_id: szakiranyId,
       szakma: {
-        nev: szakmaName.trim(),
+        nev: selectedOption.value,
       },
     };
 
@@ -146,12 +150,6 @@ const Schools = () => {
         }
         return item;
       }),
-    }));
-
-    // Clear the input for this szakirány
-    setNewSzakmaNames((prev) => ({
-      ...prev,
-      [szakiranyId]: "",
     }));
   };
 
@@ -244,8 +242,6 @@ const Schools = () => {
       intezmeny_tipus: "",
       alapadatok_szakirany: [],
     });
-    setNewSzakiranyName("");
-    setNewSzakmaNames({});
   };
 
   // Handle input change
@@ -265,6 +261,11 @@ const Schools = () => {
     //log every obj change
     console.log("Form Data Changed:", formData);
   }, [formData]);
+
+  useEffect(() => {
+    console.log("Szakirany Options:", szakiranyOptions);
+    console.log("Szakma Options:", szakmaOptions);
+  }, [szakiranyOptions, szakmaOptions]);
 
   if (isLoading) {
     return (
@@ -305,7 +306,7 @@ const Schools = () => {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => handleOpen()}
-          disabled={isAdding}
+          disabled={!hasSuperAdminPermission || isAdding}
         >
           Új iskola hozzáadása
         </Button>
@@ -466,11 +467,30 @@ const Schools = () => {
       </TableContainer>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <Dialog 
+        open={open} 
+        onClose={handleClose} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            maxHeight: '90vh',
+            overflow: 'visible'
+          }
+        }}
+        sx={{
+          '& .MuiDialog-container': {
+            overflow: 'visible'
+          },
+          '& .MuiBackdrop-root': {
+            backgroundColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }}
+      >
         <DialogTitle>
           {editMode ? "Iskola szerkesztése" : "Új iskola hozzáadása"}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ overflow: 'visible', paddingBottom: 0, maxHeight: '70vh', overflowY: 'auto' }}>
           <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 3 }}>
             {/* Basic School Information */}
             <Card variant="outlined">
@@ -515,35 +535,23 @@ const Schools = () => {
                   sx={{
                     display: "flex",
                     justifyContent: "space-between",
-                    alignItems: "center",
+                    alignItems: "flex-start",
                     mb: 2,
                   }}
                 >
-                  <Typography variant="h6">
+                  <Typography variant="h6" sx={{ pt: 1 }}>
                     Szakirányok ({formData.alapadatok_szakirany.length})
                   </Typography>
-                  <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                    <TextField
-                      size="small"
-                      label="Új szakirány neve"
-                      value={newSzakiranyName}
-                      onChange={(e) => setNewSzakiranyName(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === "Enter") {
-                          addSzakirany(newSzakiranyName);
-                        }
-                      }}
-                      sx={{ minWidth: 200 }}
+                  <Box sx={{ width: 300 }}>
+                    <CustomCreatableSelect
+                      options={szakiranyOptions}
+                      placeholder="Válasszon vagy hozzon létre szakirányt"
+                      label="Új szakirány"
+                      isLoading={isSzakiranyLoading}
+                      onChange={addSzakirany}
+                      value={null}
+                      isClearable={false}
                     />
-                    <Button
-                      variant="contained"
-                      size="small"
-                      startIcon={<AddIcon />}
-                      onClick={() => addSzakirany(newSzakiranyName)}
-                      disabled={!newSzakiranyName.trim()}
-                    >
-                      Hozzáadás
-                    </Button>
                   </Box>
                 </Box>
 
@@ -596,70 +604,29 @@ const Schools = () => {
                               sx={{
                                 display: "flex",
                                 justifyContent: "space-between",
-                                alignItems: "center",
+                                alignItems: "flex-start",
                                 mb: 1,
                               }}
                             >
-                              <Typography variant="subtitle2">
+                              <Typography variant="subtitle2" sx={{ pt: 1 }}>
                                 Szakmák (
                                 {szakiranyData.szakirany.szakma?.length || 0})
                               </Typography>
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  gap: 1,
-                                  alignItems: "center",
-                                }}
-                              >
-                                <TextField
-                                  size="small"
-                                  label="Új szakma neve"
-                                  value={
-                                    newSzakmaNames[
-                                      szakiranyData.szakirany_id
-                                    ] || ""
-                                  }
-                                  onChange={(e) =>
-                                    setNewSzakmaNames((prev) => ({
-                                      ...prev,
-                                      [szakiranyData.szakirany_id]:
-                                        e.target.value,
-                                    }))
-                                  }
-                                  onKeyPress={(e) => {
-                                    if (e.key === "Enter") {
-                                      addSzakmaToSzakirany(
-                                        szakiranyData.szakirany_id,
-                                        newSzakmaNames[
-                                          szakiranyData.szakirany_id
-                                        ] || ""
-                                      );
-                                    }
-                                  }}
-                                  sx={{ minWidth: 180 }}
-                                />
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  startIcon={<AddIcon />}
-                                  onClick={() =>
+                              <Box sx={{ width: 250 }}>
+                                <CustomCreatableSelect
+                                  options={szakmaOptions}
+                                  placeholder="Válasszon vagy hozzon létre szakmát"
+                                  label="Új szakma"
+                                  isLoading={isSzakmaLoading}
+                                  onChange={(selectedOption) =>
                                     addSzakmaToSzakirany(
                                       szakiranyData.szakirany_id,
-                                      newSzakmaNames[
-                                        szakiranyData.szakirany_id
-                                      ] || ""
+                                      selectedOption
                                     )
                                   }
-                                  disabled={
-                                    !(
-                                      newSzakmaNames[
-                                        szakiranyData.szakirany_id
-                                      ] || ""
-                                    ).trim()
-                                  }
-                                >
-                                  Hozzáadás
-                                </Button>
+                                  value={null}
+                                  isClearable={false}
+                                />
                               </Box>
                             </Box>
 

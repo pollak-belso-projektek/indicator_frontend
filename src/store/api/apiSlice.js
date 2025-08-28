@@ -35,6 +35,8 @@ export const indicatorApi = createApi({
     "Dobbanto",
     "Logs",
     "OktatokEgyebTev",
+    "Szakirany",
+    "Szakma",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -884,6 +886,16 @@ export const indicatorApi = createApi({
     }),
 
 
+    // Szakirany and Szakma endpoints
+    getSzakiranyList: build.query({
+      query: () => "szakirany",
+      providesTags: ["Szakirany"],
+    }),
+    getSzakmaList: build.query({
+      query: () => "szakma",
+      providesTags: ["Szakma"],
+    }),
+
     // User management endpoints
   }),
 });
@@ -984,4 +996,7 @@ export const {
   useAddDobbantoMutation,
   useUpdateDobbantoMutation,
   useDeleteDobbantoMutation,
+  // Szakirany and Szakma hooks
+  useGetSzakiranyListQuery,
+  useGetSzakmaListQuery,
 } = indicatorApi;

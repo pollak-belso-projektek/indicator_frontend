@@ -341,7 +341,7 @@ export default function Dashboard() {
                   </Typography>
                   <Typography variant="h6">
                     {isSuperadmin
-                      ? "Superadmin"
+                      ? "Fejlesztő"
                       : isAdmin
                       ? "Admin"
                       : isHSZC
