@@ -64,6 +64,8 @@ export default function SzakképzésiMunkaszerződésArány() {
                 )
                 ?.map((item) => item.szakma.nev) || [];
 
+            console.log(szakiranyok.szakirany);
+
             return {
               name: szakiranyok.szakirany.nev,
               specializations:

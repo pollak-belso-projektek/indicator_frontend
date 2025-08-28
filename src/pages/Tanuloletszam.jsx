@@ -52,10 +52,28 @@ export default function TanuloLetszam() {
   const { data: schoolsData, isLoading: _isLoadingSchools } =
     useGetAllAlapadatokQuery();
 
-  const { data: tanugyiData } = useGetTanugyiAdatokQuery({
-    alapadatok_id: selectedSchool?.id,
+  const {
+    data: tanugyiData,
+    error: tanugyiError,
+    isLoading: isTanugyiLoading,
+  } = useGetTanugyiAdatokQuery({
+    alapadatok_id: selectedSchool?.id || null,
     ev: 2024,
   });
+
+  // Debug tanugyi data loading
+  useEffect(() => {
+    console.log("🔍 TANUGYI DEBUG:");
+    console.log("- selectedSchool:", selectedSchool);
+    console.log("- tanugyiData:", tanugyiData);
+    console.log("- tanugyiError:", tanugyiError);
+    console.log("- isTanugyiLoading:", isTanugyiLoading);
+    console.log("- tanugyiData type:", typeof tanugyiData);
+    console.log(
+      "- tanugyiData length:",
+      Array.isArray(tanugyiData) ? tanugyiData.length : "not array"
+    );
+  }, [selectedSchool, tanugyiData, tanugyiError, isTanugyiLoading]);
 
   const [addStudentData, { isLoading: isUpdating }] =
     useAddTanuloLetszamMutation();
@@ -698,70 +716,22 @@ export default function TanuloLetszam() {
     const hasTanugyiData =
       tanugyiData && Array.isArray(tanugyiData) && tanugyiData.length > 0;
 
-    console.log(tanugyiData);
+    console.log("🔍 DEBUG - Data availability check:");
+    console.log("- selectedSchool:", selectedSchool?.iskola_neve || "None");
+    console.log("- apiStudentData:", apiStudentData?.length || 0, "records");
+    console.log("- tanugyiData:", tanugyiData?.length || 0, "records");
+    console.log("- hasTanuloLetszamData:", hasTanuloLetszamData);
+    console.log("- hasTanugyiData:", hasTanugyiData);
 
-    if (hasTanuloLetszamData) {
-      // Priority: Use TanuloLetszam data if available
-      const initialTableData = {};
+    // Helper function to calculate tanugyi data
+    const calculateTanugyiData = () => {
+      if (!hasTanugyiData) {
+        console.log("⚠️ No tanugyi data available for processing");
+        return {};
+      }
 
-      // Convert API data back to table format
-      apiStudentData.forEach((record) => {
-        // Extract programType correctly from the nested object structure
-        let programType;
-        if (record.szakma?.nev) {
-          // If szakma exists, use szakma name
-          programType = record.szakma.nev;
-        } else if (record.szakirany?.nev) {
-          // If no szakma but szakirany exists, use "Nincs meghatározva (szakiranyName)"
-          programType = `Nincs meghatározva (${record.szakirany.nev})`;
-        } else {
-          // Fallback
-          programType = "Unknown";
-        }
-
-        const year = record.tanev_kezdete;
-        const jogvType = record.jogv_tipus;
-        const letszam = record.letszam || 0;
-
-        console.log(
-          `🔍 Processing TanuloLetszam record: ${programType}, year: ${year}, jogv: ${jogvType}, letszam: ${letszam}`
-        );
-
-        if (!initialTableData[programType]) {
-          initialTableData[programType] = {};
-        }
-        if (!initialTableData[programType][year]) {
-          initialTableData[programType][year] = {
-            tanuloi_jogviszony: 0,
-            felnottkepzesi_jogviszony: 0,
-          };
-        }
-
-        if (jogvType === 0) {
-          initialTableData[programType][year].tanuloi_jogviszony = letszam;
-        } else if (jogvType === 1) {
-          initialTableData[programType][year].felnottkepzesi_jogviszony =
-            letszam;
-        }
-      });
-
-      setTableData(initialTableData);
-      setSavedData(JSON.parse(JSON.stringify(initialTableData)));
-      setDataSource("TanuloLetszam");
-      console.log(
-        "Initialized table data from TanuloLetszam API:",
-        initialTableData
-      );
-    } else if (hasTanugyiData) {
-      // Fallback: Calculate from tanugyi data when TanuloLetszam data is not available
-      console.log(
-        "TanuloLetszam data not available, calculating from tanugyi data..."
-      );
+      console.log("✅ Calculating tanugyi data...");
       const calculatedData = {};
-
-      console.log("Processing tanugyi data for calculation...");
-      console.log("Sample student record:", tanugyiData[0]);
-      console.log("Total tanugyi records:", tanugyiData.length);
 
       // Track filtering statistics
       let totalProcessed = 0;
@@ -769,8 +739,13 @@ export default function TanuloLetszam() {
       let evfolyamStats = {};
 
       // Process tanugyi data by szakirany and szakma
-      tanugyiData.forEach((student) => {
+      tanugyiData.forEach((student, index) => {
         totalProcessed++;
+
+        // Debug first 3 students in detail
+        if (index < 3) {
+          console.log(`🔍 DEBUG Student ${index + 1}:`, student);
+        }
 
         // Extract relevant fields from student data - using correct field names from tanugyi data
         let szakmaNev =
@@ -812,6 +787,19 @@ export default function TanuloLetszam() {
         const isGimnazium = evfolyam.toLowerCase().includes("gimnázium");
         const hasEvfolyamNumber = /\d+/.test(evfolyam); // Any evfolyam with numbers (9, 10, 11, 12, 13, etc.)
 
+        // Debug filtering for first 3 students
+        if (totalProcessed <= 3) {
+          console.log(`🔍 FILTERING DEBUG Student ${totalProcessed}:`, {
+            evfolyam,
+            isTechnikum,
+            isSzakkepzo,
+            isGimnazium,
+            hasEvfolyamNumber,
+            willInclude:
+              isTechnikum || isSzakkepzo || isGimnazium || hasEvfolyamNumber,
+          });
+        }
+
         // Determine jogviszony type based on student data
         const isFelnottkepzesi =
           student.tanulo_jogviszonya?.toLowerCase().includes("felnőtt") ||
@@ -833,7 +821,10 @@ export default function TanuloLetszam() {
         }
 
         // Include students in technikum, szakképző, or any evfolyam with numbers (more inclusive)
-        if (isTechnikum || isSzakkepzo || isGimnazium || hasEvfolyamNumber) {
+        // TEMPORARY: Make this very inclusive for debugging
+        const shouldInclude = true; // Include ALL students for now to debug data structure
+
+        if (shouldInclude) {
           if (!calculatedData[programType]) {
             calculatedData[programType] = {};
           }
@@ -883,12 +874,119 @@ export default function TanuloLetszam() {
       console.log("- Total unique szakma names:", szakmaNames.length);
       console.log("- Final calculated data:", calculatedData);
 
-      setTableData(calculatedData);
-      setSavedData(JSON.parse(JSON.stringify(calculatedData)));
-      setDataSource("TanugyiAdatok");
-      console.log("Calculated table data from tanugyi data:", calculatedData);
+      return calculatedData;
+    };
+
+    // Get calculated data from tanugyi data (if available)
+    const calculatedTanugyiData = calculateTanugyiData();
+
+    console.log("🔍 Calculated tanugyi data result:", calculatedTanugyiData);
+    console.log(
+      "🔍 Object keys count:",
+      Object.keys(calculatedTanugyiData).length
+    );
+
+    if (hasTanuloLetszamData || hasTanugyiData) {
+      console.log("🔄 Starting hybrid data processing...");
+      const hybridTableData = {};
+
+      // First, populate with calculated tanugyi data if available
+      if (hasTanugyiData) {
+        console.log("📊 Populating with tanugyi data...");
+        Object.keys(calculatedTanugyiData).forEach((programType) => {
+          hybridTableData[programType] = {
+            ...calculatedTanugyiData[programType],
+          };
+        });
+        console.log(
+          "📊 After tanugyi population:",
+          Object.keys(hybridTableData).length,
+          "program types"
+        );
+      }
+
+      // Then, overlay with TanuloLetszam data where available (non-zero values)
+      if (hasTanuloLetszamData) {
+        console.log(
+          "🔄 Applying hybrid logic: TanuloLetszam data over calculated tanugyi data..."
+        );
+
+        apiStudentData.forEach((record) => {
+          // Extract programType correctly from the nested object structure
+          let programType;
+          if (record.szakma?.nev) {
+            // If szakma exists, use szakma name
+            programType = record.szakma.nev;
+          } else if (record.szakirany?.nev) {
+            // If no szakma but szakirany exists, use "Nincs meghatározva (szakiranyName)"
+            programType = `Nincs meghatározva (${record.szakirany.nev})`;
+          } else {
+            // Fallback
+            programType = "Unknown";
+          }
+
+          const year = record.tanev_kezdete;
+          const jogvType = record.jogv_tipus;
+          const letszam = record.letszam || 0;
+
+          console.log(
+            `🔍 Processing TanuloLetszam record: ${programType}, year: ${year}, jogv: ${jogvType}, letszam: ${letszam}`
+          );
+
+          // Initialize structure if it doesn't exist
+          if (!hybridTableData[programType]) {
+            hybridTableData[programType] = {};
+          }
+          if (!hybridTableData[programType][year]) {
+            hybridTableData[programType][year] = {
+              tanuloi_jogviszony: 0,
+              felnottkepzesi_jogviszony: 0,
+            };
+          }
+
+          // Override with TanuloLetszam data (even if zero, to respect the explicit data)
+          if (jogvType === 0) {
+            hybridTableData[programType][year].tanuloi_jogviszony = letszam;
+            console.log(
+              `🔄 OVERRIDE tanulói: ${programType} ${year} = ${letszam}`
+            );
+          } else if (jogvType === 1) {
+            hybridTableData[programType][year].felnottkepzesi_jogviszony =
+              letszam;
+            console.log(
+              `🔄 OVERRIDE felnőtt: ${programType} ${year} = ${letszam}`
+            );
+          }
+        });
+      }
+
+      // Determine data source for UI indication
+      let dataSource;
+      if (hasTanuloLetszamData && hasTanugyiData) {
+        dataSource = "Hybrid";
+      } else if (hasTanuloLetszamData) {
+        dataSource = "TanuloLetszam";
+      } else {
+        dataSource = "TanugyiAdatok";
+      }
+
+      setTableData(hybridTableData);
+      setSavedData(JSON.parse(JSON.stringify(hybridTableData)));
+      setDataSource(dataSource);
+
+      console.log(
+        `Initialized hybrid table data (${dataSource}):`,
+        hybridTableData
+      );
+    } else {
+      console.log("⚠️ No data available from either source");
+      console.log("- TanuloLetszam available:", hasTanuloLetszamData);
+      console.log("- Tanugyi available:", hasTanugyiData);
+      setTableData({});
+      setSavedData({});
+      setDataSource(null);
     }
-  }, [apiStudentData, tanugyiData]);
+  }, [apiStudentData, tanugyiData, selectedSchool]);
 
   useEffect(() => {
     console.log("Program types:", programTypes);
@@ -940,10 +1038,18 @@ export default function TanuloLetszam() {
                 mt: 2,
                 p: 2,
                 backgroundColor:
-                  dataSource === "TanuloLetszam" ? "#e8f5e8" : "#fff3e0",
+                  dataSource === "TanuloLetszam"
+                    ? "#e8f5e8"
+                    : dataSource === "Hybrid"
+                    ? "#e3f2fd"
+                    : "#fff3e0",
                 borderRadius: 1,
                 border: `1px solid ${
-                  dataSource === "TanuloLetszam" ? "#4caf50" : "#ff9800"
+                  dataSource === "TanuloLetszam"
+                    ? "#4caf50"
+                    : dataSource === "Hybrid"
+                    ? "#2196f3"
+                    : "#ff9800"
                 }`,
               }}
             >
@@ -951,11 +1057,15 @@ export default function TanuloLetszam() {
                 📊 Adatforrás:{" "}
                 {dataSource === "TanuloLetszam"
                   ? "Tanulólétszám API (elsődleges)"
+                  : dataSource === "Hybrid"
+                  ? "Hibrid adatok (TanuloLetszam + Tanügyi számított)"
                   : "Tanügyi adatok API (számított)"}
               </Typography>
               <Typography variant="body2" sx={{ fontSize: "0.85rem", mt: 0.5 }}>
                 {dataSource === "TanuloLetszam"
                   ? "A mentett tanulólétszám adatok kerülnek megjelenítésre."
+                  : dataSource === "Hybrid"
+                  ? "Mentett tanulólétszám adatok kombinálva tanügyi adatokból számított értékekkel. Ahol van mentett adat, az kerül megjelenítésre, egyébként a tanügyi adatokból számított érték."
                   : "Nincs mentett tanulólétszám adat, ezért a tanügyi adatokból kerül kiszámításra."}
               </Typography>
             </Box>
