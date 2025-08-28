@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import {
   Box,
@@ -52,28 +52,10 @@ export default function TanuloLetszam() {
   const { data: schoolsData, isLoading: _isLoadingSchools } =
     useGetAllAlapadatokQuery();
 
-  const {
-    data: tanugyiData,
-    error: tanugyiError,
-    isLoading: isTanugyiLoading,
-  } = useGetTanugyiAdatokQuery({
-    alapadatok_id: selectedSchool?.id || null,
+  const { data: tanugyiData } = useGetTanugyiAdatokQuery({
+    alapadatok_id: selectedSchool?.id,
     ev: 2024,
   });
-
-  // Debug tanugyi data loading
-  useEffect(() => {
-    console.log("🔍 TANUGYI DEBUG:");
-    console.log("- selectedSchool:", selectedSchool);
-    console.log("- tanugyiData:", tanugyiData);
-    console.log("- tanugyiError:", tanugyiError);
-    console.log("- isTanugyiLoading:", isTanugyiLoading);
-    console.log("- tanugyiData type:", typeof tanugyiData);
-    console.log(
-      "- tanugyiData length:",
-      Array.isArray(tanugyiData) ? tanugyiData.length : "not array"
-    );
-  }, [selectedSchool, tanugyiData, tanugyiError, isTanugyiLoading]);
 
   const [addStudentData, { isLoading: isUpdating }] =
     useAddTanuloLetszamMutation();
@@ -425,8 +407,36 @@ export default function TanuloLetszam() {
       console.log("🔍 DEBUG: Starting save process");
       console.log("🔍 DEBUG: apiStudentData available:", apiStudentData);
 
-      // Convert tableData to API format and save/update
+      // Get all displayed program types from the table structure
+      const displayedProgramTypes = new Set();
+      programTypes.forEach((category) => {
+        if (category.subTypes) {
+          category.subTypes.forEach((subType) => {
+            // Skip summary rows like "Összesen" and institution type totals
+            if (
+              !category.isTotal &&
+              !category.isInstitutionType &&
+              !subType.startsWith("ebből:")
+            ) {
+              displayedProgramTypes.add(subType);
+            }
+          });
+        }
+      });
+
+      console.log(
+        "🔍 DEBUG: Displayed program types:",
+        Array.from(displayedProgramTypes)
+      );
+
+      // Convert tableData to API format and save/update - only for displayed program types
       for (const [programType, yearData] of Object.entries(tableData)) {
+        // Skip if this program type is not displayed in the table
+        if (!displayedProgramTypes.has(programType)) {
+          console.log(`⏭️ Skipping non-displayed program type: ${programType}`);
+          continue;
+        }
+
         for (const [year, fields] of Object.entries(yearData)) {
           // Handle tanulói jogviszony
           if (fields.tanuloi_jogviszony > 0) {
@@ -707,6 +717,154 @@ export default function TanuloLetszam() {
     setActiveTab(newValue);
   };
 
+  // Extract TanugyiAdatok calculation logic into a separate function
+  const calculateFromTanugyiData = useCallback(() => {
+    if (
+      !tanugyiData ||
+      !Array.isArray(tanugyiData) ||
+      tanugyiData.length === 0
+    ) {
+      return {};
+    }
+
+    console.log("Calculating from tanugyi data...");
+    const calculatedData = {};
+
+    // Track filtering statistics
+    let totalProcessed = 0;
+    let filteredOut = 0;
+    let evfolyamStats = {};
+
+    // Process tanugyi data by szakirany and szakma
+    tanugyiData.forEach((student) => {
+      totalProcessed++;
+
+      // Extract relevant fields from student data - using correct field names from tanugyi data
+      let szakmaNev =
+        student.uj_szkt_szakma_tipusa ||
+        student.szakma_nev ||
+        student.szakkepzes_nev ||
+        "Nincs meghatározva";
+
+      // Clean up szakma name - remove code suffix like "- 5 0613 12 03 (2020)"
+      if (szakmaNev && szakmaNev !== "Nincs meghatározva") {
+        szakmaNev = szakmaNev.split(" - ")[0].trim();
+      }
+
+      // Handle "Na" as "Nincs meghatározva"
+      if (szakmaNev === "Na" || szakmaNev === "NA" || szakmaNev === "na") {
+        szakmaNev = "Nincs meghatározva";
+      }
+
+      // Extract szakirány information
+      let szakiranyName = student.uj_Szkt_agazat_tipusa || "Nincs meghatározva";
+
+      // Clean up szakirany name - remove code suffix like "- 12 (2020)"
+      if (szakiranyName && szakiranyName !== "Nincs meghatározva") {
+        szakiranyName = szakiranyName.split(" - ")[0].trim();
+      }
+
+      // Handle "Na" as "Nincs meghatározva"
+      if (
+        szakiranyName === "Na" ||
+        szakiranyName === "NA" ||
+        szakiranyName === "na"
+      ) {
+        szakiranyName = "Nincs meghatározva";
+      }
+
+      const evfolyam = student.evfolyam || "";
+      const year = student.tanev_kezdete || 2024;
+
+      // Track institution types and evfolyam values for debugging
+      evfolyamStats[evfolyam] = (evfolyamStats[evfolyam] || 0) + 1;
+
+      // Only log first 10 students to avoid console spam
+      if (totalProcessed <= 10) {
+        console.log(
+          `Processing student ${totalProcessed}: szakma="${szakmaNev}", szakirany="${szakiranyName}", evfolyam="${evfolyam}", year=${year}`
+        );
+      }
+
+      // Determine institution type from evfolyam - be more inclusive
+      const isTechnikum = evfolyam.toLowerCase().includes("technikum");
+      const isSzakkepzo = evfolyam.toLowerCase().includes("szakképző");
+      const hasEvfolyamNumber = /\d+/.test(evfolyam); // Any evfolyam with numbers (9, 10, 11, 12, 13, etc.)
+
+      // Determine jogviszony type based on student data
+      const isFelnottkepzesi =
+        student.tanulo_jogviszonya?.toLowerCase().includes("felnőtt") ||
+        student.munkarend?.toLowerCase().includes("felnőtt") ||
+        student.munkarend?.toLowerCase().includes("levelező") ||
+        student.munkarend?.toLowerCase().includes("esti") ||
+        evfolyam.toLowerCase().includes("felnőtt") ||
+        evfolyam.toLowerCase().includes("levelező") ||
+        evfolyam.toLowerCase().includes("esti") ||
+        student.kepzes_forma?.toLowerCase().includes("felnőtt");
+
+      // Use szakma name as program type, but for "Nincs meghatározva" include szakirány
+      let programType;
+      if (szakmaNev === "Nincs meghatározva") {
+        // Create a unique key for "Nincs meghatározva" entries by szakirány
+        programType = `Nincs meghatározva (${szakiranyName})`;
+      } else {
+        programType = szakmaNev;
+      }
+
+      // Include students in technikum, szakképző, or any evfolyam with numbers (more inclusive)
+      if (isTechnikum || isSzakkepzo || hasEvfolyamNumber) {
+        if (!calculatedData[programType]) {
+          calculatedData[programType] = {};
+        }
+        if (!calculatedData[programType][year]) {
+          calculatedData[programType][year] = {
+            tanuloi_jogviszony: 0,
+            felnottkepzesi_jogviszony: 0,
+          };
+        }
+
+        // Count the student in the appropriate category
+        if (isFelnottkepzesi) {
+          calculatedData[programType][year].felnottkepzesi_jogviszony += 1;
+          if (totalProcessed <= 10) {
+            console.log(
+              `✅ INCLUDED (felnőtt): ${programType} - ${evfolyam} - ${year}`
+            );
+          }
+        } else {
+          calculatedData[programType][year].tanuloi_jogviszony += 1;
+          if (totalProcessed <= 10) {
+            console.log(
+              `✅ INCLUDED (tanulói): ${programType} - ${evfolyam} - ${year}`
+            );
+          }
+        }
+      } else {
+        filteredOut++;
+        if (totalProcessed <= 10) {
+          console.log(
+            `❌ FILTERED OUT: ${programType} - ${evfolyam} - year: ${year}`
+          );
+        }
+      }
+    });
+
+    // Log filtering statistics
+    console.log("Tanugyi data processing stats:");
+    console.log("- Total records processed:", totalProcessed);
+    console.log("- Records filtered out:", filteredOut);
+    console.log("- Records included:", totalProcessed - filteredOut);
+    console.log("- Evfolyam distribution:", evfolyamStats);
+
+    // Show sample of szakma names found
+    const szakmaNames = Object.keys(calculatedData);
+    console.log("- Sample szakma names found:", szakmaNames.slice(0, 10));
+    console.log("- Total unique szakma names:", szakmaNames.length);
+    console.log("- Final calculated data:", calculatedData);
+
+    return calculatedData;
+  }, [tanugyiData]);
+
   // Initialize tableData from API data when available
   useEffect(() => {
     const hasTanuloLetszamData =
@@ -716,277 +874,155 @@ export default function TanuloLetszam() {
     const hasTanugyiData =
       tanugyiData && Array.isArray(tanugyiData) && tanugyiData.length > 0;
 
-    console.log("🔍 DEBUG - Data availability check:");
-    console.log("- selectedSchool:", selectedSchool?.iskola_neve || "None");
-    console.log("- apiStudentData:", apiStudentData?.length || 0, "records");
-    console.log("- tanugyiData:", tanugyiData?.length || 0, "records");
-    console.log("- hasTanuloLetszamData:", hasTanuloLetszamData);
-    console.log("- hasTanugyiData:", hasTanugyiData);
+    console.log(tanugyiData);
 
-    // Helper function to calculate tanugyi data
-    const calculateTanugyiData = () => {
-      if (!hasTanugyiData) {
-        console.log("⚠️ No tanugyi data available for processing");
-        return {};
-      }
+    if (hasTanuloLetszamData) {
+      // Priority: Use TanuloLetszam data if available
+      const initialTableData = {};
 
-      console.log("✅ Calculating tanugyi data...");
-      const calculatedData = {};
-
-      // Track filtering statistics
-      let totalProcessed = 0;
-      let filteredOut = 0;
-      let evfolyamStats = {};
-
-      // Process tanugyi data by szakirany and szakma
-      tanugyiData.forEach((student, index) => {
-        totalProcessed++;
-
-        // Debug first 3 students in detail
-        if (index < 3) {
-          console.log(`🔍 DEBUG Student ${index + 1}:`, student);
-        }
-
-        // Extract relevant fields from student data - using correct field names from tanugyi data
-        let szakmaNev =
-          student.uj_szkt_szakma_tipusa ||
-          student.szakma_nev ||
-          student.szakkepzes_nev ||
-          "Nincs meghatározva";
-
-        // Clean up szakma name - remove code suffix like "- 5 0613 12 03 (2020)"
-        if (szakmaNev && szakmaNev !== "Nincs meghatározva") {
-          szakmaNev = szakmaNev.split(" - ")[0].trim();
-        }
-
-        // Handle "Na" as "Nincs meghatározva"
-        if (szakmaNev === "Na" || szakmaNev === "NA" || szakmaNev === "na") {
-          szakmaNev = "Nincs meghatározva";
-        }
-
-        // Extract szakirány information
-        const szakiranyName =
-          student.uj_Szkt_agazat_tipusa || "Nincs meghatározva";
-
-        const evfolyam = student.evfolyam || "";
-        const year = student.tanev_kezdete || 2024;
-
-        // Track institution types and evfolyam values for debugging
-        evfolyamStats[evfolyam] = (evfolyamStats[evfolyam] || 0) + 1;
-
-        // Only log first 10 students to avoid console spam
-        if (totalProcessed <= 10) {
-          console.log(
-            `Processing student ${totalProcessed}: szakma="${szakmaNev}", szakirany="${szakiranyName}", evfolyam="${evfolyam}", year=${year}`
-          );
-        }
-
-        // Determine institution type from evfolyam - be more inclusive
-        const isTechnikum = evfolyam.toLowerCase().includes("technikum");
-        const isSzakkepzo = evfolyam.toLowerCase().includes("szakképző");
-        const isGimnazium = evfolyam.toLowerCase().includes("gimnázium");
-        const hasEvfolyamNumber = /\d+/.test(evfolyam); // Any evfolyam with numbers (9, 10, 11, 12, 13, etc.)
-
-        // Debug filtering for first 3 students
-        if (totalProcessed <= 3) {
-          console.log(`🔍 FILTERING DEBUG Student ${totalProcessed}:`, {
-            evfolyam,
-            isTechnikum,
-            isSzakkepzo,
-            isGimnazium,
-            hasEvfolyamNumber,
-            willInclude:
-              isTechnikum || isSzakkepzo || isGimnazium || hasEvfolyamNumber,
-          });
-        }
-
-        // Determine jogviszony type based on student data
-        const isFelnottkepzesi =
-          student.tanulo_jogviszonya?.toLowerCase().includes("felnőtt") ||
-          student.munkarend?.toLowerCase().includes("felnőtt") ||
-          student.munkarend?.toLowerCase().includes("levelező") ||
-          student.munkarend?.toLowerCase().includes("esti") ||
-          evfolyam.toLowerCase().includes("felnőtt") ||
-          evfolyam.toLowerCase().includes("levelező") ||
-          evfolyam.toLowerCase().includes("esti") ||
-          student.kepzes_forma?.toLowerCase().includes("felnőtt");
-
-        // Use szakma name as program type, but for "Nincs meghatározva" include szakirány
+      // Convert API data back to table format
+      apiStudentData.forEach((record) => {
+        // Extract programType correctly from the nested object structure
         let programType;
-        if (szakmaNev === "Nincs meghatározva") {
-          // Create a unique key for "Nincs meghatározva" entries by szakirány
-          programType = `Nincs meghatározva (${szakiranyName})`;
+        if (record.szakma?.nev) {
+          // If szakma exists, use szakma name
+          programType = record.szakma.nev;
+        } else if (record.szakirany?.nev) {
+          // If no szakma but szakirany exists, use "Nincs meghatározva (szakiranyName)"
+          programType = `Nincs meghatározva (${record.szakirany.nev})`;
         } else {
-          programType = szakmaNev;
+          // Fallback
+          programType = "Unknown";
         }
 
-        // Include students in technikum, szakképző, or any evfolyam with numbers (more inclusive)
-        // TEMPORARY: Make this very inclusive for debugging
-        const shouldInclude = true; // Include ALL students for now to debug data structure
+        const year = record.tanev_kezdete;
+        const jogvType = record.jogv_tipus;
+        const letszam = record.letszam || 0;
 
-        if (shouldInclude) {
-          if (!calculatedData[programType]) {
-            calculatedData[programType] = {};
-          }
-          if (!calculatedData[programType][year]) {
-            calculatedData[programType][year] = {
-              tanuloi_jogviszony: 0,
-              felnottkepzesi_jogviszony: 0,
-            };
-          }
+        console.log(
+          `🔍 Processing TanuloLetszam record: ${programType}, year: ${year}, jogv: ${jogvType}, letszam: ${letszam}`
+        );
 
-          // Count the student in the appropriate category
-          if (isFelnottkepzesi) {
-            calculatedData[programType][year].felnottkepzesi_jogviszony += 1;
-            if (totalProcessed <= 10) {
-              console.log(
-                `✅ INCLUDED (felnőtt): ${programType} - ${evfolyam} - ${year}`
-              );
-            }
-          } else {
-            calculatedData[programType][year].tanuloi_jogviszony += 1;
-            if (totalProcessed <= 10) {
-              console.log(
-                `✅ INCLUDED (tanulói): ${programType} - ${evfolyam} - ${year}`
-              );
-            }
-          }
-        } else {
-          filteredOut++;
-          if (totalProcessed <= 10) {
-            console.log(
-              `❌ FILTERED OUT: ${programType} - ${evfolyam} - year: ${year}`
-            );
-          }
+        if (!initialTableData[programType]) {
+          initialTableData[programType] = {};
+        }
+        if (!initialTableData[programType][year]) {
+          initialTableData[programType][year] = {
+            tanuloi_jogviszony: 0,
+            felnottkepzesi_jogviszony: 0,
+          };
+        }
+
+        if (jogvType === 0) {
+          initialTableData[programType][year].tanuloi_jogviszony = letszam;
+        } else if (jogvType === 1) {
+          initialTableData[programType][year].felnottkepzesi_jogviszony =
+            letszam;
         }
       });
 
-      // Log filtering statistics
-      console.log("Tanugyi data processing stats:");
-      console.log("- Total records processed:", totalProcessed);
-      console.log("- Records filtered out:", filteredOut);
-      console.log("- Records included:", totalProcessed - filteredOut);
-      console.log("- Evfolyam distribution:", evfolyamStats);
-
-      // Show sample of szakma names found
-      const szakmaNames = Object.keys(calculatedData);
-      console.log("- Sample szakma names found:", szakmaNames.slice(0, 10));
-      console.log("- Total unique szakma names:", szakmaNames.length);
-      console.log("- Final calculated data:", calculatedData);
-
-      return calculatedData;
-    };
-
-    // Get calculated data from tanugyi data (if available)
-    const calculatedTanugyiData = calculateTanugyiData();
-
-    console.log("🔍 Calculated tanugyi data result:", calculatedTanugyiData);
-    console.log(
-      "🔍 Object keys count:",
-      Object.keys(calculatedTanugyiData).length
-    );
-
-    if (hasTanuloLetszamData || hasTanugyiData) {
-      console.log("🔄 Starting hybrid data processing...");
-      const hybridTableData = {};
-
-      // First, populate with calculated tanugyi data if available
+      // Apply TanugyiAdatok fallback for zero values if TanugyiAdatok is available
       if (hasTanugyiData) {
-        console.log("📊 Populating with tanugyi data...");
-        Object.keys(calculatedTanugyiData).forEach((programType) => {
-          hybridTableData[programType] = {
-            ...calculatedTanugyiData[programType],
-          };
+        console.log("Applying TanugyiAdatok fallback for zero values...");
+        // Use TanugyiAdatok calculation as fallback
+        const calculatedData = calculateFromTanugyiData();
+
+        // Merge calculated data with initialTableData, preferring non-zero calculated values for zero cells
+        Object.keys(calculatedData).forEach((programType) => {
+          Object.keys(calculatedData[programType]).forEach((year) => {
+            const calculatedValues = calculatedData[programType][year];
+
+            if (!initialTableData[programType]) {
+              initialTableData[programType] = {};
+            }
+            if (!initialTableData[programType][year]) {
+              initialTableData[programType][year] = {
+                tanuloi_jogviszony: 0,
+                felnottkepzesi_jogviszony: 0,
+              };
+            }
+
+            const existingValues = initialTableData[programType][year];
+
+            // Use calculated values if existing values are zero and calculated values are greater than zero
+            if (
+              existingValues.tanuloi_jogviszony === 0 &&
+              calculatedValues.tanuloi_jogviszony > 0
+            ) {
+              initialTableData[programType][year].tanuloi_jogviszony =
+                calculatedValues.tanuloi_jogviszony;
+              console.log(
+                `🔄 Applied fallback for ${programType} ${year} tanulói: ${calculatedValues.tanuloi_jogviszony}`
+              );
+            }
+            if (
+              existingValues.felnottkepzesi_jogviszony === 0 &&
+              calculatedValues.felnottkepzesi_jogviszony > 0
+            ) {
+              initialTableData[programType][year].felnottkepzesi_jogviszony =
+                calculatedValues.felnottkepzesi_jogviszony;
+              console.log(
+                `🔄 Applied fallback for ${programType} ${year} felnőtt: ${calculatedValues.felnottkepzesi_jogviszony}`
+              );
+            }
+          });
         });
-        console.log(
-          "📊 After tanugyi population:",
-          Object.keys(hybridTableData).length,
-          "program types"
+
+        // Check if any fallback data was actually applied
+        const hasAppliedFallback = Object.keys(calculatedData).some(
+          (programType) =>
+            Object.keys(calculatedData[programType]).some((year) => {
+              const calculatedValues = calculatedData[programType][year];
+              const currentValues = initialTableData[programType]?.[year];
+
+              // Check if any calculated value was actually used (i.e., current value matches calculated and is > 0)
+              return (
+                (currentValues?.tanuloi_jogviszony ===
+                  calculatedValues.tanuloi_jogviszony &&
+                  calculatedValues.tanuloi_jogviszony > 0) ||
+                (currentValues?.felnottkepzesi_jogviszony ===
+                  calculatedValues.felnottkepzesi_jogviszony &&
+                  calculatedValues.felnottkepzesi_jogviszony > 0)
+              );
+            })
         );
-      }
 
-      // Then, overlay with TanuloLetszam data where available (non-zero values)
-      if (hasTanuloLetszamData) {
-        console.log(
-          "🔄 Applying hybrid logic: TanuloLetszam data over calculated tanugyi data..."
-        );
-
-        apiStudentData.forEach((record) => {
-          // Extract programType correctly from the nested object structure
-          let programType;
-          if (record.szakma?.nev) {
-            // If szakma exists, use szakma name
-            programType = record.szakma.nev;
-          } else if (record.szakirany?.nev) {
-            // If no szakma but szakirany exists, use "Nincs meghatározva (szakiranyName)"
-            programType = `Nincs meghatározva (${record.szakirany.nev})`;
-          } else {
-            // Fallback
-            programType = "Unknown";
-          }
-
-          const year = record.tanev_kezdete;
-          const jogvType = record.jogv_tipus;
-          const letszam = record.letszam || 0;
-
+        if (hasAppliedFallback) {
+          setDataSource("TanuloLetszam + TanugyiAdatok (fallback)");
           console.log(
-            `🔍 Processing TanuloLetszam record: ${programType}, year: ${year}, jogv: ${jogvType}, letszam: ${letszam}`
+            "Applied TanugyiAdatok fallback data to zero values:",
+            initialTableData
           );
-
-          // Initialize structure if it doesn't exist
-          if (!hybridTableData[programType]) {
-            hybridTableData[programType] = {};
-          }
-          if (!hybridTableData[programType][year]) {
-            hybridTableData[programType][year] = {
-              tanuloi_jogviszony: 0,
-              felnottkepzesi_jogviszony: 0,
-            };
-          }
-
-          // Override with TanuloLetszam data (even if zero, to respect the explicit data)
-          if (jogvType === 0) {
-            hybridTableData[programType][year].tanuloi_jogviszony = letszam;
-            console.log(
-              `🔄 OVERRIDE tanulói: ${programType} ${year} = ${letszam}`
-            );
-          } else if (jogvType === 1) {
-            hybridTableData[programType][year].felnottkepzesi_jogviszony =
-              letszam;
-            console.log(
-              `🔄 OVERRIDE felnőtt: ${programType} ${year} = ${letszam}`
-            );
-          }
-        });
-      }
-
-      // Determine data source for UI indication
-      let dataSource;
-      if (hasTanuloLetszamData && hasTanugyiData) {
-        dataSource = "Hybrid";
-      } else if (hasTanuloLetszamData) {
-        dataSource = "TanuloLetszam";
+        } else {
+          setDataSource("TanuloLetszam");
+          console.log(
+            "No fallback data was applied - all TanuloLetszam values were non-zero or no matching TanugyiAdatok found"
+          );
+        }
       } else {
-        dataSource = "TanugyiAdatok";
+        setDataSource("TanuloLetszam");
       }
 
-      setTableData(hybridTableData);
-      setSavedData(JSON.parse(JSON.stringify(hybridTableData)));
-      setDataSource(dataSource);
-
+      setTableData(initialTableData);
+      setSavedData(JSON.parse(JSON.stringify(initialTableData)));
       console.log(
-        `Initialized hybrid table data (${dataSource}):`,
-        hybridTableData
+        "Initialized table data from TanuloLetszam API:",
+        initialTableData
       );
-    } else {
-      console.log("⚠️ No data available from either source");
-      console.log("- TanuloLetszam available:", hasTanuloLetszamData);
-      console.log("- Tanugyi available:", hasTanugyiData);
-      setTableData({});
-      setSavedData({});
-      setDataSource(null);
+    } else if (hasTanugyiData) {
+      // Fallback: Calculate from tanugyi data when TanuloLetszam data is not available
+      console.log(
+        "TanuloLetszam data not available, calculating from tanugyi data..."
+      );
+
+      const calculatedData = calculateFromTanugyiData();
+
+      setTableData(calculatedData);
+      setSavedData(JSON.parse(JSON.stringify(calculatedData)));
+      setDataSource("TanugyiAdatok");
+      console.log("Calculated table data from tanugyi data:", calculatedData);
     }
-  }, [apiStudentData, tanugyiData, selectedSchool]);
+  }, [apiStudentData, tanugyiData, calculateFromTanugyiData]);
 
   useEffect(() => {
     console.log("Program types:", programTypes);
@@ -1040,15 +1076,15 @@ export default function TanuloLetszam() {
                 backgroundColor:
                   dataSource === "TanuloLetszam"
                     ? "#e8f5e8"
-                    : dataSource === "Hybrid"
-                    ? "#e3f2fd"
+                    : dataSource.includes("fallback")
+                    ? "#fff8e1"
                     : "#fff3e0",
                 borderRadius: 1,
                 border: `1px solid ${
                   dataSource === "TanuloLetszam"
                     ? "#4caf50"
-                    : dataSource === "Hybrid"
-                    ? "#2196f3"
+                    : dataSource.includes("fallback")
+                    ? "#ffb300"
                     : "#ff9800"
                 }`,
               }}
@@ -1057,15 +1093,15 @@ export default function TanuloLetszam() {
                 📊 Adatforrás:{" "}
                 {dataSource === "TanuloLetszam"
                   ? "Tanulólétszám API (elsődleges)"
-                  : dataSource === "Hybrid"
-                  ? "Hibrid adatok (TanuloLetszam + Tanügyi számított)"
+                  : dataSource.includes("fallback")
+                  ? "Tanulólétszám API + Tanügyi adatok (vegyes)"
                   : "Tanügyi adatok API (számított)"}
               </Typography>
               <Typography variant="body2" sx={{ fontSize: "0.85rem", mt: 0.5 }}>
                 {dataSource === "TanuloLetszam"
                   ? "A mentett tanulólétszám adatok kerülnek megjelenítésre."
-                  : dataSource === "Hybrid"
-                  ? "Mentett tanulólétszám adatok kombinálva tanügyi adatokból számított értékekkel. Ahol van mentett adat, az kerül megjelenítésre, egyébként a tanügyi adatokból számított érték."
+                  : dataSource.includes("fallback")
+                  ? "A mentett tanulólétszám adatok 0 értékei tanügyi adatokból kerülnek kiegészítésre."
                   : "Nincs mentett tanulólétszám adat, ezért a tanügyi adatokból kerül kiszámításra."}
               </Typography>
             </Box>
@@ -1083,6 +1119,40 @@ export default function TanuloLetszam() {
         <Alert severity="info" sx={{ mb: 2 }}>
           Nincs iskola kiválasztva - az összes iskola adatait összegzi a
           rendszer.
+        </Alert>
+      )}
+
+      {/* Action Buttons */}
+      <Stack direction="row" spacing={2} sx={{ mt: 3, ml: 2 }}>
+        <Button
+          variant="contained"
+          startIcon={<SaveIcon />}
+          onClick={handleSaveData}
+          disabled={!isModified || isUpdating || isSaving}
+        >
+          {isUpdating || isSaving ? "Mentés..." : "Mentés"}
+        </Button>
+        <Button
+          variant="outlined"
+          startIcon={<RefreshIcon />}
+          onClick={handleResetData}
+          disabled={!isModified || !savedData || isUpdating || isSaving}
+        >
+          Visszaállítás
+        </Button>
+      </Stack>
+
+      {/* Status Messages */}
+      {isModified && (
+        <Alert severity="warning" sx={{ mt: 2 }}>
+          Mentetlen módosítások vannak. Ne felejtsd el menteni a
+          változtatásokat!
+        </Alert>
+      )}
+
+      {savedData && !isModified && (
+        <Alert severity="success" sx={{ mt: 2 }}>
+          Az adatok sikeresen mentve!
         </Alert>
       )}
 
@@ -1105,6 +1175,7 @@ export default function TanuloLetszam() {
 
       {activeTab === 1 && (
         <>
+          {" "}
           <TableContainer
             component={Paper}
             sx={{ maxWidth: "100%", overflowX: "auto" }}
@@ -1914,41 +1985,7 @@ export default function TanuloLetszam() {
               </TableBody>
             </Table>
           </TableContainer>
-
-          {/* Action Buttons */}
-          <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSaveData}
-              disabled={!isModified || isUpdating || isSaving}
-            >
-              {isUpdating || isSaving ? "Mentés..." : "Mentés"}
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleResetData}
-              disabled={!isModified || !savedData || isUpdating || isSaving}
-            >
-              Visszaállítás
-            </Button>
-          </Stack>
         </>
-      )}
-
-      {/* Status Messages */}
-      {isModified && (
-        <Alert severity="warning" sx={{ mt: 2 }}>
-          Mentetlen módosítások vannak. Ne felejtsd el menteni a
-          változtatásokat!
-        </Alert>
-      )}
-
-      {savedData && !isModified && (
-        <Alert severity="success" sx={{ mt: 2 }}>
-          Az adatok sikeresen mentve!
-        </Alert>
       )}
 
       {/* Loading Overlay */}
