@@ -31,6 +31,13 @@ export const AccessNotificationProvider = ({ children }) => {
   }, []);
 
   const notifyAccessDenied = useCallback((route, tableName, action = 'read') => {
+    // Special case for no access
+    if (tableName === "no_access") {
+      const message = `🚫 Hozzáférés megtagadva: Nincs jogosultsága az oldal megtekintéséhez!`;
+      showNotification(message, 'error');
+      return;
+    }
+
     const routeNames = {
       '/tanulo_letszam': 'Tanulólétszám',
       '/kompetencia': 'Kompetenciamérés',
@@ -55,7 +62,9 @@ export const AccessNotificationProvider = ({ children }) => {
       '/hatranyos-helyezu-tanulok-aranya': 'Hátrányos helyzetű tanulók aránya',
       '/intezmenyi-nevelesi-mutatok': 'Intézményi nevelési mutatók',
       '/szakkepzesi-munkaszerződes-arany': 'Szakképzési munkaszerződés arány',
-      '/oktatok-egyeb-tev': 'Oktatók egyéb tevékenysége'
+      '/oktatok-egyeb-tev': 'Oktatók egyéb tevékenysége',
+      '/adat-import': 'Adatok importálása',
+      '/schools': 'Iskolák'
     };
 
     const pageName = routeNames[route] || 'Az oldal';
@@ -68,7 +77,8 @@ export const AccessNotificationProvider = ({ children }) => {
     const roleNames = {
       'admin': 'adminisztrátori',
       'superadmin': 'szuperadminisztrátori', 
-      'hszc': 'HSZC szintű'
+      'hszc': 'HSZC szintű',
+      'admin_or_data_access': 'adminisztrátori vagy adattábla hozzáférési'
     };
 
     const roleName = roleNames[requiredRole] || requiredRole;

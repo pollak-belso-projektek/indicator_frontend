@@ -474,7 +474,7 @@ export const indicatorApi = createApi({
     }),
     updateHHesHHHNevelesuTanulok: build.mutation({
       query: ({ id, ...data }) => ({
-        url: `hh_es_hhh_nevelesu_tanulok/${id}`,
+        url: `hh_es_hhh/${id}`,
         method: "PUT",
         body: data,
       }),
@@ -482,7 +482,7 @@ export const indicatorApi = createApi({
     }),
     deleteHHesHHHNevelesuTanulok: build.mutation({
       query: (id) => ({
-        url: `hh_es_hhh_nevelesu_tanulok/${id}`,
+        url: `hh_es_hhh/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["HHesHHHNevelesuTanulok"],

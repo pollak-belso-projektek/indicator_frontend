@@ -95,13 +95,13 @@ const NavigationCategories = {
         name: "Sajátos nevelésű",
         icon: MdAccessible,
         link: "/sajatos-nevelesi-igenyu-tanulok-aranya",
-        tableName: "sajatos_nevelesi_igenyu_tanulok_aranya",
+        tableName: "sajatos_nevelesu_tanulok",
       },
       {
         name: "HH tanulók aránya",
         icon: MdAccessible,
         link: "/hatranyos-helyezu-tanulok-aranya",
-        tableName: "hatranyos_helyetu_tanulok_aranya",
+        tableName: "hh_es_hhh_nevelesu_tanulok",
       },
     ],
   },
@@ -119,13 +119,13 @@ const NavigationCategories = {
         name: "Országos kompetenciamérés",
         icon: MdAssessment,
         link: "/orszagos-kompetenciameres",
-        tableName: "orszagos_kompetenciameres",
+        tableName: "kompetencia",
       },
       {
         name: "NSZFH mérések",
         icon: MdAssessment,
         link: "/nszfh-meresek",
-        tableName: "nszfh_meresek",
+        tableName: "nszfh",
       },
       {
         name: "Vizsgaeredmények",
@@ -137,7 +137,7 @@ const NavigationCategories = {
         name: "Elégedettség mérés",
         icon: MdAssessment,
         link: "/elegedettseg-meres-eredmenyei",
-        tableName: "elegedettseg_meres_eredmenyei",
+        tableName: "elegedettseg_meres",
       },
     ],
   },
@@ -149,13 +149,13 @@ const NavigationCategories = {
         name: "Versenyek",
         icon: MdStar,
         link: "/szakmai-eredmenyek",
-        tableName: "szakmai_eredmenyek",
+        tableName: "versenyek",
       },
       {
         name: "Intézményi elismerések",
         icon: MdStar,
         link: "/intezmenyi-elismeresek",
-        tableName: "intezmenyi_elismeresek",
+        tableName: "intezmenyi_neveltseg",
       },
     ],
   },
@@ -167,19 +167,19 @@ const NavigationCategories = {
         name: "Elhelyezkedési mutató",
         icon: MdAssessment,
         link: "/elhelyezkedesi-mutato",
-        tableName: "elhelyezkedesi_mutato",
+        tableName: "elhelyezkedes",
       },
       {
         name: "Végzettek elégedettsége",
         icon: MdStar,
         link: "/vegzettek-elegedettsege",
-        tableName: "vegzettek_elegedettsege",
+        tableName: "elegedettseg",
       },
       {
         name: "Szakképzési munkaszerződés",
         icon: MdWork,
         link: "/szakkepzesi-munkaszerződes-arany",
-        tableName: "szakkepzesi_munkaszerződes_arany",
+        tableName: "szakmai_vizsga_eredmenyek",
       },
     ],
   },
@@ -191,25 +191,25 @@ const NavigationCategories = {
         name: "Felnőttképzés",
         icon: MdBook,
         link: "/felnottkepzes",
-        tableName: "felnottkepzes",
+        tableName: "alkalmazottak_munkaugy",
       },
       {
         name: "Műhelyiskola",
         icon: MdSchool,
         link: "/muhelyiskolai-reszszakmat",
-        tableName: "muhelyiskolai_reszszakmat",
+        tableName: "muhelyiskola",
       },
       {
         name: "Dobbantó program",
         icon: MdTrendingUp,
         link: "/dobbanto-program-aranya",
-        tableName: "dobbanto_program_aranya",
+        tableName: "dobbanto",
       },
       {
         name: "Intézményi nevelési mutatók",
         icon: MdGavel,
         link: "/intezmenyi-nevelesi-mutatok",
-        tableName: "intezmenyi_nevelesi_mutatok",
+        tableName: "intezmenyi_neveltseg",
       },
     ],
   },
@@ -221,19 +221,19 @@ const NavigationCategories = {
         name: "Szakmai bemutatók",
         icon: MdEvent,
         link: "/szakmai-bemutatok-konferenciak",
-        tableName: "szakmai_bemutatok_konferenciak",
+        tableName: "oktato_egyeb_tev",
       },
       {
         name: "Egy oktatóra jutó diákok",
         icon: MdBookmark,
         link: "/oktato_per_diak",
-        tableName: "oktato_per_diak",
+        tableName: "egy_oktatora_juto_tanulo",
       },
       {
         name: "Oktatók egyéb tev.",
         icon: MdWork,
         link: "/oktatok-egyeb-tev",
-        tableName: "oktatok_egyeb_tev",
+        tableName: "oktato_egyeb_tev",
       },
     ],
   },
@@ -251,7 +251,7 @@ const NavigationCategories = {
         name: "Felhasználók",
         icon: MdPerson,
         link: "/users",
-        tableName: "users",
+        tableName: "user",
       },
       {
         name: "Tábla kezelés",
@@ -263,7 +263,7 @@ const NavigationCategories = {
         name: "Rendszer naplók",
         icon: MdBookmark,
         link: "/logs",
-        tableName: "logs",
+        tableName: "log",
       },
     ],
   },
@@ -284,32 +284,59 @@ const getAccessibleNavItems = (tableAccess, userPermissions) => {
     return AllLinkItems;
   }
 
-  if (!tableAccess || !Array.isArray(tableAccess)) {
+  if (!tableAccess || !Array.isArray(tableAccess) || tableAccess.length === 0) {
     // If no table access info, only show dashboard
-    return AllLinkItems.filter((item) => item.tableName === null);
+    return AllLinkItems.filter((item) => item.link === "/dashboard");
   }
 
   const accessibleTableNames = tableAccess.map((access) => access.tableName);
 
   return AllLinkItems.filter((item) => {
-    // Always show items without tableName (like dashboard)
+    // Always show dashboard
+    if (item.link === "/dashboard") {
+      return true;
+    }
+
+    // For items without tableName, apply special rules
     if (item.tableName === null) {
-      // For data import, check if user has admin permissions or access to any data tables
+      // Data import - check if user has admin permissions or access to any data tables
       if (item.link === "/adat-import") {
         return (
           userPermissions?.isAdmin ||
           userPermissions?.isSuperadmin ||
           accessibleTableNames.some((name) =>
-            ["alapadatok", "tanulo_letszam", "kompetencia"].includes(name)
+            ["alapadatok", "tanulo_letszam", "kompetencia", "tanugyi_adatok"].includes(name)
           )
         );
       }
-      return true;
+      
+      // Table management - only for superadmins
+      if (item.link === "/table-management") {
+        return userPermissions?.isSuperadmin;
+      }
+      
+      // Alapadatok - only if user has alapadatok table access
+      if (item.link === "/alapadatok") {
+        return accessibleTableNames.includes("alapadatok");
+      }
+      
+      // Schools - only if user has alapadatok table access
+      if (item.link === "/schools") {
+        return accessibleTableNames.includes("alapadatok");
+      }
+      
+      // For other items without tableName, don't show them unless explicitly handled above
+      return false;
     }
 
-    // Special case for logs - only admins can access
-    if (item.tableName === "logs") {
-      return userPermissions?.isAdmin || userPermissions?.isSuperadmin;
+    // Special case for logs - only superadmins can access
+    if (item.tableName === "log") {
+      return userPermissions?.isSuperadmin;
+    }
+
+    // Special case for users - only superadmins can access
+    if (item.tableName === "user") {
+      return userPermissions?.isSuperadmin;
     }
 
     // Show items that the user has table access to

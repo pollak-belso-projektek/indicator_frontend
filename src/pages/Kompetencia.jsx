@@ -6,7 +6,7 @@ import {
   Text,
   Button,
 } from "@chakra-ui/react";
-import "./kompetencia.css";
+
 import React, { useState, useEffect } from "react";
 import {
   useAddKompetenciaMutation,

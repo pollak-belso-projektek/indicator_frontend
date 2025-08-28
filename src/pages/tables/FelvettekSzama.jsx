@@ -118,16 +118,27 @@ const FelvettekSzama = () => {
 
   // Handle data changes
   const handleDataChange = (programType, year, field, value) => {
-    setTableData((prev) => ({
-      ...prev,
-      [programType]: {
-        ...(prev[programType] || {}),
-        [year]: {
-          ...(prev[programType]?.[year] || {}),
-          [field]: parseFloat(value) || 0,
+    const newValue = parseFloat(value) || 0;
+    
+    setTableData((prev) => {
+      const prevData = prev[programType]?.[year]?.[field] || 0;
+      
+      // Only update if the value actually changed
+      if (prevData === newValue) {
+        return prev;
+      }
+      
+      return {
+        ...prev,
+        [programType]: {
+          ...(prev[programType] || {}),
+          [year]: {
+            ...(prev[programType]?.[year] || {}),
+            [field]: newValue,
+          },
         },
-      },
-    }));
+      };
+    });
 
     // Track this specific cell as modified
     const cellKey = `${programType}-${year}-${field}`;
@@ -158,8 +169,8 @@ const FelvettekSzama = () => {
   const calculateInstitutionSummary = (institutionType, year, field) => {
     if (!schoolsData) return 0;
 
-    // Find all szakmák that belong to this institution type
-    let totalValue = 0;
+    // Find all szakmák that belong to this institution type (collect unique szakma names)
+    const szakmaNevek = new Set();
 
     schoolsData
       .filter((school) => school.intezmeny_tipus === institutionType)
@@ -177,18 +188,21 @@ const FelvettekSzama = () => {
             ) {
               szakirany.szakma.forEach((szakmaData) => {
                 const szakmaNev = szakmaData.szakma?.nev;
-                if (
-                  szakmaNev &&
-                  tableData[szakmaNev] &&
-                  tableData[szakmaNev][year]
-                ) {
-                  totalValue += tableData[szakmaNev][year][field] || 0;
+                if (szakmaNev) {
+                  szakmaNevek.add(szakmaNev);
                 }
               });
             }
           });
         }
       });
+
+    // Now sum up values from tableData for each unique szakma (only once per szakma)
+    let totalValue = 0;
+    szakmaNevek.forEach((szakmaNev) => {
+      const currentValue = tableData[szakmaNev]?.[year]?.[field] || 0;
+      totalValue += currentValue;
+    });
 
     return totalValue;
   };
@@ -197,9 +211,9 @@ const FelvettekSzama = () => {
   const calculateSzakiranySummary = (szakiranyNev, year, field) => {
     if (!schoolsData) return 0;
 
-    // Find all szakmák that belong to this szakirány
-    let totalValue = 0;
-
+    // Find all szakmák that belong to this szakirány (collect unique szakma names)
+    const szakmaNevek = new Set();
+    
     schoolsData.forEach((school) => {
       if (
         school.alapadatok_szakirany &&
@@ -211,18 +225,21 @@ const FelvettekSzama = () => {
             if (szakirany.szakma && Array.isArray(szakirany.szakma)) {
               szakirany.szakma.forEach((szakmaData) => {
                 const szakmaNev = szakmaData.szakma?.nev;
-                if (
-                  szakmaNev &&
-                  tableData[szakmaNev] &&
-                  tableData[szakmaNev][year]
-                ) {
-                  totalValue += tableData[szakmaNev][year][field] || 0;
+                if (szakmaNev) {
+                  szakmaNevek.add(szakmaNev);
                 }
               });
             }
           }
         });
       }
+    });
+
+    // Now sum up values from tableData for each unique szakma (only once per szakma)
+    let totalValue = 0;
+    szakmaNevek.forEach((szakmaNev) => {
+      const currentValue = tableData[szakmaNev]?.[year]?.[field] || 0;
+      totalValue += currentValue;
     });
 
     return totalValue;
@@ -273,7 +290,11 @@ const FelvettekSzama = () => {
       felvettekSzama = data.felvettek_szama_9 || 0;
     }
 
-    if (!felvettekSzama || felvettekSzama === 0) return "0%";
+    // If no applicants, return 0%
+    if (!jelentkezokSzama || jelentkezokSzama === 0) return "0%";
+    
+    // If no admitted students, return "∞" or a special indicator
+    if (!felvettekSzama || felvettekSzama === 0) return "N/A";
 
     const ratio = jelentkezokSzama / felvettekSzama;
     const percentage = ratio * 100;
@@ -483,6 +504,12 @@ const FelvettekSzama = () => {
   useEffect(() => {
     console.log(programTypes);
   }, [programTypes]);
+
+  // Force re-render when tableData changes to update calculated summaries
+  useEffect(() => {
+    // This effect ensures that summary rows are recalculated when tableData changes
+    // The component will re-render automatically due to state change
+  }, [tableData]);
 
   // Load existing API data into tableData when component mounts or data changes
   useEffect(() => {

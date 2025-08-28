@@ -298,7 +298,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
             tanev_kezdete: yearStart,
             hh_tanulo_letszam: daytimeCount,
             tanuloi_osszletszam: totalStudents.daytime[year] || 0,
-            // Add other required fields based on API schema
+            jogviszony_tipus: 0, // 0 = tanulói jogviszony (daytime)
           });
         }
 
@@ -310,17 +310,44 @@ export default function HatanyosHelyzetuTanulokAranya() {
             tanev_kezdete: yearStart,
             hh_tanulo_letszam: adultCount,
             tanuloi_osszletszam: totalStudents.adult[year] || 0,
-            // Add a flag to distinguish adult education vs daytime
-            // You may need to adjust this based on actual API requirements
+            jogviszony_tipus: 1, // 1 = felnőttképzési jogviszony (adult)
           });
         }
       });
 
       if (dataToSave.length > 0) {
-        // For now, we'll use the add mutation - you may need to implement update logic
-        // based on whether the record already exists
+        // Check if records already exist and use PUT or POST accordingly
         for (const record of dataToSave) {
-          await addHHData(record).unwrap();
+          // Find existing record with matching alapadatok_id, tanev_kezdete
+          // If jogviszony_tipus exists in the database, also match on that
+          const existingRecord = hhApiData?.find(
+            (existing) => {
+              const basicMatch = existing.alapadatok_id === record.alapadatok_id &&
+                               existing.tanev_kezdete === record.tanev_kezdete;
+              
+              // If database has jogviszony_tipus, match on that too
+              if (existing.jogviszony_tipus !== undefined && existing.jogviszony_tipus !== null) {
+                return basicMatch && existing.jogviszony_tipus === record.jogviszony_tipus;
+              }
+              
+              // If database doesn't have jogviszony_tipus, only match basic fields
+              // and assume it's daytime (0) data if we're saving daytime
+              return basicMatch && record.jogviszony_tipus === 0;
+            }
+          );
+
+          if (existingRecord) {
+            // Record exists, use PUT (update)
+            console.log("Updating existing record:", existingRecord.id);
+            await updateHHData({
+              id: existingRecord.id,
+              ...record,
+            }).unwrap();
+          } else {
+            // Record doesn't exist, use POST (create)
+            console.log("Creating new record");
+            await addHHData(record).unwrap();
+          }
         }
 
         setSavedData(JSON.parse(JSON.stringify(hhStudentsCount)));
@@ -427,13 +454,16 @@ export default function HatanyosHelyzetuTanulokAranya() {
           const yearKey = `${record.tanev_kezdete}/${record.tanev_kezdete + 1}`;
 
           if (schoolYears.includes(yearKey)) {
-            // Separate by student type - assuming similar structure to student data
-            const count =
-              record.hh_tanulo_letszam || record.tanuloi_osszletszam || 0;
+            const count = record.hh_tanulo_letszam || 0;
 
-            // You may need to adjust this based on actual HH API data structure
-            // For now, assuming all HH data goes to daytime category
-            loadedHhData.daytime[yearKey] = count.toString();
+            // Check if jogviszony_tipus exists, otherwise default to daytime (tanulói jogviszony)
+            if (record.jogviszony_tipus === 0 || record.jogviszony_tipus === undefined || record.jogviszony_tipus === null) {
+              // Tanulói jogviszony (daytime) - ez az alapértelmezett, ha nincs megadva
+              loadedHhData.daytime[yearKey] = count.toString();
+            } else if (record.jogviszony_tipus === 1) {
+              // Felnőttképzési jogviszony (adult education)
+              loadedHhData.adult[yearKey] = count.toString();
+            }
           }
         }
       });
@@ -441,6 +471,9 @@ export default function HatanyosHelyzetuTanulokAranya() {
       setHhStudentsCount(loadedHhData);
       setSavedData(JSON.parse(JSON.stringify(loadedHhData)));
       setIsModified(false);
+      
+      // Debug log to check what was loaded
+      console.log("Final loaded HH data:", loadedHhData);
     }
   }, [hhApiData, selectedSchool, schoolYears]);
 

@@ -111,25 +111,27 @@ export default function Router() {
               <Route
                 path="/alapadatok"
                 element={
-                  <NavigationWithLoading>
-                    <AlapadatokPage />
-                  </NavigationWithLoading>
+                  <TableProtectedRoute tableName="alapadatok">
+                    <NavigationWithLoading>
+                      <AlapadatokPage />
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
                 }
               />
               <Route
                 path="/adat-import"
                 element={
-                  <ProtectedRoute>
+                  <TableProtectedRoute tableName="data-import">
                     <NavigationWithLoading>
                       <DataImportPage />
                     </NavigationWithLoading>
-                  </ProtectedRoute>
+                  </TableProtectedRoute>
                 }
               />
               <Route
                 path="/tanulo_letszam"
                 element={
-                  <TableProtectedRoute>
+                  <TableProtectedRoute tableName="tanulo_letszam">
                     <NavigationWithLoading>
                       <TanuloletszamPage />
                     </NavigationWithLoading>
@@ -139,7 +141,7 @@ export default function Router() {
               <Route
                 path="/kompetencia"
                 element={
-                  <TableProtectedRoute>
+                  <TableProtectedRoute tableName="kompetencia">
                     <NavigationWithLoading>
                       <KompetenciaPage />
                     </NavigationWithLoading>
@@ -149,7 +151,7 @@ export default function Router() {
               <Route
                 path="/versenyek"
                 element={
-                  <TableProtectedRoute>
+                  <TableProtectedRoute tableName="versenyek">
                     <NavigationWithLoading>
                       <VersenyekPage />
                     </NavigationWithLoading>
@@ -159,7 +161,7 @@ export default function Router() {
               <Route
                 path="/users"
                 element={
-                  <TableProtectedRoute>
+                  <TableProtectedRoute tableName="user">
                     <NavigationWithLoading>
                       <UsersPage />
                     </NavigationWithLoading>
@@ -169,7 +171,7 @@ export default function Router() {
               <Route
                 path="/table-management"
                 element={
-                  <TableProtectedRoute>
+                  <TableProtectedRoute tableName="table-management">
                     <NavigationWithLoading>
                       <TableManagementPage />
                     </NavigationWithLoading>
@@ -179,7 +181,7 @@ export default function Router() {
               <Route
                 path="/logs"
                 element={
-                  <TableProtectedRoute tableName="logs">
+                  <TableProtectedRoute tableName="log">
                     <NavigationWithLoading>
                       <LogsPage />
                     </NavigationWithLoading>
@@ -189,11 +191,11 @@ export default function Router() {
               <Route
                 path="/schools"
                 element={
-                  <ProtectedRoute>
+                  <TableProtectedRoute tableName="alapadatok">
                     <NavigationWithLoading>
                       <SchoolsPage />
                     </NavigationWithLoading>
-                  </ProtectedRoute>
+                  </TableProtectedRoute>
                 }
               />{" "}
               <Route

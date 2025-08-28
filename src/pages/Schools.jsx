@@ -61,7 +61,7 @@ const Schools = () => {
   });
   const [expandedSchool, setExpandedSchool] = useState(null);
 
-  const hasSuperAdminPermission = useUserPermissions("superadmin");
+  const hasSuperAdminPermission = useUserPermissions().isSuperadmin;
 
   // API hooks
   const {
