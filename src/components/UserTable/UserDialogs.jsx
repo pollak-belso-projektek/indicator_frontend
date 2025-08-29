@@ -43,6 +43,8 @@ import {
   calculateAccessLevel,
   formatAccessLevel,
 } from "../../utils/tableAccessUtils";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../store/slices/authSlice";
 
 export const EditUserDialog = ({
   open,
@@ -53,13 +55,15 @@ export const EditUserDialog = ({
   fullScreen,
   userPermissions,
 }) => {
+  const currentUser = useSelector(selectUser);
+
   const [editedUser, setEditedUser] = useState({
     name: "",
     email: "",
     permissions: 1,
     tableAccess: [],
     alapadatokId: null,
-    active: true,
+    isActive: true,
   });
   const [userType, setUserType] = useState("iskolai_general");
   const [selectedTables, setSelectedTables] = useState([]);
@@ -67,6 +71,11 @@ export const EditUserDialog = ({
   const [showPasswordField, setShowPasswordField] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
+
+  // Determine if current user can select schools for users
+  const canSelectSchoolForUsers =
+    userPermissions?.isSuperadmin ||
+    (userPermissions?.isHSZC && userPermissions?.isAdmin);
 
   // Notification state
   const [notification, setNotification] = useState({
@@ -109,7 +118,7 @@ export const EditUserDialog = ({
         permissions: user.permissions || 1,
         tableAccess: user.tableAccess || [],
         alapadatokId: user.alapadatokId || null,
-        active: user.active !== false, // Default to true if undefined
+        isActive: user.isActive !== false, // Default to true if undefined
       });
 
       // Set user type from permissions level
@@ -231,6 +240,22 @@ export const EditUserDialog = ({
     if (!editedUser.id) {
       showNotification("Felhasználó azonosító hiányzik!", "error");
       return;
+    }
+
+    // For Iskolai users, ensure they can only edit users from their own school
+    if (!canSelectSchoolForUsers && currentUser?.school) {
+      const currentUserSchoolId =
+        typeof currentUser.school === "object"
+          ? currentUser.school.id
+          : currentUser.school;
+
+      if (editedUser.alapadatokId !== currentUserSchoolId) {
+        showNotification(
+          "Csak saját iskolájához tartozó felhasználókat szerkeszthet!",
+          "error"
+        );
+        return;
+      }
     }
 
     // Validate password if changing
@@ -367,68 +392,110 @@ export const EditUserDialog = ({
           </Box>
           <Divider sx={{ my: 3 }} />
 
-          <Typography variant="h6" gutterBottom>
-            Iskola hozzárendelés
-          </Typography>
-          <Autocomplete
-            id="school-edit-select"
-            options={schoolsData}
-            getOptionLabel={(option) => option.iskola_neve || ""}
-            value={
-              schoolsData.find(
-                (school) => school.id === editedUser.alapadatokId
-              ) || null
-            }
-            onChange={(event, newValue) =>
-              handleInputChange("alapadatokId", newValue ? newValue.id : null)
-            }
-            loading={schoolsLoading}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Iskola kiválasztása"
-                placeholder="Válasszon iskolát..."
-                helperText="Válassza ki azt az iskolát, amelyhez a felhasználó tartozik (opcionális)"
-              />
-            )}
-            renderOption={(props, option) => (
-              <Box component="li" {...props}>
-                <Box>
-                  <Typography variant="body1">{option.iskola_neve}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {option.intezmeny_tipus}
-                  </Typography>
-                </Box>
-              </Box>
-            )}
-            sx={{ mt: 2 }}
-          />
-
-          {editedUser.alapadatokId && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Kiválasztott iskola:
+          {/* School Assignment Section - Only show for users who can select schools */}
+          {canSelectSchoolForUsers ? (
+            <>
+              <Typography variant="h6" gutterBottom>
+                Iskola hozzárendelés
               </Typography>
-              <Box sx={{ ml: 2, mt: 1 }}>
-                <Typography variant="body2">
-                  • Iskola:{" "}
-                  {
-                    schoolsData.find(
-                      (school) => school.id === editedUser.alapadatokId
-                    )?.iskola_neve
-                  }
+              <Autocomplete
+                id="school-edit-select"
+                options={schoolsData}
+                getOptionLabel={(option) => option.iskola_neve || ""}
+                value={
+                  schoolsData.find(
+                    (school) => school.id === editedUser.alapadatokId
+                  ) || null
+                }
+                onChange={(event, newValue) =>
+                  handleInputChange(
+                    "alapadatokId",
+                    newValue ? newValue.id : null
+                  )
+                }
+                loading={schoolsLoading}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Iskola kiválasztása"
+                    placeholder="Válasszon iskolát..."
+                    helperText="Válassza ki azt az iskolát, amelyhez a felhasználó tartozik (opcionális)"
+                  />
+                )}
+                renderOption={(props, option) => (
+                  <Box component="li" {...props}>
+                    <Box>
+                      <Typography variant="body1">
+                        {option.iskola_neve}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {option.intezmeny_tipus}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+                sx={{ mt: 2 }}
+              />
+              {editedUser.alapadatokId && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Kiválasztott iskola:
+                  </Typography>
+                  <Box sx={{ ml: 2, mt: 1 }}>
+                    <Typography variant="body2">
+                      • Iskola:{" "}
+                      {
+                        schoolsData.find(
+                          (school) => school.id === editedUser.alapadatokId
+                        )?.iskola_neve
+                      }
+                    </Typography>
+                    <Typography variant="body2">
+                      • Típus:{" "}
+                      {
+                        schoolsData.find(
+                          (school) => school.id === editedUser.alapadatokId
+                        )?.intezmeny_tipus
+                      }
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+            </>
+          ) : (
+            <>
+              <Typography variant="h6" gutterBottom>
+                Iskola hozzárendelés
+              </Typography>
+              <Box sx={{ p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
+                >
+                  Iskolai felhasználók csak saját iskolájukhoz tartozó
+                  felhasználókat szerkeszthetnek.
                 </Typography>
-                <Typography variant="body2">
-                  • Típus:{" "}
-                  {
-                    schoolsData.find(
-                      (school) => school.id === editedUser.alapadatokId
-                    )?.intezmeny_tipus
-                  }
-                </Typography>
+                {editedUser.alapadatokId && (
+                  <Box sx={{ ml: 1 }}>
+                    <Typography variant="body2">
+                      • Iskola:{" "}
+                      {schoolsData.find(
+                        (school) => school.id === editedUser.alapadatokId
+                      )?.iskola_neve || "Ismeretlen iskola"}
+                    </Typography>
+                    <Typography variant="body2">
+                      • Típus:{" "}
+                      {schoolsData.find(
+                        (school) => school.id === editedUser.alapadatokId
+                      )?.intezmeny_tipus || "Ismeretlen típus"}
+                    </Typography>
+                  </Box>
+                )}
               </Box>
-            </Box>
+            </>
           )}
+
           <Divider sx={{ my: 3 }} />
 
           <Typography variant="h6" gutterBottom>
@@ -466,8 +533,10 @@ export const EditUserDialog = ({
           <FormControlLabel
             control={
               <Switch
-                checked={editedUser.active}
-                onChange={(e) => handleInputChange("active", e.target.checked)}
+                checked={editedUser.isActive}
+                onChange={(e) =>
+                  handleInputChange("isActive", e.target.checked)
+                }
               />
             }
             label="Aktív felhasználó"

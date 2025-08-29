@@ -342,9 +342,11 @@ const getAccessibleNavItems = (tableAccess, userPermissions) => {
       return userPermissions?.isSuperadmin;
     }
 
-    // Special case for users - only superadmins can access
+    // Special case for users - check both superadmin and table access
     if (item.tableName === "user") {
-      return userPermissions?.isSuperadmin;
+      return (
+        userPermissions?.isSuperadmin || accessibleTableNames.includes("user")
+      );
     }
 
     // Show items that the user has table access to
