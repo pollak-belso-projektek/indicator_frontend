@@ -121,7 +121,7 @@ export const createUserColumns = (onEdit, onDelete) => [
       const roles = [];
       if (!details) return <Text>Nincs szerepkör</Text>;
       if (details.isHSZC) roles.push("HSZC");
-      if (details.isSuperadmin) roles.push("Superadmin");
+      if (details.isSuperadmin) roles.push("Fejlesztő");
       if (details.isAdmin) roles.push("Admin");
       if (details.isPrivileged) roles.push("Privileged");
       if (details.isStandard) roles.push("Standard");
@@ -135,7 +135,7 @@ export const createUserColumns = (onEdit, onDelete) => [
               colorPalette={
                 role === "HSZC"
                   ? "purple"
-                  : role === "Superadmin"
+                  : role === "Fejlesztő"
                   ? "red"
                   : role === "Admin"
                   ? "blue"
@@ -146,8 +146,8 @@ export const createUserColumns = (onEdit, onDelete) => [
             >
               {role === "HSZC"
                 ? "HSZC"
-                : role === "Superadmin"
-                ? "Superadmin"
+                : role === "Fejlesztő"
+                ? "Fejlesztő"
                 : role === "Admin"
                 ? "Admin"
                 : role === "Privileged"

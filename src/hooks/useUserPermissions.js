@@ -83,7 +83,7 @@ export const useUserPermissions = () => {
     if (hasPermission("isSuperadmin")) {
       // Superadmin can create all user types
       return [
-        { value: "superadmin", label: "Superadmin" },
+        { value: "superadmin", label: "Fejlesztő" },
         { value: "hszc_admin", label: "HSZC Admin" },
         { value: "hszc_privileged", label: "HSZC Privilegizált" },
         { value: "hszc_general", label: "HSZC Általános" },

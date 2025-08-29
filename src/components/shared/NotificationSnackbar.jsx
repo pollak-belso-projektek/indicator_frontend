@@ -15,7 +15,7 @@ const NotificationSnackbar = ({
   severity = "success",
   onClose,
   autoHideDuration = 6000,
-  anchorOrigin = { vertical: "top", horizontal: "right" },
+  anchorOrigin = { vertical: "bottom", horizontal: "right" },
 }) => {
   return (
     <Snackbar

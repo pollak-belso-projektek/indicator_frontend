@@ -35,6 +35,8 @@ export const indicatorApi = createApi({
     "Dobbanto",
     "Logs",
     "OktatokEgyebTev",
+    "Szakirany",
+    "Szakma",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -472,7 +474,7 @@ export const indicatorApi = createApi({
     }),
     updateHHesHHHNevelesuTanulok: build.mutation({
       query: ({ id, ...data }) => ({
-        url: `hh_es_hhh_nevelesu_tanulok/${id}`,
+        url: `hh_es_hhh/${id}`,
         method: "PUT",
         body: data,
       }),
@@ -480,7 +482,7 @@ export const indicatorApi = createApi({
     }),
     deleteHHesHHHNevelesuTanulok: build.mutation({
       query: (id) => ({
-        url: `hh_es_hhh_nevelesu_tanulok/${id}`,
+        url: `hh_es_hhh/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["HHesHHHNevelesuTanulok"],
@@ -601,8 +603,9 @@ export const indicatorApi = createApi({
         body: {
           alapadatok_id: data.alapadatok_id,
           tanev_kezdete: data.tanev_kezdete,
-          resztvevok_szama: data.resztvevok_szama,
-          tanulok_osszesen: data.tanulok_osszesen,
+          reszszakmat_szerezok_szama: data.reszszakmat_szerezok_szama,
+          muhelyiskola_tanuloi_osszletszam:
+            data.muhelyiskola_tanuloi_osszletszam,
         },
       }),
       invalidatesTags: (result, error, data) => [
@@ -883,6 +886,16 @@ export const indicatorApi = createApi({
       invalidatesTags: ["Dobbanto"],
     }),
 
+    // Szakirany and Szakma endpoints
+    getSzakiranyList: build.query({
+      query: () => "szakirany",
+      providesTags: ["Szakirany"],
+    }),
+    getSzakmaList: build.query({
+      query: () => "szakma",
+      providesTags: ["Szakma"],
+    }),
+
     // User management endpoints
   }),
 });
@@ -983,4 +996,7 @@ export const {
   useAddDobbantoMutation,
   useUpdateDobbantoMutation,
   useDeleteDobbantoMutation,
+  // Szakirany and Szakma hooks
+  useGetSzakiranyListQuery,
+  useGetSzakmaListQuery,
 } = indicatorApi;

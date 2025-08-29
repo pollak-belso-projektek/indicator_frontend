@@ -1,26 +1,43 @@
 const tableKeyValues = {
+  // Core tables
   tanulo_letszam: "Tanuló létszám",
   alapadatok: "Alapadatok",
   kompetencia: "Kompetencia",
   felvettek_szama: "Felvettek száma",
   tanugyi_adatok: "Tanügyi adatok",
+  
+  // Competition and achievements
   versenyek: "Versenyek",
-  users: "Felhasználók",
-  nszfh_meresek: "NSZFH mérések",
-  szakmai_eredmenyek: "Szakmai eredmények",
-  elhelyezkedesi_mutato: "Elhelyezkedési mutató",
-  vegzettek_elegedettsege: "Végzettek elégedettsége",
   vizsgaeredmenyek: "Vizsgaeredmények",
-  intezmenyi_elismeresek: "Intézményi elismerések",
-  szakmai_bemutatok_konferenciak: "Szakmai bemutatók, konferenciák",
-  elegedettseg_meres_eredmenyei: "Elégedettség mérés eredményei",
-  muhelyiskolai_reszszakmat: "Műhelyiskolai részszakmat",
-  dobbanto_program_aranya: "Dobbantó program aránya",
-  sajatos_nevelesi_igenyu_tanulok_aranya: "SNI tanulók aránya",
-  hatranyos_helyetu_tanulok_aranya: "HH tanulók aránya",
-  intezmenyi_nevelesi_mutatok: "Intézményi nevelési mutatók",
-  szakkepzesi_munkaszerződes_arany: "Szakképzési munkaszerződés aránya",
-  logs: "Rendszer naplók",
+  szakmai_vizsga_eredmenyek: "Szakmai vizsga eredmények",
+  intezmenyi_neveltseg: "Intézményi neveltség",
+  
+  // Assessment and satisfaction
+  nszfh: "NSZFH",
+  elegedettseg_meres: "Elégedettség mérés",
+  elegedettseg: "Elégedettség",
+  
+  // Student categories
+  sajatos_nevelesu_tanulok: "Sajátos nevelésű tanulók",
+  hh_es_hhh_nevelesu_tanulok: "HH és HHH nevelésű tanulók",
+  
+  // Career and employment
+  elhelyezkedes: "Elhelyezkedés",
+  alkalmazottak_munkaugy: "Alkalmazottak munkaügy",
+  
+  // Special programs
+  muhelyiskola: "Műhelyiskola",
+  dobbanto: "Dobbantó",
+  
+  // Staff and activities
+  egy_oktatora_juto_tanulo: "Egy oktatóra jutó tanuló",
+  oktato_egyeb_tev: "Oktató egyéb tevékenység",
+  
+  // System
+  user: "Felhasználók",
+  log: "Rendszer naplók",
+  auth: "Authentikáció",
+  szmsz: "SZMSZ",
 };
 
 export const getTableName = (tableKey) => {
@@ -48,17 +65,24 @@ const routeToTableMapping = {
   "/versenyek": "versenyek",
   "/tanugyi_adatok": "tanugyi_adatok",
   "/felvettek_szama": "felvettek_szama",
-  "/users": "users",
-  "/nszfh-meresek": "nszfh_meresek",
-  "/szakmai-eredmenyek": "szakmai_eredmenyek",
-  "/elhelyezkedesi-mutato": "elhelyezkedesi_mutato",
-  "/dobbanto-program-aranya": "dobbanto_program_aranya",
-  "/sajatos-nevelesi-igenyu-tanulok-aranya":
-    "sajatos_nevelesi_igenyu_tanulok_aranya",
-  "/hatranyos-helyezu-tanulok-aranya": "hatranyos_helyetu_tanulok_aranya",
-  "/intezmenyi-nevelesi-mutatok": "intezmenyi_nevelesi_mutatok",
-  "/szakkepzesi-munkaszerződes-arany": "szakkepzesi_munkaszerződes_arany",
-  "/logs": "logs",
+  "/users": "user",
+  "/nszfh-meresek": "nszfh",
+  "/szakmai-eredmenyek": "versenyek",
+  "/elhelyezkedesi-mutato": "elhelyezkedes",
+  "/vegzettek-elegedettsege": "elegedettseg",
+  "/vizsgaeredmenyek": "vizsgaeredmenyek",
+  "/intezmenyi-elismeresek": "intezmenyi_neveltseg",
+  "/szakmai-bemutatok-konferenciak": "oktato_egyeb_tev",
+  "/elegedettseg-meres-eredmenyei": "elegedettseg_meres",
+  "/muhelyiskolai-reszszakmat": "muhelyiskola",
+  "/dobbanto-program-aranya": "dobbanto",
+  "/sajatos-nevelesi-igenyu-tanulok-aranya": "sajatos_nevelesu_tanulok",
+  "/hatranyos-helyezu-tanulok-aranya": "hh_es_hhh_nevelesu_tanulok",
+  "/intezmenyi-nevelesi-mutatok": "intezmenyi_neveltseg",
+  "/szakkepzesi-munkaszerződes-arany": "szakmai_vizsga_eredmenyek",
+  "/oktatok-egyeb-tev": "oktato_egyeb_tev",
+  "/oktato_per_diak": "egy_oktatora_juto_tanulo",
+  "/logs": "log",
 };
 
 export const getTableNameFromRoute = (route) => {
@@ -132,9 +156,14 @@ export const getAccessibleRoutes = (
   const accessibleRoutes = allRoutes.filter((route) => {
     const tableName = getTableNameFromRoute(route);
 
-    // Special case for logs - only admins can access
-    if (tableName === "logs") {
-      return userPermissions?.isAdmin || userPermissions?.isSuperadmin;
+    // Special case for logs - only superadmins can access
+    if (tableName === "log") {
+      return userPermissions?.isSuperadmin;
+    }
+
+    // Special case for users - only superadmins can access
+    if (tableName === "user") {
+      return userPermissions?.isSuperadmin;
     }
 
     return tableName ? hasTableAccess(tableAccess, tableName) : false;

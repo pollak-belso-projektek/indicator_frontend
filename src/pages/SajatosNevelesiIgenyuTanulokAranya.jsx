@@ -93,7 +93,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       selectedSchool: null,
       tanev_kezdete: "",
       sni_tanulok_szama: 0,
-      osszes_tanulo_szama: 0,
+      tanulok_osszesen: 0,
     },
   });
 
@@ -116,11 +116,10 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       organized[schoolName][year] = {
         ...item,
         sni_arany:
-          item.sni_tanulok_szama && item.osszes_tanulo_szama
-            ? (
-                (item.sni_tanulok_szama / item.osszes_tanulo_szama) *
-                100
-              ).toFixed(2)
+          item.sni_tanulok_szama && item.tanulok_osszesen
+            ? ((item.sni_tanulok_szama / item.tanulok_osszesen) * 100).toFixed(
+                2
+              )
             : 0,
       };
     });
@@ -143,18 +142,15 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           const updatedItem = { ...item, [field]: value };
 
           // Recalculate percentage when either field changes
-          if (
-            field === "sni_tanulok_szama" ||
-            field === "osszes_tanulo_szama"
-          ) {
+          if (field === "sni_tanulok_szama" || field === "tanulok_osszesen") {
             const sniTanulok =
               field === "sni_tanulok_szama"
                 ? parseInt(value) || 0
                 : parseInt(item.sni_tanulok_szama) || 0;
             const osszesCanulok =
-              field === "osszes_tanulo_szama"
+              field === "tanulok_osszesen"
                 ? parseInt(value) || 0
-                : parseInt(item.osszes_tanulo_szama) || 0;
+                : parseInt(item.tanulok_osszesen) || 0;
 
             updatedItem.sni_arany =
               osszesCanulok > 0
@@ -179,7 +175,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         await updateSajatosNevelesuTanulok({
           id: item.id,
           sni_tanulok_szama: parseInt(item.sni_tanulok_szama) || 0,
-          osszes_tanulo_szama: parseInt(item.osszes_tanulo_szama) || 0,
+          tanulok_osszesen: parseInt(item.tanulok_osszesen) || 0,
+          tanev_kezdete: parseInt(item.tanev_kezdete),
         }).unwrap();
       }
 
@@ -256,7 +253,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         selectedSchool: null,
         tanev_kezdete: currentSchoolYear,
         sni_tanulok_szama: 0,
-        osszes_tanulo_szama: 0,
+        tanulok_osszesen: 0,
       },
     });
   };
@@ -269,7 +266,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         selectedSchool: null,
         tanev_kezdete: "",
         sni_tanulok_szama: 0,
-        osszes_tanulo_szama: 0,
+        tanulok_osszesen: 0,
       },
     });
   };
@@ -289,8 +286,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           parseInt(addDialog.newRecord.alapadatok_id),
         tanev_kezdete: parseInt(addDialog.newRecord.tanev_kezdete),
         sni_tanulok_szama: parseInt(addDialog.newRecord.sni_tanulok_szama) || 0,
-        osszes_tanulo_szama:
-          parseInt(addDialog.newRecord.osszes_tanulo_szama) || 0,
+        tanulok_osszesen: parseInt(addDialog.newRecord.tanulok_osszesen) || 0,
       };
 
       await addSajatosNevelesuTanulok(newRecord).unwrap();
@@ -567,11 +563,11 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                             >
                               <TextField
                                 type="number"
-                                value={data.osszes_tanulo_szama || 0}
+                                value={data.tanulok_osszesen || 0}
                                 onChange={(e) =>
                                   handleDataChange(
                                     data.id,
-                                    "osszes_tanulo_szama",
+                                    "tanulok_osszesen",
                                     e.target.value
                                   )
                                 }
@@ -823,9 +819,9 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                 fullWidth
                 label="Összes tanuló száma (fő)"
                 type="number"
-                value={addDialog.newRecord.osszes_tanulo_szama}
+                value={addDialog.newRecord.tanulok_osszesen}
                 onChange={(e) =>
-                  handleNewRecordChange("osszes_tanulo_szama", e.target.value)
+                  handleNewRecordChange("tanulok_osszesen", e.target.value)
                 }
                 inputProps={{ min: 0 }}
                 helperText="Az intézmény teljes tanulói létszáma"
@@ -843,10 +839,10 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                 }}
               >
                 <strong>Számított SNI arány:</strong>{" "}
-                {addDialog.newRecord.osszes_tanulo_szama > 0
+                {addDialog.newRecord.tanulok_osszesen > 0
                   ? (
                       (addDialog.newRecord.sni_tanulok_szama /
-                        addDialog.newRecord.osszes_tanulo_szama) *
+                        addDialog.newRecord.tanulok_osszesen) *
                       100
                     ).toFixed(2)
                   : 0}

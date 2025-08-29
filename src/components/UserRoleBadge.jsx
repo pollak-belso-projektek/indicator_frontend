@@ -4,7 +4,7 @@ import { Box } from "@mui/material";
 const UserRoleBadge = ({ role, permissions }) => {
   const getDisplayRole = (role, permissions) => {
     // Map internal roles to Hungarian display names
-    if (permissions?.isSuperadmin) return "Superadmin";
+    if (permissions?.isSuperadmin) return "Fejlesztő";
     if (permissions?.isHSZC && permissions?.isAdmin) return "HSZC Admin";
     if (permissions?.isHSZC && permissions?.isPrivileged)
       return "HSZC Privilegizált";
@@ -28,7 +28,7 @@ const UserRoleBadge = ({ role, permissions }) => {
   };
 
   const getRoleIcon = (permissions) => {
-    if (permissions?.isSuperadmin) return "👑";
+    if (permissions?.isSuperadmin) return "👨‍💻";
     if (permissions?.isAdmin) return "🛡️";
     if (permissions?.isPrivileged) return "⭐";
     if (permissions?.isStandard) return "👤";

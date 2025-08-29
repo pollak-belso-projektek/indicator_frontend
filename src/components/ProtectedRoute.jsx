@@ -103,7 +103,15 @@ export default function ProtectedRoute({
       console.warn(
         `Access denied to table: ${tableName} for route: ${location.pathname}`
       );
-      return <Navigate to="/dashboard" replace />;
+      return <Navigate 
+        to="/dashboard" 
+        state={{ 
+          redirectReason: 'table_access_denied',
+          fromRoute: location.pathname,
+          tableName: tableName
+        }} 
+        replace 
+      />;
     }
   }
 

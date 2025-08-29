@@ -4,7 +4,7 @@
 const config = {
   // API Configuration
   apiBaseUrl:
-    import.meta.env.VITE_API_BASE_URL || "http://10.0.0.83:5300/api/v1/",
+    import.meta.env.VITE_API_BASE_URL || "http://10.0.0.83:5300/",
 
   // Environment info
   isDevelopment: import.meta.env.DEV,

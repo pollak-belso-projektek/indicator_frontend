@@ -26,6 +26,7 @@ import {
   validateTanugyiFile,
   validateAlkalmazottFile,
 } from "../utils/fileValidation";
+import { generateSchoolYears } from "../utils/schoolYears";
 
 export default function DataImport() {
   const [tanugyiData, setTanugyiData] = useState(null);
@@ -45,7 +46,10 @@ export default function DataImport() {
     isLoading: tanugyiLoading,
   } = useGetTanugyiAdatokQuery({
     alapadatok_id: selectedSchool?.id,
-    tanev_kezdete: 2024,
+    tanev_kezdete:
+      new Date().getMonth() >= 8
+        ? new Date().getFullYear()
+        : new Date().getFullYear() - 1,
   });
 
   // Alkalmazott adatok API hooks
@@ -57,7 +61,10 @@ export default function DataImport() {
     isLoading: alkalmazottLoading,
   } = useGetAlkalmazottAdatokQuery({
     alapadatok_id: selectedSchool?.id,
-    tanev_kezdete: 2024,
+    tanev_kezdete:
+      new Date().getMonth() >= 8
+        ? new Date().getFullYear()
+        : new Date().getFullYear() - 1,
   });
 
   // Tanügyi adatok effect
@@ -66,7 +73,10 @@ export default function DataImport() {
     if (tanugyiData && !tanugyiValidationError) {
       addTanugyiAdatok({
         alapadatok_id: selectedSchool?.id,
-        tanev_kezdete: 2024,
+        tanev_kezdete:
+          new Date().getMonth() >= 8
+            ? new Date().getFullYear()
+            : new Date().getFullYear() - 1,
         tanugyi_adatok: tanugyiData,
       });
     }

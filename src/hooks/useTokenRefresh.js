@@ -56,7 +56,7 @@ export const useTokenRefresh = () => {
       console.log("Manual token refresh initiated...");
 
       const response = await fetch(
-        `${config.apiBaseUrl}auth/refresh`, // Ensure this matches your backend endpoint
+        `${config.apiBaseUrl}api/v1/auth/refresh`, 
         {
           method: "POST",
           headers: {

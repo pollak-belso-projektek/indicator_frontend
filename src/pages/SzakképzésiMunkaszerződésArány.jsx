@@ -55,13 +55,19 @@ export default function SzakképzésiMunkaszerződésArány() {
           ?.map((szakiranyok) => {
             const specializations =
               szakiranyok?.szakirany?.szakma
-                ?.filter(
-                  (item) =>
+                ?.filter((item) => {
+                  if (item.szakma.tipus == null) {
+                    return selectedSchool?.alapadatok_szakma.some(
+                      (item2) => item2.szakma.nev === item.szakma.nev
+                    );
+                  }
+                  return (
                     item.szakma.tipus === tipus &&
                     selectedSchool?.alapadatok_szakma.some(
                       (item2) => item2.szakma.nev === item.szakma.nev
                     )
-                )
+                  );
+                })
                 ?.map((item) => item.szakma.nev) || [];
 
             return {
@@ -1650,7 +1656,7 @@ export default function SzakképzésiMunkaszerződésArány() {
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
         <Alert
           onClose={handleSnackbarClose}
