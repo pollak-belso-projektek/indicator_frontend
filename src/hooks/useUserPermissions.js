@@ -3,6 +3,7 @@ import {
   selectUserPermissions,
   selectUserRole,
   selectUserTableAccess,
+  selectUser,
 } from "../store/slices/authSlice";
 
 // Custom hook for checking user permissions
@@ -10,6 +11,7 @@ export const useUserPermissions = () => {
   const permissions = useSelector(selectUserPermissions);
   const role = useSelector(selectUserRole);
   const tableAccess = useSelector(selectUserTableAccess);
+  const currentUser = useSelector(selectUser);
 
   const hasPermission = (permission) => {
     return permissions?.[permission] || false;
@@ -70,14 +72,82 @@ export const useUserPermissions = () => {
     return false;
   };
 
-  const canModifyUser = () => {
+  const canModifyUser = (targetUser) => {
     // Only admins can modify users
-    return hasPermission("isAdmin") || hasPermission("isSuperadmin");
+    if (!hasPermission("isAdmin") && !hasPermission("isSuperadmin")) {
+      return false;
+    }
+
+    // Superadmin can modify anyone
+    if (hasPermission("isSuperadmin")) {
+      return true;
+    }
+
+    // HSZC users can modify anyone
+    if (hasPermission("isHSZC") && hasPermission("isAdmin")) {
+      return true;
+    }
+
+    // Iskolai admins can only modify users from their own school
+    if (
+      hasPermission("isAdmin") &&
+      !hasPermission("isHSZC") &&
+      currentUser?.school &&
+      targetUser
+    ) {
+      const currentUserSchoolId =
+        typeof currentUser.school === "object"
+          ? currentUser.school.id
+          : currentUser.school;
+
+      const targetUserSchoolId =
+        typeof targetUser.alapadatokId === "object"
+          ? targetUser.alapadatokId.id
+          : targetUser.alapadatokId;
+
+      return currentUserSchoolId === targetUserSchoolId;
+    }
+
+    return false;
   };
 
-  const canDeactivateUser = () => {
+  const canDeactivateUser = (targetUser) => {
     // Only admins can deactivate users (no deletion, only deactivation)
-    return hasPermission("isAdmin") || hasPermission("isSuperadmin");
+    if (!hasPermission("isAdmin") && !hasPermission("isSuperadmin")) {
+      return false;
+    }
+
+    // Superadmin can deactivate anyone
+    if (hasPermission("isSuperadmin")) {
+      return true;
+    }
+
+    // HSZC users can deactivate anyone
+    if (hasPermission("isHSZC") && hasPermission("isAdmin")) {
+      return true;
+    }
+
+    // Iskolai admins can only deactivate users from their own school
+    if (
+      hasPermission("isAdmin") &&
+      !hasPermission("isHSZC") &&
+      currentUser?.school &&
+      targetUser
+    ) {
+      const currentUserSchoolId =
+        typeof currentUser.school === "object"
+          ? currentUser.school.id
+          : currentUser.school;
+
+      const targetUserSchoolId =
+        typeof targetUser.alapadatokId === "object"
+          ? targetUser.alapadatokId.id
+          : targetUser.alapadatokId;
+
+      return currentUserSchoolId === targetUserSchoolId;
+    }
+
+    return false;
   };
   const getAvailableUserTypes = () => {
     if (hasPermission("isSuperadmin")) {
@@ -115,6 +185,15 @@ export const useUserPermissions = () => {
 
     return [];
   };
+
+  // Check if current user can select schools when creating/editing users
+  const canSelectSchoolForUsers = () => {
+    return (
+      hasPermission("isSuperadmin") ||
+      (hasPermission("isHSZC") && hasPermission("isAdmin"))
+    );
+  };
+
   return {
     permissions,
     role,
@@ -132,6 +211,7 @@ export const useUserPermissions = () => {
     canCreateUser,
     canModifyUser,
     canDeactivateUser,
+    canSelectSchoolForUsers,
     getAvailableUserTypes,
   };
 };

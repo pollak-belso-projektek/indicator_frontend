@@ -80,7 +80,6 @@ export const createUserColumns = (onEdit, onDelete) => [
           maxHeight="150px"
           overflow="auto"
         >
-          {console.log("Rendering access badges:", access)}
           {access.map((item, index) => {
             const permissions = formatAccessLevel(item.access);
 

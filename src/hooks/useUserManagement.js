@@ -16,6 +16,8 @@ import {
   useAddUserMutation,
   useUpdateUserMutation,
 } from "../store/api/apiSlice";
+import { useSelector } from "react-redux";
+import { selectUser } from "../store/slices/authSlice";
 
 export const useUserManagement = () => {
   const [globalFilter, setGlobalFilter] = useState("");
@@ -39,13 +41,45 @@ export const useUserManagement = () => {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
 
-  // Get user permissions
+  // Get user permissions and current user info
   const userPermissions = useUserPermissions();
+  const currentUser = useSelector(selectUser);
 
   // API hooks
   const { data: usersData = [], isLoading, refetch } = useGetUsersQuery();
   const [addUser] = useAddUserMutation();
   const [updateUser] = useUpdateUserMutation();
+
+  // Filter users based on current user's school for Iskolai users
+  const filteredUsersData = useMemo(() => {
+    // Superadmin and HSZC users can see all users
+    if (userPermissions?.isSuperadmin || userPermissions?.isHSZC) {
+      return usersData;
+    }
+
+    // Iskolai users can only see users from their own school
+    if (currentUser?.school && !userPermissions?.isHSZC) {
+      const currentUserSchoolId = typeof currentUser.school === 'object' 
+        ? currentUser.school?.id 
+        : currentUser.school;
+
+      return usersData.filter(user => {
+        // Skip users without school assignment
+        if (!user.alapadatokId) {
+          return false;
+        }
+
+        const userSchoolId = typeof user.alapadatokId === 'object' 
+          ? user.alapadatokId?.id 
+          : user.alapadatokId;
+        
+        return userSchoolId === currentUserSchoolId;
+      });
+    }
+
+    // Default: return all users (fallback)
+    return usersData;
+  }, [usersData, currentUser?.school, userPermissions?.isSuperadmin, userPermissions?.isHSZC]);
   useEffect(() => {
     localStorage.setItem("hiddenColumns", hiddenColumns.join(","));
   }, [hiddenColumns]);
@@ -89,8 +123,8 @@ export const useUserManagement = () => {
   }, []);
 
   const handleEdit = (user) => {
-    if (!userPermissions.canModifyUser()) {
-      return { error: "Nincs jogosultsága felhasználók módosításához!" };
+    if (!userPermissions.canModifyUser(user)) {
+      return { error: "Nincs jogosultsága ennek a felhasználónak a módosításához!" };
     }
     setSelectedUser(user);
     setOpenModify(true);
@@ -107,8 +141,8 @@ export const useUserManagement = () => {
   };
 
   const handleDeactivate = (user) => {
-    if (!userPermissions.canDeactivateUser()) {
-      return { error: "Nincs jogosultsága felhasználók inaktiválásához!" };
+    if (!userPermissions.canDeactivateUser(user)) {
+      return { error: "Nincs jogosultsága ennek a felhasználónak az inaktiválásához!" };
     }
     setSelectedUser(user);
     setOpen(true);
@@ -201,7 +235,7 @@ export const useUserManagement = () => {
   );
 
   const table = useReactTable({
-    data: usersData,
+    data: filteredUsersData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -226,7 +260,7 @@ export const useUserManagement = () => {
   });
 
   return {
-    data: usersData,
+    data: filteredUsersData,
     table,
     globalFilter,
     setGlobalFilter,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -35,8 +35,12 @@ import {
   calculateAccessLevel,
   formatAccessLevel,
 } from "../utils/tableAccessUtils";
+import { useSelector } from "react-redux";
+import { selectUser } from "../store/slices/authSlice";
 
 const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
+  const currentUser = useSelector(selectUser);
+
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
@@ -49,6 +53,11 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
   const [selectedTables, setSelectedTables] = useState([]);
   const [tablePermissions, setTablePermissions] = useState({}); // Store permissions for each table
   const availableUserTypes = userPermissions?.getAvailableUserTypes() || [];
+
+  // Determine if current user can select schools for new users
+  const canSelectSchoolForUsers =
+    userPermissions?.isSuperadmin ||
+    (userPermissions?.isHSZC && userPermissions?.isAdmin);
 
   // Notification state
   const [notification, setNotification] = useState({
@@ -73,6 +82,22 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
   // Fetch available schools for selection
   const { data: schoolsData = [], isLoading: schoolsLoading } =
     useGetAllAlapadatokQuery();
+
+  // Effect to set default school for Iskolai users
+  useEffect(() => {
+    if (open && !canSelectSchoolForUsers && currentUser?.school) {
+      // For Iskolai users, automatically set their own school
+      const schoolId =
+        typeof currentUser.school === "object"
+          ? currentUser.school.id
+          : currentUser.school;
+
+      setNewUser((prev) => ({
+        ...prev,
+        alapadatokId: schoolId,
+      }));
+    }
+  }, [open, canSelectSchoolForUsers, currentUser?.school]);
 
   const handleUserTypeChange = (type) => {
     setUserType(type);
@@ -152,6 +177,18 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
       return;
     }
 
+    // For Iskolai users, ensure they can only create users in their own school
+    if (
+      !canSelectSchoolForUsers &&
+      (!newUser.alapadatokId || !currentUser?.school)
+    ) {
+      showNotification(
+        "Hiba történt az iskolaválasztással. Kérjük próbálja újra!",
+        "error"
+      );
+      return;
+    }
+
     onSave(newUser);
     handleClose();
   };
@@ -205,66 +242,114 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
             required
           />
           <Divider sx={{ my: 3 }} />
-          <Typography variant="h6" gutterBottom>
-            Iskola hozzárendelés
-          </Typography>
-          <Autocomplete
-            id="school-select"
-            options={schoolsData}
-            getOptionLabel={(option) => option.iskola_neve || ""}
-            value={
-              schoolsData.find(
-                (school) => school.id === newUser.alapadatokId
-              ) || null
-            }
-            onChange={(event, newValue) =>
-              handleInputChange("alapadatokId", newValue ? newValue.id : null)
-            }
-            loading={schoolsLoading}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Iskola kiválasztása"
-                placeholder="Válasszon iskolát..."
-                helperText="Válassza ki azt az iskolát, amelyhez a felhasználó tartozik (opcionális)"
-              />
-            )}
-            renderOption={(props, option) => (
-              <Box component="li" {...props}>
-                <Box>
-                  <Typography variant="body1">{option.iskola_neve}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {option.intezmeny_tipus}
-                  </Typography>
-                </Box>
-              </Box>
-            )}
-            sx={{ mt: 2 }}
-          />
-          {newUser.alapadatokId && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Kiválasztott iskola:
+          {/* School Assignment Section - Only show for users who can select schools */}
+          {canSelectSchoolForUsers ? (
+            <>
+              <Typography variant="h6" gutterBottom>
+                Iskola hozzárendelés
               </Typography>
-              <Box sx={{ ml: 2, mt: 1 }}>
-                <Typography variant="body2">
-                  • Iskola:{" "}
-                  {
-                    schoolsData.find(
-                      (school) => school.id === newUser.alapadatokId
-                    )?.iskola_neve
-                  }
+              <Autocomplete
+                id="school-select"
+                options={schoolsData}
+                getOptionLabel={(option) => option.iskola_neve || ""}
+                value={
+                  schoolsData.find(
+                    (school) => school.id === newUser.alapadatokId
+                  ) || null
+                }
+                onChange={(event, newValue) =>
+                  handleInputChange(
+                    "alapadatokId",
+                    newValue ? newValue.id : null
+                  )
+                }
+                loading={schoolsLoading}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Iskola kiválasztása"
+                    placeholder="Válasszon iskolát..."
+                    helperText="Válassza ki azt az iskolát, amelyhez a felhasználó tartozik (opcionális)"
+                  />
+                )}
+                renderOption={(props, option) => (
+                  <Box component="li" {...props}>
+                    <Box>
+                      <Typography variant="body1">
+                        {option.iskola_neve}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {option.intezmeny_tipus}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+                sx={{ mt: 2 }}
+              />
+              {newUser.alapadatokId && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Kiválasztott iskola:
+                  </Typography>
+                  <Box sx={{ ml: 2, mt: 1 }}>
+                    <Typography variant="body2">
+                      • Iskola:{" "}
+                      {
+                        schoolsData.find(
+                          (school) => school.id === newUser.alapadatokId
+                        )?.iskola_neve
+                      }
+                    </Typography>
+                    <Typography variant="body2">
+                      • Típus:{" "}
+                      {
+                        schoolsData.find(
+                          (school) => school.id === newUser.alapadatokId
+                        )?.intezmeny_tipus
+                      }
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+            </>
+          ) : (
+            <>
+              <Typography variant="h6" gutterBottom>
+                Iskola hozzárendelés
+              </Typography>
+              <Box sx={{ p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
+                >
+                  Az új felhasználó automatikusan az Ön iskolájához lesz
+                  hozzárendelve:
                 </Typography>
-                <Typography variant="body2">
-                  • Típus:{" "}
-                  {
-                    schoolsData.find(
-                      (school) => school.id === newUser.alapadatokId
-                    )?.intezmeny_tipus
-                  }
-                </Typography>
+                {currentUser?.school && newUser.alapadatokId && (
+                  <Box sx={{ ml: 1 }}>
+                    <Typography variant="body2">
+                      • Iskola:{" "}
+                      {schoolsData.find(
+                        (school) => school.id === newUser.alapadatokId
+                      )?.iskola_neve ||
+                        (typeof currentUser.school === "object"
+                          ? currentUser.school.iskola_neve
+                          : "Ismeretlen iskola")}
+                    </Typography>
+                    <Typography variant="body2">
+                      • Típus:{" "}
+                      {schoolsData.find(
+                        (school) => school.id === newUser.alapadatokId
+                      )?.intezmeny_tipus ||
+                        (typeof currentUser.school === "object"
+                          ? currentUser.school.intezmeny_tipus
+                          : "Ismeretlen típus")}
+                    </Typography>
+                  </Box>
+                )}
               </Box>
-            </Box>
+            </>
           )}
           <Divider sx={{ my: 3 }} />
           <Typography variant="h6" gutterBottom>
