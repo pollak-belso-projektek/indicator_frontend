@@ -9,6 +9,7 @@ This update implements school-based filtering for the user management system. Is
 ### 1. useUserManagement.js Hook Updates
 
 #### Added User Filtering Logic
+
 ```javascript
 // Filter users based on current user's school for Iskolai users
 const filteredUsersData = useMemo(() => {
@@ -19,51 +20,64 @@ const filteredUsersData = useMemo(() => {
 
   // Iskolai users can only see users from their own school
   if (currentUser?.school && !userPermissions?.isHSZC) {
-    const currentUserSchoolId = typeof currentUser.school === 'object' 
-      ? currentUser.school.id 
-      : currentUser.school;
+    const currentUserSchoolId =
+      typeof currentUser.school === "object"
+        ? currentUser.school.id
+        : currentUser.school;
 
-    return usersData.filter(user => {
-      const userSchoolId = typeof user.alapadatokId === 'object' 
-        ? user.alapadatokId.id 
-        : user.alapadatokId;
-      
+    return usersData.filter((user) => {
+      const userSchoolId =
+        typeof user.alapadatokId === "object"
+          ? user.alapadatokId.id
+          : user.alapadatokId;
+
       return userSchoolId === currentUserSchoolId;
     });
   }
 
   // Default: return all users (fallback)
   return usersData;
-}, [usersData, currentUser?.school, userPermissions?.isSuperadmin, userPermissions?.isHSZC]);
+}, [
+  usersData,
+  currentUser?.school,
+  userPermissions?.isSuperadmin,
+  userPermissions?.isHSZC,
+]);
 ```
 
 #### Updated Table Data Source
+
 - Changed from `data: usersData` to `data: filteredUsersData`
 - Ensures the table only displays filtered users
 
 #### Enhanced Permission Checks
+
 - Updated `handleEdit()` and `handleDeactivate()` to use the enhanced permission methods
 - Now passes the target user to permission checks: `canModifyUser(user)` and `canDeactivateUser(user)`
 
 ## User Experience by Role
 
 ### Superadmin Users
+
 - ✅ See all users from all schools
 - ✅ Can edit/deactivate any user
 - ✅ No filtering applied
 
-### HSZC Admin/Privileged Users  
+### HSZC Admin/Privileged Users
+
 - ✅ See all users from all schools
 - ✅ Can edit/deactivate users according to their permissions
 - ✅ No filtering applied
 
 ### Iskolai Admin/Privileged Users
+
 - 🔒 Only see users from their own school
 - 🔒 Can only edit/deactivate users from their own school
 - ✅ School-based filtering automatically applied
 - ✅ Cannot accidentally access users from other schools
 
 ### Iskolai General Users
+
 - 🔒 Only see users from their own school (if they have read access)
 - ❌ Cannot edit or deactivate users (based on existing permissions)
 - ✅ Read-only access with school filtering
@@ -71,23 +85,29 @@ const filteredUsersData = useMemo(() => {
 ## Technical Implementation
 
 ### School ID Handling
-The system properly handles both object and primitive school ID formats:
-```javascript
-const currentUserSchoolId = typeof currentUser.school === 'object' 
-  ? currentUser.school.id 
-  : currentUser.school;
 
-const userSchoolId = typeof user.alapadatokId === 'object' 
-  ? user.alapadatokId.id 
-  : user.alapadatokId;
+The system properly handles both object and primitive school ID formats:
+
+```javascript
+const currentUserSchoolId =
+  typeof currentUser.school === "object"
+    ? currentUser.school.id
+    : currentUser.school;
+
+const userSchoolId =
+  typeof user.alapadatokId === "object"
+    ? user.alapadatokId.id
+    : user.alapadatokId;
 ```
 
 ### Performance Optimization
+
 - Uses `useMemo` to prevent unnecessary re-filtering
 - Only recalculates when relevant dependencies change
 - Efficient filtering based on school ID comparison
 
 ### Data Flow
+
 1. Raw users data fetched from API
 2. Filtering applied based on current user's permissions and school
 3. Filtered data passed to the table component

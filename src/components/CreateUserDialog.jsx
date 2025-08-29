@@ -47,7 +47,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
     permissions: 1, // Default to iskolai_general (level 1)
     tableAccess: [], // Default empty table access
     alapadatokId: null, // Will be set based on user context
-    active: true,
+    isActive: true,
   });
   const [userType, setUserType] = useState("iskolai_general");
   const [selectedTables, setSelectedTables] = useState([]);
@@ -201,7 +201,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
       permissions: 1, // Reset to iskolai_general
       tableAccess: [],
       alapadatokId: null,
-      active: true,
+      isActive: true,
     });
     setUserType("iskolai_general");
     setSelectedTables([]);
@@ -382,8 +382,10 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
           <FormControlLabel
             control={
               <Switch
-                checked={newUser.active}
-                onChange={(e) => handleInputChange("active", e.target.checked)}
+                checked={newUser.isActive}
+                onChange={(e) =>
+                  handleInputChange("isActive", e.target.checked)
+                }
               />
             }
             disabled

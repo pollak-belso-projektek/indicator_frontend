@@ -59,27 +59,34 @@ export const useUserManagement = () => {
 
     // Iskolai users can only see users from their own school
     if (currentUser?.school && !userPermissions?.isHSZC) {
-      const currentUserSchoolId = typeof currentUser.school === 'object' 
-        ? currentUser.school?.id 
-        : currentUser.school;
+      const currentUserSchoolId =
+        typeof currentUser.school === "object"
+          ? currentUser.school?.id
+          : currentUser.school;
 
-      return usersData.filter(user => {
+      return usersData.filter((user) => {
         // Skip users without school assignment
         if (!user.alapadatokId) {
           return false;
         }
 
-        const userSchoolId = typeof user.alapadatokId === 'object' 
-          ? user.alapadatokId?.id 
-          : user.alapadatokId;
-        
+        const userSchoolId =
+          typeof user.alapadatokId === "object"
+            ? user.alapadatokId?.id
+            : user.alapadatokId;
+
         return userSchoolId === currentUserSchoolId;
       });
     }
 
     // Default: return all users (fallback)
     return usersData;
-  }, [usersData, currentUser?.school, userPermissions?.isSuperadmin, userPermissions?.isHSZC]);
+  }, [
+    usersData,
+    currentUser?.school,
+    userPermissions?.isSuperadmin,
+    userPermissions?.isHSZC,
+  ]);
   useEffect(() => {
     localStorage.setItem("hiddenColumns", hiddenColumns.join(","));
   }, [hiddenColumns]);
@@ -124,7 +131,9 @@ export const useUserManagement = () => {
 
   const handleEdit = (user) => {
     if (!userPermissions.canModifyUser(user)) {
-      return { error: "Nincs jogosultsága ennek a felhasználónak a módosításához!" };
+      return {
+        error: "Nincs jogosultsága ennek a felhasználónak a módosításához!",
+      };
     }
     setSelectedUser(user);
     setOpenModify(true);
@@ -142,7 +151,9 @@ export const useUserManagement = () => {
 
   const handleDeactivate = (user) => {
     if (!userPermissions.canDeactivateUser(user)) {
-      return { error: "Nincs jogosultsága ennek a felhasználónak az inaktiválásához!" };
+      return {
+        error: "Nincs jogosultsága ennek a felhasználónak az inaktiválásához!",
+      };
     }
     setSelectedUser(user);
     setOpen(true);

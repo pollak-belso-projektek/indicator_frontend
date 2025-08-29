@@ -63,7 +63,7 @@ export const EditUserDialog = ({
     permissions: 1,
     tableAccess: [],
     alapadatokId: null,
-    active: true,
+    isActive: true,
   });
   const [userType, setUserType] = useState("iskolai_general");
   const [selectedTables, setSelectedTables] = useState([]);
@@ -118,7 +118,7 @@ export const EditUserDialog = ({
         permissions: user.permissions || 1,
         tableAccess: user.tableAccess || [],
         alapadatokId: user.alapadatokId || null,
-        active: user.active !== false, // Default to true if undefined
+        isActive: user.isActive !== false, // Default to true if undefined
       });
 
       // Set user type from permissions level
@@ -533,8 +533,10 @@ export const EditUserDialog = ({
           <FormControlLabel
             control={
               <Switch
-                checked={editedUser.active}
-                onChange={(e) => handleInputChange("active", e.target.checked)}
+                checked={editedUser.isActive}
+                onChange={(e) =>
+                  handleInputChange("isActive", e.target.checked)
+                }
               />
             }
             label="Aktív felhasználó"
