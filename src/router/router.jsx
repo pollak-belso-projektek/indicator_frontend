@@ -8,6 +8,7 @@ import TokenValidationGuard from "../components/TokenValidationGuard.jsx";
 import ProactiveTokenRefresh from "../components/ProactiveTokenRefresh.jsx";
 import { selectIsAuthenticated } from "../store/slices/authSlice";
 import SchoolSelectionIndicator from "../components/SchoolSelectionIndicator.jsx";
+import SchoolRequiredWrapper from "../components/SchoolRequiredWrapper.jsx";
 import { LoadingProvider } from "../contexts/LoadingContext.jsx";
 import RouteLoadingSpinner from "../components/RouteLoadingSpinner.jsx";
 
@@ -73,8 +74,45 @@ const LogsPage = lazy(() => import("../pages/Logs.jsx"));
 const OktatokEgyebTevPage = lazy(() =>
   import("../pages/Oktatok_egyeb_tev.jsx")
 );
+
+// List of pages that require school selection
+const SCHOOL_REQUIRED_PAGES = [
+  "/tanulo_letszam",
+  "/felvettek_szama",
+  "/sajatos-nevelesi-igenyu-tanulok-aranya",
+  "/hatranyos-helyezu-tanulok-aranya",
+  "/kompetencia",
+  "/orszagos-kompetenciameres",
+  "/nszfh-meresek",
+  "/vizsgaeredmenyek",
+  "/elegedettseg-meres-eredmenyei",
+  "/szakmai-eredmenyek",
+  "/intezmenyi-elismeresek",
+  "/elhelyezkedesi-mutato",
+  "/vegzettek-elegedettsege",
+  "/szakkepzesi-munkaszerződes-arany",
+  "/felnottkepzes",
+  "/muhelyiskolai-reszszakmat",
+  "/dobbanto-program-aranya",
+  "/intezmenyi-nevelesi-mutatok",
+  "/szakmai-bemutatok-konferenciak",
+  "/oktato_per_diak",
+  "/oktatok-egyeb-tev",
+  "/adat-import",
+  "/alapadatok",
+];
+
 export default function Router() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
+
+  // Helper function to wrap components that require school selection
+  const withSchoolRequired = (component, path) => {
+    if (SCHOOL_REQUIRED_PAGES.includes(path)) {
+      return <SchoolRequiredWrapper>{component}</SchoolRequiredWrapper>;
+    }
+    return component;
+  };
+
   return (
     <BrowserRouter>
       <LoadingProvider>
@@ -113,7 +151,7 @@ export default function Router() {
                 element={
                   <TableProtectedRoute tableName="alapadatok">
                     <NavigationWithLoading>
-                      <AlapadatokPage />
+                      {withSchoolRequired(<AlapadatokPage />, "/alapadatok")}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -121,9 +159,9 @@ export default function Router() {
               <Route
                 path="/adat-import"
                 element={
-                  <TableProtectedRoute tableName="data-import">
+                  <TableProtectedRoute tableName="adat-import">
                     <NavigationWithLoading>
-                      <DataImportPage />
+                      {withSchoolRequired(<DataImportPage />, "/adat-import")}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -133,7 +171,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute tableName="tanulo_letszam">
                     <NavigationWithLoading>
-                      <TanuloletszamPage />
+                      {withSchoolRequired(
+                        <TanuloletszamPage />,
+                        "/tanulo_letszam"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -143,7 +184,7 @@ export default function Router() {
                 element={
                   <TableProtectedRoute tableName="kompetencia">
                     <NavigationWithLoading>
-                      <KompetenciaPage />
+                      {withSchoolRequired(<KompetenciaPage />, "/kompetencia")}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -203,7 +244,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <FelnottkepzesPage />
+                      {withSchoolRequired(
+                        <FelnottkepzesPage />,
+                        "/felnottkepzes"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -213,7 +257,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <OrszagosKompetenciameresPage />
+                      {withSchoolRequired(
+                        <OrszagosKompetenciameresPage />,
+                        "/orszagos-kompetenciameres"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -223,7 +270,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <NszfhMeresekPage />
+                      {withSchoolRequired(
+                        <NszfhMeresekPage />,
+                        "/nszfh-meresek"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -233,7 +283,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <SzakmaiEredmenyekPage />
+                      {withSchoolRequired(
+                        <SzakmaiEredmenyekPage />,
+                        "/szakmai-eredmenyek"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -243,7 +296,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <ElhelyezkedesimMutatoPage />
+                      {withSchoolRequired(
+                        <ElhelyezkedesimMutatoPage />,
+                        "/elhelyezkedesi-mutato"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -253,7 +309,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <VegzettekElegedettsegePage />
+                      {withSchoolRequired(
+                        <VegzettekElegedettsegePage />,
+                        "/vegzettek-elegedettsege"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -263,7 +322,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <VizsgaeredmenyekPage />
+                      {withSchoolRequired(
+                        <VizsgaeredmenyekPage />,
+                        "/vizsgaeredmenyek"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -273,7 +335,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <IntezményiElismeresekPage />
+                      {withSchoolRequired(
+                        <IntezményiElismeresekPage />,
+                        "/intezmenyi-elismeresek"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -283,7 +348,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <SzakmaiBemutatokKonferenciakPage />
+                      {withSchoolRequired(
+                        <SzakmaiBemutatokKonferenciakPage />,
+                        "/szakmai-bemutatok-konferenciak"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -293,7 +361,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <ElegedettsegMeresEredmenyeiPage />
+                      {withSchoolRequired(
+                        <ElegedettsegMeresEredmenyeiPage />,
+                        "/elegedettseg-meres-eredmenyei"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -303,7 +374,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <MuhelyiskolaiReszszakmatPage />
+                      {withSchoolRequired(
+                        <MuhelyiskolaiReszszakmatPage />,
+                        "/muhelyiskolai-reszszakmat"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -313,7 +387,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <DobbantoProgramAranyaPage />
+                      {withSchoolRequired(
+                        <DobbantoProgramAranyaPage />,
+                        "/dobbanto-program-aranya"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -323,7 +400,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <SajatosNevelesiIgenyuTanulokAranyaPage />
+                      {withSchoolRequired(
+                        <SajatosNevelesiIgenyuTanulokAranyaPage />,
+                        "/sajatos-nevelesi-igenyu-tanulok-aranya"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -333,7 +413,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <HatanyosHelyzetuTanulokAranyaPage />
+                      {withSchoolRequired(
+                        <HatanyosHelyzetuTanulokAranyaPage />,
+                        "/hatranyos-helyezu-tanulok-aranya"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -343,7 +426,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <IntezményiNevelesiMutatokPage />
+                      {withSchoolRequired(
+                        <IntezményiNevelesiMutatokPage />,
+                        "/intezmenyi-nevelesi-mutatok"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -353,7 +439,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <SzakképzésiMunkaszerződésArányPage />
+                      {withSchoolRequired(
+                        <SzakképzésiMunkaszerződésArányPage />,
+                        "/szakkepzesi-munkaszerződes-arany"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -363,7 +452,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute tableName="oktatok_egyeb_tev">
                     <NavigationWithLoading>
-                      <OktatokEgyebTevPage />
+                      {withSchoolRequired(
+                        <OktatokEgyebTevPage />,
+                        "/oktatok-egyeb-tev"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -384,9 +476,12 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <SchoolSelectionIndicator>
-                        <FelvettekPage />
-                      </SchoolSelectionIndicator>
+                      {withSchoolRequired(
+                        <SchoolSelectionIndicator>
+                          <FelvettekPage />
+                        </SchoolSelectionIndicator>,
+                        "/felvettek_szama"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }
@@ -396,7 +491,10 @@ export default function Router() {
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
-                      <OktatoPerDiak />
+                      {withSchoolRequired(
+                        <OktatoPerDiak />,
+                        "/oktato_per_diak"
+                      )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
                 }

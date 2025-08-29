@@ -143,6 +143,19 @@ export default function DobbantoProgramAránya() {
         total_students: totalStudentData,
       }));
 
+      // Also update savedData with total students
+      setSavedData((prev) => {
+        const newSavedData = prev || {
+          percentage_overall: {},
+          dobbanto_students: {},
+          total_students: {},
+        };
+        return {
+          ...newSavedData,
+          total_students: totalStudentData,
+        };
+      });
+
       console.log("Total student data for Dobbantó:", totalStudentData);
     }
   }, [apiStudentData]);
@@ -167,10 +180,17 @@ export default function DobbantoProgramAránya() {
       }));
 
       // Set as saved data since this is loaded from server
-      setSavedData((prev) => ({
-        ...prev,
-        dobbanto_students: dobbantoStudentsData,
-      }));
+      setSavedData((prev) => {
+        const newSavedData = prev || {
+          percentage_overall: {},
+          dobbanto_students: {},
+          total_students: {},
+        };
+        return {
+          ...newSavedData,
+          dobbanto_students: dobbantoStudentsData,
+        };
+      });
 
       console.log("Loaded dobbanto students data:", dobbantoStudentsData);
     }
@@ -180,6 +200,19 @@ export default function DobbantoProgramAránya() {
   const handleDataChange = (section, year, value) => {
     // Csak a dobbanto_students szerkeszthető
     if (section !== "dobbanto_students") return;
+
+    // Validation: Dobbantó students cannot exceed total students
+    const numericValue = parseInt(value) || 0;
+    const totalStudents = parseInt(dobbantoData.total_students[year]) || 0;
+
+    if (numericValue > totalStudents && totalStudents > 0) {
+      setSnackbarMessage(
+        `A Dobbantó programban résztvevők száma (${numericValue}) nem lehet több, mint a tanulói összlétszám (${totalStudents}) a ${year} tanévben!`
+      );
+      setSnackbarSeverity("warning");
+      setSnackbarOpen(true);
+      return;
+    }
 
     setDobbantoData((prev) => ({
       ...prev,
@@ -205,6 +238,16 @@ export default function DobbantoProgramAránya() {
     return "0.0";
   };
 
+  // Check if there are any validation errors (percentage > 100%)
+  const hasValidationErrors = () => {
+    return schoolYears.some((year) => {
+      const percentage = parseFloat(
+        dobbantoData.percentage_overall[year] || "0.0"
+      );
+      return percentage > 100;
+    });
+  };
+
   // Auto-calculate percentages when dobbanto_students or total_students change
   useEffect(() => {
     const newPercentages = {};
@@ -225,6 +268,16 @@ export default function DobbantoProgramAránya() {
     if (!selectedSchool?.id) {
       setSnackbarMessage("Kérjük, válasszon ki egy iskolát a mentés előtt!");
       setSnackbarSeverity("warning");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    // Check for validation errors before saving
+    if (hasValidationErrors()) {
+      setSnackbarMessage(
+        "A mentés nem lehetséges, mert vannak validációs hibák. Javítsa ki a hibákat a mentés előtt!"
+      );
+      setSnackbarSeverity("error");
       setSnackbarOpen(true);
       return;
     }
@@ -302,7 +355,24 @@ export default function DobbantoProgramAránya() {
 
   const handleReset = () => {
     if (savedData) {
-      setDobbantoData(JSON.parse(JSON.stringify(savedData)));
+      // Ensure we have all required sections in savedData
+      const completeData = {
+        percentage_overall: savedData.percentage_overall || {},
+        dobbanto_students: savedData.dobbanto_students || {},
+        total_students: savedData.total_students || {},
+      };
+
+      // Fill in missing years with default values
+      schoolYears.forEach((year) => {
+        if (!completeData.percentage_overall[year])
+          completeData.percentage_overall[year] = "0.0";
+        if (!completeData.dobbanto_students[year])
+          completeData.dobbanto_students[year] = "0";
+        if (!completeData.total_students[year])
+          completeData.total_students[year] = "0";
+      });
+
+      setDobbantoData(JSON.parse(JSON.stringify(completeData)));
       setIsModified(false);
     }
   };
@@ -357,7 +427,12 @@ export default function DobbantoProgramAránya() {
           variant="contained"
           startIcon={<SaveIcon />}
           onClick={handleSave}
-          disabled={!isModified || !selectedSchool?.id || isSaving}
+          disabled={
+            !isModified ||
+            !selectedSchool?.id ||
+            isSaving ||
+            hasValidationErrors()
+          }
         >
           {isSaving ? "Mentés..." : "Mentés"}
         </Button>
@@ -376,6 +451,16 @@ export default function DobbantoProgramAránya() {
         <Alert severity="warning" sx={{ mt: 2 }}>
           Mentetlen módosítások vannak. Ne felejtsd el menteni a
           változtatásokat!
+        </Alert>
+      )}
+
+      {/* Percentage over 100% warning */}
+      {hasValidationErrors() && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          ⚠️ Figyelem: Egy vagy több tanévben a Dobbantó programban résztvevők
+          aránya meghaladja a 100%-ot! Ellenőrizze, hogy a résztvevők száma nem
+          haladja meg a tanulói összlétszámot. A mentés le van tiltva, amíg a
+          hibák fennállnak.
         </Alert>
       )}
       {/* Percentage Overview Table */}
@@ -430,19 +515,28 @@ export default function DobbantoProgramAránya() {
               </TableHead>
               <TableBody>
                 <TableRow sx={{ backgroundColor: "#fff3e0" }}>
-                  {schoolYears.map((year) => (
-                    <TableCell
-                      key={year}
-                      align="center"
-                      sx={{
-                        backgroundColor: "#f8fdf8",
-                        fontWeight: "medium",
-                        fontSize: "1.1rem",
-                      }}
-                    >
-                      {dobbantoData.percentage_overall[year] || "0.0"}%
-                    </TableCell>
-                  ))}
+                  {schoolYears.map((year) => {
+                    const percentage = parseFloat(
+                      dobbantoData.percentage_overall[year] || "0.0"
+                    );
+                    const isOver100 = percentage > 100;
+
+                    return (
+                      <TableCell
+                        key={year}
+                        align="center"
+                        sx={{
+                          backgroundColor: isOver100 ? "#ffebee" : "#f8fdf8",
+                          fontWeight: "medium",
+                          fontSize: "1.1rem",
+                          color: isOver100 ? "#d32f2f" : "inherit",
+                        }}
+                      >
+                        {dobbantoData.percentage_overall[year] || "0.0"}%
+                        {isOver100 && " ⚠️"}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               </TableBody>
             </Table>

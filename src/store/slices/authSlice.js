@@ -99,10 +99,10 @@ const authSlice = createSlice({
 
       // Decode JWT token to get user permissions and role
       const decodedUser = decodeUserFromToken(action.payload.accessToken);
-      
-              console.log("Decoded user from access token:");
-        console.log(decodedUser);
-        console.log(action.payload.accessToken);
+
+      console.log("Decoded user from access token:");
+      console.log(decodedUser);
+      console.log(action.payload.accessToken);
       state.user = {
         id: action.payload.id,
         email: action.payload.email,
@@ -205,6 +205,7 @@ export const selectAuth = (state) => state.auth;
 export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
 export const selectUser = (state) => state.auth.user;
 export const selectUserRole = (state) => state.auth.user?.role;
+export const selectUserId = (state) => state.auth.user?.id;
 export const selectUserPermissions = (state) => state.auth.user?.permissions;
 export const selectUserTableAccess = (state) => state.auth.user?.tableAccess;
 export const selectTableAccess = selectUserTableAccess; // Alias for convenience

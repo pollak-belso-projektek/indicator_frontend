@@ -22,7 +22,7 @@ import {
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
-import { selectSelectedSchool } from "../store/slices/authSlice";
+import { selectSelectedSchool, selectUserId } from "../store/slices/authSlice";
 import TableLoadingOverlay from "../components/shared/TableLoadingOverlay";
 import {
   useGetOktatokEgyebTevByAlapadatokQuery,
@@ -34,6 +34,7 @@ export default function OktatokEgyebTev() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
   const schoolYearsRef = useRef(schoolYears);
   const selectedSchool = useSelector(selectSelectedSchool);
+  const uId = useSelector(selectUserId);
 
   // State for the form data
   const [data, setData] = useState({});
@@ -191,7 +192,9 @@ export default function OktatokEgyebTev() {
       tananyagfejleszto: parseInt(yearData?.tananyagfejleszto) || 0,
       tankonyv_jegyzetiro: parseInt(yearData?.tankonyv_jegyzetiro) || 0,
       szakmai_tisztsegviselo: parseInt(yearData?.szakmai_tisztsegviselo) || 0,
-      createBy: "frontend_user", // TODO: get from auth context
+      // Oktatók létszáma
+      oktatok_letszama: parseInt(yearData?.oktatok_letszama) || 0,
+      createBy: uId || "",
     };
   };
 
@@ -280,6 +283,11 @@ export default function OktatokEgyebTev() {
 
   // Handle input changes
   const handleInputChange = (category, field, year, value) => {
+    // Validate input - only allow non-negative integers
+    if (value !== "" && (isNaN(value) || parseInt(value) < 0)) {
+      return; // Don't update if invalid
+    }
+
     // Create a unique key for the cell
     const cellKey = field
       ? `${year}-${category}-${field}`
@@ -405,7 +413,7 @@ export default function OktatokEgyebTev() {
       });
 
       const savePromises = Array.from(modifiedYears).map(async (year) => {
-        const apiPayload = transformFrontendDataToApi(data, 2024);
+        const apiPayload = transformFrontendDataToApi(data, year);
         const recordId = data[year]?._recordId;
 
         if (recordId) {
@@ -445,6 +453,8 @@ export default function OktatokEgyebTev() {
 
   // Handle reset
   const handleReset = () => {
+    setModifiedCells(new Set()); // Clear modified cells first
+
     if (apiData && Array.isArray(apiData) && apiData.length > 0) {
       // Recreate data from API if available
       const frontendData = {};
@@ -489,20 +499,19 @@ export default function OktatokEgyebTev() {
       setData(frontendData);
       setIsModified(false);
       setIsDataInitialized(true);
-      setModifiedCells(new Set()); // Clear modified cells
       setNotification({
         open: true,
-        message: "Az adatok visszaállítva!",
+        message: "Az adatok visszaállítva az eredeti értékekre!",
         severity: "info",
       });
     } else {
+      // Reset to empty data structure
       setData(initialData);
       setIsModified(false);
       setIsDataInitialized(true);
-      setModifiedCells(new Set()); // Clear modified cells
       setNotification({
         open: true,
-        message: "Az adatok visszaállítva!",
+        message: "Az adatok visszaállítva üres értékekre!",
         severity: "info",
       });
     }
@@ -516,7 +525,6 @@ export default function OktatokEgyebTev() {
     tananyagfejleszto: "Tananyag fejlesztő",
     tankonyv_jegyzetiro: "Tankönyv, jegyzet író",
     szakmai_tisztsegviselo: "Szakmai tisztségviselő",
-    oktatok_letszama: "Oktatók létszáma (fő)",
   };
 
   const fieldLabels = {
@@ -551,7 +559,7 @@ export default function OktatokEgyebTev() {
 
       <Typography variant="body2" color="text.secondary" paragraph>
         💡 A módosított cellák sárga háttérrel vannak jelölve. Csak a módosított
-        adatok kerülnek mentésre.
+        adatok kerülnek mentésre. Csak nem-negatív egész számok adhatók meg.
       </Typography>
 
       {/* Action buttons */}
@@ -669,18 +677,19 @@ export default function OktatokEgyebTev() {
                                     }
                                     inputProps={{
                                       min: 0,
+                                      step: 1,
                                       style: { textAlign: "center" },
                                     }}
                                     sx={{
                                       width: 80,
                                       borderRadius: 2,
-                                      border: isCellModified(
+                                      backgroundColor: isCellModified(
                                         categoryKey,
                                         fieldKey,
                                         year
                                       )
-                                        ? "2px solid orange"
-                                        : "2px solid transparent",
+                                        ? "yellow"
+                                        : "transparent",
                                     }}
                                   />
                                 </TableCell>
@@ -733,18 +742,19 @@ export default function OktatokEgyebTev() {
                                 }
                                 inputProps={{
                                   min: 0,
+                                  step: 1,
                                   style: { textAlign: "center" },
                                 }}
                                 sx={{
                                   width: 80,
                                   borderRadius: 2,
-                                  border: isCellModified(
+                                  backgroundColor: isCellModified(
                                     categoryKey,
                                     null,
                                     year
                                   )
-                                    ? "2px solid orange"
-                                    : "2px solid transparent",
+                                    ? "yellow"
+                                    : "transparent",
                                 }}
                               />
                             </TableCell>
@@ -793,7 +803,7 @@ export default function OktatokEgyebTev() {
                       borderTop: "2px solid #333",
                     }}
                   >
-                    {categoryLabels.oktatok_letszama}
+                    Oktatók létszáma (fő)
                   </TableCell>
                   {schoolYears.map((year) => (
                     <TableCell
@@ -815,6 +825,11 @@ export default function OktatokEgyebTev() {
                             e.target.value
                           )
                         }
+                        inputProps={{
+                          min: 0,
+                          step: 1,
+                          style: { textAlign: "center" },
+                        }}
                         sx={{
                           "& .MuiInputBase-input": {
                             textAlign: "center",

@@ -603,8 +603,9 @@ export const indicatorApi = createApi({
         body: {
           alapadatok_id: data.alapadatok_id,
           tanev_kezdete: data.tanev_kezdete,
-          resztvevok_szama: data.resztvevok_szama,
-          tanulok_osszesen: data.tanulok_osszesen,
+          reszszakmat_szerezok_szama: data.reszszakmat_szerezok_szama,
+          muhelyiskola_tanuloi_osszletszam:
+            data.muhelyiskola_tanuloi_osszletszam,
         },
       }),
       invalidatesTags: (result, error, data) => [
@@ -884,7 +885,6 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["Dobbanto"],
     }),
-
 
     // Szakirany and Szakma endpoints
     getSzakiranyList: build.query({

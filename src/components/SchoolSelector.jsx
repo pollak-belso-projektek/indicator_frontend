@@ -168,7 +168,7 @@ const SchoolSelector = () => {
   // Render the school selector for users who can select schools
   return (
     <HStack spacing={2} alignItems="center">
-      <FormControl variant="outlined" size="small" width="200px">
+      <FormControl variant="filled" size="small" width="200px">
         <Select
           value={selectedSchool?.id?.toString() || ""}
           onChange={handleChange}

@@ -36,7 +36,6 @@ import {
   Error as ErrorIcon,
   Storage as StorageIcon,
   Timer as TimerIcon,
-  Memory as MemoryIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import TokenDebugPanel from "../components/TokenDebugPanel";
@@ -67,14 +66,12 @@ export default function Dashboard() {
   const isAdmin = userPermissions?.isAdmin || false;
   const isHSZC = userPermissions?.isHSZC || false;
 
-
   const { data: healthResponse, error: healthError } = useCheckHealthQuery();
 
   // Extract health data from the response structure
   // Success case: healthResponse directly contains the health data
   // Error case: healthError.data contains the health data (like HTTP 503 with health info)
   const healthData = healthResponse || healthError?.data;
-
 
   useEffect(() => {
     console.log("Health check response:", healthResponse);
@@ -103,18 +100,27 @@ export default function Dashboard() {
 
   // Get overall system health status
   const getSystemHealth = () => {
-    if (!healthData) return { status: 'unknown', color: 'default' };
-    
+    if (!healthData) return { status: "unknown", color: "default" };
+
     // If we have health data, use it regardless of HTTP error status
     const overallStatus = healthData.status;
-    const summary = healthData.summary;
-    
-    if (overallStatus === 'healthy' && summary?.unhealthy === 0) {
-      return { status: 'healthy', color: 'success' };
-    } else if (summary?.unhealthy > 0 || overallStatus === 'degraded') {
-      return { status: 'degraded', color: 'warning' };
+
+    // Calculate health based on available services
+    const services = healthData.services || {};
+    const serviceStatuses = Object.values(services);
+    const totalServices = serviceStatuses.length;
+    const healthyServices = serviceStatuses.filter(
+      (service) => service.status === "healthy"
+    ).length;
+    const unhealthyServices = totalServices - healthyServices;
+
+    // If overall status is healthy and no unhealthy services
+    if (overallStatus === "healthy" && unhealthyServices === 0) {
+      return { status: "healthy", color: "success" };
+    } else if (unhealthyServices > 0 || overallStatus === "degraded") {
+      return { status: "degraded", color: "warning" };
     } else {
-      return { status: 'unhealthy', color: 'error' };
+      return { status: "unhealthy", color: "error" };
     }
   };
 
@@ -374,31 +380,59 @@ export default function Dashboard() {
                       {(() => {
                         const systemHealth = getSystemHealth();
                         const statusLabels = {
-                          healthy: 'Egészséges',
-                          degraded: 'Részlegesen működik',
-                          unhealthy: 'Problémás',
-                          unknown: 'Ismeretlen'
+                          healthy: "Egészséges",
+                          degraded: "Részlegesen működik",
+                          unhealthy: "Problémás",
+                          unknown: "Ismeretlen",
                         };
                         return (
-                          <Chip 
-                            label={statusLabels[systemHealth.status]} 
-                            color={systemHealth.color} 
-                            size="small" 
-                            icon={systemHealth.status === 'healthy' ? <CheckCircleIcon /> : <ErrorIcon />}
+                          <Chip
+                            label={statusLabels[systemHealth.status]}
+                            color={systemHealth.color}
+                            size="small"
+                            icon={
+                              systemHealth.status === "healthy" ? (
+                                <CheckCircleIcon />
+                              ) : (
+                                <ErrorIcon />
+                              )
+                            }
                           />
                         );
                       })()}
-                      <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
-                        {healthData.summary ? `${healthData.summary.healthy}/${healthData.summary.total} szolgáltatás` : `v${healthData.gateway?.version || healthData.version}`}
+                      <Typography
+                        variant="caption"
+                        display="block"
+                        sx={{ mt: 0.5 }}
+                      >
+                        {healthData.services
+                          ? `${
+                              Object.values(healthData.services).filter(
+                                (service) => service.status === "healthy"
+                              ).length
+                            }/${
+                              Object.keys(healthData.services).length
+                            } szolgáltatás`
+                          : `v${healthData.version || "ismeretlen"}`}
                       </Typography>
                     </Box>
                   ) : healthError ? (
-                    <Chip label="Offline" color="error" size="small" icon={<ErrorIcon />} />
+                    <Chip
+                      label="Offline"
+                      color="error"
+                      size="small"
+                      icon={<ErrorIcon />}
+                    />
                   ) : (
                     <Chip label="Ellenőrzés..." color="default" size="small" />
                   )}
                 </Box>
-                <TrendingUpIcon sx={{ fontSize: 40, color: getSystemHealth().color + '.main' }} />
+                <TrendingUpIcon
+                  sx={{
+                    fontSize: 40,
+                    color: getSystemHealth().color + ".main",
+                  }}
+                />
               </Box>
             </CardContent>
           </Card>
@@ -472,28 +506,66 @@ export default function Dashboard() {
                     <CheckCircleIcon sx={{ mr: 1, color: "success.main" }} />
                     <Typography variant="h6">Szolgáltatások</Typography>
                   </Box>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 1,
+                    }}
+                  >
                     <Typography variant="body2" color="textSecondary">
                       Összes:
                     </Typography>
                     <Typography variant="h4" color="primary.main">
-                      {healthData.summary?.total || 0}
+                      {healthData.services
+                        ? Object.keys(healthData.services).length
+                        : 0}
                     </Typography>
                   </Box>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 1,
+                    }}
+                  >
                     <Typography variant="body2" color="textSecondary">
                       Egészséges:
                     </Typography>
-                    <Typography variant="body2" fontWeight="bold" color="success.main">
-                      {healthData.summary?.healthy || 0}
+                    <Typography
+                      variant="body2"
+                      fontWeight="bold"
+                      color="success.main"
+                    >
+                      {healthData.services
+                        ? Object.values(healthData.services).filter(
+                            (service) => service.status === "healthy"
+                          ).length
+                        : 0}
                     </Typography>
                   </Box>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <Typography variant="body2" color="textSecondary">
                       Problémás:
                     </Typography>
-                    <Typography variant="body2" fontWeight="bold" color="error.main">
-                      {healthData.summary?.unhealthy || 0}
+                    <Typography
+                      variant="body2"
+                      fontWeight="bold"
+                      color="error.main"
+                    >
+                      {healthData.services
+                        ? Object.values(healthData.services).filter(
+                            (service) => service.status !== "healthy"
+                          ).length
+                        : 0}
                     </Typography>
                   </Box>
                 </CardContent>
@@ -508,13 +580,20 @@ export default function Dashboard() {
                     <Typography variant="h6">Gateway</Typography>
                   </Box>
                   <Typography variant="h4" sx={{ mb: 1 }}>
-                    {formatUptime(healthData.gateway?.uptime)}
+                    {formatUptime(healthData.uptime)}
                   </Typography>
-                  <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    sx={{ mb: 1 }}
+                  >
                     Működési idő
                   </Typography>
                   <Typography variant="caption" color="textSecondary">
-                    v{healthData.gateway?.version} | {formatTimestamp(healthData.gateway?.timestamp)}
+                    {healthData.version
+                      ? `v${healthData.version}`
+                      : "Verzió ismeretlen"}{" "}
+                    | {formatTimestamp(healthData.timestamp)}
                   </Typography>
                 </CardContent>
               </Card>
@@ -528,39 +607,73 @@ export default function Dashboard() {
                     <Typography variant="h6">Adatbázis</Typography>
                   </Box>
                   {(() => {
+                    // Check if we have direct database info or through services
+                    const directDb = healthData.database;
                     const mainService = healthData.services?.main_service;
-                    const dbStatus = mainService?.healthData?.database?.status;
-                    const isMainServiceHealthy = mainService?.status === 'healthy';
-                    
-                    if (!isMainServiceHealthy) {
+                    const dbFromService = mainService?.healthData?.database;
+
+                    // Use direct database info if available, otherwise try service data
+                    const dbInfo = directDb || dbFromService;
+                    const dbStatus = dbInfo?.status;
+
+                    if (!dbInfo) {
                       return (
-                        <Box sx={{ textAlign: 'center' }}>
-                          <Chip label="Nem elérhető" color="error" size="small" />
-                          <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-                            A fő szolgáltatás nem működik
+                        <Box sx={{ textAlign: "center" }}>
+                          <Chip
+                            label="Nincs adat"
+                            color="default"
+                            size="small"
+                          />
+                          <Typography
+                            variant="body2"
+                            color="textSecondary"
+                            sx={{ mt: 1 }}
+                          >
+                            Adatbázis információ nem elérhető
                           </Typography>
                         </Box>
                       );
                     }
-                    
+
                     return (
                       <>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            mb: 1,
+                          }}
+                        >
                           <Typography variant="body2" color="textSecondary">
                             Állapot:
                           </Typography>
-                          <Chip 
-                            label={dbStatus === 'connected' ? 'Kapcsolódva' : 'Lecsatlakozva'} 
-                            color={dbStatus === 'connected' ? 'success' : 'error'} 
-                            size="small" 
+                          <Chip
+                            label={
+                              dbStatus === "connected" || dbStatus === "healthy"
+                                ? "Kapcsolódva"
+                                : "Lecsatlakozva"
+                            }
+                            color={
+                              dbStatus === "connected" || dbStatus === "healthy"
+                                ? "success"
+                                : "error"
+                            }
+                            size="small"
                           />
                         </Box>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
                           <Typography variant="body2" color="textSecondary">
                             Válaszidő:
                           </Typography>
                           <Typography variant="body2" fontWeight="bold">
-                            {mainService.healthData?.database?.responseTime || 'N/A'}
+                            {dbInfo.responseTime || "N/A"}
                           </Typography>
                         </Box>
                       </>
@@ -575,100 +688,182 @@ export default function Dashboard() {
           <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold" }}>
             Szolgáltatások részletei
           </Typography>
-          
+
           <Grid container spacing={3} sx={{ mb: 4 }}>
-            {healthData.services && Object.entries(healthData.services).map(([serviceName, serviceData]) => (
-              <Grid item xs={12} md={6} key={serviceName}>
-                <Card sx={{ 
-                  border: serviceData.status !== 'healthy' ? '2px solid' : 'none',
-                  borderColor: serviceData.status === 'unhealthy' ? 'error.main' : 'inherit'
-                }}>
-                  <CardContent>
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-                      <Typography variant="h6">
-                        {serviceName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </Typography>
-                      <Chip 
-                        label={serviceData.status === 'healthy' ? 'Egészséges' : 'Problémás'} 
-                        color={serviceData.status === 'healthy' ? 'success' : 'error'} 
-                        size="small" 
-                        icon={serviceData.status === 'healthy' ? <CheckCircleIcon /> : <ErrorIcon />}
-                      />
-                    </Box>
-                    
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="textSecondary" gutterBottom>
-                        Utolsó ellenőrzés: {formatTimestamp(serviceData.lastCheck)}
-                      </Typography>
-                      {serviceData.healthData?.version && (
-                        <Typography variant="body2" color="textSecondary">
-                          Verzió: {serviceData.healthData.version}
-                        </Typography>
-                      )}
-                    </Box>
+            {healthData.services &&
+              Object.entries(healthData.services).map(
+                ([serviceName, serviceData]) => (
+                  <Grid item xs={12} md={6} key={serviceName}>
+                    <Card
+                      sx={{
+                        border:
+                          serviceData.status !== "healthy"
+                            ? "2px solid"
+                            : "none",
+                        borderColor:
+                          serviceData.status === "unhealthy"
+                            ? "error.main"
+                            : "inherit",
+                      }}
+                    >
+                      <CardContent>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            mb: 2,
+                          }}
+                        >
+                          <Typography variant="h6">
+                            {serviceName
+                              .replace(/_/g, " ")
+                              .replace(/\b\w/g, (l) => l.toUpperCase())}
+                          </Typography>
+                          <Chip
+                            label={
+                              serviceData.status === "healthy"
+                                ? "Egészséges"
+                                : "Problémás"
+                            }
+                            color={
+                              serviceData.status === "healthy"
+                                ? "success"
+                                : "error"
+                            }
+                            size="small"
+                            icon={
+                              serviceData.status === "healthy" ? (
+                                <CheckCircleIcon />
+                              ) : (
+                                <ErrorIcon />
+                              )
+                            }
+                          />
+                        </Box>
 
-                    {/* Error message for unhealthy services */}
-                    {serviceData.status !== 'healthy' && serviceData.error && (
-                      <Alert severity="error" sx={{ mb: 2 }}>
-                        <Typography variant="body2" fontWeight="bold">
-                          Hiba:
-                        </Typography>
-                        <Typography variant="body2">
-                          {serviceData.error}
-                        </Typography>
-                      </Alert>
-                    )}
-
-                    {/* Service-specific memory and uptime data - only show if service is healthy */}
-                    {serviceData.status === 'healthy' && serviceData.healthData ? (
-                      <>
-                        {serviceData.healthData.memory && (
-                          <Box sx={{ mb: 1 }}>
-                            <Typography variant="body2" fontWeight="bold" gutterBottom>
-                              Memória:
+                        <Box sx={{ mb: 2 }}>
+                          <Typography
+                            variant="body2"
+                            color="textSecondary"
+                            gutterBottom
+                          >
+                            Utolsó ellenőrzés:{" "}
+                            {formatTimestamp(serviceData.lastCheck)}
+                          </Typography>
+                          {serviceData.healthData?.version && (
+                            <Typography variant="body2" color="textSecondary">
+                              Verzió: {serviceData.healthData.version}
                             </Typography>
-                            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
-                              <Typography variant="caption" color="textSecondary">
-                                RSS:
+                          )}
+                        </Box>
+
+                        {/* Error message for unhealthy services */}
+                        {serviceData.status !== "healthy" &&
+                          serviceData.error && (
+                            <Alert severity="error" sx={{ mb: 2 }}>
+                              <Typography variant="body2" fontWeight="bold">
+                                Hiba:
                               </Typography>
-                              <Typography variant="caption">
-                                {formatMemory(serviceData.healthData.memory.rss)}
+                              <Typography variant="body2">
+                                {serviceData.error}
+                              </Typography>
+                            </Alert>
+                          )}
+
+                        {/* Service-specific memory and uptime data - only show if service is healthy */}
+                        {serviceData.status === "healthy" &&
+                        serviceData.healthData ? (
+                          <>
+                            {serviceData.healthData.memory && (
+                              <Box sx={{ mb: 1 }}>
+                                <Typography
+                                  variant="body2"
+                                  fontWeight="bold"
+                                  gutterBottom
+                                >
+                                  Memória:
+                                </Typography>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    mb: 0.5,
+                                  }}
+                                >
+                                  <Typography
+                                    variant="caption"
+                                    color="textSecondary"
+                                  >
+                                    RSS:
+                                  </Typography>
+                                  <Typography variant="caption">
+                                    {formatMemory(
+                                      serviceData.healthData.memory.rss
+                                    )}
+                                  </Typography>
+                                </Box>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                  }}
+                                >
+                                  <Typography
+                                    variant="caption"
+                                    color="textSecondary"
+                                  >
+                                    Heap használt:
+                                  </Typography>
+                                  <Typography variant="caption">
+                                    {formatMemory(
+                                      serviceData.healthData.memory.heapUsed
+                                    )}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            )}
+
+                            {serviceData.healthData.uptime && (
+                              <Box>
+                                <Typography
+                                  variant="body2"
+                                  fontWeight="bold"
+                                  gutterBottom
+                                >
+                                  Működési idő:{" "}
+                                  {formatUptime(serviceData.healthData.uptime)}
+                                </Typography>
+                              </Box>
+                            )}
+                          </>
+                        ) : (
+                          serviceData.status !== "healthy" && (
+                            <Box sx={{ textAlign: "center", py: 2 }}>
+                              <ErrorIcon
+                                sx={{
+                                  fontSize: 48,
+                                  color: "error.main",
+                                  mb: 1,
+                                }}
+                              />
+                              <Typography variant="body2" color="error">
+                                A szolgáltatás nem elérhető
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="textSecondary"
+                              >
+                                Memória és működési idő adatok nem elérhetők
                               </Typography>
                             </Box>
-                            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                              <Typography variant="caption" color="textSecondary">
-                                Heap használt:
-                              </Typography>
-                              <Typography variant="caption">
-                                {formatMemory(serviceData.healthData.memory.heapUsed)}
-                              </Typography>
-                            </Box>
-                          </Box>
+                          )
                         )}
-
-                        {serviceData.healthData.uptime && (
-                          <Box>
-                            <Typography variant="body2" fontWeight="bold" gutterBottom>
-                              Működési idő: {formatUptime(serviceData.healthData.uptime)}
-                            </Typography>
-                          </Box>
-                        )}
-                      </>
-                    ) : serviceData.status !== 'healthy' && (
-                      <Box sx={{ textAlign: 'center', py: 2 }}>
-                        <ErrorIcon sx={{ fontSize: 48, color: 'error.main', mb: 1 }} />
-                        <Typography variant="body2" color="error">
-                          A szolgáltatás nem elérhető
-                        </Typography>
-                        <Typography variant="caption" color="textSecondary">
-                          Memória és működési idő adatok nem elérhetők
-                        </Typography>
-                      </Box>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                )
+              )}
           </Grid>
         </>
       )}
@@ -689,25 +884,31 @@ export default function Dashboard() {
       {healthError && healthData && (
         <Alert severity="warning" sx={{ mb: 3 }}>
           <Typography variant="body1" fontWeight="bold">
-            Rendszer állapot problémás (HTTP {healthError.status || 'hiba'})
+            Rendszer állapot problémás (HTTP {healthError.status || "hiba"})
           </Typography>
           <Typography variant="body2">
-            A backend szerver hibás válaszokat ad, de részleges állapotinformációk elérhetők.
+            A backend szerver hibás válaszokat ad, de részleges
+            állapotinformációk elérhetők.
           </Typography>
         </Alert>
       )}
 
       {/* Degraded System Alert */}
-      {healthData && healthData.status === 'degraded' && (
+      {healthData && healthData.status === "degraded" && (
         <Alert severity="warning" sx={{ mb: 3 }}>
           <Typography variant="body1" fontWeight="bold">
             Részlegesen működő rendszer
           </Typography>
           <Typography variant="body2">
-            Egy vagy több szolgáltatás nem működik megfelelően. 
-            {healthData.summary && (
-              ` ${healthData.summary.unhealthy} szolgáltatás problémás a ${healthData.summary.total} szolgáltatásból.`
-            )}
+            Egy vagy több szolgáltatás nem működik megfelelően.
+            {healthData.services &&
+              ` ${
+                Object.values(healthData.services).filter(
+                  (service) => service.status !== "healthy"
+                ).length
+              } szolgáltatás problémás a ${
+                Object.keys(healthData.services).length
+              } szolgáltatásból.`}
           </Typography>
         </Alert>
       )}
