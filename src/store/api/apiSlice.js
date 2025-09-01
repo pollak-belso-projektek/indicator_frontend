@@ -5,13 +5,10 @@ import { baseQueryWithReauth } from "./baseQueryWithReauth";
 export const indicatorApi = createApi({
   reducerPath: "indicatorApi",
   baseQuery: baseQueryWithReauth,
-  // Development mode: disable caching for immediate updates
-  ...(import.meta.env.DEV && {
-    keepUnusedDataFor: 0, // Don't keep any unused data
-    refetchOnMountOrArgChange: true, // Always refetch on mount or arg change
-    refetchOnReconnect: true, // Refetch when reconnecting
-    refetchOnFocus: true, // Refetch when window gains focus
-  }),
+  keepUnusedDataFor: 0, // Don't keep any unused data
+  refetchOnMountOrArgChange: true, // Always refetch on mount or arg change
+  refetchOnReconnect: true, // Refetch when reconnecting
+  refetchOnFocus: true, // Refetch when window gains focus
   tagTypes: [
     "User",
     "TanugyiAdatok",
