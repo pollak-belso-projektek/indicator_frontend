@@ -18,6 +18,7 @@ import {
   ListItemText,
   Switch,
   FormControlLabel,
+  IconButton,
 } from "@mui/material";
 import {
   School as SchoolIcon,
@@ -36,6 +37,8 @@ import {
   Error as ErrorIcon,
   Storage as StorageIcon,
   Timer as TimerIcon,
+  History as HistoryIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import TokenDebugPanel from "../components/TokenDebugPanel";
@@ -46,9 +49,134 @@ import {
   selectSelectedSchool,
 } from "../store/slices/authSlice";
 import CacheDebugPanel from "../components/CacheDebugPanel";
+import { useRecentPages } from "../hooks/useRecentPages";
 
 import { useCheckHealthQuery } from "../store/api/healthSlice";
 import { useRedirectNotification } from "../hooks/useRedirectNotification";
+
+// Import navigation categories for recent pages functionality
+const NavigationCategories = {
+  GENERAL: {
+    name: "Általános",
+    icon: DashboardIcon,
+    items: [
+      {
+        name: "Főoldal",
+        icon: DashboardIcon,
+        link: "/dashboard",
+        tableName: null,
+      },
+      {
+        name: "Alapadatok",
+        icon: SettingsIcon,
+        link: "/alapadatok",
+        tableName: null,
+      },
+      {
+        name: "Iskolák",
+        icon: SchoolIcon,
+        link: "/schools",
+        tableName: "alapadatok",
+      },
+    ],
+  },
+  STUDENTS: {
+    name: "Tanulói adatok",
+    icon: GroupIcon,
+    items: [
+      {
+        name: "Tanulólétszám",
+        icon: GroupIcon,
+        link: "/tanulo_letszam",
+        tableName: "tanulo_letszam",
+      },
+      {
+        name: "Felvettek száma",
+        icon: GroupIcon,
+        link: "/felvettek_szama",
+        tableName: "felvettek_szama",
+      },
+    ],
+  },
+  EDUCATION: {
+    name: "Oktatási eredmények",
+    icon: AssessmentIcon,
+    items: [
+      {
+        name: "Kompetencia",
+        icon: AssessmentIcon,
+        link: "/kompetencia",
+        tableName: "kompetencia",
+      },
+      {
+        name: "NSZFH mérések",
+        icon: AssessmentIcon,
+        link: "/nszfh-meresek",
+        tableName: "nszfh",
+      },
+      {
+        name: "Vizsgaeredmények",
+        icon: AssessmentIcon,
+        link: "/vizsgaeredmenyek",
+        tableName: "vizsgaeredmenyek",
+      },
+    ],
+  },
+  ACHIEVEMENTS: {
+    name: "Eredmények és elismerések",
+    icon: StarIcon,
+    items: [
+      {
+        name: "Versenyek",
+        icon: StarIcon,
+        link: "/szakmai-eredmenyek",
+        tableName: "versenyek",
+      },
+      {
+        name: "Intézményi elismerések",
+        icon: StarIcon,
+        link: "/intezmenyi-elismeresek",
+        tableName: "intezmenyi_neveltseg",
+      },
+    ],
+  },
+  CAREER: {
+    name: "Pályakövetés",
+    icon: WorkIcon,
+    items: [
+      {
+        name: "Elhelyezkedési mutató",
+        icon: AssessmentIcon,
+        link: "/elhelyezkedesi-mutato",
+        tableName: "elhelyezkedes",
+      },
+    ],
+  },
+  ADMIN: {
+    name: "Adminisztráció",
+    icon: SettingsIcon,
+    items: [
+      {
+        name: "Adatok importálása",
+        icon: DataIcon,
+        link: "/adat-import",
+        tableName: null,
+      },
+      {
+        name: "Felhasználók",
+        icon: PersonIcon,
+        link: "/users",
+        tableName: "user",
+      },
+      {
+        name: "Tábla kezelés",
+        icon: SettingsIcon,
+        link: "/table-management",
+        tableName: null,
+      },
+    ],
+  },
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -61,6 +189,10 @@ export default function Dashboard() {
   const userPermissions = useSelector(selectUserPermissions);
   const tableAccess = useSelector(selectUserTableAccess);
   const selectedSchool = useSelector(selectSelectedSchool);
+
+  // Initialize recent pages hook
+  const { recentPages, clearRecentPages, removeRecentPage } =
+    useRecentPages(NavigationCategories);
 
   const isSuperadmin = userPermissions?.isSuperadmin || false;
   const isAdmin = userPermissions?.isAdmin || false;
@@ -280,6 +412,112 @@ export default function Dashboard() {
           </Box>
         </Box>
       </Paper>
+      {/* Recently Used Pages Section */}
+      {recentPages && recentPages.length > 0 && (
+        <>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              mb: 2,
+              justifyContent: "space-between",
+            }}
+          >
+            <Typography
+              variant="h5"
+              component="h2"
+              sx={{ mb: 3, fontWeight: "bold" }}
+            >
+              Utoljára használt oldalak
+            </Typography>
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 4 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={clearRecentPages}
+                startIcon={<CloseIcon />}
+              >
+                Előzmények törlése
+              </Button>
+            </Box>
+          </Box>
+
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            {recentPages.slice(0, 5).map((page, index) => {
+              const categoryInfo = Object.values(NavigationCategories).find(
+                (cat) => cat.items.some((item) => item.link === page.link)
+              );
+              const categoryName = categoryInfo?.name || "Ismeretlen kategória";
+
+              return (
+                <Grid item xs={12} sm={6} md={4} lg={3} key={page.link}>
+                  <Card
+                    sx={{
+                      height: "100%",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "translateY(-4px)",
+                        boxShadow: 4,
+                      },
+                    }}
+                    onClick={() => navigate(page.link)}
+                  >
+                    <CardContent>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          mb: 2,
+                        }}
+                      >
+                        <Box sx={{ mr: 2, color: "primary.main" }}>
+                          <HistoryIcon />
+                        </Box>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography
+                            variant="h6"
+                            component="h3"
+                            sx={{ mb: 1 }}
+                          >
+                            {categoryName}
+                          </Typography>
+
+                          <Typography variant="caption" color="textSecondary">
+                            {page.timestamp &&
+                              new Date(page.timestamp).toLocaleDateString(
+                                "hu-HU",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )}
+                          </Typography>
+                        </Box>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeRecentPage(page.link);
+                          }}
+                          sx={{ p: 0.5 }}
+                        >
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                      <Button size="small" color="primary" sx={{ mt: 1 }}>
+                        Megnyitás
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              );
+            })}
+          </Grid>
+        </>
+      )}
 
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -356,6 +594,39 @@ export default function Dashboard() {
                   </Typography>
                 </Box>
                 <PersonIcon sx={{ fontSize: 40, color: "info.main" }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Box>
+                  <Typography color="textSecondary" gutterBottom>
+                    Utoljára használt
+                  </Typography>
+                  <Typography variant="h4">
+                    {recentPages ? recentPages.length : 0}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    display="block"
+                    sx={{ mt: 0.5 }}
+                  >
+                    {recentPages && recentPages.length > 0
+                      ? `Max ${Math.min(recentPages.length, 5)} oldal`
+                      : "Nincs előzmény"}
+                  </Typography>
+                </Box>
+                <HistoryIcon sx={{ fontSize: 40, color: "warning.main" }} />
               </Box>
             </CardContent>
           </Card>

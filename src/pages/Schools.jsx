@@ -70,8 +70,10 @@ const Schools = () => {
     isLoading,
     refetch,
   } = useGetAllAlapadatokQuery();
-  const { data: szakiranyOptions = [], isLoading: isSzakiranyLoading } = useGetSzakiranyListQuery();
-  const { data: szakmaOptions = [], isLoading: isSzakmaLoading } = useGetSzakmaListQuery();
+  const { data: szakiranyOptions = [], isLoading: isSzakiranyLoading } =
+    useGetSzakiranyListQuery();
+  const { data: szakmaOptions = [], isLoading: isSzakmaLoading } =
+    useGetSzakmaListQuery();
   const [addSchool, { isLoading: isAdding }] = useAddAlapadatokMutation();
   const [updateSchool, { isLoading: isUpdating }] =
     useUpdateAlapadatokMutation();
@@ -324,135 +326,145 @@ const Schools = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {schools?.map((school) => (
-              <>
-                <TableRow
-                  key={school.id}
-                  sx={{
-                    cursor: "pointer",
-                    backgroundColor:
-                      expandedSchool === school.id ? "#f0f0f0" : "inherit",
-                    "&:hover": {
+            {schools
+              ?.slice()
+              ?.sort((a, b) =>
+                a.iskola_neve.localeCompare(b.iskola_neve, "hu", {
+                  sensitivity: "base",
+                })
+              )
+              ?.map((school) => (
+                <>
+                  <TableRow
+                    key={school.id}
+                    sx={{
+                      cursor: "pointer",
                       backgroundColor:
-                        expandedSchool === school.id ? "#e0e0e0" : "#f5f5f5",
-                    },
-                  }}
-                  onClick={() => handleSchoolExpansion(school.id)}
-                >
-                  <TableCell>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <SchoolIcon color="primary" />
-                      {school.iskola_neve}
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={school.intezmeny_tipus}
-                      variant="outlined"
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={school.alapadatok_szakirany?.length || 0}
-                      color="primary"
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell align="center">
-                    <IconButton
-                      color="primary"
-                      onClick={() => handleOpen(school)}
-                      disabled={isUpdating}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDelete(school.id)}
-                      disabled={isDeleting}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                    <Button
-                      size="small"
-                      onClick={() => handleSchoolExpansion(school.id)}
-                    >
-                      {expandedSchool === school.id ? "Bezárás" : "Részletek"}
-                    </Button>
-                  </TableCell>
-                </TableRow>
-
-                {/* Expanded Details Row */}
-                {expandedSchool === school.id && (
-                  <TableRow>
-                    <TableCell colSpan={5} sx={{ p: 0 }}>
-                      <Box sx={{ p: 3, backgroundColor: "#f5f5f5" }}>
-                        <Typography variant="h6" gutterBottom>
-                          Szakirányok és szakmák
-                        </Typography>
-
-                        {school.alapadatok_szakirany?.length > 0 ? (
-                          school.alapadatok_szakirany.map(
-                            (szakiranyData, index) => (
-                              <Accordion
-                                key={szakiranyData.szakirany_id}
-                                sx={{ mb: 1 }}
-                              >
-                                <AccordionSummary
-                                  expandIcon={<ExpandMoreIcon />}
-                                >
-                                  <Box
-                                    display="flex"
-                                    alignItems="center"
-                                    gap={1}
-                                  >
-                                    <WorkIcon color="secondary" />
-                                    <Typography variant="subtitle1">
-                                      {szakiranyData.szakirany.nev}
-                                    </Typography>
-                                  </Box>
-                                </AccordionSummary>
-                                <AccordionDetails>
-                                  <Typography variant="subtitle2" gutterBottom>
-                                    Szakmák:
-                                  </Typography>
-                                  <List dense>
-                                    {szakiranyData.szakirany.szakma?.map(
-                                      (szakmaData) => (
-                                        <ListItem key={szakmaData.szakma.id}>
-                                          <ListItemText
-                                            primary={szakmaData.szakma.nev}
-                                          />
-                                        </ListItem>
-                                      )
-                                    )}
-                                  </List>
-                                  {(!szakiranyData.szakirany.szakma ||
-                                    szakiranyData.szakirany.szakma.length ===
-                                      0) && (
-                                    <Typography
-                                      variant="body2"
-                                      color="textSecondary"
-                                    >
-                                      Nincs hozzárendelt szakma
-                                    </Typography>
-                                  )}
-                                </AccordionDetails>
-                              </Accordion>
-                            )
-                          )
-                        ) : (
-                          <Typography variant="body2" color="textSecondary">
-                            Nincs hozzárendelt szakirány
-                          </Typography>
-                        )}
+                        expandedSchool === school.id ? "#f0f0f0" : "inherit",
+                      "&:hover": {
+                        backgroundColor:
+                          expandedSchool === school.id ? "#e0e0e0" : "#f5f5f5",
+                      },
+                    }}
+                    onClick={() => handleSchoolExpansion(school.id)}
+                  >
+                    <TableCell>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <SchoolIcon color="primary" />
+                        {school.iskola_neve}
                       </Box>
                     </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={school.intezmeny_tipus}
+                        variant="outlined"
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={school.alapadatok_szakirany?.length || 0}
+                        color="primary"
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        color="primary"
+                        onClick={() => handleOpen(school)}
+                        disabled={isUpdating}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        color="error"
+                        onClick={() => handleDelete(school.id)}
+                        disabled={isDeleting}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                      <Button
+                        size="small"
+                        onClick={() => handleSchoolExpansion(school.id)}
+                      >
+                        {expandedSchool === school.id ? "Bezárás" : "Részletek"}
+                      </Button>
+                    </TableCell>
                   </TableRow>
-                )}
-              </>
-            ))}
+
+                  {/* Expanded Details Row */}
+                  {expandedSchool === school.id && (
+                    <TableRow>
+                      <TableCell colSpan={5} sx={{ p: 0 }}>
+                        <Box sx={{ p: 3, backgroundColor: "#f5f5f5" }}>
+                          <Typography variant="h6" gutterBottom>
+                            Szakirányok és szakmák
+                          </Typography>
+
+                          {school.alapadatok_szakirany?.length > 0 ? (
+                            school.alapadatok_szakirany.map(
+                              (szakiranyData, index) => (
+                                <Accordion
+                                  key={szakiranyData.szakirany_id}
+                                  sx={{ mb: 1 }}
+                                >
+                                  <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
+                                  >
+                                    <Box
+                                      display="flex"
+                                      alignItems="center"
+                                      gap={1}
+                                    >
+                                      <WorkIcon color="secondary" />
+                                      <Typography variant="subtitle1">
+                                        {szakiranyData.szakirany.nev}
+                                      </Typography>
+                                    </Box>
+                                  </AccordionSummary>
+                                  <AccordionDetails>
+                                    <Typography
+                                      variant="subtitle2"
+                                      gutterBottom
+                                    >
+                                      Szakmák:
+                                    </Typography>
+                                    <List dense>
+                                      {szakiranyData.szakirany.szakma?.map(
+                                        (szakmaData) => (
+                                          <ListItem key={szakmaData.szakma.id}>
+                                            <ListItemText
+                                              primary={szakmaData.szakma.nev}
+                                            />
+                                          </ListItem>
+                                        )
+                                      )}
+                                    </List>
+                                    {(!szakiranyData.szakirany.szakma ||
+                                      szakiranyData.szakirany.szakma.length ===
+                                        0) && (
+                                      <Typography
+                                        variant="body2"
+                                        color="textSecondary"
+                                      >
+                                        Nincs hozzárendelt szakma
+                                      </Typography>
+                                    )}
+                                  </AccordionDetails>
+                                </Accordion>
+                              )
+                            )
+                          ) : (
+                            <Typography variant="body2" color="textSecondary">
+                              Nincs hozzárendelt szakirány
+                            </Typography>
+                          )}
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </>
+              ))}
             {(!schools || schools.length === 0) && (
               <TableRow>
                 <TableCell colSpan={5} align="center">
@@ -467,30 +479,37 @@ const Schools = () => {
       </TableContainer>
 
       {/* Add/Edit Dialog */}
-      <Dialog 
-        open={open} 
-        onClose={handleClose} 
-        maxWidth="md" 
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
-            maxHeight: '90vh',
-            overflow: 'visible'
-          }
+            maxHeight: "90vh",
+            overflow: "visible",
+          },
         }}
         sx={{
-          '& .MuiDialog-container': {
-            overflow: 'visible'
+          "& .MuiDialog-container": {
+            overflow: "visible",
           },
-          '& .MuiBackdrop-root': {
-            backgroundColor: 'rgba(0, 0, 0, 0.5)'
-          }
+          "& .MuiBackdrop-root": {
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+          },
         }}
       >
         <DialogTitle>
           {editMode ? "Iskola szerkesztése" : "Új iskola hozzáadása"}
         </DialogTitle>
-        <DialogContent sx={{ overflow: 'visible', paddingBottom: 0, maxHeight: '70vh', overflowY: 'auto' }}>
+        <DialogContent
+          sx={{
+            overflow: "visible",
+            paddingBottom: 0,
+            maxHeight: "70vh",
+            overflowY: "auto",
+          }}
+        >
           <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 3 }}>
             {/* Basic School Information */}
             <Card variant="outlined">

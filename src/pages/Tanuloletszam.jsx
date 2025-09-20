@@ -44,6 +44,7 @@ export default function TanuloLetszam() {
     data: apiStudentData,
     error: _fetchError,
     isLoading: _isFetching,
+    refetch: refetchTanuloLetszam,
   } = useGetTanuloLetszamQuery(
     { alapadatok_id: selectedSchool?.id },
     { skip: !selectedSchool?.id }
@@ -109,7 +110,7 @@ export default function TanuloLetszam() {
       });
     }
 
-    // Extract szakirányok and szakmák from the schools
+    // Extract szakirányok and szakmák from the RELEVANT schools only (not all schools)
     relevantSchools.forEach((school) => {
       if (
         school.alapadatok_szakirany &&
@@ -128,13 +129,42 @@ export default function TanuloLetszam() {
               );
 
               if (!existingSzakiranyCategory) {
-                // Get szakmák under this szakirány
+                // Get szakmák under this szakirány from RELEVANT schools only
                 let szakmaNevek = [];
-                if (szakirany.szakma && Array.isArray(szakirany.szakma)) {
-                  szakmaNevek = szakirany.szakma
-                    .map((szakmaData) => szakmaData.szakma?.nev)
-                    .filter(Boolean);
-                }
+
+                // Collect szakmák from all relevant schools for this szakirány
+                relevantSchools.forEach((relevantSchool) => {
+                  if (
+                    relevantSchool.alapadatok_szakirany &&
+                    Array.isArray(relevantSchool.alapadatok_szakirany)
+                  ) {
+                    relevantSchool.alapadatok_szakirany.forEach(
+                      (relSzakiranyData) => {
+                        const relSzakirany = relSzakiranyData.szakirany;
+                        if (
+                          relSzakirany &&
+                          relSzakirany.nev === szakiranyName
+                        ) {
+                          if (
+                            relSzakirany.szakma &&
+                            Array.isArray(relSzakirany.szakma)
+                          ) {
+                            const currentSzakmaNevek = relSzakirany.szakma
+                              .map((szakmaData) => szakmaData.szakma?.nev)
+                              .filter(Boolean);
+
+                            // Add only unique szakma names
+                            currentSzakmaNevek.forEach((szakmaNev) => {
+                              if (!szakmaNevek.includes(szakmaNev)) {
+                                szakmaNevek.push(szakmaNev);
+                              }
+                            });
+                          }
+                        }
+                      }
+                    );
+                  }
+                });
 
                 // Add szakirány category with its szakmák
                 const subTypes =
@@ -864,6 +894,20 @@ export default function TanuloLetszam() {
 
     return calculatedData;
   }, [tanugyiData]);
+
+  // Refetch data when selected school changes
+  useEffect(() => {
+    if (selectedSchool?.id) {
+      console.log('Selected school changed, refetching data for school:', selectedSchool.id);
+      // Reset states to show loading and clear old data
+      setTableData({});
+      setIsModified(false);
+      setSavedData(null);
+      setDataSource(null);
+      // Refetch the data
+      refetchTanuloLetszam();
+    }
+  }, [selectedSchool?.id, refetchTanuloLetszam]);
 
   // Initialize tableData from API data when available
   useEffect(() => {

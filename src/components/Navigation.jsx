@@ -57,6 +57,57 @@ import {
 } from "@mui/material";
 import { useRecentPages } from "../hooks/useRecentPages";
 
+// Page numbering map based on the user's requirements
+const PageNumbering = {
+  "/tanulo_letszam": 1,
+  "/felvettek_szama": 2,
+  "/oktato_per_diak": 3,
+  "/szmsz": 4, // Note: This page doesn't exist yet in navigation
+  "/felnottkepzes": 5,
+  "/kompetencia": 6,
+  "/nszfh-meresek": 7,
+  "/szakmai-eredmenyek": 8, // Versenyek
+  "/elhelyezkedesi-mutato": 9,
+  "/vegzettek-elegedettsege": 10,
+  "/vizsgaeredmenyek": 11,
+  "/szakmai-vizsga": 12, // Note: This page doesn't exist yet in navigation
+  "/intezmenyi-elismeresek": 13,
+  "/szakmai-bemutatok-konferenciak": 14, // Rendezvények
+  "/lemorzsolodas": 15, // Note: This page doesn't exist yet in navigation
+  "/elegedettseg-meres-eredmenyei": 16,
+  "/intezmenyi-nevelesi-mutatok": 17,
+  "/hatranyos-helyezu-tanulok-aranya": 18, // HH és HHH tanulók
+  "/sajatos-nevelesi-igenyu-tanulok-aranya": 19,
+  "/dobbanto-program-aranya": 20,
+  "/muhelyiskolai-reszszakmat": 21,
+  "/szakmai-tovabbkepzesek": 22, // Note: This page doesn't exist yet in navigation
+  "/oktatok-egyeb-tev": 23,
+  "/palyazatok": 24, // Note: This page doesn't exist yet in navigation
+  "/tanulmani-eredmeny": 25, // Note: This page doesn't exist yet in navigation
+  "/hianyzas": 26, // Note: This page doesn't exist yet in navigation
+  "/egy-oktatora-juto-ossz-diak": 27, // Note: This page doesn't exist yet in navigation
+  "/nyelvvizsgak-szama": 28, // Note: This page doesn't exist yet in navigation
+  "/projektek": 29, // Note: This page doesn't exist yet in navigation
+  "/dualis-kepzohelyek-szama": 30, // Note: This page doesn't exist yet in navigation
+  "/palyaorientacio": 31, // Note: This page doesn't exist yet in navigation
+  "/egyuttmukudesek-szama": 32, // Note: This page doesn't exist yet in navigation
+  "/szervezetfejlesztes": 33, // Note: This page doesn't exist yet in navigation
+  "/innovacios-tevekenysegek": 34, // Note: This page doesn't exist yet in navigation
+  "/digitalis-kompetencia": 35, // Note: This page doesn't exist yet in navigation
+  "/szakkepzes-zolditese": 36, // Note: This page doesn't exist yet in navigation
+};
+
+// Function to get the page number for a given link
+const getPageNumber = (link) => {
+  return PageNumbering[link] || null;
+};
+
+// Function to get the display name with page number prefix
+const getDisplayName = (item) => {
+  const pageNumber = getPageNumber(item.link);
+  return pageNumber ? `${pageNumber}. ${item.name}` : item.name;
+};
+
 // Organized navigation items with categories
 const NavigationCategories = {
   GENERAL: {
@@ -474,19 +525,88 @@ const SidebarContent = ({ onClose, ...rest }) => {
     );
   }, [accessibleNavItems]);
 
-  // Filter scrollable items based on search
-  const filteredScrollableItems = scrollableItems.filter((item) =>
-    item.name.toLowerCase().includes(itemSearch.toLowerCase())
-  );
+  // Filter scrollable items based on search (search by name or page number)
+  const filteredScrollableItems = scrollableItems.filter((item) => {
+    const pageNumber = getPageNumber(item.link);
+    const searchValue = itemSearch.trim();
 
-  // Filter categories based on search
+    if (!searchValue) return true;
+
+    // Search by name
+    if (item.name.toLowerCase().includes(searchValue.toLowerCase())) {
+      return true;
+    }
+
+    // Search by page number - handle both "11" and "11." formats
+    if (pageNumber) {
+      const pageNumberStr = pageNumber.toString();
+      const searchClean = searchValue.replace(/\.$/, ""); // Remove trailing dot
+
+      // Check if search matches the number (with or without dot)
+      if (
+        pageNumberStr === searchClean ||
+        pageNumberStr.includes(searchClean)
+      ) {
+        return true;
+      }
+
+      // Also check if search with dot matches the formatted display name
+      if (
+        searchValue.includes(".") &&
+        getDisplayName(item).toLowerCase().includes(searchValue.toLowerCase())
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  });
+
+  // Filter categories based on search (search by name or page number)
   const filteredCategories = Object.entries(organizedCategories).reduce(
     (acc, [key, category]) => {
-      const filteredItems = category.items.filter(
-        (item) =>
-          item.name.toLowerCase().includes(itemSearch.toLowerCase()) &&
-          !fixedItems.some((fixed) => fixed.link === item.link)
-      );
+      const filteredItems = category.items.filter((item) => {
+        const pageNumber = getPageNumber(item.link);
+        const searchValue = itemSearch.trim();
+
+        if (!searchValue) return true;
+
+        // Exclude fixed items
+        if (fixedItems.some((fixed) => fixed.link === item.link)) {
+          return false;
+        }
+
+        // Search by name
+        if (item.name.toLowerCase().includes(searchValue.toLowerCase())) {
+          return true;
+        }
+
+        // Search by page number - handle both "11" and "11." formats
+        if (pageNumber) {
+          const pageNumberStr = pageNumber.toString();
+          const searchClean = searchValue.replace(/\.$/, ""); // Remove trailing dot
+
+          // Check if search matches the number (with or without dot)
+          if (
+            pageNumberStr === searchClean ||
+            pageNumberStr.includes(searchClean)
+          ) {
+            return true;
+          }
+
+          // Also check if search with dot matches the formatted display name
+          if (
+            searchValue.includes(".") &&
+            getDisplayName(item)
+              .toLowerCase()
+              .includes(searchValue.toLowerCase())
+          ) {
+            return true;
+          }
+        }
+
+        return false;
+      });
 
       if (filteredItems.length > 0) {
         acc[key] = { ...category, items: filteredItems };
@@ -532,7 +652,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
         <VStack align="start" mx="4" my="4">
           <Box width="100%">
             <TextField
-              placeholder="Keresés a menüben..."
+              placeholder="Keresés név vagy szám alapján..."
               value={itemSearch}
               onChange={(e) => setItemSearch(e.target.value)}
               size="small"
@@ -626,12 +746,13 @@ const SidebarContent = ({ onClose, ...rest }) => {
                     icon={link.icon}
                     as={Link}
                     to={link.link}
+                    link={link.link}
                     onClick={() => onClose()}
                     p="3"
                     pl="8"
                     fontSize="sm"
                   >
-                    {link.name}
+                    {getDisplayName(link)}
                   </NavItem>
                 ))}
               </VStack>
@@ -739,12 +860,13 @@ const SidebarContent = ({ onClose, ...rest }) => {
                             icon={link.icon}
                             as={Link}
                             to={link.link}
+                            link={link.link}
                             onClick={() => onClose()}
                             fontSize="sm"
                             p="3"
                             pl="8"
                           >
-                            {link.name}
+                            {getDisplayName(link)}
                           </NavItem>
                         ))}
                       </VStack>
@@ -755,16 +877,41 @@ const SidebarContent = ({ onClose, ...rest }) => {
             )
           : // When searching, show flat list
             filteredScrollableItems
-              .sort((a, b) => a.name.localeCompare(b.name))
+              .sort((a, b) => {
+                const searchValue = itemSearch.trim();
+                const searchClean = searchValue.replace(/\.$/, ""); // Remove trailing dot
+
+                // If searching by number, prioritize exact number matches and sort numerically
+                if (searchClean && !isNaN(searchClean)) {
+                  const aNumber = getPageNumber(a.link);
+                  const bNumber = getPageNumber(b.link);
+                  const searchNum = parseInt(searchClean);
+
+                  // Exact matches first
+                  if (aNumber === searchNum && bNumber !== searchNum) return -1;
+                  if (bNumber === searchNum && aNumber !== searchNum) return 1;
+
+                  // Then sort numerically if both have numbers
+                  if (aNumber && bNumber) return aNumber - bNumber;
+
+                  // Items with numbers come before items without numbers
+                  if (aNumber && !bNumber) return -1;
+                  if (!aNumber && bNumber) return 1;
+                }
+
+                // Default alphabetical sort
+                return a.name.localeCompare(b.name);
+              })
               .map((link) => (
                 <NavItem
                   key={link.name}
                   icon={link.icon}
                   as={Link}
                   to={link.link}
+                  link={link.link}
                   onClick={() => onClose()}
                 >
-                  {link.name}
+                  {getDisplayName(link)}
                 </NavItem>
               ))}
 
@@ -792,7 +939,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
   );
 };
 
-const NavItem = ({ icon, children, onClick, ...rest }) => {
+const NavItem = ({ icon, children, onClick, link, ...rest }) => {
   const location = useLocation();
   // Extract the 'to' prop from rest to check if it's active
   const { to, ...otherProps } = rest;
