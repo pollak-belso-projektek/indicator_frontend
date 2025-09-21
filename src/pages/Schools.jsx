@@ -33,6 +33,7 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  DeleteForever as DeleteForeverIcon,
   ExpandMore as ExpandMoreIcon,
   School as SchoolIcon,
   Work as WorkIcon,
@@ -46,6 +47,8 @@ import {
   useDeleteAlapadatokMutation,
   useGetSzakiranyListQuery,
   useGetSzakmaListQuery,
+  useRemoveSzakiranyFromSchoolMutation,
+  useRemoveSzakmaFromSchoolMutation,
 } from "../store/api/apiSlice";
 import CustomCreatableSelect from "../components/ui/CreatableSelect";
 import { useUserPermissions } from "../hooks/useUserPermissions";
@@ -60,6 +63,12 @@ const Schools = () => {
     alapadatok_szakirany: [],
   });
   const [expandedSchool, setExpandedSchool] = useState(null);
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState({
+    open: false,
+    type: null, // 'szakirany' or 'szakma'
+    itemName: "",
+    onConfirm: null,
+  });
 
   const hasSuperAdminPermission = useUserPermissions().isSuperadmin;
 
@@ -79,6 +88,10 @@ const Schools = () => {
     useUpdateAlapadatokMutation();
   const [deleteSchool, { isLoading: isDeleting }] =
     useDeleteAlapadatokMutation();
+  const [removeSzakiranyFromSchool, { isLoading: isRemovingSzakirany }] =
+    useRemoveSzakiranyFromSchoolMutation();
+  const [removeSzakmaFromSchool, { isLoading: isRemovingSzakma }] =
+    useRemoveSzakmaFromSchoolMutation();
 
   // Institution types
   const institutionTypes = [
@@ -119,6 +132,37 @@ const Schools = () => {
         (item) => item.szakirany_id !== szakiranyId
       ),
     }));
+  };
+
+  // Permanently delete szakirány from school (API call)
+  const permanentlyDeleteSzakirany = async (alapadatokId, szakiranyId) => {
+    try {
+      await removeSzakiranyFromSchool({ alapadatokId, szakiranyId }).unwrap();
+      refetch(); // Refresh the schools data
+      setDeleteConfirmDialog({
+        open: false,
+        type: null,
+        itemName: "",
+        onConfirm: null,
+      });
+    } catch (error) {
+      console.error("Error deleting szakirány:", error);
+      // You can add a toast notification here instead of alert
+    }
+  };
+
+  // Show delete confirmation dialog for szakirány
+  const showDeleteSzakiranyDialog = (
+    alapadatokId,
+    szakiranyId,
+    szakiranyName
+  ) => {
+    setDeleteConfirmDialog({
+      open: true,
+      type: "szakirany",
+      itemName: szakiranyName,
+      onConfirm: () => permanentlyDeleteSzakirany(alapadatokId, szakiranyId),
+    });
   };
 
   // Add szakma to szakirány
@@ -174,6 +218,43 @@ const Schools = () => {
         return item;
       }),
     }));
+  };
+
+  // Permanently delete szakma from school (API call)
+  const permanentlyDeleteSzakma = async (alapadatokId, szakmaId) => {
+    try {
+      await removeSzakmaFromSchool({ alapadatokId, szakmaId }).unwrap();
+      refetch(); // Refresh the schools data
+      setDeleteConfirmDialog({
+        open: false,
+        type: null,
+        itemName: "",
+        onConfirm: null,
+      });
+    } catch (error) {
+      console.error("Error deleting szakma:", error);
+      // You can add a toast notification here instead of alert
+    }
+  };
+
+  // Show delete confirmation dialog for szakma
+  const showDeleteSzakmaDialog = (alapadatokId, szakmaId, szakmaName) => {
+    setDeleteConfirmDialog({
+      open: true,
+      type: "szakma",
+      itemName: szakmaName,
+      onConfirm: () => permanentlyDeleteSzakma(alapadatokId, szakmaId),
+    });
+  };
+
+  // Close delete confirmation dialog
+  const closeDeleteConfirmDialog = () => {
+    setDeleteConfirmDialog({
+      open: false,
+      type: null,
+      itemName: "",
+      onConfirm: null,
+    });
   };
 
   // Handle form submission
@@ -401,6 +482,16 @@ const Schools = () => {
                             Szakirányok és szakmák
                           </Typography>
 
+                          <Alert
+                            severity="info"
+                            sx={{ mb: 2, fontSize: "0.875rem" }}
+                          >
+                            <strong>Törlési opciók:</strong> A szerkesztés során
+                            (🗑️) csak a kapcsolatot távolítja el, míg a
+                            permanens törlés (🗑️) véglegesen eltávolítja az
+                            elemet az iskolából.
+                          </Alert>
+
                           {school.alapadatok_szakirany?.length > 0 ? (
                             school.alapadatok_szakirany.map(
                               (szakiranyData, index) => (
@@ -414,12 +505,36 @@ const Schools = () => {
                                     <Box
                                       display="flex"
                                       alignItems="center"
-                                      gap={1}
+                                      justifyContent="space-between"
+                                      width="100%"
+                                      sx={{ pr: 2 }}
                                     >
-                                      <WorkIcon color="secondary" />
-                                      <Typography variant="subtitle1">
-                                        {szakiranyData.szakirany.nev}
-                                      </Typography>
+                                      <Box
+                                        display="flex"
+                                        alignItems="center"
+                                        gap={1}
+                                      >
+                                        <WorkIcon color="secondary" />
+                                        <Typography variant="subtitle1">
+                                          {szakiranyData.szakirany.nev}
+                                        </Typography>
+                                      </Box>
+                                      <IconButton
+                                        size="small"
+                                        color="error"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          showDeleteSzakiranyDialog(
+                                            school.id,
+                                            szakiranyData.szakirany_id,
+                                            szakiranyData.szakirany.nev
+                                          );
+                                        }}
+                                        disabled={isRemovingSzakirany}
+                                        title="Szakirány végleges törlése"
+                                      >
+                                        <DeleteForeverIcon />
+                                      </IconButton>
                                     </Box>
                                   </AccordionSummary>
                                   <AccordionDetails>
@@ -432,7 +547,33 @@ const Schools = () => {
                                     <List dense>
                                       {szakiranyData.szakirany.szakma?.map(
                                         (szakmaData) => (
-                                          <ListItem key={szakmaData.szakma.id}>
+                                          <ListItem
+                                            key={szakmaData.szakma.id}
+                                            sx={{
+                                              border: "1px solid #e0e0e0",
+                                              borderRadius: 1,
+                                              mb: 1,
+                                              backgroundColor: "#fafafa",
+                                            }}
+                                            secondaryAction={
+                                              <IconButton
+                                                edge="end"
+                                                size="small"
+                                                color="error"
+                                                onClick={() =>
+                                                  showDeleteSzakmaDialog(
+                                                    school.id,
+                                                    szakmaData.szakma.id,
+                                                    szakmaData.szakma.nev
+                                                  )
+                                                }
+                                                disabled={isRemovingSzakma}
+                                                title="Szakma végleges törlése"
+                                              >
+                                                <DeleteForeverIcon />
+                                              </IconButton>
+                                            }
+                                          >
                                             <ListItemText
                                               primary={szakmaData.szakma.nev}
                                             />
@@ -558,9 +699,15 @@ const Schools = () => {
                     mb: 2,
                   }}
                 >
-                  <Typography variant="h6" sx={{ pt: 1 }}>
-                    Szakirányok ({formData.alapadatok_szakirany.length})
-                  </Typography>
+                  <Box>
+                    <Typography variant="h6" sx={{ pt: 1 }}>
+                      Szakirányok ({formData.alapadatok_szakirany.length})
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary">
+                      Itt csak a kapcsolatok módosíthatók. Végleges törléshez
+                      használja a főoldal részleteit.
+                    </Typography>
+                  </Box>
                   <Box sx={{ width: 300 }}>
                     <CustomCreatableSelect
                       options={szakiranyOptions}
@@ -607,13 +754,14 @@ const Schools = () => {
                             </Typography>
                             <Button
                               size="small"
-                              color="error"
+                              color="warning"
                               startIcon={<RemoveIcon />}
                               onClick={() =>
                                 removeSzakirany(szakiranyData.szakirany_id)
                               }
+                              title="Kapcsolat eltávolítása (csak szerkesztés során)"
                             >
-                              Eltávolítás
+                              Kapcsolat eltávolítása
                             </Button>
                           </Box>
 
@@ -627,10 +775,18 @@ const Schools = () => {
                                 mb: 1,
                               }}
                             >
-                              <Typography variant="subtitle2" sx={{ pt: 1 }}>
-                                Szakmák (
-                                {szakiranyData.szakirany.szakma?.length || 0})
-                              </Typography>
+                              <Box>
+                                <Typography variant="subtitle2" sx={{ pt: 1 }}>
+                                  Szakmák (
+                                  {szakiranyData.szakirany.szakma?.length || 0})
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  color="textSecondary"
+                                >
+                                  Kapcsolat módosítása
+                                </Typography>
+                              </Box>
                               <Box sx={{ width: 250 }}>
                                 <CustomCreatableSelect
                                   options={szakmaOptions}
@@ -674,13 +830,14 @@ const Schools = () => {
                                         <IconButton
                                           edge="end"
                                           size="small"
-                                          color="error"
+                                          color="warning"
                                           onClick={() =>
                                             removeSzakmaFromSzakirany(
                                               szakiranyData.szakirany_id,
                                               szakmaData.szakma_id
                                             )
                                           }
+                                          title="Kapcsolat eltávolítása (csak szerkesztés során)"
                                         >
                                           <RemoveIcon />
                                         </IconButton>
@@ -723,6 +880,74 @@ const Schools = () => {
             ) : (
               "Hozzáadás"
             )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirmDialog.open}
+        onClose={closeDeleteConfirmDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box display="flex" alignItems="center" gap={1}>
+            <DeleteForeverIcon color="error" />
+            <Typography variant="h6">
+              {deleteConfirmDialog.type === "szakirany"
+                ? "Szakirány törlése"
+                : "Szakma törlése"}
+            </Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            <Typography variant="body1" gutterBottom>
+              <strong>Figyelmeztetés!</strong> Ez a művelet nem vonható vissza.
+            </Typography>
+            <Typography variant="body2">
+              Biztosan véglegesen törölni szeretné a következő{" "}
+              {deleteConfirmDialog.type === "szakirany"
+                ? "szakirányt"
+                : "szakmát"}{" "}
+              az iskolából?
+            </Typography>
+          </Alert>
+
+          <Box sx={{ p: 2, backgroundColor: "#f5f5f5", borderRadius: 1 }}>
+            <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+              {deleteConfirmDialog.itemName}
+            </Typography>
+          </Box>
+
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
+            A törlés után ez a{" "}
+            {deleteConfirmDialog.type === "szakirany" ? "szakirány" : "szakma"}
+            {deleteConfirmDialog.type === "szakirany"
+              ? " és az összes hozzá tartozó szakma"
+              : ""}
+            véglegesen eltávolításra kerül az iskolából.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteConfirmDialog}>Mégse</Button>
+          <Button
+            onClick={deleteConfirmDialog.onConfirm}
+            variant="contained"
+            color="error"
+            disabled={isRemovingSzakirany || isRemovingSzakma}
+            startIcon={
+              isRemovingSzakirany || isRemovingSzakma ? (
+                <CircularProgress size={16} />
+              ) : (
+                <DeleteForeverIcon />
+              )
+            }
+          >
+            {isRemovingSzakirany || isRemovingSzakma
+              ? "Törlés..."
+              : "Végleges törlés"}
           </Button>
         </DialogActions>
       </Dialog>

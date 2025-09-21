@@ -898,7 +898,10 @@ export default function TanuloLetszam() {
   // Refetch data when selected school changes
   useEffect(() => {
     if (selectedSchool?.id) {
-      console.log('Selected school changed, refetching data for school:', selectedSchool.id);
+      console.log(
+        "Selected school changed, refetching data for school:",
+        selectedSchool.id
+      );
       // Reset states to show loading and clear old data
       setTableData({});
       setIsModified(false);

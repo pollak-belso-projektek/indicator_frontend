@@ -896,6 +896,24 @@ export const indicatorApi = createApi({
       providesTags: ["Szakma"],
     }),
 
+    // Remove szakirany from school (permanent deletion)
+    removeSzakiranyFromSchool: build.mutation({
+      query: ({ alapadatokId, szakiranyId }) => ({
+        url: `alapadatok/removeSzakirany/${alapadatokId}/${szakiranyId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Alapadatok", "Szakirany"],
+    }),
+
+    // Remove szakma from school (permanent deletion)
+    removeSzakmaFromSchool: build.mutation({
+      query: ({ alapadatokId, szakmaId }) => ({
+        url: `alapadatok/removeSzakma/${alapadatokId}/${szakmaId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Alapadatok", "Szakma"],
+    }),
+
     // User management endpoints
   }),
 });
@@ -999,4 +1017,6 @@ export const {
   // Szakirany and Szakma hooks
   useGetSzakiranyListQuery,
   useGetSzakmaListQuery,
+  useRemoveSzakiranyFromSchoolMutation,
+  useRemoveSzakmaFromSchoolMutation,
 } = indicatorApi;
