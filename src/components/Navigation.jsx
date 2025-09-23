@@ -823,7 +823,11 @@ const SidebarContent = ({ onClose, ...rest }) => {
       <Box
         overflowY="auto"
         overflowX="hidden"
-        maxHeight="calc(100vh - 550px)"
+        maxHeight={
+          expandedCategories["FIXED_GENERAL"]
+            ? "calc(100% - 520px)"
+            : "calc(100% - 205px)"
+        }
         sx={{
           "&::-webkit-scrollbar": {
             width: "6px",
@@ -961,7 +965,6 @@ const SidebarContent = ({ onClose, ...rest }) => {
                   {getDisplayName(link)}
                 </NavItem>
               ))}
-
         {/* Show message if no items found in search */}
         {itemSearch &&
           Object.keys(filteredCategories).length === 0 &&
@@ -972,7 +975,6 @@ const SidebarContent = ({ onClose, ...rest }) => {
               </Text>
             </Box>
           )}
-
         {/* Show message if user has no table access */}
         {!itemSearch && Object.keys(filteredCategories).length === 0 && (
           <Box mx="4" my="2">
