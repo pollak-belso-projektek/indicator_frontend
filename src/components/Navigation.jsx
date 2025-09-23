@@ -417,9 +417,23 @@ const getOrganizedAccessibleItems = (tableAccess, userPermissions) => {
     );
 
     if (categoryItems.length > 0) {
+      // Sort category items by page number
+      const sortedCategoryItems = categoryItems.sort((a, b) => {
+        const aNumber = getPageNumber(a.link);
+        const bNumber = getPageNumber(b.link);
+
+        // Items with page numbers come first, sorted numerically
+        if (aNumber && bNumber) return aNumber - bNumber;
+        if (aNumber && !bNumber) return -1;
+        if (!aNumber && bNumber) return 1;
+
+        // If neither has a page number, sort alphabetically
+        return a.name.localeCompare(b.name);
+      });
+
       organizedCategories[categoryKey] = {
         ...category,
-        items: categoryItems,
+        items: sortedCategoryItems,
       };
     }
   });
@@ -450,7 +464,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
   // Separate fixed items (first 5) and scrollable items - memoized to prevent infinite re-renders
   const fixedItems = useMemo(() => {
-    return accessibleNavItems.filter(
+    const items = accessibleNavItems.filter(
       (item) =>
         item.link === "/dashboard" ||
         item.link === "/alapadatok" ||
@@ -459,6 +473,20 @@ const SidebarContent = ({ onClose, ...rest }) => {
         item.link === "/users" ||
         item.link === "/logs"
     );
+
+    // Sort fixed items by page number
+    return items.sort((a, b) => {
+      const aNumber = getPageNumber(a.link);
+      const bNumber = getPageNumber(b.link);
+
+      // Items with page numbers come first, sorted numerically
+      if (aNumber && bNumber) return aNumber - bNumber;
+      if (aNumber && !bNumber) return -1;
+      if (!aNumber && bNumber) return 1;
+
+      // If neither has a page number, sort alphabetically
+      return a.name.localeCompare(b.name);
+    });
   }, [accessibleNavItems]);
 
   // Get organized categories
@@ -514,7 +542,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
   };
 
   const scrollableItems = useMemo(() => {
-    return accessibleNavItems.filter(
+    const items = accessibleNavItems.filter(
       (item) =>
         item.link !== "/dashboard" &&
         item.link !== "/alapadatok" &&
@@ -523,6 +551,20 @@ const SidebarContent = ({ onClose, ...rest }) => {
         item.link !== "/users" &&
         item.link !== "/logs"
     );
+
+    // Sort scrollable items by page number
+    return items.sort((a, b) => {
+      const aNumber = getPageNumber(a.link);
+      const bNumber = getPageNumber(b.link);
+
+      // Items with page numbers come first, sorted numerically
+      if (aNumber && bNumber) return aNumber - bNumber;
+      if (aNumber && !bNumber) return -1;
+      if (!aNumber && bNumber) return 1;
+
+      // If neither has a page number, sort alphabetically
+      return a.name.localeCompare(b.name);
+    });
   }, [accessibleNavItems]);
 
   // Filter scrollable items based on search (search by name or page number)
@@ -565,6 +607,11 @@ const SidebarContent = ({ onClose, ...rest }) => {
   // Filter categories based on search (search by name or page number)
   const filteredCategories = Object.entries(organizedCategories).reduce(
     (acc, [key, category]) => {
+      // Skip the GENERAL category since its items are already shown in the fixed section
+      if (key === "GENERAL") {
+        return acc;
+      }
+
       const filteredItems = category.items.filter((item) => {
         const pageNumber = getPageNumber(item.link);
         const searchValue = itemSearch.trim();
@@ -970,7 +1017,7 @@ const NavItem = ({ icon, children, onClick, link, ...rest }) => {
       to={to} // Pass the 'to' prop back for Link
       {...otherProps}
     >
-      {icon && (
+      {/* {icon && (
         <Icon
           mr="4"
           fontSize="16"
@@ -980,7 +1027,7 @@ const NavItem = ({ icon, children, onClick, link, ...rest }) => {
           color={isActive ? "white" : undefined}
           as={icon}
         />
-      )}
+      )} */}
       {children}
     </Flex>
   );
