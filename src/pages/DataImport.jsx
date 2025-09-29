@@ -251,7 +251,7 @@ export default function DataImport() {
                       : "Nincs adat"}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
-                    <strong>Betöltött adatok száma:</strong>{" "}
+                    <strong>Rendszerben lévő összes adat száma:</strong>{" "}
                     <Chip
                       label={
                         tanugyiDataFromAPI && Array.isArray(tanugyiDataFromAPI)

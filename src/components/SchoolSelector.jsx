@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FormControl, OutlinedInput, MenuItem, Select } from "@mui/material";
 import { HStack, Text } from "@chakra-ui/react";
-import { useGetAllAlapadatokQuery } from "../store/api/apiSlice";
+import { useGetAllAlapadatokQuery, indicatorApi } from "../store/api/apiSlice";
 import {
   selectUser,
   selectUserPermissions,
@@ -142,6 +142,12 @@ const SchoolSelector = () => {
     console.log("- Selected value:", selectedValue);
     console.log("- Available schools:", schools.items);
     console.log("- Found school data:", selectedSchoolData);
+
+    // Clear all cached API data when switching schools to prevent stale data
+    if (selectedSchoolData?.id !== selectedSchool?.id) {
+      console.log("SchoolSelector: Clearing API cache due to school change");
+      dispatch(indicatorApi.util.resetApiState());
+    }
 
     // Dispatch the selected school to Redux store
     dispatch(setSelectedSchool(selectedSchoolData || null));

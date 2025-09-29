@@ -42,6 +42,7 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import TokenDebugPanel from "../components/TokenDebugPanel";
+import CacheBuster from "../components/CacheBuster";
 import {
   selectUserPermissions,
   selectUserTableAccess,
@@ -447,7 +448,7 @@ export default function Dashboard() {
               const categoryInfo = Object.values(NavigationCategories).find(
                 (cat) => cat.items.some((item) => item.link === page.link)
               );
-              const categoryName = categoryInfo?.name || "Ismeretlen kategória";
+              const categoryName = categoryInfo?.name ;
 
               return (
                 <Grid item xs={12} sm={6} md={4} lg={3} key={page.link}>
@@ -599,38 +600,6 @@ export default function Dashboard() {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Box>
-                  <Typography color="textSecondary" gutterBottom>
-                    Utoljára használt
-                  </Typography>
-                  <Typography variant="h4">
-                    {recentPages ? recentPages.length : 0}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    display="block"
-                    sx={{ mt: 0.5 }}
-                  >
-                    {recentPages && recentPages.length > 0
-                      ? `Max ${Math.min(recentPages.length, 5)} oldal`
-                      : "Nincs előzmény"}
-                  </Typography>
-                </Box>
-                <HistoryIcon sx={{ fontSize: 40, color: "warning.main" }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
           <Card>
@@ -1332,6 +1301,12 @@ export default function Dashboard() {
                 szolgálnak.
               </Alert>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                  <Typography variant="h6" component="h3">
+                    Gyorsítótár kezelés:
+                  </Typography>
+                  <CacheBuster />
+                </Box>
                 <TokenDebugPanel />
                 <CacheDebugPanel />
               </Box>

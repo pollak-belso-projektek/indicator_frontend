@@ -443,6 +443,7 @@ const getOrganizedAccessibleItems = (tableAccess, userPermissions) => {
 
 const SidebarContent = ({ onClose, ...rest }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [itemSearch, setItemSearch] = useState("");
   const [expandedCategories, setExpandedCategories] = useState({
     GENERAL: true, // Keep general expanded by default
@@ -451,6 +452,44 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
   const tableAccess = useSelector(selectUserTableAccess);
   const userPermissions = useSelector(selectUserPermissions);
+
+  // Add keyboard shortcuts for navigation
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      // Only trigger shortcuts when not in an input field
+      if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Ctrl/Cmd + K to focus search
+      if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+        event.preventDefault();
+        const searchInput = document.querySelector('input[placeholder*="Keresés"]');
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+      
+      // Escape to clear search or close mobile menu
+      if (event.key === 'Escape') {
+        if (itemSearch) {
+          setItemSearch("");
+        } else if (onClose) {
+          onClose();
+        }
+      }
+
+      // Ctrl/Cmd + H to go to dashboard
+      if ((event.ctrlKey || event.metaKey) && event.key === 'h') {
+        event.preventDefault();
+        navigate('/dashboard');
+        if (onClose) onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [itemSearch, navigate, onClose]);
 
   // Get navigation items that the user has access to
   const accessibleNavItems = getAccessibleNavItems(
@@ -672,61 +711,114 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
   return (
     <Box
-      transition="3s ease"
+      transition="all 0.3s ease-in-out"
       borderRight="1px"
       borderRightColor={useColorModeValue("gray.200", "gray.700")}
-      w={{ base: "full", md: 60 }}
+      w={{ base: "full", md: 64 }}
       pos="fixed"
       h="100vh"
-      bg="white"
+      bg={useColorModeValue("white", "gray.50")}
+      boxShadow={useColorModeValue("lg", "2xl")}
+      zIndex={1000}
       {...rest}
     >
       {/* Header */}
-      <Box>
-        <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
-          <Image
-            src="https://cms.hodmezovasarhelyi.szc.edir.hu/uploads/HSZC_logo_color_tomb_k_4b19d45dc7.png"
-            alt="HSZC"
-            className="!max-w-[150px] h-auto object-contain !important"
-          />
+      <Box bg={useColorModeValue("white", "gray.50")} borderBottom="1px" borderColor={useColorModeValue("gray.100", "gray.200")}>
+        <Flex h="20" alignItems="center" mx="6" justifyContent="space-between">
+          <Link to="/dashboard" onClick={onClose}>
+            <Image
+              src="https://cms.hodmezovasarhelyi.szc.edir.hu/uploads/HSZC_logo_color_tomb_k_4b19d45dc7.png"
+              alt="HSZC Logo"
+              maxW="140px"
+              h="auto"
+              objectFit="contain"
+              transition="all 0.2s ease-in-out"
+              _hover={{ transform: "scale(1.02)" }}
+            />
+          </Link>
           <CloseButton
             display={{ base: "flex", md: "none" }}
             onClick={onClose}
+            size="lg"
+            color="gray.500"
+            _hover={{ color: "gray.700", bg: "gray.100" }}
+            borderRadius="md"
           />
         </Flex>
 
         {/* Search */}
-        <VStack align="start" mx="4" my="4">
-          <Box width="100%">
-            <TextField
-              placeholder="Keresés név vagy szám alapján..."
-              value={itemSearch}
-              onChange={(e) => setItemSearch(e.target.value)}
-              size="small"
-              fullWidth
-              variant="outlined"
-              InputProps={{
-                endAdornment:
-                  itemSearch !== "" ? (
-                    <InputAdornment position="end">
-                      <MuiIconButton
-                        aria-label="Keresés törlése"
-                        onClick={() => setItemSearch("")}
-                        edge="end"
-                        size="small"
-                      >
-                        <MdClose />
-                      </MuiIconButton>
-                    </InputAdornment>
-                  ) : (
-                    <InputAdornment position="end">
-                      <MdSearch />
-                    </InputAdornment>
-                  ),
-              }}
-            />
-          </Box>
-        </VStack>
+        <Box mx="4" my="4">
+          <TextField
+            placeholder="Keresés név vagy szám alapján... (Ctrl+K)"
+            value={itemSearch}
+            onChange={(e) => setItemSearch(e.target.value)}
+            size="small"
+            fullWidth
+            variant="outlined"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '12px',
+                transition: 'all 0.2s ease-in-out',
+                backgroundColor: 'rgba(0,0,0,0.02)',
+                '&:hover': {
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  backgroundColor: 'rgba(0,0,0,0.03)'
+                },
+                '&.Mui-focused': {
+                  boxShadow: '0 2px 12px rgba(66, 153, 225, 0.3)',
+                  backgroundColor: 'white'
+                }
+              },
+              '& .MuiOutlinedInput-input': {
+                fontSize: '14px'
+              }
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <MdSearch style={{ color: itemSearch ? '#4299E1' : '#9CA3AF' }} />
+                </InputAdornment>
+              ),
+              endAdornment:
+                itemSearch !== "" ? (
+                  <InputAdornment position="end">
+                    <MuiIconButton
+                      aria-label="Keresés törlése"
+                      onClick={() => {
+                        setItemSearch("");
+                        // Refocus the search input after clearing
+                        setTimeout(() => {
+                          const searchInput = document.querySelector('input[placeholder*="Keresés"]');
+                          if (searchInput) searchInput.focus();
+                        }, 100);
+                      }}
+                      edge="end"
+                      size="small"
+                      sx={{ 
+                        color: 'gray.500',
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': { 
+                          color: 'red.500', 
+                          bg: 'red.50',
+                          transform: 'scale(1.1)'
+                        }
+                      }}
+                    >
+                      <MdClose />
+                    </MuiIconButton>
+                  </InputAdornment>
+                ) : null,
+            }}
+          />
+          {/* Search Results Count */}
+          {itemSearch && (
+            <Text fontSize="xs" color="gray.500" mt="2" ml="1">
+              {Object.keys(filteredCategories).length === 0 && filteredScrollableItems.length === 0
+                ? "Nincs találat"
+                : `${filteredScrollableItems.length} találat`}
+            </Text>
+          )}
+        </Box>
 
         {/* Recent Pages Section 
         <RecentPages
@@ -741,66 +833,95 @@ const SidebarContent = ({ onClose, ...rest }) => {
           {/* Fixed Category Header */}
           <Flex
             align="center"
-            p="2"
+            p="3"
             mx="4"
-            borderRadius="lg"
+            borderRadius="xl"
             cursor="pointer"
+            role="button"
+            tabIndex={0}
+            transition="all 0.2s ease-in-out"
             bg={
               isFixedGeneralActive()
                 ? "blue.50"
-                : useColorModeValue("gray.50", "gray.700")
+                : useColorModeValue("gray.50", "gray.100")
             }
             _hover={{
               bg: isFixedGeneralActive()
                 ? "blue.100"
-                : useColorModeValue("gray.100", "gray.600"),
+                : useColorModeValue("gray.100", "gray.200"),
+              transform: "translateY(-1px)",
+              boxShadow: "sm"
+            }}
+            _focus={{
+              boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.6)",
+              outline: "none"
             }}
             onClick={() => toggleCategory("FIXED_GENERAL")}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleCategory("FIXED_GENERAL");
+              }
+            }}
+            aria-expanded={expandedCategories["FIXED_GENERAL"]}
+            aria-label="Toggle general navigation section"
           >
             <Icon
               as={MdHome}
-              mr="2"
-              fontSize="16"
-              color={isFixedGeneralActive() ? "blue.600" : undefined}
+              mr="3"
+              fontSize="18"
+              color={isFixedGeneralActive() ? "blue.600" : "gray.600"}
             />
             <Text
               fontSize="sm"
-              fontWeight={isFixedGeneralActive() ? "bold" : "medium"}
+              fontWeight={isFixedGeneralActive() ? "bold" : "semibold"}
               flex="1"
-              color={isFixedGeneralActive() ? "blue.700" : undefined}
+              color={isFixedGeneralActive() ? "blue.700" : "gray.700"}
             >
               Általános
             </Text>
             <Icon
               as={FiChevronDown}
-              fontSize="12"
+              fontSize="14"
               transform={
                 expandedCategories["FIXED_GENERAL"]
                   ? "rotate(0deg)"
                   : "rotate(-90deg)"
               }
-              transition="transform 0.2s"
+              transition="transform 0.2s ease-in-out"
+              color={isFixedGeneralActive() ? "blue.600" : "gray.500"}
             />
           </Flex>
 
           {/* Fixed Category Items */}
           {expandedCategories["FIXED_GENERAL"] && (
-            <Box overflow="hidden" transition="all 0.2s ease-in-out">
-              <VStack align="stretch" spacing="0" mt="1">
-                {fixedItems.map((link) => (
-                  <NavItem
+            <Box 
+              overflow="hidden" 
+              transition="all 0.3s ease-in-out"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+            >
+              <VStack align="stretch" spacing="1" mt="2">
+                {fixedItems.map((link, index) => (
+                  <Box
                     key={link.name}
-                    icon={link.icon}
-                    as={Link}
-                    to={link.link}
-                    link={link.link}
-                    onClick={() => onClose()}
-                    p="3"
-                    pl="8"
-                    fontSize="sm"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
                   >
-                    {getDisplayName(link)}
-                  </NavItem>
+                    <NavItem
+                      icon={link.icon}
+                      as={Link}
+                      to={link.link}
+                      link={link.link}
+                      onClick={() => onClose()}
+                      p="3"
+                      pl="6"
+                      fontSize="sm"
+                    >
+                      {getDisplayName(link)}
+                    </NavItem>
+                  </Box>
                 ))}
               </VStack>
             </Box>
@@ -821,28 +942,31 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
       {/* Scrollable Navigation Items - Organized by Categories */}
       <Box
+        flex="1"
         overflowY="auto"
         overflowX="hidden"
         maxHeight={
           expandedCategories["FIXED_GENERAL"]
-            ? "calc(100% - 520px)"
-            : "calc(100% - 205px)"
+            ? "calc(100% - 535px)"
+            : "calc(100% - 210px)"
         }
         sx={{
+          scrollBehavior: "smooth",
           "&::-webkit-scrollbar": {
-            width: "6px",
+            width: "4px",
           },
           "&::-webkit-scrollbar-track": {
-            background: "#f1f1f1",
+            background: "transparent",
           },
           "&::-webkit-scrollbar-thumb": {
-            background: "#cbd5e0",
-            borderRadius: "10px",
+            background: "rgba(0,0,0,0.2)",
+            borderRadius: "20px",
             "&:hover": {
-              background: "#a0aec0",
+              background: "rgba(0,0,0,0.3)",
             },
           },
         }}
+        pb="4"
       >
         {/* Show categorized navigation */}
         {!itemSearch
@@ -853,72 +977,103 @@ const SidebarContent = ({ onClose, ...rest }) => {
                   {/* Category Header */}
                   <Flex
                     align="center"
-                    p="2"
+                    p="3"
                     mx="4"
-                    borderRadius="lg"
+                    borderRadius="xl"
                     cursor="pointer"
+                    role="button"
+                    tabIndex={0}
+                    transition="all 0.2s ease-in-out"
                     bg={
                       isCategoryActive(categoryKey)
                         ? "blue.50"
-                        : useColorModeValue("gray.50", "gray.700")
+                        : useColorModeValue("gray.50", "gray.100")
                     }
                     _hover={{
                       bg: isCategoryActive(categoryKey)
                         ? "blue.100"
-                        : useColorModeValue("gray.100", "gray.600"),
+                        : useColorModeValue("gray.100", "gray.200"),
+                      transform: "translateY(-1px)",
+                      boxShadow: "sm"
+                    }}
+                    _focus={{
+                      boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.6)",
+                      outline: "none"
                     }}
                     onClick={() => toggleCategory(categoryKey)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleCategory(categoryKey);
+                      }
+                    }}
+                    aria-expanded={expandedCategories[categoryKey]}
+                    aria-label={`Toggle ${category.name} section`}
                   >
                     <Icon
                       as={category.icon}
-                      mr="2"
-                      fontSize="16"
+                      mr="3"
+                      fontSize="18"
                       color={
-                        isCategoryActive(categoryKey) ? "blue.600" : undefined
+                        isCategoryActive(categoryKey) ? "blue.600" : "gray.600"
                       }
                     />
                     <Text
                       fontSize="sm"
                       fontWeight={
-                        isCategoryActive(categoryKey) ? "bold" : "medium"
+                        isCategoryActive(categoryKey) ? "bold" : "semibold"
                       }
                       flex="1"
                       color={
-                        isCategoryActive(categoryKey) ? "blue.700" : undefined
+                        isCategoryActive(categoryKey) ? "blue.700" : "gray.700"
                       }
                     >
                       {category.name}
                     </Text>
                     <Icon
                       as={FiChevronDown}
-                      fontSize="12"
+                      fontSize="14"
                       transform={
                         expandedCategories[categoryKey]
                           ? "rotate(180deg)"
                           : "rotate(0deg)"
                       }
-                      transition="transform 0.2s"
+                      transition="transform 0.2s ease-in-out"
+                      color={
+                        isCategoryActive(categoryKey) ? "blue.600" : "gray.500"
+                      }
                     />
                   </Flex>
 
                   {/* Category Items */}
                   {expandedCategories[categoryKey] && (
-                    <Box overflow="hidden" transition="all 0.2s ease-in-out">
-                      <VStack align="stretch" spacing="0" mt="1">
-                        {category.items.map((link) => (
-                          <NavItem
+                    <Box 
+                      overflow="hidden" 
+                      transition="all 0.3s ease-in-out"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                    >
+                      <VStack align="stretch" spacing="1" mt="2">
+                        {category.items.map((link, index) => (
+                          <Box
                             key={link.name}
-                            icon={link.icon}
-                            as={Link}
-                            to={link.link}
-                            link={link.link}
-                            onClick={() => onClose()}
-                            fontSize="sm"
-                            p="3"
-                            pl="8"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
                           >
-                            {getDisplayName(link)}
-                          </NavItem>
+                            <NavItem
+                              icon={link.icon}
+                              as={Link}
+                              to={link.link}
+                              link={link.link}
+                              onClick={() => onClose()}
+                              fontSize="sm"
+                              p="3"
+                              pl="6"
+                            >
+                              {getDisplayName(link)}
+                            </NavItem>
+                          </Box>
                         ))}
                       </VStack>
                     </Box>
@@ -984,6 +1139,8 @@ const SidebarContent = ({ onClose, ...rest }) => {
           </Box>
         )}
       </Box>
+
+
     </Box>
   );
 };
@@ -999,38 +1156,63 @@ const NavItem = ({ icon, children, onClick, link, ...rest }) => {
     if (onClick) onClick(e);
   };
 
+  // Handle keyboard navigation
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick(e);
+    }
+  };
+
   return (
     <Flex
       align="center"
-      p="4"
+      p="3"
       mx="4"
-      borderRadius="lg"
-      role="group"
+      borderRadius="xl"
+      role="button"
+      tabIndex={0}
       cursor="pointer"
       style={{ textDecoration: "none" }}
-      _focus={{ boxShadow: "none" }}
-      _hover={{
-        bg: "blue.500",
-        color: "white",
+      transition="all 0.2s ease-in-out"
+      _focus={{ 
+        boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.6)",
+        outline: "none"
       }}
-      bg={isActive ? "blue.500" : undefined}
-      color={isActive ? "white" : undefined}
+      _hover={{
+        bg: isActive ? "blue.600" : "blue.50",
+        color: isActive ? "white" : "blue.700",
+        transform: "translateX(4px)",
+        boxShadow: "md"
+      }}
+      bg={isActive ? "blue.500" : "transparent"}
+      color={isActive ? "white" : "gray.700"}
       onClick={handleClick}
-      to={to} // Pass the 'to' prop back for Link
+      onKeyDown={handleKeyDown}
+      to={to}
+      aria-label={`Navigate to ${children}`}
       {...otherProps}
     >
-      {/* {icon && (
+      {icon && (
         <Icon
-          mr="4"
-          fontSize="16"
+          mr="3"
+          fontSize="18"
+          flexShrink={0}
           _groupHover={{
-            color: "white",
+            color: isActive ? "white" : "blue.600",
           }}
-          color={isActive ? "white" : undefined}
+          color={isActive ? "white" : "gray.500"}
           as={icon}
         />
-      )} */}
-      {children}
+      )}
+      <Text 
+        fontSize="sm" 
+        fontWeight={isActive ? "semibold" : "medium"}
+        noOfLines={1}
+        flex="1"
+      >
+        {children}
+      </Text>
     </Flex>
   );
 };
@@ -1149,14 +1331,16 @@ const MobileNav = ({ onOpen, ...rest }) => {
 
   return (
     <Flex
-      ml={{ base: 0, md: 60 }}
-      px={{ base: 4, md: 4 }}
+      ml={{ base: 0, md: 64 }}
+      px={{ base: 4, md: 6 }}
       height="20"
       alignItems="center"
-      bg="white"
+      bg={useColorModeValue("white", "gray.50")}
       borderBottomWidth="1px"
-      borderBottomColor={useColorModeValue("gray.200", "gray.700")}
+      borderBottomColor={useColorModeValue("gray.200", "gray.300")}
       justifyContent={{ base: "space-between", md: "flex-end" }}
+      boxShadow={useColorModeValue("sm", "md")}
+      zIndex={999}
       {...rest}
     >
       <Box position="relative">
@@ -1164,9 +1348,20 @@ const MobileNav = ({ onOpen, ...rest }) => {
           display={{ base: "flex", md: "none" }}
           onClick={onOpen}
           variant="outline"
-          aria-label="open menu"
+          aria-label="Open navigation menu"
+          size="lg"
+          borderRadius="xl"
+          transition="all 0.2s ease-in-out"
+          _hover={{ 
+            bg: "blue.50", 
+            borderColor: "blue.200",
+            transform: "scale(1.05)"
+          }}
+          _active={{
+            transform: "scale(0.95)"
+          }}
         >
-          <MdMenu />
+          <MdMenu size={20} />
         </IconButton>
 
         {/* Recent pages indicator for mobile 
@@ -1208,20 +1403,35 @@ const MobileNav = ({ onOpen, ...rest }) => {
         </Box>
 */}
 
-        <Flex alignItems={"center"} gap={2}>
+        <Flex alignItems={"center"} gap={3}>
           <Tooltip title="Az oldal fejlesztés alatt áll.">
-            <MdInfo
-              style={{ cursor: "pointer" }}
-              color={"orange"}
-              size={25}
-              className="animate-pulse"
-            />
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              w="8"
+              h="8"
+              borderRadius="full"
+              bg="orange.100"
+              color="orange.600"
+              cursor="pointer"
+              transition="all 0.2s ease-in-out"
+              _hover={{
+                bg: "orange.200",
+                transform: "scale(1.1)"
+              }}
+            >
+              <MdInfo size={18} />
+            </Box>
           </Tooltip>
           <Menu.Root>
             <Menu.Trigger
               py={2}
-              transition="all 0.3s"
-              _focus={{ boxShadow: "none" }}
+              px={3}
+              borderRadius="xl"
+              transition="all 0.2s ease-in-out"
+              _focus={{ boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.6)" }}
+              _hover={{ bg: "gray.50" }}
             >
               {" "}
               <HStack>
@@ -1302,7 +1512,7 @@ export default function Navigation({ children }) {
         </Drawer.Root>
         {/* mobilenav */}
         <MobileNav onOpen={() => setIsOpen(true)} />
-        <Box ml={{ base: 0, md: 60 }} p="1">
+        <Box ml={{ base: 0, md: 64 }} p="4">
           {children}
         </Box>
       </Box>
