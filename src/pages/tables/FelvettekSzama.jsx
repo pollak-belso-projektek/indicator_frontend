@@ -101,12 +101,25 @@ const FelvettekSzama = () => {
               const szakmaNevek = szakirany.szakma
                 .map((szakmaData) => szakmaData.szakma?.nev)
                 .filter(Boolean);
-              if (szakmaNevek.length > 0) {
+
+              // Add "Nincs meghatározva" entry for each szakirány
+              const subTypes =
+                szakmaNevek.length > 0
+                  ? [...szakmaNevek, `Nincs meghatározva (${szakirany.nev})`]
+                  : [`Nincs meghatározva (${szakirany.nev})`];
+
+              if (subTypes.length > 0) {
                 categories.push({
                   category: `${szakirany.nev} szakmái`,
-                  subTypes: szakmaNevek,
+                  subTypes: subTypes,
                 });
               }
+            } else {
+              // If no szakmák exist, still add "Nincs meghatározva" entry
+              categories.push({
+                category: `${szakirany.nev} szakmái`,
+                subTypes: [`Nincs meghatározva (${szakirany.nev})`],
+              });
             }
           }
         });
@@ -119,15 +132,15 @@ const FelvettekSzama = () => {
   // Handle data changes
   const handleDataChange = (programType, year, field, value) => {
     const newValue = parseFloat(value) || 0;
-    
+
     setTableData((prev) => {
       const prevData = prev[programType]?.[year]?.[field] || 0;
-      
+
       // Only update if the value actually changed
       if (prevData === newValue) {
         return prev;
       }
-      
+
       return {
         ...prev,
         [programType]: {
@@ -169,8 +182,9 @@ const FelvettekSzama = () => {
   const calculateInstitutionSummary = (institutionType, year, field) => {
     if (!schoolsData) return 0;
 
-    // Find all szakmák that belong to this institution type (collect unique szakma names)
+    // Find all szakmák and szakirányok that belong to this institution type
     const szakmaNevek = new Set();
+    const szakiranyNevek = new Set();
 
     schoolsData
       .filter((school) => school.intezmeny_tipus === institutionType)
@@ -181,27 +195,37 @@ const FelvettekSzama = () => {
         ) {
           school.alapadatok_szakirany.forEach((szakiranyData) => {
             const szakirany = szakiranyData.szakirany;
-            if (
-              szakirany &&
-              szakirany.szakma &&
-              Array.isArray(szakirany.szakma)
-            ) {
-              szakirany.szakma.forEach((szakmaData) => {
-                const szakmaNev = szakmaData.szakma?.nev;
-                if (szakmaNev) {
-                  szakmaNevek.add(szakmaNev);
-                }
-              });
+            if (szakirany) {
+              // Collect szakirány names
+              szakiranyNevek.add(szakirany.nev);
+
+              // Collect szakma names
+              if (szakirany.szakma && Array.isArray(szakirany.szakma)) {
+                szakirany.szakma.forEach((szakmaData) => {
+                  const szakmaNev = szakmaData.szakma?.nev;
+                  if (szakmaNev) {
+                    szakmaNevek.add(szakmaNev);
+                  }
+                });
+              }
             }
           });
         }
       });
 
-    // Now sum up values from tableData for each unique szakma (only once per szakma)
+    // Sum up values from tableData for each unique szakma (only once per szakma)
     let totalValue = 0;
     szakmaNevek.forEach((szakmaNev) => {
       const currentValue = tableData[szakmaNev]?.[year]?.[field] || 0;
       totalValue += currentValue;
+    });
+
+    // Also add the "Nincs meghatározva" entries for each szakirány in this institution
+    szakiranyNevek.forEach((szakiranyNev) => {
+      const nincsMeghatározvaKey = `Nincs meghatározva (${szakiranyNev})`;
+      const nincsMeghatározvaValue =
+        tableData[nincsMeghatározvaKey]?.[year]?.[field] || 0;
+      totalValue += nincsMeghatározvaValue;
     });
 
     return totalValue;
@@ -213,7 +237,7 @@ const FelvettekSzama = () => {
 
     // Find all szakmák that belong to this szakirány (collect unique szakma names)
     const szakmaNevek = new Set();
-    
+
     schoolsData.forEach((school) => {
       if (
         school.alapadatok_szakirany &&
@@ -241,6 +265,12 @@ const FelvettekSzama = () => {
       const currentValue = tableData[szakmaNev]?.[year]?.[field] || 0;
       totalValue += currentValue;
     });
+
+    // Also add the "Nincs meghatározva" entry for this szakirány
+    const nincsMeghatározvaKey = `Nincs meghatározva (${szakiranyNev})`;
+    const nincsMeghatározvaValue =
+      tableData[nincsMeghatározvaKey]?.[year]?.[field] || 0;
+    totalValue += nincsMeghatározvaValue;
 
     return totalValue;
   };
@@ -292,7 +322,7 @@ const FelvettekSzama = () => {
 
     // If no applicants, return 0%
     if (!jelentkezokSzama || jelentkezokSzama === 0) return "0%";
-    
+
     // If no admitted students, return "∞" or a special indicator
     if (!felvettekSzama || felvettekSzama === 0) return "N/A";
 
@@ -335,92 +365,113 @@ const FelvettekSzama = () => {
             let szakmaNev = "";
             let szakiranyNev = "";
 
-            // Find the program type in our categories to get proper names
-            const category = programTypes.find((cat) =>
-              cat.subTypes.includes(programType)
-            );
+            // Handle "Nincs meghatározva" case - save as null in database
+            if (programType.startsWith("Nincs meghatározva")) {
+              szakmaNev = null;
+              // Extract szakirány name from the programType if it's in format "Nincs meghatározva (szakirányName)"
+              const match = programType.match(/Nincs meghatározva \((.+)\)$/);
+              if (match) {
+                szakiranyNev = match[1];
+              } else {
+                szakiranyNev = "Nincs meghatározva";
+              }
+            } else {
+              // Find the program type in our categories to get proper names
+              const category = programTypes.find((cat) =>
+                cat.subTypes.includes(programType)
+              );
 
-            if (category) {
-              if (category.category === "Szakirány") {
-                szakiranyNev = programType;
-                // For szakirány level, we need a default szakma or skip
-                console.warn(
-                  `Skipping szakirány level record: ${programType} - no szakma specified`
-                );
-                continue; // Skip this iteration as backend requires both szakma and szakirany
-              } else if (category.category.includes("szakmái")) {
-                // Extract szakirány name from category
-                szakiranyNev = category.category.replace(" szakmái", "");
-                szakmaNev = programType;
-              } else if (category.category === "Összesen") {
-                // For institution types like "Technikum", we need to find actual szakma/szakirany pairs
-                // Let's find all szakma-szakirany combinations for this institution type
-                const institutionSchools = relevantSchools.filter(
-                  (school) => school.intezmeny_tipus === programType
-                );
+              if (category) {
+                if (category.category === "Szakirány") {
+                  szakiranyNev = programType;
+                  // For szakirány level, we need a default szakma or skip
+                  console.warn(
+                    `Skipping szakirány level record: ${programType} - no szakma specified`
+                  );
+                  continue; // Skip this iteration as backend requires both szakma and szakirany
+                } else if (category.category.includes("szakmái")) {
+                  // Extract szakirány name from category
+                  szakiranyNev = category.category.replace(" szakmái", "");
+                  szakmaNev = programType;
+                } else if (category.category === "Összesen") {
+                  // For institution types like "Technikum", we need to find actual szakma/szakirany pairs
+                  // Let's find all szakma-szakirany combinations for this institution type
+                  const institutionSchools = relevantSchools.filter(
+                    (school) => school.intezmeny_tipus === programType
+                  );
 
-                if (institutionSchools.length > 0) {
-                  // For now, let's use the first available szakma-szakirany pair
-                  // You might want to create separate records for each pair later
-                  const firstSchool = institutionSchools[0];
-                  if (
-                    firstSchool.alapadatok_szakirany &&
-                    Array.isArray(firstSchool.alapadatok_szakirany) &&
-                    firstSchool.alapadatok_szakirany.length > 0
-                  ) {
-                    const firstSzakirany =
-                      firstSchool.alapadatok_szakirany[0].szakirany;
-                    if (firstSzakirany) {
-                      szakiranyNev = firstSzakirany.nev;
+                  if (institutionSchools.length > 0) {
+                    // For now, let's use the first available szakma-szakirany pair
+                    // You might want to create separate records for each pair later
+                    const firstSchool = institutionSchools[0];
+                    if (
+                      firstSchool.alapadatok_szakirany &&
+                      Array.isArray(firstSchool.alapadatok_szakirany) &&
+                      firstSchool.alapadatok_szakirany.length > 0
+                    ) {
+                      const firstSzakirany =
+                        firstSchool.alapadatok_szakirany[0].szakirany;
+                      if (firstSzakirany) {
+                        szakiranyNev = firstSzakirany.nev;
 
-                      // Try to get the first szakma from this szakirany
-                      if (
-                        firstSzakirany.szakma &&
-                        Array.isArray(firstSzakirany.szakma) &&
-                        firstSzakirany.szakma.length > 0
-                      ) {
-                        const firstSzakma = firstSzakirany.szakma[0].szakma;
-                        if (firstSzakma) {
-                          szakmaNev = firstSzakma.nev;
+                        // Try to get the first szakma from this szakirany
+                        if (
+                          firstSzakirany.szakma &&
+                          Array.isArray(firstSzakirany.szakma) &&
+                          firstSzakirany.szakma.length > 0
+                        ) {
+                          const firstSzakma = firstSzakirany.szakma[0].szakma;
+                          if (firstSzakma) {
+                            szakmaNev = firstSzakma.nev;
+                          }
                         }
                       }
                     }
                   }
-                }
 
-                if (!szakmaNev || !szakiranyNev) {
-                  console.warn(
-                    `Institution type record: ${programType} - could not find valid szakma/szakirany pair`
-                  );
-                  continue;
-                } else {
-                  console.log(
-                    `Institution type record: ${programType} - using szakma: ${szakmaNev}, szakirany: ${szakiranyNev}`
-                  );
+                  if (!szakmaNev || !szakiranyNev) {
+                    console.warn(
+                      `Institution type record: ${programType} - could not find valid szakma/szakirany pair`
+                    );
+                    continue;
+                  } else {
+                    console.log(
+                      `Institution type record: ${programType} - using szakma: ${szakmaNev}, szakirany: ${szakiranyNev}`
+                    );
+                  }
                 }
               }
             }
 
-            // Skip if we don't have both szakma and szakirany names
-            if (!szakmaNev || !szakiranyNev) {
+            // Skip if we don't have szakirany name (szakma can be null for "Nincs meghatározva")
+            if (!szakiranyNev) {
               console.warn(
-                `Skipping record - missing szakma (${szakmaNev}) or szakirany (${szakiranyNev})`
+                `Skipping record - missing szakirany (${szakiranyNev})`
               );
               continue;
             }
 
             // Check if a record already exists for this combination
-            const existingRecord = apiAdmissionData?.find(
-              (record) =>
-                record.szakma?.nev === szakmaNev &&
+            const existingRecord = apiAdmissionData?.find((record) => {
+              // Handle null matching for "Nincs meghatározva" cases
+              const recordSzakmaNev = record.szakma?.nev || null;
+              const targetSzakmaNev =
+                szakmaNev === null ||
+                programType.startsWith("Nincs meghatározva")
+                  ? null
+                  : szakmaNev;
+
+              return (
+                recordSzakmaNev === targetSzakmaNev &&
                 record.szakirany?.nev === szakiranyNev &&
                 record.tanev_kezdete === parseInt(year)
-            );
+              );
+            });
 
             const recordData = {
               alapadatok_id: selectedSchool?.id,
               tanev_kezdete: parseInt(year),
-              szakmaNev: szakmaNev,
+              szakmaNev: szakmaNev, // null for "Nincs meghatározva"
               szakiranyNev: szakiranyNev,
               jelentkezo_letszam: fields.jelentkezok_szama_9 || 0,
               felveheto_letszam: fields.felvettek_letszam_9 || 0,
@@ -436,19 +487,25 @@ const FelvettekSzama = () => {
                 }).unwrap();
                 updatedCount++;
                 console.log(
-                  `Updated record for ${szakmaNev} - ${szakiranyNev} - ${year}`
+                  `Updated record for ${
+                    szakmaNev || "Nincs meghatározva"
+                  } - ${szakiranyNev} - ${year}`
                 );
               } else {
                 // Create new record
                 await addAdmissionData(recordData).unwrap();
                 savedCount++;
                 console.log(
-                  `Created new record for ${szakmaNev} - ${szakiranyNev} - ${year}`
+                  `Created new record for ${
+                    szakmaNev || "Nincs meghatározva"
+                  } - ${szakiranyNev} - ${year}`
                 );
               }
             } catch (recordError) {
               console.error(
-                `Error saving record for ${szakmaNev} - ${szakiranyNev} - ${year}:`,
+                `Error saving record for ${
+                  szakmaNev || "Nincs meghatározva"
+                } - ${szakiranyNev} - ${year}:`,
                 recordError
               );
               throw recordError; // Re-throw to be caught by outer catch
@@ -532,9 +589,16 @@ const FelvettekSzama = () => {
           szakirany,
         } = record;
 
-        if (szakma && szakirany) {
-          // Use szakma name as the key for the table data
-          const programKey = szakma.nev;
+        if (szakirany) {
+          let programKey;
+
+          if (szakma && szakma.nev) {
+            // Regular szakma entry
+            programKey = szakma.nev;
+          } else {
+            // "Nincs meghatározva" entry (szakma is null)
+            programKey = `Nincs meghatározva (${szakirany.nev})`;
+          }
 
           if (!newTableData[programKey]) {
             newTableData[programKey] = {};
@@ -765,6 +829,12 @@ const FelvettekSzama = () => {
                         left: 0,
                         backgroundColor: "#ffffff",
                         zIndex: 1,
+                        fontStyle: subType.startsWith("Nincs meghatározva")
+                          ? "italic"
+                          : "normal",
+                        color: subType.startsWith("Nincs meghatározva")
+                          ? "#666"
+                          : "inherit",
                       }}
                     >
                       {subType}

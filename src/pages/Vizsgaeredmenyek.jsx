@@ -28,12 +28,7 @@ import {
 
 export default function Vizsgaeredmenyek() {
   // API hooks
-  const {
-    data: apiData,
-    isLoading,
-    error,
-    refetch,
-  } = useGetAllVizsgaeredmenyekQuery();
+  const { data: apiData, isLoading, error } = useGetAllVizsgaeredmenyekQuery();
   const [addVizsgaeredmenyek] = useAddVizsgaeredmenyekMutation();
   const [updateVizsgaeredmenyek] = useUpdateVizsgaeredmenyekMutation();
 

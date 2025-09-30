@@ -13,11 +13,12 @@ const baseQuery = fetchBaseQuery({
     // If we have a token, include it in the Authorization header
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
-    } // Add cache control headers to prevent caching in development
-    if (config.isDevelopment) {
-      headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
-      headers.set("Expires", "0");
     }
+    
+    // Add cache control headers to prevent caching in all environments
+    headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+    headers.set("Pragma", "no-cache");
+    headers.set("Expires", "0");
 
     return headers;
   },

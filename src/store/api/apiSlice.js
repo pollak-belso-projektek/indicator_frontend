@@ -5,13 +5,10 @@ import { baseQueryWithReauth } from "./baseQueryWithReauth";
 export const indicatorApi = createApi({
   reducerPath: "indicatorApi",
   baseQuery: baseQueryWithReauth,
-  // Development mode: disable caching for immediate updates
-  ...(import.meta.env.DEV && {
-    keepUnusedDataFor: 0, // Don't keep any unused data
-    refetchOnMountOrArgChange: true, // Always refetch on mount or arg change
-    refetchOnReconnect: true, // Refetch when reconnecting
-    refetchOnFocus: true, // Refetch when window gains focus
-  }),
+  keepUnusedDataFor: 0, // Don't keep any unused data
+  refetchOnMountOrArgChange: 30, // Refetch if data is older than 30 seconds
+  refetchOnReconnect: true, // Refetch when reconnecting
+  refetchOnFocus: false, // Disable to prevent excessive refetching and race conditions
   tagTypes: [
     "User",
     "TanugyiAdatok",
@@ -180,7 +177,22 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: (result, error, params) => [
         { type: "TanuloLetszam", id: params.alapadatok_id },
+        "TanuloLetszam", // Invalidate all TanuloLetszam queries
+        "TanugyiAdatok", // Also invalidate related data
       ],
+      // Force refetch after successful mutation
+      async onQueryStarted(params, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          // Force refetch of related queries
+          dispatch(
+            indicatorApi.util.invalidateTags([
+              "TanuloLetszam",
+              "TanugyiAdatok"
+            ])
+          );
+        } catch {}
+      },
     }),
     updateTanuloLetszam: build.mutation({
       query: (params) => ({
@@ -197,7 +209,22 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: (result, error, params) => [
         { type: "TanuloLetszam", id: params.alapadatok_id },
+        "TanuloLetszam", // Invalidate all TanuloLetszam queries
+        "TanugyiAdatok", // Also invalidate related data
       ],
+      // Force refetch after successful mutation
+      async onQueryStarted(params, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          // Force refetch of related queries
+          dispatch(
+            indicatorApi.util.invalidateTags([
+              "TanuloLetszam",
+              "TanugyiAdatok"
+            ])
+          );
+        } catch {}
+      },
     }),
     addTanugyiAdatok: build.mutation({
       query: (params) => ({
@@ -214,7 +241,21 @@ export const indicatorApi = createApi({
           id: `${params.alapadatok_id}_${params.tanev_kezdete || "all"}`,
         },
         "TanugyiAdatok",
+        "TanuloLetszam", // Also invalidate related student data
       ],
+      // Force refetch after successful mutation
+      async onQueryStarted(params, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          // Force refetch of related queries
+          dispatch(
+            indicatorApi.util.invalidateTags([
+              "TanugyiAdatok",
+              "TanuloLetszam"
+            ])
+          );
+        } catch {}
+      },
     }),
     addAlkalmazottAdatok: build.mutation({
       query: (params) => ({

@@ -57,14 +57,13 @@ export default function Alapadatok() {
   const calculateSummary = (data) => {
     if (!data || !Array.isArray(data)) return null;
 
-    const currentYear = new Date().getFullYear();
+    // const currentYear = new Date().getFullYear();
     const years = generateSchoolYears().map((year) =>
       parseInt(year.split("/")[0])
     );
 
     // Group data by year and jogv_tipus
     const yearSummary = {};
-    let totalStudents = 0;
 
     data.forEach((item) => {
       const year = item.tanev_kezdete;
@@ -81,9 +80,11 @@ export default function Alapadatok() {
       } else if (jogvTipus === 1) {
         yearSummary[year].esti += letszam;
       }
-
-      totalStudents += letszam;
     });
+
+    // Calculate total students for the most recent year only
+    const mostRecentYear = Math.max(...years);
+    const totalStudents = yearSummary[mostRecentYear]?.total || 0;
 
     return { yearSummary, totalStudents, years };
   };

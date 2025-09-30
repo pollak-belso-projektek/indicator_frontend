@@ -6,8 +6,8 @@ export const persistConfig = {
   key: "root", // Key for localStorage
   storage, // Storage engine (localStorage)
   whitelist: ["auth"], // Only persist the auth reducer
-  // You can add blacklist for reducers you DON'T want to persist
-  // blacklist: ["someReducer"],
+  // Explicitly blacklist API data to prevent persisting stale cache
+  blacklist: ["indicatorApi", "healthApi"],
 };
 
 // Helper function to create a persisted reducer
