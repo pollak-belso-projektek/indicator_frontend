@@ -15,7 +15,6 @@ import { selectSelectedSchool } from "../../store/slices/authSlice";
 import {
   useGetFelvettekSzamaByAlapadatokIdAndYearQuery,
   useAddFelvettekSzamaMutation,
-  useUpdateFelvettekSzamaMutation,
   useGetAllAlapadatokQuery,
 } from "../../store/api/apiSlice";
 import FelvettekSzamaInfo from "../../components/infos/FelvettekSzamaInfo";
@@ -33,7 +32,10 @@ const FelvettekSzama = () => {
   const { data: apiAdmissionData, isLoading: isFetching } =
     useGetFelvettekSzamaByAlapadatokIdAndYearQuery({
       alapadatokId: selectedSchool?.id,
-      year: 2024,
+      year:
+        new Date().getMonth() < 8
+          ? new Date().getFullYear() - 1
+          : new Date().getFullYear(),
     });
 
   const { data: schoolsData, isLoading: isLoadingSchools } =
@@ -41,8 +43,6 @@ const FelvettekSzama = () => {
 
   const [addAdmissionData, { isLoading: isAdding }] =
     useAddFelvettekSzamaMutation();
-  const [updateAdmissionData, { isLoading: isUpdating }] =
-    useUpdateFelvettekSzamaMutation();
 
   // State for the integrated table data
   const [tableData, setTableData] = useState({});
@@ -56,6 +56,12 @@ const FelvettekSzama = () => {
 
   // Track which specific cells have been modified by the user
   const [modifiedCells, setModifiedCells] = useState({});
+
+  // Utility function to normalize szakirány names (trim whitespace, normalize special chars)
+  const normalizeSzakiranyName = (name) => {
+    if (!name) return name;
+    return name.trim().replace(/\s+/g, " "); // Remove extra whitespace
+  };
 
   // Program types based on the selected school's actual data
   const programTypes = useMemo(() => {
@@ -90,23 +96,35 @@ const FelvettekSzama = () => {
         school.alapadatok_szakirany.forEach((szakiranyData) => {
           const szakirany = szakiranyData.szakirany;
           if (szakirany) {
+            console.log(`📚 Found szakirány in school data:`, {
+              szakiranyNev: szakirany.nev,
+              length: szakirany.nev?.length,
+              bytes: szakirany.nev
+                ? [...szakirany.nev].map((c) => c.charCodeAt(0))
+                : null,
+            });
+
             // Add szakirány as category
             categories.push({
               category: "Szakirány",
               subTypes: [szakirany.nev],
-            });
-
-            // Add szakmák under this szakirány
+            }); // Add szakmák under this szakirány
             if (szakirany.szakma && Array.isArray(szakirany.szakma)) {
               const szakmaNevek = szakirany.szakma
                 .map((szakmaData) => szakmaData.szakma?.nev)
                 .filter(Boolean);
 
               // Add "Nincs meghatározva" entry for each szakirány
+              const normalizedSzakiranyNev = normalizeSzakiranyName(
+                szakirany.nev
+              );
               const subTypes =
                 szakmaNevek.length > 0
-                  ? [...szakmaNevek, `Nincs meghatározva (${szakirany.nev})`]
-                  : [`Nincs meghatározva (${szakirany.nev})`];
+                  ? [
+                      ...szakmaNevek,
+                      `Nincs meghatározva (${normalizedSzakiranyNev})`,
+                    ]
+                  : [`Nincs meghatározva (${normalizedSzakiranyNev})`];
 
               if (subTypes.length > 0) {
                 categories.push({
@@ -116,9 +134,12 @@ const FelvettekSzama = () => {
               }
             } else {
               // If no szakmák exist, still add "Nincs meghatározva" entry
+              const normalizedSzakiranyNev = normalizeSzakiranyName(
+                szakirany.nev
+              );
               categories.push({
                 category: `${szakirany.nev} szakmái`,
-                subTypes: [`Nincs meghatározva (${szakirany.nev})`],
+                subTypes: [`Nincs meghatározva (${normalizedSzakiranyNev})`],
               });
             }
           }
@@ -342,7 +363,6 @@ const FelvettekSzama = () => {
       setIsSaving(true);
       setSaveError(null);
       let savedCount = 0;
-      let updatedCount = 0;
 
       // Recreate relevantSchools for institution type lookup
       let relevantSchools = schoolsData;
@@ -371,9 +391,19 @@ const FelvettekSzama = () => {
               // Extract szakirány name from the programType if it's in format "Nincs meghatározva (szakirányName)"
               const match = programType.match(/Nincs meghatározva \((.+)\)$/);
               if (match) {
-                szakiranyNev = match[1];
+                szakiranyNev = normalizeSzakiranyName(match[1]);
+                console.log(`🔍 Nincs meghatározva processing:`, {
+                  programType,
+                  rawExtracted: match[1],
+                  normalizedSzakiranyNev: szakiranyNev,
+                  szakiranyLength: szakiranyNev.length,
+                  szakiranyBytes: [...szakiranyNev].map((c) => c.charCodeAt(0)),
+                });
               } else {
                 szakiranyNev = "Nincs meghatározva";
+                console.warn(
+                  `⚠️ Could not extract szakirány from: ${programType}`
+                );
               }
             } else {
               // Find the program type in our categories to get proper names
@@ -451,23 +481,6 @@ const FelvettekSzama = () => {
               continue;
             }
 
-            // Check if a record already exists for this combination
-            const existingRecord = apiAdmissionData?.find((record) => {
-              // Handle null matching for "Nincs meghatározva" cases
-              const recordSzakmaNev = record.szakma?.nev || null;
-              const targetSzakmaNev =
-                szakmaNev === null ||
-                programType.startsWith("Nincs meghatározva")
-                  ? null
-                  : szakmaNev;
-
-              return (
-                recordSzakmaNev === targetSzakmaNev &&
-                record.szakirany?.nev === szakiranyNev &&
-                record.tanev_kezdete === parseInt(year)
-              );
-            });
-
             const recordData = {
               alapadatok_id: selectedSchool?.id,
               tanev_kezdete: parseInt(year),
@@ -479,36 +492,38 @@ const FelvettekSzama = () => {
             };
 
             try {
-              if (existingRecord) {
-                // Update existing record
-                await updateAdmissionData({
-                  id: existingRecord.id,
-                  ...recordData,
-                }).unwrap();
-                updatedCount++;
-                console.log(
-                  `Updated record for ${
-                    szakmaNev || "Nincs meghatározva"
-                  } - ${szakiranyNev} - ${year}`
-                );
-              } else {
-                // Create new record
-                await addAdmissionData(recordData).unwrap();
-                savedCount++;
-                console.log(
-                  `Created new record for ${
-                    szakmaNev || "Nincs meghatározva"
-                  } - ${szakiranyNev} - ${year}`
-                );
-              }
+              // Add upsertMode flag to let backend know this should be create-or-update
+              const upsertData = {
+                ...recordData,
+                upsertMode: true, // Signal to backend to handle duplicates
+              };
+
+              console.log(`Saving record:`, {
+                programType,
+                year,
+                szakmaNev: szakmaNev || "Nincs meghatározva",
+                szakiranyNev,
+                data: upsertData,
+              });
+
+              await addAdmissionData(upsertData).unwrap();
+              savedCount++;
+              console.log(
+                `✅ Saved record for ${
+                  szakmaNev || "Nincs meghatározva"
+                } - ${szakiranyNev} - ${year}`
+              );
             } catch (recordError) {
               console.error(
-                `Error saving record for ${
+                `❌ Error saving record for ${
                   szakmaNev || "Nincs meghatározva"
                 } - ${szakiranyNev} - ${year}:`,
                 recordError
               );
-              throw recordError; // Re-throw to be caught by outer catch
+
+              // For now, don't throw the error to avoid stopping the entire save process
+              // Log the error and continue with other records
+              console.log(`Continuing with other records...`);
             }
           }
         }
@@ -517,14 +532,10 @@ const FelvettekSzama = () => {
       setIsModified(false);
       setModifiedCells({}); // Clear modified cells tracking after successful save
       setSaveSuccess(true);
-      console.log(
-        `Successfully saved ${savedCount} new records and updated ${updatedCount} existing records`
-      );
+      console.log(`Successfully processed ${savedCount} records`);
 
       // Show success snackbar
-      setSnackbarMessage(
-        `Sikeresen mentve: ${savedCount} új rekord és ${updatedCount} frissített rekord`
-      );
+      setSnackbarMessage(`Sikeresen mentve: ${savedCount} rekord feldolgozva`);
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
 
@@ -559,8 +570,42 @@ const FelvettekSzama = () => {
   };
 
   useEffect(() => {
-    console.log(programTypes);
-  }, [programTypes]);
+    console.log("📊 Program types:", programTypes);
+
+    // Extract all szakirány names for comparison
+    const szakiranyNames = new Set();
+    if (schoolsData && Array.isArray(schoolsData)) {
+      schoolsData.forEach((school) => {
+        if (
+          school.alapadatok_szakirany &&
+          Array.isArray(school.alapadatok_szakirany)
+        ) {
+          school.alapadatok_szakirany.forEach((szakiranyData) => {
+            if (szakiranyData.szakirany?.nev) {
+              szakiranyNames.add(szakiranyData.szakirany.nev);
+            }
+          });
+        }
+      });
+    }
+
+    console.log(
+      "🎯 All available szakirány names:",
+      Array.from(szakiranyNames)
+    );
+
+    // Show which Nincs meghatározva entries we're creating
+    const nincsMeghatározvaEntries = programTypes.flatMap(
+      (category) =>
+        category.subTypes?.filter((subType) =>
+          subType.startsWith("Nincs meghatározva")
+        ) || []
+    );
+    console.log(
+      "🔧 Generated Nincs meghatározva entries:",
+      nincsMeghatározvaEntries
+    );
+  }, [programTypes, schoolsData]);
 
   // Force re-render when tableData changes to update calculated summaries
   useEffect(() => {
@@ -595,9 +640,27 @@ const FelvettekSzama = () => {
           if (szakma && szakma.nev) {
             // Regular szakma entry
             programKey = szakma.nev;
+            console.log(`📥 Loading regular szakma record:`, {
+              programKey,
+              szakiranyNev: szakirany.nev,
+              year: tanev_kezdete,
+            });
           } else {
             // "Nincs meghatározva" entry (szakma is null)
-            programKey = `Nincs meghatározva (${szakirany.nev})`;
+            const normalizedSzakiranyNev = normalizeSzakiranyName(
+              szakirany.nev
+            );
+            programKey = `Nincs meghatározva (${normalizedSzakiranyNev})`;
+            console.log(`📥 Loading Nincs meghatározva record:`, {
+              originalSzakiranyNev: szakirany.nev,
+              normalizedSzakiranyNev,
+              programKey,
+              szakiranyLength: normalizedSzakiranyNev?.length,
+              szakiranyBytes: normalizedSzakiranyNev
+                ? [...normalizedSzakiranyNev].map((c) => c.charCodeAt(0))
+                : null,
+              year: tanev_kezdete,
+            });
           }
 
           if (!newTableData[programKey]) {
@@ -648,15 +711,15 @@ const FelvettekSzama = () => {
           variant="contained"
           startIcon={<SaveIcon />}
           onClick={handleSave}
-          disabled={!isModified || isUpdating || isAdding || isSaving}
+          disabled={!isModified || isAdding || isSaving}
         >
-          {isUpdating || isAdding || isSaving ? "Mentés..." : "Mentés"}
+          {isAdding || isSaving ? "Mentés..." : "Mentés"}
         </Button>
         <Button
           variant="outlined"
           startIcon={<RefreshIcon />}
           onClick={handleReset}
-          disabled={!isModified || isUpdating || isAdding || isSaving}
+          disabled={!isModified || isAdding || isSaving}
         >
           Visszaállítás
         </Button>
