@@ -1080,16 +1080,20 @@ export default function TanuloLetszam() {
 
   return (
     <Box sx={{ p: 3 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        1. Tanulólétszám
+      </Typography>
+
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+        A szakképző intézményben adott tanév október 1-jén szakmai oktatásban
+        (tanulói jogviszonyban és felnőttképzési jogviszonyban) tanulók száma.
+      </Typography>
+
       {/* Info Card */}
       <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
         <CardContent>
           <Typography variant="h6" color="primary" gutterBottom>
-            📊 Tanulólétszám
-          </Typography>
-          <Typography variant="body2">
-            A szakképző intézményben adott tanév október 1-jén szakmai
-            oktatásban (tanulói jogviszonyban és felnőttképzési jogviszonyban)
-            tanulók száma.
+            📊 Adatgyűjtés információ
           </Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
             A trendvizsgálathoz a szakképző intézmény évente gyűjti az október

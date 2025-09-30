@@ -387,7 +387,7 @@ export default function DobbantoProgramAránya() {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Dobbantó programban tanulók aránya a teljes létszámhoz viszonyítva [%]
+        20. Dobbantó programban tanulók aránya
       </Typography>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
@@ -395,29 +395,28 @@ export default function DobbantoProgramAránya() {
         (tanulói összlétszám) és a Dobbantó programban résztvevők aránya.
       </Typography>
 
-      {/* Selected School Alert */}
-      {!selectedSchool && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Nincs iskola kiválasztva - válasszon ki egy iskolát a mentéshez!
-        </Alert>
-      )}
-
-      {selectedSchool && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
-        </Alert>
-      )}
-
       {/* Loading State */}
       {(isFetching || isDobbantoFetching) && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          <CircularProgress size={20} sx={{ mr: 1 }} />
-          {isFetching && isDobbantoFetching
-            ? "Tanulói létszám és Dobbantó adatok betöltése..."
-            : isFetching
-            ? "Tanulói létszám adatok betöltése..."
-            : "Dobbantó program adatok betöltése..."}
-        </Alert>
+        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {/* Content - only show when not loading */}
+      {!isFetching && !isDobbantoFetching && (
+        <>
+          {/* Selected School Alert */}
+          {!selectedSchool && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              Nincs iskola kiválasztva - válasszon ki egy iskolát a mentéshez!
+            </Alert>
+          )}
+
+          {selectedSchool && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
+            </Alert>
+          )}
       )}
 
       {/* Main Data Tables */}
@@ -707,6 +706,8 @@ export default function DobbantoProgramAránya() {
         autoHideDuration={6000}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       />
+        </>
+      )}
     </Box>
   );
 }

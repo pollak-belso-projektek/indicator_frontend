@@ -1,11 +1,18 @@
 import {
+  Box,
+  Typography,
   Table,
-  Spinner,
-  HStack,
-  Tooltip,
-  Text,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
   Button,
-} from "@chakra-ui/react";
+  CircularProgress,
+  Alert,
+} from "@mui/material";
+import { Save as SaveIcon } from "@mui/icons-material";
 
 import React, { useState, useEffect } from "react";
 import {
@@ -183,83 +190,102 @@ export default function Kompetencia() {
   };
 
   return kompetenciaLoading ? (
-    <div
-      style={{
+    <Box
+      sx={{
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        height: "90vh",
+        minHeight: "400px",
       }}
     >
-      <Spinner size="xl" />
-    </div>
+      <CircularProgress size={40} />
+    </Box>
   ) : kompetenciaError ? (
-    <div
-      style={{
+    <Box
+      sx={{
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        height: "90vh",
+        minHeight: "400px",
       }}
     >
-      <h1 style={{ color: "red" }}>Hiba történt az adatok betöltésekor!</h1>
-    </div>
+      <Alert severity="error">
+        Hiba történt az adatok betöltésekor!
+      </Alert>
+    </Box>
   ) : (
-    <>
-      <Text fontSize="2xl" mb={4}>
-        Tanulói létszám adatok
-      </Text>
-      <Text mb={4}>
-        Ideiglenes adatok, az excel táblázatból származnak. <br />
-        Szükség esetén módosíthatóak a cellákba kattintva. <br />A módosítások
-        mentéséhez kérjük, használja a "Mentés" gombot, mellyel a módosításokat
-        elmentheti és véglegesítheti.
-      </Text>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        6. Kompetencia
+      </Typography>
 
-      <HStack>
-        <Tooltip.Root>
-          <Tooltip.Trigger>
-            <Button onClick={handleSave} backgroundColor={"green.700"} mb={4}>
-              Mentés
-            </Button>
-          </Tooltip.Trigger>
-          <Tooltip.Positioner>
-            <Tooltip.Content>Az adatok mentése</Tooltip.Content>
-          </Tooltip.Positioner>
-        </Tooltip.Root>
-      </HStack>
-      <Table.Root size="md" showColumnBorder variant="outline" striped>
-        <Table.Header>
-          <Table.Row>
-            <Table.ColumnHeader rowSpan={2}>Mérési Terület</Table.ColumnHeader>
-            <Table.ColumnHeader rowSpan={2}>Képzési Forma</Table.ColumnHeader>
-            {years.map((e) => {
-              return (
-                <Table.ColumnHeader key={e} colSpan={2}>
-                  {e}/{e + 1}
-                </Table.ColumnHeader>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+        Kompetenciamérés eredményei országos és intézményi szinten
+      </Typography>
+
+      <Button
+        variant="contained"
+        startIcon={<SaveIcon />}
+        onClick={handleSave}
+        sx={{ mb: 3 }}
+      >
+        Mentés
+      </Button>
+
+      <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
+        <Table size="small">
+          <TableHead>
+            <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+              <TableCell
+                rowSpan={2}
+                sx={{ fontWeight: "bold", verticalAlign: "middle" }}
+              >
+                Mérési Terület
+              </TableCell>
+              <TableCell
+                rowSpan={2}
+                sx={{ fontWeight: "bold", verticalAlign: "middle" }}
+              >
+                Képzési Forma
+              </TableCell>
+              {years.map((e) => {
+                return (
+                  <TableCell
+                    key={e}
+                    colSpan={2}
+                    align="center"
+                    sx={{ fontWeight: "bold" }}
+                  >
+                    {e}/{e + 1}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+            <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+              {years.map((e) => {
+                return (
+                  <React.Fragment key={e}>
+                    <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                      Országos
+                    </TableCell>
+                    <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                      Intézményi
+                    </TableCell>
+                  </React.Fragment>
               );
             })}
-          </Table.Row>
-          <Table.Row>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          <TableRow>
+            <TableCell>Matematika</TableCell>
+            <TableCell rowSpan={2} sx={{ verticalAlign: "middle" }}>
+              Technikum
+            </TableCell>
             {years.map((e) => {
               return (
                 <React.Fragment key={e}>
-                  <Table.ColumnHeader>Országos</Table.ColumnHeader>
-                  <Table.ColumnHeader>Intézményi</Table.ColumnHeader>
-                </React.Fragment>
-              );
-            })}
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          <Table.Row>
-            <Table.Cell>Matematika</Table.Cell>
-            <Table.Cell rowSpan={2}>Technikum</Table.Cell>
-            {years.map((e) => {
-              return (
-                <React.Fragment key={e}>
-                  <Table.Cell>
+                  <TableCell align="center">
                     {data[e] ? (
                       <EditableCell
                         value={data[e].matematika.technikum.orszagos}
@@ -276,8 +302,8 @@ export default function Kompetencia() {
                     ) : (
                       "-"
                     )}
-                  </Table.Cell>
-                  <Table.Cell>
+                  </TableCell>
+                  <TableCell align="center">
                     {data[e] ? (
                       <EditableCell
                         value={data[e].matematika.technikum.intezmenyi}
@@ -294,17 +320,17 @@ export default function Kompetencia() {
                     ) : (
                       "-"
                     )}
-                  </Table.Cell>
+                  </TableCell>
                 </React.Fragment>
               );
             })}
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Szövegértés</Table.Cell>
+          </TableRow>
+          <TableRow>
+            <TableCell>Szövegértés</TableCell>
             {years.map((e) => {
               return (
                 <React.Fragment key={e}>
-                  <Table.Cell>
+                  <TableCell align="center">
                     {data[e] ? (
                       <EditableCell
                         value={data[e].szovegertes.technikum.orszagos}
@@ -321,8 +347,8 @@ export default function Kompetencia() {
                     ) : (
                       "-"
                     )}
-                  </Table.Cell>
-                  <Table.Cell>
+                  </TableCell>
+                  <TableCell align="center">
                     {data[e] ? (
                       <EditableCell
                         value={data[e].szovegertes.technikum.intezmenyi}
@@ -339,18 +365,18 @@ export default function Kompetencia() {
                     ) : (
                       "-"
                     )}
-                  </Table.Cell>
+                  </TableCell>
                 </React.Fragment>
               );
             })}
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Matematika</Table.Cell>
-            <Table.Cell rowSpan={2}>Szakképző</Table.Cell>
+          </TableRow>
+          <TableRow>
+            <TableCell>Matematika</TableCell>
+            <TableCell rowSpan={2}>Szakképző</TableCell>
             {years.map((e) => {
               return (
                 <React.Fragment key={e}>
-                  <Table.Cell>
+                  <TableCell>
                     {data[e] ? (
                       <EditableCell
                         value={data[e].matematika.szakkepzo.orszagos}
@@ -367,8 +393,8 @@ export default function Kompetencia() {
                     ) : (
                       "-"
                     )}
-                  </Table.Cell>
-                  <Table.Cell>
+                  </TableCell>
+                  <TableCell>
                     {data[e] ? (
                       <EditableCell
                         value={data[e].matematika.szakkepzo.intezmenyi}
@@ -385,17 +411,17 @@ export default function Kompetencia() {
                     ) : (
                       "-"
                     )}
-                  </Table.Cell>
+                  </TableCell>
                 </React.Fragment>
               );
             })}
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Szövegértés</Table.Cell>
+          </TableRow>
+          <TableRow>
+            <TableCell>Szövegértés</TableCell>
             {years.map((e) => {
               return (
                 <React.Fragment key={e}>
-                  <Table.Cell>
+                  <TableCell>
                     {data[e] ? (
                       <EditableCell
                         value={data[e].szovegertes.szakkepzo.orszagos}
@@ -412,8 +438,8 @@ export default function Kompetencia() {
                     ) : (
                       "-"
                     )}
-                  </Table.Cell>
-                  <Table.Cell>
+                  </TableCell>
+                  <TableCell>
                     {data[e] ? (
                       <EditableCell
                         value={data[e].szovegertes.szakkepzo.intezmenyi}
@@ -430,13 +456,14 @@ export default function Kompetencia() {
                     ) : (
                       "-"
                     )}
-                  </Table.Cell>
+                  </TableCell>
                 </React.Fragment>
               );
             })}
-          </Table.Row>
-        </Table.Body>
-      </Table.Root>
-    </>
+          </TableRow>
+        </TableBody>
+      </Table>
+      </TableContainer>
+    </Box>
   );
 }

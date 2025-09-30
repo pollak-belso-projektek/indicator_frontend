@@ -231,7 +231,7 @@ export default function SzakmaiEredmenyek() {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Szakmai, közismereti, kulturális és sporteredmények
+        8. Szakmai, közismereti, kulturális és sporteredmények
       </Typography>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
