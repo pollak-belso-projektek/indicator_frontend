@@ -16,8 +16,11 @@ import {
   Button,
   Stack,
   Alert,
+  Container,
+  Fade,
+  CircularProgress,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import { Save as SaveIcon, Refresh as RefreshIcon, Build as BuildIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import { selectSelectedSchool } from "../store/slices/authSlice";
 import {
@@ -375,26 +378,41 @@ export default function MuhelyiskolaiReszszakmat() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        21. Műhelyiskolában részszakmát szerzők aránya
-      </Typography>
-
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        A műhelyiskolában részszakmát szerzők aránya a teljes tanulói létszámhoz viszonyítva
-      </Typography>
+    <Container maxWidth="xl">
+      <Fade in={true} timeout={800}>
+        <Box sx={{ minHeight: 'calc(100vh - 120px)' }}>
+          {/* Header Section */}
+          <Card 
+            elevation={6} 
+            sx={{ 
+              mb: 2, 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
+            }}
+          >
+            <CardContent sx={{ p: 2 }}>
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+              
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+                  21. Műhelyiskolában részszakmát szerzők aránya
+                </Typography>
+              </Stack>
+            
+              <Typography variant="body1" sx={{ opacity: 0.8 }}>
+                A műhelyiskolában részszakmát szerzők aránya a teljes tanulói létszámhoz viszonyítva
+              </Typography>
+            </CardContent>
+          </Card>
 
       {/* Loading overlay */}
-      {(isFetching || isWorkshopFetching || isSaving) && (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-          <CircularProgress />
-        </Box>
-      )}
+   
 
       {/* Content - only show when not loading */}
-      {!isFetching && !isWorkshopFetching && (
+   
         <>
-          <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 3 }}>
+          <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 3, position: 'sticky', top: 2, zIndex: 10, backgroundColor: 'white', padding: 1, borderRadius: 1 }}>
             <Button
               variant="contained"
               startIcon={<SaveIcon />}
@@ -433,19 +451,6 @@ export default function MuhelyiskolaiReszszakmat() {
         <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
           Mentetlen módosítások vannak. Ne felejtsd el menteni a
           változtatásokat!
-        </Alert>
-      )}
-
-      {savedData && !isModified && (
-        <Alert severity="success" sx={{ mt: 2, mb: 2 }}>
-          Az adatok sikeresen mentve!
-        </Alert>
-      )}
-
-      {saveError && (
-        <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
-          Hiba történt a mentés során:{" "}
-          {saveError?.data?.message || saveError.message}
         </Alert>
       )}
 
@@ -730,7 +735,9 @@ export default function MuhelyiskolaiReszszakmat() {
         onClose={() => setSnackbarOpen(false)}
       />
         </>
-      )}
-    </Box>
+    
+        </Box>
+      </Fade>
+    </Container>
   );
 }

@@ -3,9 +3,7 @@ import { Typography } from "@mui/material";
 const FelvettekSzamaInfo = () => {
   return (
     <>
-      <Typography variant="h4" component="h1" gutterBottom>
-        9. évfolyamra jelentkezések és felvettek száma és aránya
-      </Typography>
+    
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         Az indikátor azt mutatja meg, hogy hányszoros a jelentkezési arány a
