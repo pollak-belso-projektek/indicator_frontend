@@ -186,10 +186,7 @@ export const indicatorApi = createApi({
           await queryFulfilled;
           // Force refetch of related queries
           dispatch(
-            indicatorApi.util.invalidateTags([
-              "TanuloLetszam",
-              "TanugyiAdatok"
-            ])
+            indicatorApi.util.invalidateTags(["TanuloLetszam", "TanugyiAdatok"])
           );
         } catch {}
       },
@@ -218,10 +215,7 @@ export const indicatorApi = createApi({
           await queryFulfilled;
           // Force refetch of related queries
           dispatch(
-            indicatorApi.util.invalidateTags([
-              "TanuloLetszam",
-              "TanugyiAdatok"
-            ])
+            indicatorApi.util.invalidateTags(["TanuloLetszam", "TanugyiAdatok"])
           );
         } catch {}
       },
@@ -249,10 +243,7 @@ export const indicatorApi = createApi({
           await queryFulfilled;
           // Force refetch of related queries
           dispatch(
-            indicatorApi.util.invalidateTags([
-              "TanugyiAdatok",
-              "TanuloLetszam"
-            ])
+            indicatorApi.util.invalidateTags(["TanugyiAdatok", "TanuloLetszam"])
           );
         } catch {}
       },
@@ -754,12 +745,19 @@ export const indicatorApi = createApi({
 
     // EgyOktatoraJutoTanulo (Students per Teacher)
     getAllEgyOktatoraJutoTanulo: build.query({
-      query: () => "egyoktatorajutotanulo",
+      query: () => "egy_oktatora_juto_tanulo",
       providesTags: ["EgyOktatoraJutoTanulo"],
+    }),
+    getEgyOktatoraJutoTanuloByAlapadatok: build.query({
+      query: ({ alapadatok_id, year }) =>
+        `egy_oktatora_juto_tanulo/${alapadatok_id}/${year}`,
+      providesTags: (result, error, alapadatok_id) => [
+        { type: "EgyOktatoraJutoTanulo", id: alapadatok_id },
+      ],
     }),
     addEgyOktatoraJutoTanulo: build.mutation({
       query: (data) => ({
-        url: "egyoktatorajutotanulo",
+        url: "egy_oktatora_juto_tanulo",
         method: "POST",
         body: data,
       }),
@@ -767,16 +765,9 @@ export const indicatorApi = createApi({
     }),
     updateEgyOktatoraJutoTanulo: build.mutation({
       query: ({ id, ...data }) => ({
-        url: `egyoktatorajutotanulo/${id}`,
+        url: `egy_oktatora_juto_tanulo/${id}`,
         method: "PUT",
         body: data,
-      }),
-      invalidatesTags: ["EgyOktatoraJutoTanulo"],
-    }),
-    deleteEgyOktatoraJutoTanulo: build.mutation({
-      query: (id) => ({
-        url: `egyoktatorajutotanulo/${id}`,
-        method: "DELETE",
       }),
       invalidatesTags: ["EgyOktatoraJutoTanulo"],
     }),
@@ -1038,9 +1029,9 @@ export const {
   useUpdateSZMSZMutation,
   useDeleteSZMSZMutation,
   useGetAllEgyOktatoraJutoTanuloQuery,
+  useGetEgyOktatoraJutoTanuloByAlapadatokQuery,
   useAddEgyOktatoraJutoTanuloMutation,
   useUpdateEgyOktatoraJutoTanuloMutation,
-  useDeleteEgyOktatoraJutoTanuloMutation,
   useGetIntezmenyiNeveltsegByYearQuery,
   useGetAllIntezmenyiNeveltsegQuery,
   useAddIntezmenyiNeveltsegMutation,
