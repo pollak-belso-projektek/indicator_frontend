@@ -19,8 +19,10 @@ import {
   Chip,
   CircularProgress,
   Snackbar,
+  Container,
+  Fade,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import { Save as SaveIcon, Refresh as RefreshIcon, Work as WorkIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import { selectSelectedSchool, selectUserId } from "../store/slices/authSlice";
 import TableLoadingOverlay from "../components/shared/TableLoadingOverlay";
@@ -546,16 +548,33 @@ export default function OktatokEgyebTev() {
   };
 
   return (
-    <Box p={1}>
-      <Typography variant="h5" gutterBottom>
-        23. Oktatók egyéb tevékenységei
-      </Typography>
-
-      <Typography variant="body1" color="text.secondary" paragraph>
-        Ez az oldal az oktatók iskolarendszeren kívüli egyéb tevékenységeit
-        gyűjti össze különböző kategóriákban. Minden kategóriában megadható,
-        hogy hány oktató végez ilyen jellegű tevékenységet.
-      </Typography>
+    <Container maxWidth="xl">
+      <Fade in={true} timeout={800}>
+        <Box sx={{ minHeight: 'calc(100vh - 120px)' }}>
+          {/* Header Section */}
+          <Card 
+            elevation={6} 
+            sx={{ 
+              mb: 2, 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
+            }}
+          >
+            <CardContent sx={{ p: 2 }}>
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                <WorkIcon sx={{ fontSize: 40, color: '#ffeb3b' }} />
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+                  23. Oktatók egyéb tevékenységei
+                </Typography>
+              </Stack>
+            
+              <Typography variant="body1" sx={{ opacity: 0.8 }}>
+                Az oktatók iskolarendszeren kívüli egyéb tevékenységei különböző kategóriákban.
+              </Typography>
+            </CardContent>
+          </Card>
 
       {/* Loading State */}
       {isLoading && (
@@ -906,6 +925,8 @@ export default function OktatokEgyebTev() {
       </Snackbar>
         </>
       )}
-    </Box>
+        </Box>
+      </Fade>
+    </Container>
   );
 }

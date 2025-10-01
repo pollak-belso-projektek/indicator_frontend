@@ -21,6 +21,8 @@ import {
   Grid,
   Chip,
   CircularProgress,
+  Container,
+  Fade,
 } from "@mui/material";
 import {
   Save as SaveIcon,
@@ -28,6 +30,7 @@ import {
   BarChart as BarChartIcon,
   TrendingUp as TrendingUpIcon,
   Assessment as AssessmentIcon,
+  AccessibleForward as AccessibleIcon,
 } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import { selectSelectedSchool } from "../store/slices/authSlice";
@@ -479,14 +482,33 @@ export default function HatanyosHelyzetuTanulokAranya() {
   }, [hhApiData, selectedSchool, schoolYears]);
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        18. Hátrányos helyzetű tanulók aránya
-      </Typography>
-
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        A hátrányos és halmozottan hátrányos helyzetű tanulók arányának nyomon követése
-      </Typography>
+    <Container maxWidth="xl">
+      <Fade in={true} timeout={800}>
+        <Box sx={{ minHeight: 'calc(100vh - 120px)' }}>
+          {/* Header Section */}
+          <Card 
+            elevation={6} 
+            sx={{ 
+              mb: 2, 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
+            }}
+          >
+            <CardContent sx={{ p: 2 }}>
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                <AccessibleIcon sx={{ fontSize: 40, color: '#ffeb3b' }} />
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+                  18. Hátrányos helyzetű tanulók aránya
+                </Typography>
+              </Stack>
+            
+              <Typography variant="body1" sx={{ opacity: 0.8 }}>
+                A hátrányos és halmozottan hátrányos helyzetű tanulók arányának nyomon követése
+              </Typography>
+            </CardContent>
+          </Card>
 
       {/* Loading State */}
       {(isFetching || isHhFetching) && (
@@ -1607,6 +1629,8 @@ export default function HatanyosHelyzetuTanulokAranya() {
       )}
         </>
       )}
-    </Box>
+        </Box>
+      </Fade>
+    </Container>
   );
 }
