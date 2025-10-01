@@ -546,8 +546,8 @@ export default function OktatokEgyebTev() {
   };
 
   return (
-    <Box p={3}>
-      <Typography variant="h4" gutterBottom>
+    <Box p={1}>
+      <Typography variant="h5" gutterBottom>
         23. Oktatók egyéb tevékenységei
       </Typography>
 

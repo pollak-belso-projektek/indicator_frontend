@@ -39,7 +39,7 @@ const evszamok = generateSchoolYears();
 export default function TanuloLetszam() {
   const selectedSchool = useSelector(selectSelectedSchool);
 
-  // API hooks
+  // API hooks - Database 
   const {
     data: apiStudentData,
     error: _fetchError,
@@ -53,6 +53,8 @@ export default function TanuloLetszam() {
   const { data: schoolsData, isLoading: _isLoadingSchools } =
     useGetAllAlapadatokQuery();
 
+
+  // Kréta export
   const { data: tanugyiData } = useGetTanugyiAdatokQuery({
     alapadatok_id: selectedSchool?.id,
     ev: 2024,

@@ -20,6 +20,7 @@ import {
   Tab,
   Grid,
   Chip,
+  CircularProgress,
 } from "@mui/material";
 import {
   Save as SaveIcon,
@@ -1229,11 +1230,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
             </Alert>
           )}
 
-          {savedData && !isModified && (
-            <Alert severity="success" sx={{ mt: 2 }}>
-              Az adatok sikeresen mentve!
-            </Alert>
-          )}
+     
         </Box>
       )}
 

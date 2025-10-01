@@ -82,6 +82,7 @@ const routeToTableMapping = {
   "/szakkepzesi-munkaszerződes-arany": "szakmai_vizsga_eredmenyek",
   "/oktatok-egyeb-tev": "oktato_egyeb_tev",
   "/oktato_per_diak": "egy_oktatora_juto_tanulo",
+  "/egy-oktatora-juto-ossz-diak": "egy_oktatora_juto_tanulo",
   "/logs": "log",
 };
 

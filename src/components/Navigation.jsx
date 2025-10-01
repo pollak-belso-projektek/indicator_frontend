@@ -62,7 +62,7 @@ const PageNumbering = {
   "/tanulo_letszam": 1,
   "/felvettek_szama": 2,
   "/oktato_per_diak": 3,
-  "/szmsz": 4, // Note: This page doesn't exist yet in navigation
+  "/szakkepzesi-munkaszerződes-arany": 4, // Note: This page doesn't exist yet in navigation
   "/felnottkepzes": 5,
   "/kompetencia": 6,
   "/nszfh-meresek": 7,
@@ -85,7 +85,7 @@ const PageNumbering = {
   "/palyazatok": 24, // Note: This page doesn't exist yet in navigation
   "/tanulmani-eredmeny": 25, // Note: This page doesn't exist yet in navigation
   "/hianyzas": 26, // Note: This page doesn't exist yet in navigation
-  "/egy-oktatora-juto-ossz-diak": 27, // Note: This page doesn't exist yet in navigation
+  "/egy-oktatora-juto-ossz-diak": 27,
   "/nyelvvizsgak-szama": 28, // Note: This page doesn't exist yet in navigation
   "/projektek": 29, // Note: This page doesn't exist yet in navigation
   "/dualis-kepzohelyek-szama": 30, // Note: This page doesn't exist yet in navigation
@@ -281,6 +281,12 @@ const NavigationCategories = {
         name: "Egy oktatóra jutó diákok",
         icon: MdBookmark,
         link: "/oktato_per_diak",
+        tableName: "egy_oktatora_juto_tanulo",
+      },
+      {
+        name: "Egy oktatóra jutó össz diák",
+        icon: MdBookmark,
+        link: "/egy-oktatora-juto-ossz-diak",
         tableName: "egy_oktatora_juto_tanulo",
       },
       {
