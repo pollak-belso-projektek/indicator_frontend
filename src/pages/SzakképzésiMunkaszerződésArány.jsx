@@ -37,12 +37,18 @@ export default function SzakképzésiMunkaszerződésArány() {
 
   const { data: szmszData } = useGetAllSZMSZQuery({
     alapadatok_id: selectedSchool?.id,
-    tanev: 2024,
+    tanev:
+      new Date().getMonth() >= 8
+        ? new Date().getFullYear()
+        : new Date().getFullYear() - 1,
   });
 
   const { data } = useGetTanugyiAdatokQuery({
     alapadatok_id: selectedSchool?.id,
-    ev: 2024,
+    ev:
+      new Date().getMonth() >= 8
+        ? new Date().getFullYear()
+        : new Date().getFullYear() - 1,
   });
 
   const [addSZMSZ, { isLoading: isAdding }] = useAddSZMSZMutation();
