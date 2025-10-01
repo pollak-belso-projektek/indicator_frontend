@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -8,7 +8,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
-import { Alert, TextField, Button, Stack } from "@mui/material";
+import { Alert, TextField, Button, Stack, Typography } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../../utils/schoolYears";
 import { selectSelectedSchool } from "../../store/slices/authSlice";
@@ -16,6 +16,7 @@ import {
   useGetFelvettekSzamaByAlapadatokIdAndYearQuery,
   useAddFelvettekSzamaMutation,
   useGetAllAlapadatokQuery,
+  useGetTanugyiAdatokQuery,
 } from "../../store/api/apiSlice";
 import FelvettekSzamaInfo from "../../components/infos/FelvettekSzamaInfo";
 import {
@@ -29,7 +30,7 @@ const FelvettekSzama = () => {
   const selectedSchool = useSelector(selectSelectedSchool);
 
   // API hooks
-  const { data: apiAdmissionData, isLoading: isFetching } =
+  const { data: apiAdmissionData, isLoading: _isFetching } =
     useGetFelvettekSzamaByAlapadatokIdAndYearQuery({
       alapadatokId: selectedSchool?.id,
       year:
@@ -38,7 +39,17 @@ const FelvettekSzama = () => {
           : new Date().getFullYear(),
     });
 
-  const { data: schoolsData, isLoading: isLoadingSchools } =
+  const { data: tanugyiData } = useGetTanugyiAdatokQuery({
+    alapadatok_id: selectedSchool?.id,
+    ev:
+      new Date().getMonth() >= 8
+        ? new Date().getFullYear()
+        : new Date().getFullYear() - 1,
+  });
+
+  console.log("Fetched tanügyi adatok:", tanugyiData);
+
+  const { data: schoolsData, isLoading: _isLoadingSchools } =
     useGetAllAlapadatokQuery();
 
   const [addAdmissionData, { isLoading: isAdding }] =
@@ -47,15 +58,112 @@ const FelvettekSzama = () => {
   // State for the integrated table data
   const [tableData, setTableData] = useState({});
   const [isModified, setIsModified] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [saveError, setSaveError] = useState(null);
+  const [_saveSuccess, setSaveSuccess] = useState(false);
+  const [_saveError, setSaveError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [dataSource, setDataSource] = useState(null);
 
   // Track which specific cells have been modified by the user
   const [modifiedCells, setModifiedCells] = useState({});
+
+  console.log("Current data source:", dataSource);
+
+  // Extract admission data calculation logic into a separate function
+  // This mimics the approach used in Tanuloletszam.jsx
+  const calculateFromTanugyiData = useCallback(() => {
+    if (
+      !tanugyiData ||
+      !Array.isArray(tanugyiData) ||
+      tanugyiData.length === 0
+    ) {
+      return {};
+    }
+
+    const calculatedData = {};
+
+    let evfolyamStats = {};
+
+    // Process tanugyi data by szakirany and szakma
+    tanugyiData.forEach((student) => {
+      // Extract admission year from felvetel_taneve (e.g., "2024/2025" -> 2024)
+      const admissionYear = student.felvetel_taneve
+        ? parseInt(student.felvetel_taneve.split("/")[0])
+        : null;
+
+      if (!admissionYear) {
+        return;
+      }
+
+      // Track evfolyam distribution for debugging
+      const evfolyam = student.evfolyam || "Unknown";
+      evfolyamStats[evfolyam] = (evfolyamStats[evfolyam] || 0) + 1;
+
+      // Only count students with "Tanulói jogviszony"
+      const jogviszony = student.tanulo_jogviszonya;
+      if (jogviszony !== "Tanulói jogviszony") {
+        return;
+      }
+
+      // Only count students admitted to 9th grade (9. évfolyam)
+      // Check if evfolyam contains "1/" or similar patterns indicating first year
+      const isFirstYear = evfolyam.includes("1/") || evfolyam.includes("9.");
+      if (!isFirstYear) {
+        return;
+      }
+
+      // Extract szakma name from uj_szkt_szakma_tipusa
+      let szakmaNev = student.uj_szkt_szakma_tipusa;
+      if (szakmaNev && szakmaNev.includes(" - ")) {
+        szakmaNev = szakmaNev.split(" - ")[0].trim();
+      }
+
+      // Extract szakirany name from uj_Szkt_agazat_tipusa
+      let szakiranyNev = student.uj_Szkt_agazat_tipusa;
+      if (szakiranyNev && szakiranyNev.includes(" - ")) {
+        szakiranyNev = szakiranyNev.split(" - ")[0].trim();
+      }
+
+      // Determine the category name based on szakma availability
+      let categoryName;
+
+      // If szakma is "Na" or empty/null, use "Nincs meghatározva" format
+      if (!szakmaNev || szakmaNev === "Na" || szakmaNev.trim() === "") {
+        if (szakiranyNev) {
+          categoryName = `Nincs meghatározva (${szakiranyNev})`;
+        } else {
+          categoryName = "Nincs meghatározva";
+        }
+      } else {
+        // Use the actual szakma name
+        categoryName = szakmaNev;
+      }
+
+      // Initialize the category if it doesn't exist
+      if (!calculatedData[categoryName]) {
+        calculatedData[categoryName] = {};
+      }
+
+      // Initialize the year if it doesn't exist
+      if (!calculatedData[categoryName][admissionYear]) {
+        calculatedData[categoryName][admissionYear] = {
+          jelentkezok_szama_9: 0,
+          felvettek_szama_9: 0,
+          felvettek_letszam_9: 0,
+        };
+      }
+
+      // Since this is from tanugyi data (already admitted students),
+      // we only count them as admitted students, not as applicants
+      // Leave jelentkezok_szama_9 as 0 since we don't have applicant data
+      calculatedData[categoryName][admissionYear].felvettek_szama_9 += 1;
+      // We don't have capacity data from tanugyi records, so leave felvettek_letszam_9 as 0
+    });
+
+    return calculatedData;
+  }, [tanugyiData]);
 
   // Utility function to normalize szakirány names (trim whitespace, normalize special chars)
   const normalizeSzakiranyName = (name) => {
@@ -96,14 +204,6 @@ const FelvettekSzama = () => {
         school.alapadatok_szakirany.forEach((szakiranyData) => {
           const szakirany = szakiranyData.szakirany;
           if (szakirany) {
-            console.log(`📚 Found szakirány in school data:`, {
-              szakiranyNev: szakirany.nev,
-              length: szakirany.nev?.length,
-              bytes: szakirany.nev
-                ? [...szakirany.nev].map((c) => c.charCodeAt(0))
-                : null,
-            });
-
             // Add szakirány as category
             categories.push({
               category: "Szakirány",
@@ -613,14 +713,28 @@ const FelvettekSzama = () => {
     // The component will re-render automatically due to state change
   }, [tableData]);
 
-  // Load existing API data into tableData when component mounts or data changes
+  // Load data with priority: apiAdmissionData first, then fallback to calculated tanugyiData
   useEffect(() => {
-    if (
+    const hasAdmissionData =
       apiAdmissionData &&
       Array.isArray(apiAdmissionData) &&
-      apiAdmissionData.length > 0
-    ) {
-      console.log("Loading existing admission data:", apiAdmissionData);
+      apiAdmissionData.length > 0;
+    const hasTanugyiData =
+      tanugyiData && Array.isArray(tanugyiData) && tanugyiData.length > 0;
+
+    console.log("Data loading check:", {
+      hasAdmissionData,
+      hasTanugyiData,
+      apiAdmissionDataLength: apiAdmissionData?.length,
+      tanugyiDataLength: tanugyiData?.length,
+    });
+
+    if (hasAdmissionData) {
+      console.log(
+        "Loading existing admission data from API:",
+        apiAdmissionData
+      );
+      setDataSource("FelvettekSzama");
 
       const newTableData = {};
 
@@ -680,10 +794,21 @@ const FelvettekSzama = () => {
         }
       });
 
-      console.log("Transformed table data:", newTableData);
+      console.log("Transformed API table data:", newTableData);
       setTableData(newTableData);
+    } else if (hasTanugyiData) {
+      console.log("No admission data found, calculating from tanugyi data...");
+      setDataSource("TanugyiAdatok");
+
+      const calculatedData = calculateFromTanugyiData();
+      console.log("Setting calculated data:", calculatedData);
+      setTableData(calculatedData);
+    } else {
+      console.log("No data available to load");
+      setDataSource(null);
+      setTableData({});
     }
-  }, [apiAdmissionData]);
+  }, [apiAdmissionData, tanugyiData, calculateFromTanugyiData]);
 
   return (
     <Box sx={{ p: 3 }}>
@@ -700,6 +825,47 @@ const FelvettekSzama = () => {
           rendszer.
         </Alert>
       )}
+
+      {dataSource && (
+        <Box
+          sx={{
+            mt: 2,
+            mb: 2,
+            p: 2,
+            backgroundColor:
+              dataSource === "FelvettekSzama"
+                ? "#e8f5e8"
+                : dataSource.includes("fallback")
+                ? "#fff8e1"
+                : "#fff3e0",
+            borderRadius: 1,
+            border: `1px solid ${
+              dataSource === "FelvettekSzama"
+                ? "#4caf50"
+                : dataSource.includes("fallback")
+                ? "#ffb300"
+                : "#ff9800"
+            }`,
+          }}
+        >
+          <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+            📊 Adatforrás:{" "}
+            {dataSource === "FelvettekSzama"
+              ? "Felvettek Száma API (elsődleges)"
+              : dataSource.includes("fallback")
+              ? "Felvettek Száma API + Tanügyi adatok (vegyes)"
+              : "Tanügyi adatok API (számított)"}
+          </Typography>
+          <Typography variant="body2" sx={{ fontSize: "0.85rem", mt: 0.5 }}>
+            {dataSource === "FelvettekSzama"
+              ? "A mentett felvételi adatok kerülnek megjelenítésre."
+              : dataSource.includes("fallback")
+              ? "A mentett felvételi adatok 0 értékei tanügyi adatokból kerülnek kiegészítésre."
+              : "Nincs mentett felvételi adat, ezért a tanügyi adatokból kerül kiszámításra. Csak a felvettek száma töltődik be (jelentkezők száma nem ismert)."}
+          </Typography>
+        </Box>
+      )}
+
       {isModified && (
         <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
           Mentetlen módosítások vannak. Ne felejtsd el menteni a
