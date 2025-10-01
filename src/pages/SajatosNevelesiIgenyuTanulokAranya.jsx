@@ -367,7 +367,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           >
             <CardContent sx={{ p: 2 }}>
               <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-                <AccessibleIcon sx={{ fontSize: 40, color: '#ffeb3b' }} />
+               
                 <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
                   19. Sajátos nevelési igényű tanulók aránya
                 </Typography>

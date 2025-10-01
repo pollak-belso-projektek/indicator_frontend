@@ -40,6 +40,7 @@ import {
   useAddHHesHHHNevelesuTanulokMutation,
   useUpdateHHesHHHNevelesuTanulokMutation,
 } from "../store/api/apiSlice";
+import NotificationSnackbar from "../components/shared/NotificationSnackbar";
 
 export default function HatanyosHelyzetuTanulokAranya() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -125,6 +126,21 @@ export default function HatanyosHelyzetuTanulokAranya() {
   const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+
+  // Notification state
+  const [notification, setNotification] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const showNotification = (message, severity = "success") => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const closeNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -357,12 +373,14 @@ export default function HatanyosHelyzetuTanulokAranya() {
         setSavedData(JSON.parse(JSON.stringify(hhStudentsCount)));
         setIsModified(false);
 
-        // Show success message (you may want to add a snackbar for this)
-        console.log("HH data saved successfully");
+        showNotification("A hátrányos helyzetű tanulók adatai sikeresen mentve!");
       }
     } catch (error) {
       console.error("Error saving HH data:", error);
-      // Handle error (you may want to show an error message)
+      showNotification(
+        "Hiba történt az adatok mentése során. Kérjük, próbálja újra!",
+        "error"
+      );
     }
   };
 
@@ -498,7 +516,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
           >
             <CardContent sx={{ p: 2 }}>
               <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-                <AccessibleIcon sx={{ fontSize: 40, color: '#ffeb3b' }} />
+              
                 <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
                   18. Hátrányos helyzetű tanulók aránya
                 </Typography>
@@ -570,6 +588,25 @@ export default function HatanyosHelyzetuTanulokAranya() {
       {/* Tab Content */}
       {activeTab === 0 && (
         <Box>
+              {/* Action Buttons */}
+          <Stack direction="row" spacing={2} sx={{ mt: 3 , mb: 2, position: 'sticky', top: 2, p: 2, zIndex: 10, backgroundColor: 'white', py: 1 }}>
+            <Button
+              variant="contained"
+              startIcon={<SaveIcon />}
+              onClick={handleSave}
+              disabled={!isModified || isAdding || isUpdating}
+            >
+              {isAdding || isUpdating ? "Mentés..." : "Mentés"}
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleReset}
+              disabled={!isModified || !savedData || isAdding || isUpdating}
+            >
+              Visszaállítás
+            </Button>
+          </Stack>
           {/* DATA TABLES TAB CONTENT */}
           {/* 1. HH tanulók aránya - AUTO CALCULATED PERCENTAGES */}
           <Card sx={{ mb: 4, boxShadow: 3 }}>
@@ -1224,25 +1261,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
             </CardContent>
           </Card>
 
-          {/* Action Buttons */}
-          <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSave}
-              disabled={!isModified || isAdding || isUpdating}
-            >
-              {isAdding || isUpdating ? "Mentés..." : "Mentés"}
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleReset}
-              disabled={!isModified || !savedData || isAdding || isUpdating}
-            >
-              Visszaállítás
-            </Button>
-          </Stack>
+      
 
           {/* Status Messages */}
           {isModified && (
@@ -1610,27 +1629,19 @@ export default function HatanyosHelyzetuTanulokAranya() {
         </Box>
       )}
 
-      {/* Status Messages for all tabs */}
-      {activeTab === 0 && (
-        <>
-          {isModified && (
-            <Alert severity="warning" sx={{ mt: 2 }}>
-              Mentetlen módosítások vannak. Ne felejtsd el menteni a
-              változtatásokat!
-            </Alert>
-          )}
 
-          {savedData && !isModified && (
-            <Alert severity="success" sx={{ mt: 2 }}>
-              Az adatok sikeresen mentve!
-            </Alert>
-          )}
-        </>
-      )}
         </>
       )}
         </Box>
       </Fade>
+
+      {/* Notification Snackbar */}
+      <NotificationSnackbar
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={closeNotification}
+      />
     </Container>
   );
 }

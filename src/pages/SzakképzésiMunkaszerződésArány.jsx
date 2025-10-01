@@ -1557,11 +1557,7 @@ export default function SzakképzésiMunkaszerződésArány() {
       {/* Instructions Card */}
       <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
         <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Szerintem ezt is számíthatjuk az 1. indikátorhoz feltöltött tanulók
-            exportból (tartalmazza a szakmai munkszerződéssel mezőt, abból
-            megszámolhatjuk).
-          </Typography>
+     
 
           <Typography variant="body2" color="text.primary" sx={{ mb: 2 }}>
             <strong>Megjegyzés:</strong>
@@ -1605,6 +1601,26 @@ export default function SzakképzésiMunkaszerződésArány() {
           </Box>
         </CardContent>
       </Card>
+        <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 2, position: 'sticky', top: 2, backgroundColor: 'white', zIndex: 10, py: 1 }}>
+        <Button
+          variant="contained"
+          startIcon={<SaveIcon />}
+          onClick={handleSave}
+          disabled={!isModified || isUpdating || isAdding || isSaving}
+        >
+          {isUpdating || isAdding || isSaving ? "Mentés..." : "Mentés"}
+        </Button>
+        <Button
+          variant="outlined"
+          startIcon={<RefreshIcon />}
+          onClick={handleReset}
+          disabled={
+            !isModified || !savedData || isUpdating || isAdding || isSaving
+          }
+        >
+          Visszaállítás
+        </Button>
+      </Stack>
       {/* Percentage Table */}
       {renderTableSection(
         "percentage",
@@ -1627,26 +1643,7 @@ export default function SzakképzésiMunkaszerződésArány() {
         "#e8f5e8"
       )}
       {/* Action Buttons */}
-      <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-        <Button
-          variant="contained"
-          startIcon={<SaveIcon />}
-          onClick={handleSave}
-          disabled={!isModified || isUpdating || isAdding || isSaving}
-        >
-          {isUpdating || isAdding || isSaving ? "Mentés..." : "Mentés"}
-        </Button>
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={handleReset}
-          disabled={
-            !isModified || !savedData || isUpdating || isAdding || isSaving
-          }
-        >
-          Visszaállítás
-        </Button>
-      </Stack>
+    
       {/* Status Messages */}
       {isModified && (
         <Alert severity="warning" sx={{ mt: 2 }}>

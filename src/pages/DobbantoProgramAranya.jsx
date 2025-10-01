@@ -437,7 +437,6 @@ export default function DobbantoProgramAránya() {
               Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
             </Alert>
           )}
-      )}
 
       {/* Main Data Tables */}
       {/* Action Buttons */}

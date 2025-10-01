@@ -18,7 +18,6 @@ import {
   Alert,
   Chip,
   CircularProgress,
-  Snackbar,
   Container,
   Fade,
 } from "@mui/material";
@@ -31,6 +30,7 @@ import {
   useAddOktatokEgyebTevMutation,
   useUpdateOktatokEgyebTevMutation,
 } from "../store/api/oktatokEgyebTevSlice";
+import { NotificationSnackbar } from "../components/shared";
 
 export default function OktatokEgyebTev() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -50,6 +50,15 @@ export default function OktatokEgyebTev() {
     message: "",
     severity: "success",
   });
+
+  // Notification helper functions
+  const showNotification = (message, severity = "success") => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const closeNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
 
   // API hooks - Use multiple individual hooks for each year (React allows this pattern)
   // Since we know the years in advance, we can create fixed hooks
@@ -910,19 +919,12 @@ export default function OktatokEgyebTev() {
       </Card>
 
       {/* Notification Snackbar */}
-      <Snackbar
+      <NotificationSnackbar 
         open={notification.open}
-        autoHideDuration={6000}
-        onClose={() => setNotification({ ...notification, open: false })}
-      >
-        <Alert
-          onClose={() => setNotification({ ...notification, open: false })}
-          severity={notification.severity}
-          sx={{ width: "100%" }}
-        >
-          {notification.message}
-        </Alert>
-      </Snackbar>
+        message={notification.message}
+        severity={notification.severity}
+        onClose={closeNotification}
+      />
         </>
       )}
         </Box>

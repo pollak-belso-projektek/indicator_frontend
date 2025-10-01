@@ -25,7 +25,6 @@ import {
   MdAssessment,
   MdEvent,
   MdTrendingUp,
-  MdAccessible,
   MdGavel,
   MdWork,
   MdClose,
@@ -147,13 +146,13 @@ const NavigationCategories = {
       },
       {
         name: "Sajátos nevelésű",
-        icon: MdAccessible,
+        icon: null,
         link: "/sajatos-nevelesi-igenyu-tanulok-aranya",
         tableName: "sajatos_nevelesu_tanulok",
       },
       {
         name: "HH tanulók aránya",
-        icon: MdAccessible,
+        icon: null,
         link: "/hatranyos-helyezu-tanulok-aranya",
         tableName: "hh_es_hhh_nevelesu_tanulok",
       },

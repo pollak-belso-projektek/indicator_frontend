@@ -394,7 +394,7 @@ export default function MuhelyiskolaiReszszakmat() {
           >
             <CardContent sx={{ p: 2 }}>
               <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-                <BuildIcon sx={{ fontSize: 40, color: '#ffeb3b' }} />
+              
                 <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
                   21. Műhelyiskolában részszakmát szerzők aránya
                 </Typography>
@@ -407,16 +407,12 @@ export default function MuhelyiskolaiReszszakmat() {
           </Card>
 
       {/* Loading overlay */}
-      {(isFetching || isWorkshopFetching || isSaving) && (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-          <CircularProgress />
-        </Box>
-      )}
+   
 
       {/* Content - only show when not loading */}
-      {!isFetching && !isWorkshopFetching && (
+   
         <>
-          <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 3 }}>
+          <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 3, position: 'sticky', top: 2, zIndex: 10, backgroundColor: 'white', padding: 1, borderRadius: 1 }}>
             <Button
               variant="contained"
               startIcon={<SaveIcon />}
@@ -455,19 +451,6 @@ export default function MuhelyiskolaiReszszakmat() {
         <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
           Mentetlen módosítások vannak. Ne felejtsd el menteni a
           változtatásokat!
-        </Alert>
-      )}
-
-      {savedData && !isModified && (
-        <Alert severity="success" sx={{ mt: 2, mb: 2 }}>
-          Az adatok sikeresen mentve!
-        </Alert>
-      )}
-
-      {saveError && (
-        <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
-          Hiba történt a mentés során:{" "}
-          {saveError?.data?.message || saveError.message}
         </Alert>
       )}
 
@@ -752,7 +735,7 @@ export default function MuhelyiskolaiReszszakmat() {
         onClose={() => setSnackbarOpen(false)}
       />
         </>
-      )}
+    
         </Box>
       </Fade>
     </Container>
