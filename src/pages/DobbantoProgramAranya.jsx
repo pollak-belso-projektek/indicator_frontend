@@ -17,8 +17,10 @@ import {
   Stack,
   Alert,
   CircularProgress,
+  Container,
+  Fade,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import { Save as SaveIcon, Refresh as RefreshIcon, TrendingUp as TrendingUpIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import { selectSelectedSchool } from "../store/slices/authSlice";
 import {
@@ -385,15 +387,33 @@ export default function DobbantoProgramAránya() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        20. Dobbantó programban tanulók aránya
-      </Typography>
-
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Adott tanévben a tanulói jogviszonnyal rendelkező tanulók létszáma
-        (tanulói összlétszám) és a Dobbantó programban résztvevők aránya.
-      </Typography>
+    <Container maxWidth="xl">
+      <Fade in={true} timeout={800}>
+        <Box sx={{ minHeight: 'calc(100vh - 120px)' }}>
+          {/* Header Section */}
+          <Card 
+            elevation={6} 
+            sx={{ 
+              mb: 2, 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
+            }}
+          >
+            <CardContent sx={{ p: 2 }}>
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                <TrendingUpIcon sx={{ fontSize: 40, color: '#ffeb3b' }} />
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+                  20. Dobbantó programban tanulók aránya
+                </Typography>
+              </Stack>
+            
+              <Typography variant="body1" sx={{ opacity: 0.8 }}>
+                Adott tanévben a tanulói jogviszonnyal rendelkező tanulók létszáma (tanulói összlétszám) és a Dobbantó programban résztvevők aránya.
+              </Typography>
+            </CardContent>
+          </Card>
 
       {/* Loading State */}
       {(isFetching || isDobbantoFetching) && (
@@ -708,6 +728,8 @@ export default function DobbantoProgramAránya() {
       />
         </>
       )}
-    </Box>
+        </Box>
+      </Fade>
+    </Container>
   );
 }

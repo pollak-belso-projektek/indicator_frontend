@@ -15,7 +15,11 @@ import {
   Alert,
   Divider,
   CircularProgress,
+  Container,
+  Fade,
+  Stack,
 } from "@mui/material";
+import { School as SchoolIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import { selectSelectedSchool } from "../store/slices/authSlice";
 import { useGetTanuloLetszamQuery } from "../store/api/apiSlice";
@@ -185,21 +189,40 @@ export default function Felnottkepzes() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        5. Felnőttképzés
-      </Typography>
+    <Container maxWidth="xl">
+      <Fade in={true} timeout={800}>
+        <Box sx={{ minHeight: 'calc(100vh - 120px)' }}>
+          {/* Header Section */}
+          <Card 
+            elevation={6} 
+            sx={{ 
+              mb: 2, 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
+            }}
+          >
+            <CardContent sx={{ p: 2 }}>
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                <SchoolIcon sx={{ fontSize: 40, color: '#ffeb3b' }} />
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+                  5. Felnőttképzés
+                </Typography>
+              </Stack>
+            
+              <Typography variant="body1" sx={{ opacity: 0.8 }}>
+                Felnőttképzési jogviszonyú tanulók adatai és statisztikái
+              </Typography>
+            </CardContent>
+          </Card>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Felnőttképzési jogviszonyú tanulók adatai és statisztikái
-      </Typography>
-
-      {/* Loading State */}
-      {isFetching && (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-          <CircularProgress />
-        </Box>
-      )}
+          {/* Loading State */}
+          {isFetching && (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+              <CircularProgress />
+            </Box>
+          )}
 
       {/* Content - only show when not loading */}
       {!isFetching && (
@@ -358,6 +381,8 @@ export default function Felnottkepzes() {
       </Card>
         </>
       )}
-    </Box>
+        </Box>
+      </Fade>
+    </Container>
   );
 }
