@@ -18,8 +18,10 @@ import {
   CircularProgress,
   Backdrop,
   Snackbar,
+  Container,
+  Fade,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import { Save as SaveIcon, Refresh as RefreshIcon, Description as DescriptionIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import {
   useGetTanugyiAdatokQuery,
@@ -1525,11 +1527,33 @@ export default function SzakképzésiMunkaszerződésArány() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        4. A szakképző intézményben szakképzési munkaszerződéssel rendelkezők
-        aránya az intézmény szakirányú oktatásában résztvevő
-      </Typography>
+    <Container maxWidth="xl">
+      <Fade in={true} timeout={800}>
+        <Box sx={{ minHeight: 'calc(100vh - 120px)' }}>
+          {/* Header Section */}
+          <Card 
+            elevation={6} 
+            sx={{ 
+              mb: 2, 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
+            }}
+          >
+            <CardContent sx={{ p: 2 }}>
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                <DescriptionIcon sx={{ fontSize: 40, color: '#ffeb3b' }} />
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+                  4. Szakképzési munkaszerződéssel rendelkezők aránya
+                </Typography>
+              </Stack>
+            
+              <Typography variant="body1" sx={{ opacity: 0.8 }}>
+                A szakképző intézményben szakképzési munkaszerződéssel rendelkezők aránya az intézmény szakirányú oktatásában résztvevők között
+              </Typography>
+            </CardContent>
+          </Card>
       {/* Instructions Card */}
       <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
         <CardContent>
@@ -1673,6 +1697,8 @@ export default function SzakképzésiMunkaszerződésArány() {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </Box>
+        </Box>
+      </Fade>
+    </Container>
   );
 }
