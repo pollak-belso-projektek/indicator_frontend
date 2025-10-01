@@ -8,8 +8,8 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
-import { Alert, TextField, Button, Stack } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import { Alert, TextField, Button, Stack, Container, Fade, Card, CardContent, Typography } from "@mui/material";
+import { Save as SaveIcon, Refresh as RefreshIcon, PersonAdd as PersonAddIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../../utils/schoolYears";
 import { selectSelectedSchool } from "../../store/slices/authSlice";
 import {
@@ -686,7 +686,33 @@ const FelvettekSzama = () => {
   }, [apiAdmissionData]);
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Container maxWidth="xl">
+      <Fade in={true} timeout={800}>
+        <Box sx={{ minHeight: 'calc(100vh - 120px)' }}>
+          {/* Header Section */}
+          <Card 
+            elevation={6} 
+            sx={{ 
+              mb: 2, 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
+            }}
+          >
+            <CardContent sx={{ p: 2 }}>
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                <PersonAddIcon sx={{ fontSize: 40, color: '#ffeb3b' }} />
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+                  2. Felvettek száma
+                </Typography>
+              </Stack>
+            
+              <Typography variant="body1" sx={{ opacity: 0.8 }}>
+                A szakképző intézménybe adott tanévben felvett tanulók száma szakirány és szakma szerinti bontásban
+              </Typography>
+            </CardContent>
+          </Card>
       <FelvettekSzamaInfo />
       {selectedSchool && (
         <Alert severity="info" sx={{ mb: 2 }}>
@@ -1194,7 +1220,9 @@ const FelvettekSzama = () => {
         autoHideDuration={6000}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       />
-    </Box>
+        </Box>
+      </Fade>
+    </Container>
   );
 };
 

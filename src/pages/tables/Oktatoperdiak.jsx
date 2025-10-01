@@ -13,8 +13,12 @@ import {
   Alert,
   Snackbar,
   Typography,
+  Container,
+  Fade,
+  Card,
+  CardContent,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import { Save as SaveIcon, Refresh as RefreshIcon, Calculate as CalculateIcon } from "@mui/icons-material";
 import { useEffect, useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -229,7 +233,33 @@ const Oktatoperdiak = () => {
     }
   };
   return (
-    <Box sx={{ margin: 2 }}>
+    <Container maxWidth="xl">
+      <Fade in={true} timeout={800}>
+        <Box sx={{ minHeight: 'calc(100vh - 120px)' }}>
+          {/* Header Section */}
+          <Card 
+            elevation={6} 
+            sx={{ 
+              mb: 2, 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
+            }}
+          >
+            <CardContent sx={{ p: 2 }}>
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                <CalculateIcon sx={{ fontSize: 40, color: '#ffeb3b' }} />
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+                  3. Egy oktatóra jutó tanulók száma
+                </Typography>
+              </Stack>
+            
+              <Typography variant="body1" sx={{ opacity: 0.8 }}>
+                Egy oktatóra jutó tanulói jogviszonyú tanulók számának nyomon követése tanévenként
+              </Typography>
+            </CardContent>
+          </Card>
       {/* Divisor Configuration */}
       <Box sx={{ margin: 2, mb: 3 }}>
         <Stack direction="row" spacing={2} alignItems="center">
@@ -442,7 +472,9 @@ fenntartó által engedélyezett heti óratömeg
           {notification.message}
         </Alert>
       </Snackbar>
-    </Box>
+        </Box>
+      </Fade>
+    </Container>
   );
 };
 
