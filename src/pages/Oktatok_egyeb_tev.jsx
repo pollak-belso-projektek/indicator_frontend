@@ -546,9 +546,9 @@ export default function OktatokEgyebTev() {
   };
 
   return (
-    <Box p={3}>
-      <Typography variant="h4" gutterBottom>
-        Oktatók egyéb tevékenységei
+    <Box p={1}>
+      <Typography variant="h5" gutterBottom>
+        23. Oktatók egyéb tevékenységei
       </Typography>
 
       <Typography variant="body1" color="text.secondary" paragraph>
@@ -557,27 +557,37 @@ export default function OktatokEgyebTev() {
         hogy hány oktató végez ilyen jellegű tevékenységet.
       </Typography>
 
-      <Typography variant="body2" color="text.secondary" paragraph>
-        💡 A módosított cellák sárga háttérrel vannak jelölve. Csak a módosított
-        adatok kerülnek mentésre. Csak nem-negatív egész számok adhatók meg.
-      </Typography>
+      {/* Loading State */}
+      {isLoading && (
+        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
 
-      {/* Action buttons */}
-      <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-        <Button
-          variant="contained"
-          startIcon={<SaveIcon />}
-          onClick={handleSave}
-          disabled={!isModified || isLoading}
-        >
-          {isLoading ? <CircularProgress size={20} /> : "Mentés"}
-        </Button>
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={handleReset}
-          disabled={!isModified || isLoading}
-        >
+      {/* Content - only show when not loading */}
+      {!isLoading && (
+        <>
+          <Typography variant="body2" color="text.secondary" paragraph>
+            💡 A módosított cellák sárga háttérrel vannak jelölve. Csak a módosított
+            adatok kerülnek mentésre. Csak nem-negatív egész számok adhatók meg.
+          </Typography>
+
+          {/* Action buttons */}
+          <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+            <Button
+              variant="contained"
+              startIcon={<SaveIcon />}
+              onClick={handleSave}
+              disabled={!isModified || isLoading}
+            >
+              {isLoading ? <CircularProgress size={20} /> : "Mentés"}
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleReset}
+              disabled={!isModified || isLoading}
+            >
           Visszaállítás
         </Button>
         {isModified && (
@@ -894,6 +904,8 @@ export default function OktatokEgyebTev() {
           {notification.message}
         </Alert>
       </Snackbar>
+        </>
+      )}
     </Box>
   );
 }

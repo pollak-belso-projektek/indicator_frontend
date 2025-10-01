@@ -173,7 +173,7 @@ export default function NszfhMeresek() {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        NSZFH mérések eredményei
+        7. NSZFH mérések eredményei
       </Typography>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>

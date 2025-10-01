@@ -376,41 +376,50 @@ export default function MuhelyiskolaiReszszakmat() {
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Loading overlay */}
-      {(isFetching || isWorkshopFetching || isSaving) && (
-        <TableLoadingOverlay />
-      )}
-
-      <Typography variant="h6" component="h6" gutterBottom>
-        Műhelyiskola
+      <Typography variant="h4" component="h1" gutterBottom>
+        21. Műhelyiskolában részszakmát szerzők aránya
       </Typography>
 
-      <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 3 }}>
-        <Button
-          variant="contained"
-          startIcon={<SaveIcon />}
-          onClick={handleSave}
-          disabled={!isModified || isSaving}
-        >
-          {isSaving ? "Mentés..." : "Mentés"}
-        </Button>
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={handleReset}
-          disabled={!isModified || isSaving}
-        >
-          Visszaállítás
-        </Button>
-      </Stack>
-      {/* Instructions Card */}
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+        A műhelyiskolában részszakmát szerzők aránya a teljes tanulói létszámhoz viszonyítva
+      </Typography>
 
-      {/* Status Messages */}
-      {!selectedSchool && (
-        <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
-          Kérjük, válasszon ki egy iskolát az adatok betöltéséhez és mentéséhez.
-        </Alert>
+      {/* Loading overlay */}
+      {(isFetching || isWorkshopFetching || isSaving) && (
+        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+          <CircularProgress />
+        </Box>
       )}
+
+      {/* Content - only show when not loading */}
+      {!isFetching && !isWorkshopFetching && (
+        <>
+          <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 3 }}>
+            <Button
+              variant="contained"
+              startIcon={<SaveIcon />}
+              onClick={handleSave}
+              disabled={!isModified || isSaving}
+            >
+              {isSaving ? "Mentés..." : "Mentés"}
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleReset}
+              disabled={!isModified || isSaving}
+            >
+              Visszaállítás
+            </Button>
+          </Stack>
+          {/* Instructions Card */}
+
+          {/* Status Messages */}
+          {!selectedSchool && (
+            <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+              Kérjük, válasszon ki egy iskolát az adatok betöltéséhez és mentéséhez.
+            </Alert>
+          )}
 
       {hasPercentageWarning() && (
         <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
@@ -720,6 +729,8 @@ export default function MuhelyiskolaiReszszakmat() {
         severity={snackbarSeverity}
         onClose={() => setSnackbarOpen(false)}
       />
+        </>
+      )}
     </Box>
   );
 }

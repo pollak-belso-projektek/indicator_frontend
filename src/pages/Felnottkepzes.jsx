@@ -187,37 +187,39 @@ export default function Felnottkepzes() {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Felnőttképzés
+        5. Felnőttképzés
       </Typography>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         Felnőttképzési jogviszonyú tanulók adatai és statisztikái
       </Typography>
 
-      {/* Selected School Alert */}
-      {selectedSchool && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
-        </Alert>
-      )}
-
-      {!selectedSchool && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Nincs iskola kiválasztva - az összes iskola adatait összegzi a
-          rendszer.
-        </Alert>
-      )}
-
       {/* Loading State */}
       {isFetching && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          <CircularProgress size={20} sx={{ mr: 1 }} />
-          Adatok betöltése...
-        </Alert>
+        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+          <CircularProgress />
+        </Box>
       )}
 
-      {/* First Table - Read Only (Percentages) */}
-      <Card sx={{ mb: 3 }}>
+      {/* Content - only show when not loading */}
+      {!isFetching && (
+        <>
+          {/* Selected School Alert */}
+          {selectedSchool && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
+            </Alert>
+          )}
+
+          {!selectedSchool && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Nincs iskola kiválasztva - az összes iskola adatait összegzi a
+              rendszer.
+            </Alert>
+          )}
+
+          {/* First Table - Read Only (Percentages) */}
+          <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" component="h2" gutterBottom>
             Felnőttképzési jogviszonyú tanulók aránya (%)
@@ -354,6 +356,8 @@ export default function Felnottkepzes() {
           </Typography>
         </CardContent>
       </Card>
+        </>
+      )}
     </Box>
   );
 }

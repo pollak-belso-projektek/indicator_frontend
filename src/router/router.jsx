@@ -69,6 +69,7 @@ const SzakképzésiMunkaszerződésArányPage = lazy(() =>
   import("../pages/SzakképzésiMunkaszerződésArány.jsx")
 );
 const OktatoPerDiak = lazy(() => import("../pages/tables/Oktatoperdiak.jsx"));
+const EgyOktatoraJutoOsszDiak = lazy(() => import("../pages/EgyOktatoraJutoOsszDiak.jsx"));
 const FelvettekPage = lazy(() => import("../pages/tables/FelvettekSzama.jsx"));
 const LogsPage = lazy(() => import("../pages/Logs.jsx"));
 const OktatokEgyebTevPage = lazy(() =>
@@ -97,6 +98,7 @@ const SCHOOL_REQUIRED_PAGES = [
   "/intezmenyi-nevelesi-mutatok",
   "/szakmai-bemutatok-konferenciak",
   "/oktato_per_diak",
+  "/egy-oktatora-juto-ossz-diak",
   "/oktatok-egyeb-tev",
   "/adat-import",
   "/alapadatok",
@@ -494,6 +496,19 @@ export default function Router() {
                       {withSchoolRequired(
                         <OktatoPerDiak />,
                         "/oktato_per_diak"
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/egy-oktatora-juto-ossz-diak"
+                element={
+                  <TableProtectedRoute>
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <EgyOktatoraJutoOsszDiak />,
+                        "/egy-oktatora-juto-ossz-diak"
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>

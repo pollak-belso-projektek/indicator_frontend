@@ -20,6 +20,7 @@ import {
   Tab,
   Grid,
   Chip,
+  CircularProgress,
 } from "@mui/material";
 import {
   Save as SaveIcon,
@@ -480,64 +481,67 @@ export default function HatanyosHelyzetuTanulokAranya() {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Hátrányos helyzetű tanulók aránya
+        18. Hátrányos helyzetű tanulók aránya
       </Typography>
 
-      {/* School Selection Info */}
-      {selectedSchool && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
-        </Alert>
-      )}
-
-      {!selectedSchool && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Nincs iskola kiválasztva - az összes iskola adatait összegzi a
-          rendszer.
-        </Alert>
-      )}
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+        A hátrányos és halmozottan hátrányos helyzetű tanulók arányának nyomon követése
+      </Typography>
 
       {/* Loading State */}
       {(isFetching || isHhFetching) && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          {isFetching && isHhFetching
-            ? "Tanulólétszám és HH adatok betöltése folyamatban..."
-            : isFetching
-            ? "Tanulólétszám adatok betöltése folyamatban..."
-            : "HH adatok betöltése folyamatban..."}
-        </Alert>
+        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+          <CircularProgress />
+        </Box>
       )}
 
-      {/* Error State */}
-      {(fetchError || hhFetchError) && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          Hiba történt az adatok betöltésekor:
-          {fetchError && " Tanulólétszám adatok"}
-          {fetchError && hhFetchError && ","}
-          {hhFetchError && " HH adatok"}
-        </Alert>
-      )}
+      {/* Content - only show when not loading */}
+      {!isFetching && !isHhFetching && (
+        <>
+          {/* School Selection Info */}
+          {selectedSchool && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
+            </Alert>
+          )}
 
-      {/* Tab Navigation */}
-      <Card sx={{ mb: 3 }}>
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs
-            value={activeTab}
-            onChange={handleTabChange}
-            aria-label="HH tanulók tabs"
-            variant="fullWidth"
-          >
-            <Tab
-              icon={<AssessmentIcon />}
-              label="Adatok és táblázatok"
-              sx={{ fontWeight: "bold", fontSize: "1rem" }}
-            />
-            <Tab
-              icon={<BarChartIcon />}
-              label="Statisztikák és elemzés"
-              sx={{ fontWeight: "bold", fontSize: "1rem" }}
-            />
-          </Tabs>
+          {!selectedSchool && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Nincs iskola kiválasztva - az összes iskola adatait összegzi a
+              rendszer.
+            </Alert>
+          )}
+
+          {/* Error State */}
+          {(fetchError || hhFetchError) && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              Hiba történt az adatok betöltésekor:
+              {fetchError && " Tanulólétszám adatok"}
+              {fetchError && hhFetchError && ","}
+              {hhFetchError && " HH adatok"}
+            </Alert>
+          )}
+
+          {/* Tab Navigation */}
+          <Card sx={{ mb: 3 }}>
+            <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+              <Tabs
+                value={activeTab}
+                onChange={handleTabChange}
+                aria-label="HH tanulók tabs"
+                variant="fullWidth"
+              >
+                <Tab
+                  icon={<AssessmentIcon />}
+                  label="Adatok és táblázatok"
+                  sx={{ fontWeight: "bold", fontSize: "1rem" }}
+                />
+                <Tab
+                  icon={<BarChartIcon />}
+                  label="Statisztikák és elemzés"
+                  sx={{ fontWeight: "bold", fontSize: "1rem" }}
+                />
+              </Tabs>
         </Box>
       </Card>
 
@@ -1226,11 +1230,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
             </Alert>
           )}
 
-          {savedData && !isModified && (
-            <Alert severity="success" sx={{ mt: 2 }}>
-              Az adatok sikeresen mentve!
-            </Alert>
-          )}
+     
         </Box>
       )}
 
@@ -1603,6 +1603,8 @@ export default function HatanyosHelyzetuTanulokAranya() {
               Az adatok sikeresen mentve!
             </Alert>
           )}
+        </>
+      )}
         </>
       )}
     </Box>

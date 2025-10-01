@@ -349,13 +349,26 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
   return (
     <Box sx={{ p: 3 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        19. Sajátos nevelési igényű tanulók aránya
+      </Typography>
+
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+        A sajátos nevelési igényű (SNI) tanulók arányának nyomon követése
+        intézményenként és tanévenként. Ez az indikátor az inkluzív oktatás
+        hatékonyságának és az egyenlő esélyű hozzáférés biztosításának fontos
+        mutatója.
+      </Typography>
+
       {/* Loading State */}
       {isFetching && (
         <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="200px"
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "200px",
+          }}
         >
           <CircularProgress />
         </Box>
@@ -368,46 +381,37 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         </Alert>
       )}
 
-      <Typography variant="h5" component="h1" gutterBottom>
-        Sajátos nevelési igényű tanulók aránya
-      </Typography>
-
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        A sajátos nevelési igényű (SNI) tanulók arányának nyomon követése
-        intézményenként és tanévenként. Ez az indikátor az inkluzív oktatás
-        hatékonyságának és az egyenlő esélyű hozzáférés biztosításának fontos
-        mutatója.
-      </Typography>
-
-      {/* Summary Statistics */}
-
-      <Card sx={{ mb: 2, backgroundColor: "#f8f9fa" }}>
-        <CardContent>
-          <SNIJelmagy />
-          <Typography variant="h6" component="h3" gutterBottom>
-            Összesített statisztikák
-          </Typography>
-          {Object.keys(summaryStats).length === 0 ? (
-            <Box sx={{ textAlign: "center", py: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Nincs statisztikai adat megjelenítésre
+      {/* Content - only show when not loading */}
+      {!isFetching && (
+        <>
+          {/* Summary Statistics */}
+          <Card sx={{ mb: 2, backgroundColor: "#f8f9fa" }}>
+            <CardContent>
+              <SNIJelmagy />
+              <Typography variant="h6" component="h3" gutterBottom>
+                Összesített statisztikák
               </Typography>
-            </Box>
-          ) : (
-            <TableContainer component={Paper} variant="outlined">
-              <Table size="small">
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                    <TableCell sx={{ fontWeight: "bold" }}>Tanév</TableCell>
-                    <TableCell
-                      align="center"
-                      sx={{ fontWeight: "bold", backgroundColor: "#fff3cd" }}
-                    >
-                      SNI tanulók (fő)
-                    </TableCell>
-                    <TableCell
-                      align="center"
-                      sx={{ fontWeight: "bold", backgroundColor: "#d4edda" }}
+              {Object.keys(summaryStats).length === 0 ? (
+                <Box sx={{ textAlign: "center", py: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Nincs statisztikai adat megjelenítésre
+                  </Typography>
+                </Box>
+              ) : (
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                        <TableCell sx={{ fontWeight: "bold" }}>Tanév</TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ fontWeight: "bold", backgroundColor: "#fff3cd" }}
+                        >
+                          SNI tanulók (fő)
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ fontWeight: "bold", backgroundColor: "#d4edda" }}
                     >
                       Összes tanuló (fő)
                     </TableCell>
@@ -892,6 +896,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           {notification.message}
         </Alert>
       </Snackbar>
+        </>
+      )}
     </Box>
   );
 }
