@@ -188,7 +188,9 @@ export const indicatorApi = createApi({
           dispatch(
             indicatorApi.util.invalidateTags(["TanuloLetszam", "TanugyiAdatok"])
           );
-        } catch {}
+        } catch (e) {
+          console.error("Error in addTanuloLetszam onQueryStarted:", e);
+        }
       },
     }),
     updateTanuloLetszam: build.mutation({
@@ -217,7 +219,9 @@ export const indicatorApi = createApi({
           dispatch(
             indicatorApi.util.invalidateTags(["TanuloLetszam", "TanugyiAdatok"])
           );
-        } catch {}
+        } catch (e) {
+          console.error("Error in updateTanuloLetszam onQueryStarted:", e);
+        }
       },
     }),
     addTanugyiAdatok: build.mutation({
@@ -245,7 +249,9 @@ export const indicatorApi = createApi({
           dispatch(
             indicatorApi.util.invalidateTags(["TanugyiAdatok", "TanuloLetszam"])
           );
-        } catch {}
+        } catch (e) {
+          console.error("Error in addTanugyiAdatok onQueryStarted:", e);
+        }
       },
     }),
     addAlkalmazottAdatok: build.mutation({
