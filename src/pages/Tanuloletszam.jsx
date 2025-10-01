@@ -21,8 +21,10 @@ import {
   CircularProgress,
   Backdrop,
   Snackbar,
+  Container,
+  Fade,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import { Save as SaveIcon, Refresh as RefreshIcon, School as SchoolIcon } from "@mui/icons-material";
 import { selectSelectedSchool } from "../store/slices/authSlice";
 import {
   useGetTanuloLetszamQuery,
@@ -1081,15 +1083,33 @@ export default function TanuloLetszam() {
   }, [programTypes, chartData, years, editableData]);
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        1. Tanulólétszám
-      </Typography>
-
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        A szakképző intézményben adott tanév október 1-jén szakmai oktatásban
-        (tanulói jogviszonyban és felnőttképzési jogviszonyban) tanulók száma.
-      </Typography>
+    <Container maxWidth="xl">
+      <Fade in={true} timeout={800}>
+        <Box sx={{ minHeight: 'calc(100vh - 120px)' }}>
+          {/* Header Section */}
+          <Card 
+            elevation={6} 
+            sx={{ 
+              mb: 2, 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
+            }}
+          >
+            <CardContent sx={{ p: 2 }}>
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                <SchoolIcon sx={{ fontSize: 40, color: '#ffeb3b' }} />
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+                  1. Tanulólétszám
+                </Typography>
+              </Stack>
+            
+              <Typography variant="body1" sx={{ opacity: 0.8 }}>
+                A szakképző intézményben adott tanév október 1-jén szakmai oktatásban (tanulói jogviszonyban és felnőttképzési jogviszonyban) tanulók száma
+              </Typography>
+            </CardContent>
+          </Card>
 
       {/* Info Card */}
       <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
@@ -2078,6 +2098,8 @@ export default function TanuloLetszam() {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </Box>
+        </Box>
+      </Fade>
+    </Container>
   );
 }
