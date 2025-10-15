@@ -463,7 +463,7 @@ export default function Vizsgaeredmenyek() {
                                 }
                                 size="small"
                                 inputProps={{
-                                  min: 1,
+                                  min: 0,
                                   max: 5,
                                   step: 0.1,
                                   style: { textAlign: "center" },

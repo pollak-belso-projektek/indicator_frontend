@@ -439,12 +439,12 @@ fenntartó által engedélyezett heti óratömeg
                         size="small"
                         type="number"
                         inputProps={{
-                          min: 1,
+                          min: 0,
                           style: { textAlign: "center" },
                         }}
                         sx={{ width: "80px" }}
                       />
-                    ) : value > 0 ? (
+                    ) : value >= 0 ? (
                       value
                     ) : (
                       "-"
