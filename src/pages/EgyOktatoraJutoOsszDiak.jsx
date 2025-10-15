@@ -38,8 +38,10 @@ import {
   Assessment as AssessmentIcon,
   Input as InputIcon,
   Functions as FunctionsIcon,
+  BarChart as BarChartIcon,
 } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
+import GenericYearlyChart from "../components/GenericYearlyChart";
 
 // TabPanel component for tab content
 function TabPanel({ children, value, index, ...other }) {
@@ -334,6 +336,11 @@ export default function EgyOktatoraJutoOsszDiak() {
                 <Tab 
                   icon={<TimeIcon />} 
                   label="Óratömegek" 
+                  iconPosition="start"
+                />
+                <Tab 
+                  icon={<BarChartIcon />} 
+                  label="Grafikon" 
                   iconPosition="start"
                 />
               </Tabs>
@@ -767,6 +774,46 @@ export default function EgyOktatoraJutoOsszDiak() {
                   </Card>
                 </Grid>
               </Grid>
+              </Box>
+            </TabPanel>
+
+            {/* Tab 4: Grafikon (Chart) */}
+            <TabPanel value={activeTab} index={3}>
+              <Box sx={{ p: 3 }}>
+                {(() => {
+                  // Prepare chart data
+                  const chartData = schoolYears.map((year) => {
+                    const yearData = data[year] || {};
+                    const totalStudents = (yearData.studentCount || 0) + (yearData.adultEducationCount || 0);
+                    const calculatedTeachers = yearData.calculatedTeachers || 0;
+                    const ratio = calculatedTeachers > 0 ? (totalStudents / calculatedTeachers) : 0;
+
+                    return {
+                      year: year,
+                      totalStudents: totalStudents,
+                      calculatedTeachers: calculatedTeachers,
+                      studentTeacherRatio: parseFloat(ratio.toFixed(2)),
+                    };
+                  });
+
+                  const chartDataKeys = ["totalStudents", "calculatedTeachers", "studentTeacherRatio"];
+                  const chartKeyLabels = {
+                    totalStudents: "Összes tanuló",
+                    calculatedTeachers: "Számított oktatói létszám",
+                    studentTeacherRatio: "Egy oktatóra jutó diákok száma",
+                  };
+
+                  return (
+                    <GenericYearlyChart
+                      data={chartData}
+                      dataKeys={chartDataKeys}
+                      keyLabels={chartKeyLabels}
+                      yAxisLabel="Érték"
+                      height={450}
+                      title="Oktató-diák arány alakulása évek szerint"
+                    />
+                  );
+                })()}
               </Box>
             </TabPanel>
           </Card>
