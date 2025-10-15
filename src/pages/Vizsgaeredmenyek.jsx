@@ -214,7 +214,8 @@ export default function Vizsgaeredmenyek() {
         Object.keys(examData[categoryKey]).forEach((subjectKey) => {
           Object.keys(examData[categoryKey][subjectKey]).forEach((year) => {
             const value = examData[categoryKey][subjectKey][year];
-            if (value && value !== "0") {
+            // Allow zero values, only filter out empty/null/undefined
+            if (value !== "" && value !== null && value !== undefined) {
               dataToSave.push({
                 tanev_kezdete: parseInt(year),
                 category_type: categoryKey,

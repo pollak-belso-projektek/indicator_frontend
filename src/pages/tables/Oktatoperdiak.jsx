@@ -153,10 +153,10 @@ const Oktatoperdiak = () => {
         const yearKey = `${year}/${year + 1}`;
         const hetiOraValue = hetiOratomeg[i];
 
+        // Allow zero values, only filter out null/undefined
         if (
           hetiOraValue !== null &&
-          hetiOraValue !== undefined &&
-          hetiOraValue > 0
+          hetiOraValue !== undefined
         ) {
           const recordData = {
             alapadatok_id: selectedSchool?.id,
