@@ -32,6 +32,10 @@ import {
   FormControl,
   InputLabel,
   Grid,
+  Tabs,
+  Tab,
+  Container,
+  Fade,
 } from "@mui/material";
 import {
   Save as SaveIcon,
@@ -40,6 +44,8 @@ import {
   Delete as DeleteIcon,
   Close as CloseIcon,
   Add as AddIcon,
+  Assessment as AssessmentIcon,
+  BarChart as BarChartIcon,
 } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import {
@@ -49,6 +55,7 @@ import {
   useDeleteIntezmenyiNeveltsegMutation,
   useGetAllAlapadatokQuery,
 } from "../store/api/apiSlice";
+import GenericYearlyChart from "../components/GenericYearlyChart";
 
 export default function IntezmenyiNeveltseg() {
   const schoolYears = generateSchoolYears();
@@ -73,6 +80,7 @@ export default function IntezmenyiNeveltseg() {
   const [educationData, setEducationData] = useState([]);
   const [isModified, setIsModified] = useState(false);
   const [modifiedIds, setModifiedIds] = useState(new Set());
+  const [activeTab, setActiveTab] = useState(0);
 
   // UI state
   const [notification, setNotification] = useState({
@@ -102,6 +110,10 @@ export default function IntezmenyiNeveltseg() {
       egyeb_szakmai_kepesites: 0,
     },
   });
+
+  const handleTabChange = (_event, newValue) => {
+    setActiveTab(newValue);
+  };
 
   // Transform and organize API data
   const organizedData = useMemo(() => {
@@ -667,6 +679,32 @@ export default function IntezmenyiNeveltseg() {
         </CardContent>
       </Card>
 
+      {/* Tab Navigation */}
+      <Card sx={{ mb: 3 }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            aria-label="Intézményi nevelettség tabs"
+            variant="fullWidth"
+          >
+            <Tab
+              icon={<AssessmentIcon />}
+              label="Adatok és táblázatok"
+              sx={{ fontWeight: "bold", fontSize: "1rem" }}
+            />
+            <Tab
+              icon={<BarChartIcon />}
+              label="Grafikon nézet"
+              sx={{ fontWeight: "bold", fontSize: "1rem" }}
+            />
+          </Tabs>
+        </Box>
+      </Card>
+
+      {/* Tab Content */}
+      {activeTab === 0 && (
+        <Box>
       {/* Instructions Card */}
       <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
         <CardContent>
@@ -950,6 +988,68 @@ export default function IntezmenyiNeveltseg() {
           </Button>
         </DialogActions>
       </Dialog>
+        </Box>
+      )}
+
+      {/* Chart Tab Content */}
+      {activeTab === 1 && (
+        <Box>
+          {(() => {
+            // Prepare chart data - aggregate by year and category
+            const chartData = schoolYears.map((year) => {
+              let altalanos = 0;
+              let kozepfoku = 0;
+              let felsofoku = 0;
+              let ogy = 0;
+              let msc = 0;
+              let phd = 0;
+
+              // Aggregate data across all schools for this year
+              Object.values(organizedData).forEach((schoolData) => {
+                if (schoolData[year]) {
+                  altalanos += schoolData[year].altalanos_iskolai_vegzettseg || 0;
+                  kozepfoku += schoolData[year].kozepfoku_vegzettseg || 0;
+                  felsofoku += schoolData[year].felsofoku_vegzettseg || 0;
+                  ogy += schoolData[year].ogy_fokozat || 0;
+                  msc += schoolData[year].msc_fokozat || 0;
+                  phd += schoolData[year].phd_fokozat || 0;
+                }
+              });
+
+              return {
+                year: year,
+                altalanos: altalanos,
+                kozepfoku: kozepfoku,
+                felsofoku: felsofoku,
+                ogy: ogy,
+                msc: msc,
+                phd: phd,
+              };
+            });
+
+            const chartDataKeys = ["altalanos", "kozepfoku", "felsofoku", "ogy", "msc", "phd"];
+            const chartKeyLabels = {
+              altalanos: "Általános iskola",
+              kozepfoku: "Középfokú",
+              felsofoku: "Felsőfokú",
+              ogy: "OGY fokozat",
+              msc: "MSc fokozat",
+              phd: "PhD fokozat",
+            };
+
+            return (
+              <GenericYearlyChart
+                data={chartData}
+                dataKeys={chartDataKeys}
+                keyLabels={chartKeyLabels}
+                yAxisLabel="Alkalmazottak száma (fő)"
+                height={450}
+                title="Intézményi nevelettségi mutatók alakulása"
+              />
+            );
+          })()}
+        </Box>
+      )}
 
       {/* Add New Record Dialog */}
       <Dialog
