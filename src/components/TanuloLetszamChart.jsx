@@ -43,7 +43,6 @@ import {
   MdShowChart,
   MdBarChart,
   MdAreaChart,
-  MdDownload,
   MdRefresh,
   MdVisibility,
   MdVisibilityOff,
@@ -88,7 +87,7 @@ const TanuloLetszamChart = ({ data, years }) => {
   const [showDots, setShowDots] = useState(true);
   const [strokeWidth, setStrokeWidth] = useState(2);
   const [viewMode, setViewMode] = useState("all"); // 'all', 'selected'
-  const [showControls, setShowControls] = useState(true);
+  const [showControls, setShowControls] = useState(false);
   const [animationDuration, setAnimationDuration] = useState(1000);
   const [yAxisDomain, setYAxisDomain] = useState("auto"); // 'auto', 'dataMin', 'custom'
   const [customYMin, setCustomYMin] = useState(0);
@@ -233,13 +232,6 @@ const TanuloLetszamChart = ({ data, years }) => {
 
   const downloadChart = () => {
     // This would implement chart download functionality
-    console.log("Download chart data:", chartData);
-    // TODO: Implement proper download functionality
-    setNotification({
-      open: true,
-      message: "Letöltés funkció fejlesztés alatt!",
-      severity: "info",
-    });
   };
 
   const resetSettings = () => {
@@ -420,19 +412,14 @@ const TanuloLetszamChart = ({ data, years }) => {
               <MuiTooltip title="Beállítások megjelenítése/elrejtése">
                 <IconButton
                   onClick={() => setShowControls(!showControls)}
-                  size="small"
+                  size="medium"
                 >
                   {showControls ? <MdVisibilityOff /> : <MdVisibility />}
                 </IconButton>
               </MuiTooltip>
               <MuiTooltip title="Beállítások visszaállítása">
-                <IconButton onClick={resetSettings} size="small">
+                <IconButton onClick={resetSettings} size="medium">
                   <MdRefresh />
-                </IconButton>
-              </MuiTooltip>
-              <MuiTooltip title="Grafikon letöltése">
-                <IconButton onClick={downloadChart} size="small">
-                  <MdDownload />
                 </IconButton>
               </MuiTooltip>
             </Stack>
