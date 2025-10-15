@@ -32,6 +32,10 @@ import {
   FormControl,
   InputLabel,
   Grid,
+  Tabs,
+  Tab,
+  Container,
+  Fade,
 } from "@mui/material";
 import {
   Save as SaveIcon,
@@ -40,6 +44,8 @@ import {
   Delete as DeleteIcon,
   Close as CloseIcon,
   Add as AddIcon,
+  Assessment as AssessmentIcon,
+  BarChart as BarChartIcon,
 } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import {
@@ -49,6 +55,7 @@ import {
   useDeleteEgyOktatoraJutoTanuloMutation,
   useGetAllAlapadatokQuery,
 } from "../store/api/apiSlice";
+import GenericYearlyChart from "../components/GenericYearlyChart";
 
 export default function EgyOktatoraJutoTanulo() {
   const schoolYears = generateSchoolYears();
@@ -73,6 +80,7 @@ export default function EgyOktatoraJutoTanulo() {
   const [teacherRatioData, setTeacherRatioData] = useState([]);
   const [isModified, setIsModified] = useState(false);
   const [modifiedIds, setModifiedIds] = useState(new Set());
+  const [activeTab, setActiveTab] = useState(0);
 
   // UI state
   const [notification, setNotification] = useState({
@@ -96,6 +104,10 @@ export default function EgyOktatoraJutoTanulo() {
       oktatok_szama: 0,
     },
   });
+
+  const handleTabChange = (_event, newValue) => {
+    setActiveTab(newValue);
+  };
 
   // Transform and organize API data
   const organizedData = useMemo(() => {
@@ -448,6 +460,32 @@ export default function EgyOktatoraJutoTanulo() {
         </CardContent>
       </Card>
 
+      {/* Tab Navigation */}
+      <Card sx={{ mb: 3 }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            aria-label="Oktató-tanuló arány tabs"
+            variant="fullWidth"
+          >
+            <Tab
+              icon={<AssessmentIcon />}
+              label="Adatok és táblázatok"
+              sx={{ fontWeight: "bold", fontSize: "1rem" }}
+            />
+            <Tab
+              icon={<BarChartIcon />}
+              label="Grafikon nézet"
+              sx={{ fontWeight: "bold", fontSize: "1rem" }}
+            />
+          </Tabs>
+        </Box>
+      </Card>
+
+      {/* Tab Content */}
+      {activeTab === 0 && (
+        <Box>
       {/* Instructions Card */}
       <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
         <CardContent>
@@ -761,6 +799,54 @@ export default function EgyOktatoraJutoTanulo() {
           </Button>
         </DialogActions>
       </Dialog>
+        </Box>
+      )}
+
+      {/* Chart Tab Content */}
+      {activeTab === 1 && (
+        <Box>
+          {(() => {
+            // Prepare chart data - aggregate by year
+            const chartData = schoolYears.map((year) => {
+              let totalStudents = 0;
+              let totalTeachers = 0;
+
+              // Aggregate data across all schools for this year
+              Object.values(organizedData).forEach((schoolData) => {
+                if (schoolData[year]) {
+                  totalStudents += schoolData[year].tanulok_szama || 0;
+                  totalTeachers += schoolData[year].oktatok_szama || 0;
+                }
+              });
+
+              const ratio = totalTeachers > 0 ? (totalStudents / totalTeachers) : 0;
+
+              return {
+                year: year,
+                studentTeacherRatio: parseFloat(ratio.toFixed(2)),
+                totalStudents: totalStudents,
+                totalTeachers: totalTeachers,
+              };
+            });
+
+            const chartDataKeys = ["studentTeacherRatio"];
+            const chartKeyLabels = {
+              studentTeacherRatio: "Egy oktatóra jutó tanulók száma",
+            };
+
+            return (
+              <GenericYearlyChart
+                data={chartData}
+                dataKeys={chartDataKeys}
+                keyLabels={chartKeyLabels}
+                yAxisLabel="Oktató-tanuló arány"
+                height={450}
+                title="Oktató-tanuló arány alakulása"
+              />
+            );
+          })()}
+        </Box>
+      )}
 
       {/* Add New Record Dialog */}
       <Dialog

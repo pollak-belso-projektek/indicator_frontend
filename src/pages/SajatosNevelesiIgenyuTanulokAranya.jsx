@@ -33,6 +33,8 @@ import {
   Grid,
   Container,
   Fade,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import {
   Save as SaveIcon,
@@ -42,6 +44,8 @@ import {
   Close as CloseIcon,
   Add as AddIcon,
   Accessible as AccessibleIcon,
+  Assessment as AssessmentIcon,
+  BarChart as BarChartIcon,
 } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import {
@@ -52,6 +56,7 @@ import {
   useGetAllAlapadatokQuery,
 } from "../store/api/apiSlice";
 import SNIJelmagy from "../components/infos/SNIJelmagy";
+import GenericYearlyChart from "../components/GenericYearlyChart";
 
 export default function SajatosNevelesiIgenyuTanulokAranya() {
   const schoolYears = generateSchoolYears();
@@ -76,6 +81,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
   const [sniData, setSniData] = useState([]);
   const [isModified, setIsModified] = useState(false);
   const [modifiedIds, setModifiedIds] = useState(new Set());
+  const [activeTab, setActiveTab] = useState(0);
 
   // UI state
   const [notification, setNotification] = useState({
@@ -99,6 +105,10 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       tanulok_osszesen: 0,
     },
   });
+
+  const handleTabChange = (_event, newValue) => {
+    setActiveTab(newValue);
+  };
 
   // Transform and organize API data
   const organizedData = useMemo(() => {
@@ -483,6 +493,32 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         </CardContent>
       </Card>
 
+      {/* Tab Navigation */}
+      <Card sx={{ mb: 3 }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            aria-label="SNI tanulók tabs"
+            variant="fullWidth"
+          >
+            <Tab
+              icon={<AssessmentIcon />}
+              label="Adatok és táblázatok"
+              sx={{ fontWeight: "bold", fontSize: "1rem" }}
+            />
+            <Tab
+              icon={<BarChartIcon />}
+              label="Grafikon nézet"
+              sx={{ fontWeight: "bold", fontSize: "1rem" }}
+            />
+          </Tabs>
+        </Box>
+      </Card>
+
+      {/* Tab Content */}
+      {activeTab === 0 && (
+        <Box>
       {/* Instructions Card */}
 
       {/* Detailed Data by School */}
@@ -672,6 +708,55 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           )}
         </CardContent>
       </Card>
+        </Box>
+      )}
+
+      {/* Chart Tab Content */}
+      {activeTab === 1 && (
+        <Box>
+          {(() => {
+            // Prepare chart data - aggregate by year
+            const chartData = schoolYears.map((year) => {
+              let totalSniStudents = 0;
+              let totalStudents = 0;
+
+              // Aggregate data across all schools for this year
+              Object.values(organizedData).forEach((schoolData) => {
+                if (schoolData[year]) {
+                  totalSniStudents += schoolData[year].sni_tanulok_szama || 0;
+                  totalStudents += schoolData[year].tanulok_osszesen || 0;
+                }
+              });
+
+              const sniRatio = totalStudents > 0 ? (totalSniStudents / totalStudents) * 100 : 0;
+
+              return {
+                year: year,
+                sniRatio: parseFloat(sniRatio.toFixed(2)),
+                sniStudents: totalSniStudents,
+                totalStudents: totalStudents,
+              };
+            });
+
+            const chartDataKeys = ["sniRatio"];
+            const chartKeyLabels = {
+              sniRatio: "SNI tanulók aránya (%)",
+            };
+
+            return (
+              <GenericYearlyChart
+                data={chartData}
+                dataKeys={chartDataKeys}
+                keyLabels={chartKeyLabels}
+                yAxisLabel="SNI arány (%)"
+                height={450}
+                title="SNI tanulók arányának alakulása"
+              />
+            );
+          })()}
+        </Box>
+      )}
+
       <Card sx={{ mt: 2, backgroundColor: "#f8f9fa" }}>
         <CardContent>
           <Typography variant="h6" component="h3" gutterBottom>
