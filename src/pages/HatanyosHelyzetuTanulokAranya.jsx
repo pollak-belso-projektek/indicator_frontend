@@ -41,6 +41,7 @@ import {
   useUpdateHHesHHHNevelesuTanulokMutation,
 } from "../store/api/apiSlice";
 import NotificationSnackbar from "../components/shared/NotificationSnackbar";
+import GenericYearlyChart from "../components/GenericYearlyChart";
 
 export default function HatanyosHelyzetuTanulokAranya() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -1623,6 +1624,41 @@ export default function HatanyosHelyzetuTanulokAranya() {
                     </Card>
                   </Grid>
                 </Grid>
+
+                {/* Chart visualization */}
+                {(() => {
+                  // Prepare chart data
+                  const chartData = schoolYears.map((year) => {
+                    const combinedPerc = parseFloat(calculatePercentage("combined", year));
+                    const daytimePerc = parseFloat(calculatePercentage("daytime", year));
+                    const adultPerc = parseFloat(calculatePercentage("adult", year));
+
+                    return {
+                      year: year,
+                      combined: isNaN(combinedPerc) ? 0 : combinedPerc,
+                      daytime: isNaN(daytimePerc) ? 0 : daytimePerc,
+                      adult: isNaN(adultPerc) ? 0 : adultPerc,
+                    };
+                  });
+
+                  const chartDataKeys = ["combined", "daytime", "adult"];
+                  const chartKeyLabels = {
+                    combined: "Összesen (tanulói + felnőttképzési)",
+                    daytime: "Tanulói jogviszony",
+                    adult: "Felnőttképzési jogviszony",
+                  };
+
+                  return (
+                    <GenericYearlyChart
+                      data={chartData}
+                      dataKeys={chartDataKeys}
+                      keyLabels={chartKeyLabels}
+                      yAxisLabel="HH arány (%)"
+                      height={450}
+                      title="HH tanulók arányának alakulása"
+                    />
+                  );
+                })()}
               </>
             );
           })()}
