@@ -474,8 +474,8 @@ export default function TanuloLetszam() {
         }
 
         for (const [year, fields] of Object.entries(yearData)) {
-          // Handle tanulói jogviszony
-          if (fields.tanuloi_jogviszony > 0) {
+          // Handle tanulói jogviszony - allow zero values
+          if (fields.tanuloi_jogviszony >= 0) {
             // Determine szakirany and szakma from programType
             let szakiranyName = null;
             let szakmaNev = null;
@@ -589,8 +589,8 @@ export default function TanuloLetszam() {
             }
           }
 
-          // Handle felnőttképzési jogviszony
-          if (fields.felnottkepzesi_jogviszony > 0) {
+          // Handle felnőttképzési jogviszony - allow zero values
+          if (fields.felnottkepzesi_jogviszony >= 0) {
             // Determine szakirany and szakma from programType
             let szakiranyName = null;
             let szakmaNev = null;

@@ -153,10 +153,10 @@ const Oktatoperdiak = () => {
         const yearKey = `${year}/${year + 1}`;
         const hetiOraValue = hetiOratomeg[i];
 
+        // Allow zero values, only filter out null/undefined
         if (
           hetiOraValue !== null &&
-          hetiOraValue !== undefined &&
-          hetiOraValue > 0
+          hetiOraValue !== undefined
         ) {
           const recordData = {
             alapadatok_id: selectedSchool?.id,
@@ -439,12 +439,12 @@ fenntartó által engedélyezett heti óratömeg
                         size="small"
                         type="number"
                         inputProps={{
-                          min: 1,
+                          min: 0,
                           style: { textAlign: "center" },
                         }}
                         sx={{ width: "80px" }}
                       />
-                    ) : value > 0 ? (
+                    ) : value >= 0 ? (
                       value
                     ) : (
                       "-"

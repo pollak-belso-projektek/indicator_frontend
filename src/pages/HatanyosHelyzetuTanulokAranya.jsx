@@ -310,9 +310,9 @@ export default function HatanyosHelyzetuTanulokAranya() {
       schoolYears.forEach((year) => {
         const yearStart = parseInt(year.split("/")[0]);
 
-        // Save daytime HH students if value exists
+        // Save daytime HH students - allow zero values
         const daytimeCount = parseInt(hhStudentsCount.daytime[year] || 0);
-        if (daytimeCount > 0) {
+        if (daytimeCount >= 0) {
           dataToSave.push({
             alapadatok_id: selectedSchool.id,
             tanev_kezdete: yearStart,
@@ -322,9 +322,9 @@ export default function HatanyosHelyzetuTanulokAranya() {
           });
         }
 
-        // Save adult education HH students if value exists
+        // Save adult education HH students - allow zero values
         const adultCount = parseInt(hhStudentsCount.adult[year] || 0);
-        if (adultCount > 0) {
+        if (adultCount >= 0) {
           dataToSave.push({
             alapadatok_id: selectedSchool.id,
             tanev_kezdete: yearStart,

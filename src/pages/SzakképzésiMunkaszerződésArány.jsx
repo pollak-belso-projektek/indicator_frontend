@@ -1125,8 +1125,11 @@ export default function SzakképzésiMunkaszerződésArány() {
                 year
               ] || "0";
 
-            // Only save if there's actual data
-            if (parseFloat(totalValue) > 0 || parseFloat(contractValue) > 0) {
+            // Allow zero values - only skip if both are empty strings or null
+            if (
+              (totalValue !== "" && totalValue !== null && totalValue !== undefined) ||
+              (contractValue !== "" && contractValue !== null && contractValue !== undefined && contractValue !== "0")
+            ) {
               console.log(
                 `🔍 DEBUG: Processing specialization record - institutionKey: ${institutionKey}, itemKey: ${itemKey}, year: ${year}, yearData: ${JSON.stringify(
                   yearData
