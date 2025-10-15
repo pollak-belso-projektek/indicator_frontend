@@ -21,7 +21,11 @@ import {
   Container,
   Fade,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon, Description as DescriptionIcon } from "@mui/icons-material";
+import {
+  Save as SaveIcon,
+  Refresh as RefreshIcon,
+  Description as DescriptionIcon,
+} from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import {
   useGetTanugyiAdatokQuery,
@@ -1127,8 +1131,12 @@ export default function SzakképzésiMunkaszerződésArány() {
 
             // Allow zero values - only skip if both are empty strings or null
             if (
-              (totalValue !== "" && totalValue !== null && totalValue !== undefined) ||
-              (contractValue !== "" && contractValue !== null && contractValue !== undefined && contractValue !== "0")
+              (totalValue !== "" &&
+                totalValue !== null &&
+                totalValue !== undefined) ||
+              (contractValue !== "" &&
+                contractValue !== null &&
+                contractValue !== undefined)
             ) {
               console.log(
                 `🔍 DEBUG: Processing specialization record - institutionKey: ${institutionKey}, itemKey: ${itemKey}, year: ${year}, yearData: ${JSON.stringify(
@@ -1532,171 +1540,196 @@ export default function SzakképzésiMunkaszerződésArány() {
   return (
     <Container maxWidth="xl">
       <Fade in={true} timeout={800}>
-        <Box sx={{ minHeight: 'calc(100vh - 120px)' }}>
+        <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
           {/* Header Section */}
-          <Card 
-            elevation={6} 
-            sx={{ 
-              mb: 2, 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
+          <Card
+            elevation={6}
+            sx={{
+              mb: 2,
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              color: "white",
               borderRadius: 3,
-              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
+              boxShadow: "0 8px 32px rgba(102, 126, 234, 0.3)",
             }}
           >
             <CardContent sx={{ p: 2 }}>
-              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-                <DescriptionIcon sx={{ fontSize: 40, color: '#ffeb3b' }} />
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+              <Stack
+                direction="row"
+                alignItems="center"
+                spacing={2}
+                sx={{ mb: 2 }}
+              >
+                <DescriptionIcon sx={{ fontSize: 40, color: "#ffeb3b" }} />
+                <Typography
+                  variant="h4"
+                  component="h1"
+                  sx={{ fontWeight: 600 }}
+                >
                   4. Szakképzési munkaszerződéssel rendelkezők aránya
                 </Typography>
               </Stack>
-            
+
               <Typography variant="body1" sx={{ opacity: 0.8 }}>
-                A szakképző intézményben szakképzési munkaszerződéssel rendelkezők aránya az intézmény szakirányú oktatásában résztvevők között
+                A szakképző intézményben szakképzési munkaszerződéssel
+                rendelkezők aránya az intézmény szakirányú oktatásában
+                résztvevők között
               </Typography>
             </CardContent>
           </Card>
-      {/* Instructions Card */}
-      <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
-        <CardContent>
-     
+          {/* Instructions Card */}
+          <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
+            <CardContent>
+              <Typography variant="body2" color="text.primary" sx={{ mb: 2 }}>
+                <strong>Megjegyzés:</strong>
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                Az érettségi utáni képzések első évfolyamán tanulók szakképzési
+                munkaszerződésének száma az október 1-jei adatban még nem
+                jelenik meg, mert csak az első félvét lezáró időszaki
+                alapvizsgát követően tudnak munkaszerződést kötni. Az adatok
+                értékelésénél, elemzésénél ezt az időbeli eltérést érdemes
+                figyelembe venni.
+              </Typography>
 
-          <Typography variant="body2" color="text.primary" sx={{ mb: 2 }}>
-            <strong>Megjegyzés:</strong>
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Az érettségi utáni képzések első évfolyamán tanulók szakképzési
-            munkaszerződésének száma az október 1-jei adatban még nem jelenik
-            meg, mert csak az első félvét lezáró időszaki alapvizsgát követően
-            tudnak munkaszerződést kötni. Az adatok értékelésénél, elemzésénél
-            ezt az időbeli eltérést érdemes figyelembe venni.
-          </Typography>
-
-          <Box
+              <Box
+                sx={{
+                  p: 2,
+                  backgroundColor: "#f0f8ff",
+                  borderRadius: 1,
+                  border: "1px solid #90caf9",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{ fontStyle: "italic", flex: 1 }}
+                >
+                  <strong>Számítási képlet:</strong>
+                  <br />
+                  (Szakképzési munkaszerződéssel rendelkezők száma / szakirányú
+                  oktatásban részt vevő tanulók összlétszáma) × 100
+                </Typography>
+                <Box
+                  sx={{
+                    fontSize: "2rem",
+                    fontWeight: "bold",
+                    color: "#1976d2",
+                    textAlign: "center",
+                    minWidth: "100px",
+                  }}
+                >
+                  = %
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+          <Stack
+            direction="row"
+            spacing={2}
             sx={{
-              p: 2,
-              backgroundColor: "#f0f8ff",
-              borderRadius: 1,
-              border: "1px solid #90caf9",
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
+              mt: 3,
+              mb: 2,
+              position: "sticky",
+              top: 2,
+              backgroundColor: "white",
+              zIndex: 10,
+              py: 1,
             }}
           >
-            <Typography variant="body2" sx={{ fontStyle: "italic", flex: 1 }}>
-              <strong>Számítási képlet:</strong>
-              <br />
-              (Szakképzési munkaszerződéssel rendelkezők száma / szakirányú
-              oktatásban részt vevő tanulók összlétszáma) × 100
-            </Typography>
-            <Box
-              sx={{
-                fontSize: "2rem",
-                fontWeight: "bold",
-                color: "#1976d2",
-                textAlign: "center",
-                minWidth: "100px",
-              }}
+            <Button
+              variant="contained"
+              startIcon={<SaveIcon />}
+              onClick={handleSave}
+              disabled={!isModified || isUpdating || isAdding || isSaving}
             >
-              = %
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-        <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 2, position: 'sticky', top: 2, backgroundColor: 'white', zIndex: 10, py: 1 }}>
-        <Button
-          variant="contained"
-          startIcon={<SaveIcon />}
-          onClick={handleSave}
-          disabled={!isModified || isUpdating || isAdding || isSaving}
-        >
-          {isUpdating || isAdding || isSaving ? "Mentés..." : "Mentés"}
-        </Button>
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={handleReset}
-          disabled={
-            !isModified || !savedData || isUpdating || isAdding || isSaving
-          }
-        >
-          Visszaállítás
-        </Button>
-      </Stack>
-      {/* Percentage Table */}
-      {renderTableSection(
-        "percentage",
-        "szakképzési munkaszerződéssel rendelkezők aránya (%) - AUTOMATIKUSAN SZÁMÍTOTT",
-        "%",
-        "#ffebee"
-      )}
-      {/* Contract Students Count Table */}
-      {renderTableSection(
-        "contract_students",
-        "szakképzési munkaszerződéssel rendelkező tanulók száma (tanulói jogviszony) (fő) - SZERKESZTHETŐ",
-        "fő",
-        "#e3f2fd"
-      )}
-      {/* Total Students Table */}
-      {renderTableSection(
-        "total_students",
-        "szakirányú oktatásban részt vevő tanulók összlétszáma (tanulói jogviszony) (fő) - SZERKESZTHETŐ",
-        "fő",
-        "#e8f5e8"
-      )}
-      {/* Action Buttons */}
-    
-      {/* Status Messages */}
-      {isModified && (
-        <Alert severity="warning" sx={{ mt: 2 }}>
-          Mentetlen módosítások vannak. Ne felejtsd el menteni a
-          változtatásokat!
-        </Alert>
-      )}
-      {savedData && !isModified && (
-        <Alert severity="success" sx={{ mt: 2 }}>
-          Az adatok sikeresen mentve!
-        </Alert>
-      )}
+              {isUpdating || isAdding || isSaving ? "Mentés..." : "Mentés"}
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleReset}
+              disabled={
+                !isModified || !savedData || isUpdating || isAdding || isSaving
+              }
+            >
+              Visszaállítás
+            </Button>
+          </Stack>
+          {/* Percentage Table */}
+          {renderTableSection(
+            "percentage",
+            "szakképzési munkaszerződéssel rendelkezők aránya (%) - AUTOMATIKUSAN SZÁMÍTOTT",
+            "%",
+            "#ffebee"
+          )}
+          {/* Contract Students Count Table */}
+          {renderTableSection(
+            "contract_students",
+            "szakképzési munkaszerződéssel rendelkező tanulók száma (tanulói jogviszony) (fő) - SZERKESZTHETŐ",
+            "fő",
+            "#e3f2fd"
+          )}
+          {/* Total Students Table */}
+          {renderTableSection(
+            "total_students",
+            "szakirányú oktatásban részt vevő tanulók összlétszáma (tanulói jogviszony) (fő) - SZERKESZTHETŐ",
+            "fő",
+            "#e8f5e8"
+          )}
+          {/* Action Buttons */}
 
-      {/* Loading Overlay */}
-      {isSaving && (
-        <Backdrop
-          sx={{
-            position: "fixed",
-            zIndex: 1300,
-            backgroundColor: "rgba(255, 255, 255, 0.8)",
-            color: "primary.main",
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-          }}
-          open={isSaving}
-        >
-          <CircularProgress size={50} />
-          <Box sx={{ textAlign: "center", fontWeight: "medium" }}>
-            Adatok mentése folyamatban, kérjük várjon...
-          </Box>
-        </Backdrop>
-      )}
+          {/* Status Messages */}
+          {isModified && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              Mentetlen módosítások vannak. Ne felejtsd el menteni a
+              változtatásokat!
+            </Alert>
+          )}
+          {savedData && !isModified && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              Az adatok sikeresen mentve!
+            </Alert>
+          )}
 
-      {/* Snackbar for save notifications */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          onClose={handleSnackbarClose}
-          severity={snackbarSeverity}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+          {/* Loading Overlay */}
+          {isSaving && (
+            <Backdrop
+              sx={{
+                position: "fixed",
+                zIndex: 1300,
+                backgroundColor: "rgba(255, 255, 255, 0.8)",
+                color: "primary.main",
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+              }}
+              open={isSaving}
+            >
+              <CircularProgress size={50} />
+              <Box sx={{ textAlign: "center", fontWeight: "medium" }}>
+                Adatok mentése folyamatban, kérjük várjon...
+              </Box>
+            </Backdrop>
+          )}
+
+          {/* Snackbar for save notifications */}
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={6000}
+            onClose={handleSnackbarClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          >
+            <Alert
+              onClose={handleSnackbarClose}
+              severity={snackbarSeverity}
+              variant="filled"
+              sx={{ width: "100%" }}
+            >
+              {snackbarMessage}
+            </Alert>
+          </Snackbar>
         </Box>
       </Fade>
     </Container>
