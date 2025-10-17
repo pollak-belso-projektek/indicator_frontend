@@ -22,15 +22,7 @@ const FelvettekSzamaInfo = () => {
         Tehát 3-szoros jelentkezési arány szükséges a szakma indításához.
       </Typography>
 
-      <Typography
-        variant="body2"
-        color="warning.main"
-        sx={{ mb: 3, fontStyle: "italic" }}
-      >
-        Kérjük a jelek töltésük, de a tanulólétszám számításához szükséges
-        algoritmus és számíthat az exportban van behurkoltként adatunk, akár azt
-        is felhasználhatjuk.
-      </Typography>
+  
     </>
   );
 };

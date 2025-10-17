@@ -1131,17 +1131,7 @@ export default function TanuloLetszam() {
             adata. [%]
           </Typography>
 
-          <Box
-            sx={{ mt: 2, p: 2, backgroundColor: "#ffeb3b", borderRadius: 1 }}
-          >
-            <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-              A kék tanulók tanügyi adatai exportból szerintöm össze lehet
-              számolni, ha október 1-jén feltöltjük az iskolákkal. Az ágazatok
-              mindenképpen szerepelnek, az 11-ig a szakmák is. Minden iskolának
-              annyit sor lesz, ahány szakma, illetve szakirány (mint ebben a
-              táblázatban).
-            </Typography>
-          </Box>
+    
 
           {dataSource && (
             <Box
