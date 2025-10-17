@@ -79,6 +79,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
     useDeleteSajatosNevelesuTanulokMutation();
 
   const [sniData, setSniData] = useState([]);
+  const [originalSniData, setOriginalSniData] = useState([]); // Store original data for reset
   const [isModified, setIsModified] = useState(false);
   const [modifiedIds, setModifiedIds] = useState(new Set());
   const [activeTab, setActiveTab] = useState(0);
@@ -144,6 +145,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
   useEffect(() => {
     if (apiSniData && Array.isArray(apiSniData)) {
       setSniData(apiSniData);
+      setOriginalSniData(JSON.parse(JSON.stringify(apiSniData))); // Deep clone for reset
     }
   }, [apiSniData]);
 
@@ -195,6 +197,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
       setIsModified(false);
       setModifiedIds(new Set());
+      setOriginalSniData(JSON.parse(JSON.stringify(sniData))); // Update original data after successful save
 
       setNotification({
         open: true,
@@ -214,8 +217,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
   };
 
   const handleReset = () => {
-    if (apiSniData) {
-      setSniData([...apiSniData]);
+    if (originalSniData) {
+      setSniData(JSON.parse(JSON.stringify(originalSniData))); // Deep clone to avoid reference issues
       setIsModified(false);
       setModifiedIds(new Set());
     }
@@ -225,7 +228,9 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
     try {
       await deleteSajatosNevelesuTanulok(id).unwrap();
 
-      setSniData((prev) => prev.filter((item) => item.id !== id));
+      const updatedData = sniData.filter((item) => item.id !== id);
+      setSniData(updatedData);
+      setOriginalSniData(JSON.parse(JSON.stringify(updatedData))); // Update original data after delete
 
       setNotification({
         open: true,

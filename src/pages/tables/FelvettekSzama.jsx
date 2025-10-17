@@ -57,6 +57,7 @@ const FelvettekSzama = () => {
 
   // State for the integrated table data
   const [tableData, setTableData] = useState({});
+  const [originalTableData, setOriginalTableData] = useState({}); // Store original data for reset
   const [isModified, setIsModified] = useState(false);
   const [_saveSuccess, setSaveSuccess] = useState(false);
   const [_saveError, setSaveError] = useState(null);
@@ -475,8 +476,15 @@ const FelvettekSzama = () => {
       // Convert tableData to API format and save/update
       for (const [programType, yearData] of Object.entries(tableData)) {
         for (const [year, fields] of Object.entries(yearData)) {
-          // Only save if there's actual data
+          // Check if any field in this row was modified by the user
+          const wasModified = 
+            modifiedCells[`${programType}-${year}-jelentkezok_szama_9`] ||
+            modifiedCells[`${programType}-${year}-felvettek_szama_9`] ||
+            modifiedCells[`${programType}-${year}-felvettek_letszam_9`];
+
+          // Only save if there's actual data OR if the field was modified (to support saving 0 values)
           if (
+            wasModified ||
             fields.jelentkezok_szama_9 > 0 ||
             fields.felvettek_szama_9 > 0 ||
             fields.felvettek_letszam_9 > 0
@@ -631,6 +639,7 @@ const FelvettekSzama = () => {
 
       setIsModified(false);
       setModifiedCells({}); // Clear modified cells tracking after successful save
+      setOriginalTableData(JSON.parse(JSON.stringify(tableData))); // Update original data after save
       setSaveSuccess(true);
       console.log(`Successfully processed ${savedCount} records`);
 
@@ -657,6 +666,8 @@ const FelvettekSzama = () => {
   };
 
   const handleReset = () => {
+    // Restore original data
+    setTableData(JSON.parse(JSON.stringify(originalTableData)));
     setIsModified(false);
     // Clear the modified cells tracking when resetting
     setModifiedCells({});
@@ -796,6 +807,7 @@ const FelvettekSzama = () => {
 
       console.log("Transformed API table data:", newTableData);
       setTableData(newTableData);
+      setOriginalTableData(JSON.parse(JSON.stringify(newTableData))); // Save original for reset
     } else if (hasTanugyiData) {
       console.log("No admission data found, calculating from tanugyi data...");
       setDataSource("TanugyiAdatok");
@@ -803,10 +815,12 @@ const FelvettekSzama = () => {
       const calculatedData = calculateFromTanugyiData();
       console.log("Setting calculated data:", calculatedData);
       setTableData(calculatedData);
+      setOriginalTableData(JSON.parse(JSON.stringify(calculatedData))); // Save original for reset
     } else {
       console.log("No data available to load");
       setDataSource(null);
       setTableData({});
+      setOriginalTableData({}); // Clear original data when no data available
     }
   }, [apiAdmissionData, tanugyiData, calculateFromTanugyiData]);
 

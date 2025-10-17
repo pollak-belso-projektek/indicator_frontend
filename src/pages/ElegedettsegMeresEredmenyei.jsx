@@ -120,9 +120,7 @@ export default function ElegedettsegMeresEredmenyei() {
       {/* Instructions Card */}
       <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
         <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Kérzel...
-          </Typography>
+       
           <Typography variant="body2" color="text.primary" sx={{ mb: 2 }}>
             Az indikátor kiszámítása: Az adott partner elégedettségének egyedi
             és átlagos százalékos értéke, amely megmutatja, hogy mennyire

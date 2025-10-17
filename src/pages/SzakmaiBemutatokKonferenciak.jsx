@@ -123,9 +123,7 @@ export default function SzakmaiBemutatokKonferenciak() {
       {/* Instructions Card */}
       <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
         <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Kérzel...
-          </Typography>
+      
           <Typography variant="body2" color="text.primary" sx={{ mb: 2 }}>
             Ilyen lehet például: szakmai konferencia, országos vagy regionális
             szakmai verseny, új technológiákat és piaci szerepeket bemutató
