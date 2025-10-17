@@ -189,8 +189,9 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       for (const item of itemsToUpdate) {
         await updateSajatosNevelesuTanulok({
           id: item.id,
-          sni_tanulok_szama: parseInt(item.sni_tanulok_szama) || 0,
-          tanulok_osszesen: parseInt(item.tanulok_osszesen) || 0,
+          alapadatok_id: item.alapadatok_id,
+          sni_tanulok_szama: (parseInt(item.sni_tanulok_szama) || 0).toString(),
+          tanulok_osszesen: (parseInt(item.tanulok_osszesen) || 0).toString(),
           tanev_kezdete: parseInt(item.tanev_kezdete),
         }).unwrap();
       }
