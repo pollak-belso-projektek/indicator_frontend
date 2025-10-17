@@ -475,8 +475,14 @@ const FelvettekSzama = () => {
       // Convert tableData to API format and save/update
       for (const [programType, yearData] of Object.entries(tableData)) {
         for (const [year, fields] of Object.entries(yearData)) {
-          // Only save if there's actual data
+          // Check if any cell in this programType-year combination has been modified
+          const hasModifiedCell = ['jelentkezok_szama_9', 'felvettek_szama_9', 'felvettek_letszam_9'].some(
+            field => modifiedCells[`${programType}-${year}-${field}`]
+          );
+
+          // Only save if there's actual data OR if cells were modified (including to zero)
           if (
+            hasModifiedCell ||
             fields.jelentkezok_szama_9 > 0 ||
             fields.felvettek_szama_9 > 0 ||
             fields.felvettek_letszam_9 > 0
