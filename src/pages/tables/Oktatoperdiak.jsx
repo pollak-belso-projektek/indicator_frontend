@@ -105,7 +105,7 @@ const Oktatoperdiak = () => {
           (item) => item.tanev_kezdete === year
         );
         console.log(`Record for year ${year}:`, record);
-        return record ? record.letszam || 0 : 0;
+        return record ? parseFloat(record.letszam) || 0 : 0;
       });
       setHetiOratomeg(newHetiOratomeg);
       console.log("Loaded hetiOratomeg from API:", newHetiOratomeg);
@@ -135,7 +135,7 @@ const Oktatoperdiak = () => {
 
   // Handle value change
   const handleValueChange = (index, newValue) => {
-    const numericValue = parseInt(newValue) || 0;
+    const numericValue = parseFloat(newValue);
     const newHetiOratomeg = [...hetiOratomeg];
     newHetiOratomeg[index] = numericValue;
     setHetiOratomeg(newHetiOratomeg);
@@ -211,7 +211,18 @@ const Oktatoperdiak = () => {
 
   // Handle reset
   const handleReset = () => {
-    setHetiOratomeg([0, 0, 0, 0]);
+    // Reset to API data if available, otherwise reset to zeros
+    if (oktatorPerDiakData && Array.isArray(oktatorPerDiakData)) {
+      const newHetiOratomeg = years.map((year) => {
+        const record = oktatorPerDiakData.find(
+          (item) => item.tanev_kezdete === year
+        );
+        return record ? parseFloat(record.letszam) || 0 : 0;
+      });
+      setHetiOratomeg(newHetiOratomeg);
+    } else {
+      setHetiOratomeg([0, 0, 0, 0]);
+    }
     setDivisor(22);
     setIsModified(false);
   };
@@ -268,12 +279,13 @@ const Oktatoperdiak = () => {
           </Typography>
           <TextField
             value={divisor}
-            onChange={(e) => setDivisor(parseInt(e.target.value))}
+            onChange={(e) => setDivisor(parseFloat(e.target.value) || 22)}
             size="small"
             type="number"
             inputProps={{
-              min: 1,
+              min: 0.1,
               max: 100,
+              step: 0.1,
               style: { textAlign: "center" },
             }}
             sx={{ width: "80px" }}
@@ -440,9 +452,10 @@ fenntartó által engedélyezett heti óratömeg
                         type="number"
                         inputProps={{
                           min: 0,
+                          step: 0.1,
                           style: { textAlign: "center" },
                         }}
-                        sx={{ width: "80px" }}
+                        sx={{ width: "100px" }}
                       />
                     ) : value >= 0 ? (
                       value

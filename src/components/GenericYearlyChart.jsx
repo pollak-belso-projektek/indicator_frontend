@@ -76,6 +76,7 @@ const GenericYearlyChart = ({
   yAxisLabel = "Érték",
   height = 400,
   title = "Grafikon",
+  hideSmallDataPoints = false,
 }) => {
   const [chartType, setChartType] = useState("line");
 
@@ -231,7 +232,7 @@ const GenericYearlyChart = ({
   return (
     <Box sx={{ p: 3 }}>
       {/* Statistics Overview */}
-      {statistics && (
+      {(statistics && !hideSmallDataPoints) && (
         <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid item xs={6} md={2.4}>
             <Paper sx={{ p: 2, textAlign: "center" }}>

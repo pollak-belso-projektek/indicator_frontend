@@ -538,7 +538,7 @@ export default function EgyOktatoraJutoOsszDiak() {
                             fontStyle: "italic",
                           }}
                         >
-                          Órátömegek összege
+                          Óratömegek összege
                         </Typography>
                         <TableContainer component={Paper} elevation={2}>
                           <Table size="small">
@@ -903,7 +903,7 @@ export default function EgyOktatoraJutoOsszDiak() {
                               variant="h6"
                               sx={{ fontWeight: 600, color: "#7b1fa2" }}
                             >
-                              Tanulói jogviszony órátömeg
+                              Tanulói jogviszony óratömeg
                             </Typography>
                             <Typography
                               variant="caption"
@@ -1004,7 +1004,7 @@ export default function EgyOktatoraJutoOsszDiak() {
                               variant="h6"
                               sx={{ fontWeight: 600, color: "#f57c00" }}
                             >
-                              Felnőttképzési órátömeg
+                              Felnőttképzési óratömeg
                             </Typography>
                             <Typography
                               variant="caption"

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useContext } from "react";
 import {
   Box,
   Card,
@@ -54,9 +54,12 @@ import {
   useUpdateSajatosNevelesuTanulokMutation,
   useDeleteSajatosNevelesuTanulokMutation,
   useGetAllAlapadatokQuery,
+  useGetTanuloLetszamQuery,
 } from "../store/api/apiSlice";
 import SNIJelmagy from "../components/infos/SNIJelmagy";
 import GenericYearlyChart from "../components/GenericYearlyChart";
+import { useSelector } from "react-redux";
+import { selectSelectedSchool } from "../store/slices/authSlice";
 
 export default function SajatosNevelesiIgenyuTanulokAranya() {
   const schoolYears = generateSchoolYears();
@@ -67,9 +70,15 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
     error: fetchError,
     isLoading: isFetching,
   } = useGetAllSajatosNevelesuTanulokQuery();
-
+ const selectedSchool = useSelector(selectSelectedSchool);
   const { data: schoolsData, isLoading: isLoadingSchools } =
     useGetAllAlapadatokQuery();
+
+  const { data: tanuloLetszamData } = useGetTanuloLetszamQuery(
+    { alapadatok_id: selectedSchool?.id },
+    { skip: !selectedSchool?.id }
+  );
+
 
   const [addSajatosNevelesuTanulok, { isLoading: isAdding }] =
     useAddSajatosNevelesuTanulokMutation();
@@ -100,7 +109,6 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
     open: false,
     newRecord: {
       alapadatok_id: "",
-      selectedSchool: null,
       tanev_kezdete: "",
       sni_tanulok_szama: 0,
       tanulok_osszesen: 0,
@@ -109,6 +117,20 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
   const handleTabChange = (_event, newValue) => {
     setActiveTab(newValue);
+  };
+
+  // Calculate total students for a given year from tanuloLetszamData
+  const getTotalStudentsForYear = (year) => {
+    if (!tanuloLetszamData || !Array.isArray(tanuloLetszamData)) {
+      return 0;
+    }
+    
+    const yearStart = parseInt(year.split("/")[0]);
+    
+    // Sum all students with jogv_tipus === 0 for this year
+    return tanuloLetszamData
+      .filter(item => item.tanev_kezdete === yearStart && item.jogv_tipus === 0)
+      .reduce((sum, item) => sum + (parseInt(item.letszam) || 0), 0);
   };
 
   // Transform and organize API data
@@ -144,28 +166,38 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
   // Load data from API
   useEffect(() => {
     if (apiSniData && Array.isArray(apiSniData)) {
-      setSniData(apiSniData);
-      setOriginalSniData(JSON.parse(JSON.stringify(apiSniData))); // Deep clone for reset
+      // Enrich data with total students from tanuloLetszamData
+      const enrichedData = apiSniData.map(item => {
+        const year = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
+        const totalStudents = getTotalStudentsForYear(year);
+        
+        return {
+          ...item,
+          tanulok_osszesen: totalStudents > 0 ? totalStudents : item.tanulok_osszesen
+        };
+      });
+      
+      setSniData(enrichedData);
+      setOriginalSniData(JSON.parse(JSON.stringify(enrichedData))); // Deep clone for reset
     }
-  }, [apiSniData]);
+  }, [apiSniData, tanuloLetszamData]);
 
   // Handle data changes
   const handleDataChange = (id, field, value) => {
+    // Prevent editing of tanulok_osszesen - it's auto-calculated
+    if (field === "tanulok_osszesen") {
+      return;
+    }
+    
     setSniData((prev) =>
       prev.map((item) => {
         if (item.id === id) {
           const updatedItem = { ...item, [field]: value };
 
-          // Recalculate percentage when either field changes
-          if (field === "sni_tanulok_szama" || field === "tanulok_osszesen") {
-            const sniTanulok =
-              field === "sni_tanulok_szama"
-                ? parseInt(value) || 0
-                : parseInt(item.sni_tanulok_szama) || 0;
-            const osszesCanulok =
-              field === "tanulok_osszesen"
-                ? parseInt(value) || 0
-                : parseInt(item.tanulok_osszesen) || 0;
+          // Recalculate percentage when SNI students count changes
+          if (field === "sni_tanulok_szama") {
+            const sniTanulok = parseInt(value) || 0;
+            const osszesCanulok = parseInt(item.tanulok_osszesen) || 0;
 
             updatedItem.sni_arany =
               osszesCanulok > 0
@@ -264,15 +296,17 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
     const currentYear = new Date().getFullYear();
     const currentSchoolYear =
       new Date().getMonth() >= 8 ? currentYear : currentYear - 1;
+    
+    const yearString = `${currentSchoolYear}/${currentSchoolYear + 1}`;
+    const totalStudents = getTotalStudentsForYear(yearString);
 
     setAddDialog({
       open: true,
       newRecord: {
         alapadatok_id: "",
-        selectedSchool: null,
         tanev_kezdete: currentSchoolYear,
         sni_tanulok_szama: 0,
-        tanulok_osszesen: 0,
+        tanulok_osszesen: totalStudents,
       },
     });
   };
@@ -282,7 +316,6 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       open: false,
       newRecord: {
         alapadatok_id: "",
-        selectedSchool: null,
         tanev_kezdete: "",
         sni_tanulok_szama: 0,
         tanulok_osszesen: 0,
@@ -291,17 +324,28 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
   };
 
   const handleNewRecordChange = (field, value) => {
-    setAddDialog((prev) => ({
-      ...prev,
-      newRecord: { ...prev.newRecord, [field]: value },
-    }));
+    setAddDialog((prev) => {
+      const updatedRecord = { ...prev.newRecord, [field]: value };
+      
+      // If year changes, update total students automatically
+      if (field === "tanev_kezdete") {
+        const yearString = `${value}/${parseInt(value) + 1}`;
+        const totalStudents = getTotalStudentsForYear(yearString);
+        updatedRecord.tanulok_osszesen = totalStudents;
+      }
+      
+      return {
+        ...prev,
+        newRecord: updatedRecord,
+      };
+    });
   };
 
   const handleAddNewRecord = async () => {
     try {
       const newRecord = {
         alapadatok_id:
-          addDialog.newRecord.selectedSchool?.id ||
+          selectedSchool?.id ||
           parseInt(addDialog.newRecord.alapadatok_id),
         tanev_kezdete: parseInt(addDialog.newRecord.tanev_kezdete),
         sni_tanulok_szama: parseInt(addDialog.newRecord.sni_tanulok_szama) || 0,
@@ -313,7 +357,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       setNotification({
         open: true,
         message: `Új SNI tanuló arány rekord sikeresen hozzáadva: ${
-          addDialog.newRecord.selectedSchool?.iskola_neve || "Ismeretlen iskola"
+          selectedSchool?.iskola_neve || "Ismeretlen iskola"
         } - ${newRecord.tanev_kezdete}/${newRecord.tanev_kezdete + 1}`,
         severity: "success",
       });
@@ -423,79 +467,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           <Card sx={{ mb: 2, backgroundColor: "#f8f9fa" }}>
             <CardContent>
               <SNIJelmagy />
-              <Typography variant="h6" component="h3" gutterBottom>
-                Összesített statisztikák
-              </Typography>
-              {Object.keys(summaryStats).length === 0 ? (
-                <Box sx={{ textAlign: "center", py: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Nincs statisztikai adat megjelenítésre
-                  </Typography>
-                </Box>
-              ) : (
-                <TableContainer component={Paper} variant="outlined">
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                        <TableCell sx={{ fontWeight: "bold" }}>Tanév</TableCell>
-                        <TableCell
-                          align="center"
-                          sx={{ fontWeight: "bold", backgroundColor: "#fff3cd" }}
-                        >
-                          SNI tanulók (fő)
-                        </TableCell>
-                        <TableCell
-                          align="center"
-                          sx={{ fontWeight: "bold", backgroundColor: "#d4edda" }}
-                    >
-                      Összes tanuló (fő)
-                    </TableCell>
-                    <TableCell
-                      align="center"
-                      sx={{ fontWeight: "bold", backgroundColor: "#cce5ff" }}
-                    >
-                      SNI arány (%)
-                    </TableCell>
-                    <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                      Intézmények száma
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {Object.entries(summaryStats).map(([year, stats]) => (
-                    <TableRow key={year}>
-                      <TableCell sx={{ fontWeight: "medium" }}>
-                        {year}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ backgroundColor: "#fff3cd40" }}
-                      >
-                        {stats.totalSniTanulok}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ backgroundColor: "#d4edda40" }}
-                      >
-                        {stats.totalOsszesTanulok}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{
-                          backgroundColor: "#cce5ff40",
-                          fontWeight: "bold",
-                          color: "primary.main",
-                        }}
-                      >
-                        {stats.atlagArany}%
-                      </TableCell>
-                      <TableCell align="center">{stats.count}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
+    
         </CardContent>
       </Card>
 
@@ -548,13 +520,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
             </Box>
           ) : (
             Object.entries(organizedData).map(([schoolName, schoolData]) => (
-              <Accordion key={schoolName} sx={{ mb: 2 }}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                    {schoolName}
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
+          
                   <TableContainer component={Paper} variant="outlined">
                     <Table size="small">
                       <TableHead>
@@ -589,9 +555,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                           >
                             SNI arány (%)
                           </TableCell>
-                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                            Műveletek
-                          </TableCell>
+              
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -629,19 +593,20 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                               <TextField
                                 type="number"
                                 value={data.tanulok_osszesen || 0}
-                                onChange={(e) =>
-                                  handleDataChange(
-                                    data.id,
-                                    "tanulok_osszesen",
-                                    e.target.value
-                                  )
-                                }
                                 size="small"
                                 inputProps={{
                                   min: 0,
                                   style: { textAlign: "center" },
+                                  readOnly: true,
                                 }}
-                                sx={{ width: "80px" }}
+                                sx={{ 
+                                  width: "80px",
+                                  "& .MuiInputBase-input": {
+                                    backgroundColor: "#f5f5f5",
+                                    cursor: "not-allowed"
+                                  }
+                                }}
+                                disabled
                               />
                             </TableCell>
                             <TableCell
@@ -654,7 +619,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                             >
                               {data.sni_arany}%
                             </TableCell>
-                            <TableCell align="center">
+                            {/* <TableCell align="center">
                               <IconButton
                                 size="small"
                                 color="error"
@@ -665,14 +630,13 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                               >
                                 <DeleteIcon fontSize="small" />
                               </IconButton>
-                            </TableCell>
+                            </TableCell> */}
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
-                </AccordionDetails>
-              </Accordion>
+   
             ))
           )}
 
@@ -754,6 +718,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                 data={chartData}
                 dataKeys={chartDataKeys}
                 keyLabels={chartKeyLabels}
+                hideSmallDataPoints={true}
                 yAxisLabel="SNI arány (%)"
                 height={450}
                 title="SNI tanulók arányának alakulása"
@@ -866,30 +831,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         <DialogTitle>Új SNI tanuló arány rekord hozzáadása</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Iskola *</InputLabel>
-                <Select
-                  value={addDialog.newRecord.selectedSchool?.id || ""}
-                  label="Iskola *"
-                  onChange={(e) => {
-                    const selectedSchool = schoolsData?.find(
-                      (school) => school.id === e.target.value
-                    );
-                    handleNewRecordChange("selectedSchool", selectedSchool);
-                    handleNewRecordChange("alapadatok_id", e.target.value);
-                  }}
-                  disabled={isLoadingSchools}
-                  required
-                >
-                  {schoolsData?.map((school) => (
-                    <MenuItem key={school.id} value={school.id}>
-                      {school.iskola_neve}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+
 
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
@@ -934,15 +876,22 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                 label="Összes tanuló száma (fő)"
                 type="number"
                 value={addDialog.newRecord.tanulok_osszesen}
-                onChange={(e) =>
-                  handleNewRecordChange("tanulok_osszesen", e.target.value)
-                }
-                inputProps={{ min: 0 }}
-                helperText="Az intézmény teljes tanulói létszáma"
+                inputProps={{ 
+                  min: 0,
+                  readOnly: true,
+                }}
+                disabled
+                helperText="Az intézmény teljes tanulói létszáma (automatikusan számítva)"
+                sx={{
+                  "& .MuiInputBase-input": {
+                    backgroundColor: "#f5f5f5",
+                    cursor: "not-allowed"
+                  }
+                }}
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <div  className="flex w-full items-center justify-center" >
               <Typography
                 variant="body2"
                 sx={{
@@ -962,7 +911,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                   : 0}
                 %
               </Typography>
-            </Grid>
+            </div>
           </Grid>
         </DialogContent>
         <DialogActions>
@@ -972,7 +921,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
             variant="contained"
             color="success"
             disabled={
-              !addDialog.newRecord.selectedSchool ||
+              selectedSchool?.id === undefined ||
               !addDialog.newRecord.tanev_kezdete ||
               isAdding
             }

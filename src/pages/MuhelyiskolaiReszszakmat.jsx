@@ -564,7 +564,7 @@ export default function MuhelyiskolaiReszszakmat() {
               fontWeight: "bold",
             }}
           >
-            részszakmát szerző tanulók száma
+            Részszakmát szerző tanulók száma
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Tanulói és felnőttképzési jogviszony (fő)

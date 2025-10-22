@@ -145,13 +145,13 @@ const NavigationCategories = {
         tableName: "felvettek_szama",
       },
       {
-        name: "Sajátos nevelésű",
+        name: "Sajátos nevelésű (SNI)",
         icon: null,
         link: "/sajatos-nevelesi-igenyu-tanulok-aranya",
         tableName: "sajatos_nevelesu_tanulok",
       },
       {
-        name: "HH tanulók aránya",
+        name: "HH és HHH",
         icon: null,
         link: "/hatranyos-helyezu-tanulok-aranya",
         tableName: "hh_es_hhh_nevelesu_tanulok",

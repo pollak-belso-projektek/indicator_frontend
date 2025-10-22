@@ -184,8 +184,8 @@ export default function EgyOktatoraJutoTanulo() {
       for (const item of itemsToUpdate) {
         await updateTeacherRatioData({
           id: item.id,
-          tanulok_szama: parseInt(item.tanulok_szama) || 0,
-          oktatok_szama: parseInt(item.oktatok_szama) || 0,
+          tanulok_szama: parseInt(item.tanulok_szama),
+          oktatok_szama: parseInt(item.oktatok_szama),
         }).unwrap();
       }
 
