@@ -151,7 +151,7 @@ const NavigationCategories = {
         tableName: "sajatos_nevelesu_tanulok",
       },
       {
-        name: "HH és HHH",
+        name: "HH tanulók aránya",
         icon: null,
         link: "/hatranyos-helyezu-tanulok-aranya",
         tableName: "hh_es_hhh_nevelesu_tanulok",

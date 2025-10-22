@@ -412,9 +412,13 @@ export default function OktatokEgyebTev() {
 
   // Handle input changes
   const handleInputChange = (category, field, year, value) => {
-    // Prevent editing of oktatok_letszama - it's auto-calculated from alkalmazott data
+    // Allow editing of oktatok_letszama only if there's no data from alkalmazott
     if (category === "oktatok_letszama") {
-      return;
+      const oktatokLetszamaFromAlkalmazott = getOktatokLetszamaForYear(year);
+      // Only allow manual edit if no data from alkalmazott
+      if (oktatokLetszamaFromAlkalmazott > 0) {
+        return; // Don't allow edit if data exists from alkalmazott
+      }
     }
     
     // Validate input - only allow non-negative integers
@@ -427,7 +431,16 @@ export default function OktatokEgyebTev() {
       ? `${year}-${category}-${field}`
       : `${year}-${category}`;
 
-    if (
+    if (category === "oktatok_letszama") {
+      // Handle oktatok_letszama directly
+      setData((prevData) => ({
+        ...prevData,
+        [year]: {
+          ...prevData[year],
+          oktatok_letszama: value,
+        },
+      }));
+    } else if (
       typeof data[year]?.[category] === "object" &&
       data[year][category] !== null
     ) {
@@ -719,7 +732,8 @@ export default function OktatokEgyebTev() {
           <Typography variant="body2" color="text.secondary" paragraph>
             💡 A módosított cellák sárga háttérrel vannak jelölve. Csak a módosított
             adatok kerülnek mentésre. Csak nem-negatív egész számok adhatók meg.
-            Az "Oktatók létszáma" mező automatikusan kitöltődik az alkalmazotti adatokból.
+            Az "Oktatók létszáma" mező automatikusan kitöltődik az alkalmazotti adatokból, 
+            vagy manuálisan szerkeszthető, ha nincs exportált adat.
           </Typography>
 
           {/* Action buttons */}
@@ -973,27 +987,48 @@ export default function OktatokEgyebTev() {
                         fontWeight: "bold",
                       }}
                     >
-                      <TextField
-                        size="small"
-                        type="number"
-                        value={data[year]?.oktatok_letszama || ""}
-                        inputProps={{
-                          min: 0,
-                          step: 1,
-                          style: { textAlign: "center" },
-                          readOnly: true,
-                        }}
-                        disabled
-                        sx={{
-                          "& .MuiInputBase-input": {
-                            textAlign: "center",
-                            fontWeight: "bold",
-                            backgroundColor: "#f5f5f5",
-                            borderRadius: 2,
-                            cursor: "not-allowed",
-                          },
-                        }}
-                      />
+                      {(() => {
+                        const oktatokLetszamaFromAlkalmazott = getOktatokLetszamaForYear(year);
+                        const isReadOnly = oktatokLetszamaFromAlkalmazott > 0;
+                        
+                        return (
+                          <TextField
+                            size="small"
+                            type="number"
+                            value={data[year]?.oktatok_letszama || ""}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "oktatok_letszama",
+                                null,
+                                year,
+                                e.target.value
+                              )
+                            }
+                            inputProps={{
+                              min: 0,
+                              step: 1,
+                              style: { textAlign: "center" },
+                              readOnly: isReadOnly,
+                            }}
+                            disabled={isReadOnly}
+                            sx={{
+                              "& .MuiInputBase-input": {
+                                textAlign: "center",
+                                fontWeight: "bold",
+                                backgroundColor: isReadOnly ? "#f5f5f5" : "white",
+                                cursor: isReadOnly ? "not-allowed" : "text",
+                              },
+                              border: !isReadOnly && isCellModified(
+                                "oktatok_letszama",
+                                null,
+                                year
+                              )
+                                ? "2px solid #ff9800"
+                                : "1px solid transparent",
+                            }}
+                          />
+                        );
+                      })()}
                     </TableCell>
                   ))}
                 </TableRow>
