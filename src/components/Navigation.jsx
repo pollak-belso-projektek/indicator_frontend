@@ -271,12 +271,6 @@ const NavigationCategories = {
     icon: MdEvent,
     items: [
       {
-        name: "Szakmai bemutatók",
-        icon: MdEvent,
-        link: "/szakmai-bemutatok-konferenciak",
-        tableName: "oktato_egyeb_tev",
-      },
-      {
         name: "Egy oktatóra jutó diákok",
         icon: MdBookmark,
         link: "/oktato_per_diak",
@@ -291,8 +285,8 @@ const NavigationCategories = {
       {
         name: "Oktatók egyéb tev.",
         icon: MdWork,
-        link: "/oktatok-egyeb-tev",
-        tableName: "oktato_egyeb_tev",
+        link: "/oktato-egyeb-tev",
+        tableName: "oktato-egyeb-tev",
       },
     ],
   },

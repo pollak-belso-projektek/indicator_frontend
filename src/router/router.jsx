@@ -450,13 +450,13 @@ export default function Router() {
                 }
               />
               <Route
-                path="/oktatok-egyeb-tev"
+                path="/oktato-egyeb-tev"
                 element={
-                  <TableProtectedRoute tableName="oktatok_egyeb_tev">
+                  <TableProtectedRoute tableName="oktato-egyeb-tev">
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <OktatokEgyebTevPage />,
-                        "/oktatok-egyeb-tev"
+                        "/oktato-egyeb-tev"
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>

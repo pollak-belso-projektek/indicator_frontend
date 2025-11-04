@@ -134,6 +134,10 @@ export const parseApiError = (error) => {
     if (error.includes("500") || error.includes("Internal Server Error")) {
       return "Szerver hiba történt. Kérjük, próbáld újra később.";
     }
+    //rate limit
+    if (error.includes("429") || error.includes("rate limit")) {
+      return "Túl sok kérés érkezett rövid időn belül. Kérjük, próbáld újra később.";
+    } 
     return error;
   }
 
