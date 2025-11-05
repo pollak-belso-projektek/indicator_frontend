@@ -80,7 +80,7 @@ const PageNumbering = {
   "/dobbanto-program-aranya": 20,
   "/muhelyiskolai-reszszakmat": 21,
   "/szakmai-tovabbkepzesek": 22, // Note: This page doesn't exist yet in navigation
-  "/oktatok-egyeb-tev": 23,
+  "/oktato-egyeb-tev": 23,
   "/palyazatok": 24, // Note: This page doesn't exist yet in navigation
   "/tanulmani-eredmeny": 25, // Note: This page doesn't exist yet in navigation
   "/hianyzas": 26, // Note: This page doesn't exist yet in navigation
