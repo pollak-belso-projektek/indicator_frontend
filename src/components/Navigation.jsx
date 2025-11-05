@@ -30,6 +30,7 @@ import {
   MdClose,
   MdSearch,
   MdInfo,
+  MdAccessible,
 } from "react-icons/md";
 
 import { useColorModeValue } from "./ui/color-mode";
@@ -146,13 +147,13 @@ const NavigationCategories = {
       },
       {
         name: "Sajátos nevelésű (SNI)",
-        icon: null,
+        icon: MdAccessible,
         link: "/sajatos-nevelesi-igenyu-tanulok-aranya",
         tableName: "sajatos_nevelesu_tanulok",
       },
       {
         name: "HH tanulók aránya",
-        icon: null,
+        icon: MdAccessible,
         link: "/hatranyos-helyezu-tanulok-aranya",
         tableName: "hh_es_hhh_nevelesu_tanulok",
       },

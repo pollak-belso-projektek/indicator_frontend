@@ -41,6 +41,7 @@ import {
 } from "../store/api/apiSlice";
 import NotificationSnackbar from "../components/shared/NotificationSnackbar";
 import GenericYearlyChart from "../components/GenericYearlyChart";
+import { MdAccessible } from "react-icons/md";
 
 export default function HatanyosHelyzetuTanulokAranya() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -532,6 +533,9 @@ export default function HatanyosHelyzetuTanulokAranya() {
                 spacing={2}
                 sx={{ mb: 2 }}
               >
+                <MdAccessible
+                  style={{ color: "yellow" }}
+                size={40} />
                 <Typography
                   variant="h4"
                   component="h1"

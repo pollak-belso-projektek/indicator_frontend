@@ -60,6 +60,7 @@ import SNIJelmagy from "../components/infos/SNIJelmagy";
 import GenericYearlyChart from "../components/GenericYearlyChart";
 import { useSelector } from "react-redux";
 import { selectSelectedSchool } from "../store/slices/authSlice";
+import { MdAccessible } from "react-icons/md";
 
 export default function SajatosNevelesiIgenyuTanulokAranya() {
   const schoolYears = generateSchoolYears();
@@ -427,7 +428,9 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
           >
             <CardContent sx={{ p: 2 }}>
               <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-               
+                  <MdAccessible
+                                 style={{ color: "yellow" }}
+                               size={40} />
                 <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
                   19. Sajátos nevelési igényű tanulók aránya
                 </Typography>
