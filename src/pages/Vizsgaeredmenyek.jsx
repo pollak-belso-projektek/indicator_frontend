@@ -19,6 +19,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import ExportButton from "../components/ExportButton";
+import { exportYearlyDataToXLS } from "../utils/xlsExport";
 import { generateSchoolYears } from "../utils/schoolYears";
 import {
   useGetAllVizsgaeredmenyekQuery,
@@ -259,6 +261,15 @@ export default function Vizsgaeredmenyek() {
       setExamData(JSON.parse(JSON.stringify(savedData)));
       setIsModified(false);
     }
+  };
+
+  // Handle export to XLS
+  const handleExport = () => {
+    if (!examData || Object.keys(examData).length === 0) {
+      return;
+    }
+
+    exportYearlyDataToXLS(examData, schoolYears, "vizsgaeredmenyek");
   };
 
   return (
@@ -502,6 +513,12 @@ export default function Vizsgaeredmenyek() {
         >
           Visszaállítás
         </Button>
+        <ExportButton
+          onExport={handleExport}
+          label="Export XLS"
+          disabled={!examData || Object.keys(examData).length === 0}
+          tooltip="Vizsgaeredmények exportálása XLS fájlba"
+        />
       </Stack>
 
       {/* Status Messages */}

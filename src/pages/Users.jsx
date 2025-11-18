@@ -8,6 +8,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
+import ExportButton from "../components/ExportButton";
+import { exportTableToXLS } from "../utils/xlsExport";
 import { useState } from "react";
 import NotificationSnackbar from "../components/shared/NotificationSnackbar";
 import { useUserManagement } from "../hooks/useUserManagement";
@@ -101,6 +103,31 @@ const Users = () => {
     } else if (result.success) {
       showNotification(result.message || "Felhasználó sikeresen inaktiválva!");
     }
+  };
+
+  // Handle export to XLS
+  const handleExport = () => {
+    if (!data || data.length === 0) {
+      return;
+    }
+
+    const exportData = data.map((user) => ({
+      "Felhasználónév": user.username,
+      "Email": user.email,
+      "Szerepkör": user.user_type,
+      "Státusz": user.active ? "Aktív" : "Inaktív",
+      "Létrehozva": user.created_at ? new Date(user.created_at).toLocaleDateString('hu-HU') : "",
+    }));
+
+    const columns = [
+      { header: "Felhasználónév", accessor: "Felhasználónév" },
+      { header: "Email", accessor: "Email" },
+      { header: "Szerepkör", accessor: "Szerepkör" },
+      { header: "Státusz", accessor: "Státusz" },
+      { header: "Létrehozva", accessor: "Létrehozva" },
+    ];
+
+    exportTableToXLS(exportData, columns, "felhasznalok", "Felhasználók");
   };
 
   if (isLoading) {
@@ -208,6 +235,14 @@ const Users = () => {
                     backgroundColor: "#f8f9fa",
                   },
                 }}
+              />
+              <ExportButton
+                onExport={handleExport}
+                label="Export XLS"
+                disabled={!data || data.length === 0}
+                tooltip="Felhasználók exportálása XLS fájlba"
+                size="large"
+                sx={{ height: "56px" }}
               />
               {userPermissions.getAvailableUserTypes().length > 0 && (
                 <Button

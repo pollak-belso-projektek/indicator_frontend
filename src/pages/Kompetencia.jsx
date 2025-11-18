@@ -11,8 +11,11 @@ import {
   Button,
   CircularProgress,
   Alert,
+  Stack,
 } from "@mui/material";
 import { Save as SaveIcon } from "@mui/icons-material";
+import ExportButton from "../components/ExportButton";
+import { exportYearlyDataToXLS } from "../utils/xlsExport";
 
 import React, { useState, useEffect } from "react";
 import {
@@ -189,6 +192,15 @@ export default function Kompetencia() {
     });
   };
 
+  // Handle export to XLS
+  const handleExport = () => {
+    if (!data || Object.keys(data).length === 0) {
+      return;
+    }
+
+    exportYearlyDataToXLS(data, years, "kompetencia");
+  };
+
   return kompetenciaLoading ? (
     <Box
       sx={{
@@ -223,14 +235,21 @@ export default function Kompetencia() {
         Kompetenciamérés eredményei országos és intézményi szinten
       </Typography>
 
-      <Button
-        variant="contained"
-        startIcon={<SaveIcon />}
-        onClick={handleSave}
-        sx={{ mb: 3 }}
-      >
-        Mentés
-      </Button>
+      <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+        <Button
+          variant="contained"
+          startIcon={<SaveIcon />}
+          onClick={handleSave}
+        >
+          Mentés
+        </Button>
+        <ExportButton
+          onExport={handleExport}
+          label="Export XLS"
+          disabled={!data || Object.keys(data).length === 0}
+          tooltip="Kompetencia adatok exportálása XLS fájlba"
+        />
+      </Stack>
 
       <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
         <Table size="small">
