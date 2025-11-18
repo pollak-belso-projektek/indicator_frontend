@@ -21,6 +21,8 @@ import {
   Fade,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon, TrendingUp as TrendingUpIcon } from "@mui/icons-material";
+import ExportButton from "../components/ExportButton";
+import { exportYearlyDataToXLS } from "../utils/xlsExport";
 import { generateSchoolYears } from "../utils/schoolYears";
 import { selectSelectedSchool } from "../store/slices/authSlice";
 import {
@@ -379,6 +381,15 @@ export default function DobbantoProgramAránya() {
     }
   };
 
+  // Handle export to XLS
+  const handleExport = () => {
+    if (!dobbantoData || Object.keys(dobbantoData).length === 0) {
+      return;
+    }
+
+    exportYearlyDataToXLS(dobbantoData, schoolYears, "dobbanto_program");
+  };
+
   const handleSnackbarClose = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -462,6 +473,12 @@ export default function DobbantoProgramAránya() {
         >
           Visszaállítás
         </Button>
+        <ExportButton
+          onExport={handleExport}
+          label="Export XLS"
+          disabled={!dobbantoData || Object.keys(dobbantoData).length === 0}
+          tooltip="Dobbantó program adatok exportálása XLS fájlba"
+        />
       </Stack>
 
       {/* Status Messages */}
