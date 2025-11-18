@@ -25,6 +25,8 @@ import {
   Fade,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon, School as SchoolIcon } from "@mui/icons-material";
+import ExportButton from "../components/ExportButton";
+import { exportYearlyDataToXLS } from "../utils/xlsExport";
 import { selectSelectedSchool } from "../store/slices/authSlice";
 import {
   useGetTanuloLetszamQuery,
@@ -753,6 +755,15 @@ export default function TanuloLetszam() {
     setActiveTab(newValue);
   };
 
+  // Handle export to XLS
+  const handleExport = () => {
+    if (!tableData || Object.keys(tableData).length === 0) {
+      return;
+    }
+
+    exportYearlyDataToXLS(tableData, evszamok, "tanuloletszam");
+  };
+
   // Extract TanugyiAdatok calculation logic into a separate function
   const calculateFromTanugyiData = useCallback(() => {
     if (
@@ -1205,6 +1216,12 @@ export default function TanuloLetszam() {
         >
           Visszaállítás
         </Button>
+        <ExportButton
+          onExport={handleExport}
+          label="Export XLS"
+          disabled={!tableData || Object.keys(tableData).length === 0}
+          tooltip="Tanulólétszám adatok exportálása XLS fájlba"
+        />
       </Stack>
 
       {/* Status Messages */}

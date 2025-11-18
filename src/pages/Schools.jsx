@@ -52,6 +52,8 @@ import {
 } from "../store/api/apiSlice";
 import CustomCreatableSelect from "../components/ui/CreatableSelect";
 import { useUserPermissions } from "../hooks/useUserPermissions";
+import ExportButton from "../components/ExportButton";
+import { exportTableToXLS } from "../utils/xlsExport";
 
 const Schools = () => {
   const [open, setOpen] = useState(false);
@@ -340,6 +342,32 @@ const Schools = () => {
     setExpandedSchool(expandedSchool === schoolId ? null : schoolId);
   };
 
+  // Handle export to XLS
+  const handleExport = () => {
+    if (!schools || schools.length === 0) {
+      return;
+    }
+
+    const exportData = schools.map((school) => ({
+      "Iskola neve": school.iskola_neve,
+      "Intézmény típusa": school.intezmeny_tipus,
+      "Szakirányok száma": school.alapadatok_szakirany?.length || 0,
+      "Szakirányok": school.alapadatok_szakirany
+        ?.map((sz) => sz.szakirany?.nev)
+        .filter(Boolean)
+        .join(", ") || "",
+    }));
+
+    const columns = [
+      { header: "Iskola neve", accessor: "Iskola neve" },
+      { header: "Intézmény típusa", accessor: "Intézmény típusa" },
+      { header: "Szakirányok száma", accessor: "Szakirányok száma" },
+      { header: "Szakirányok", accessor: "Szakirányok" },
+    ];
+
+    exportTableToXLS(exportData, columns, "iskolak", "Iskolák");
+  };
+
   useEffect(() => {
     //log every obj change
     console.log("Form Data Changed:", formData);
@@ -385,14 +413,22 @@ const Schools = () => {
         <Typography variant="h4" component="h1">
           Iskolák kezelése
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpen()}
-          disabled={!hasSuperAdminPermission || isAdding}
-        >
-          Új iskola hozzáadása
-        </Button>
+        <Stack direction="row" spacing={2}>
+          <ExportButton
+            onExport={handleExport}
+            label="Export XLS"
+            disabled={!schools || schools.length === 0}
+            tooltip="Iskolák exportálása XLS fájlba"
+          />
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpen()}
+            disabled={!hasSuperAdminPermission || isAdding}
+          >
+            Új iskola hozzáadása
+          </Button>
+        </Stack>
       </Box>
 
       {/* Schools Table */}
