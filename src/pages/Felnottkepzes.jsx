@@ -20,6 +20,8 @@ import {
   Stack,
 } from "@mui/material";
 import { School as SchoolIcon } from "@mui/icons-material";
+import ExportButton from "../components/ExportButton";
+import { exportYearlyDataToXLS } from "../utils/xlsExport";
 import { generateSchoolYears } from "../utils/schoolYears";
 import { selectSelectedSchool } from "../store/slices/authSlice";
 import { useGetTanuloLetszamQuery } from "../store/api/apiSlice";
@@ -188,6 +190,21 @@ export default function Felnottkepzes() {
     }
   };
 
+  // Handle export to XLS
+  const handleExport = () => {
+    const exportData = {
+      felnottkepzesiArany,
+      felnottkepzesiLetszam,
+      osszesLetszam,
+    };
+
+    if (!exportData || Object.keys(exportData).length === 0) {
+      return;
+    }
+
+    exportYearlyDataToXLS(exportData, years, "felnottkepzes");
+  };
+
   return (
     <Container maxWidth="xl">
       <Fade in={true} timeout={800}>
@@ -216,6 +233,16 @@ export default function Felnottkepzes() {
               </Typography>
             </CardContent>
           </Card>
+
+          {/* Export Button */}
+          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <ExportButton
+              onExport={handleExport}
+              label="Export XLS"
+              disabled={!felnottkepzesiArany || Object.keys(felnottkepzesiArany).length === 0}
+              tooltip="Felnőttképzés adatok exportálása XLS fájlba"
+            />
+          </Box>
 
           {/* Loading State */}
           {isFetching && (

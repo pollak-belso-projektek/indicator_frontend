@@ -18,6 +18,8 @@ import {
   Chip,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import ExportButton from "../components/ExportButton";
+import { exportCurrentViewToXLS } from "../utils/xlsExport";
 
 export default function NszfhMeresek() {
   // Data structure based on the NSZFH measurements requirements
@@ -161,6 +163,15 @@ export default function NszfhMeresek() {
       setTotalStudents(JSON.parse(JSON.stringify(savedData.totalStudents)));
       setIsModified(false);
     }
+  };
+
+  // Handle export to XLS
+  const handleExport = () => {
+    if (!measurementData || Object.keys(measurementData).length === 0) {
+      return;
+    }
+
+    exportCurrentViewToXLS(measurementData, "nszfh_meresek", { sheetName: "NSZFH Mérések" });
   };
 
   const getRowSpan = (institutionIndex, competencyIndex) => {
@@ -445,6 +456,12 @@ export default function NszfhMeresek() {
             >
               Visszaállítás
             </Button>
+            <ExportButton
+              onExport={handleExport}
+              label="Export XLS"
+              disabled={!measurementData || Object.keys(measurementData).length === 0}
+              tooltip="NSZFH mérések exportálása XLS fájlba"
+            />
           </Stack>
 
           {/* Status Messages */}
