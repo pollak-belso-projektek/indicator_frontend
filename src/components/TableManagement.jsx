@@ -24,13 +24,23 @@ import {
   Alert,
   CircularProgress,
 } from "@mui/material";
-import { Add as AddIcon, Edit as EditIcon } from "@mui/icons-material";
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Lock as LockIcon,
+  LockOpen as UnlockIcon,
+} from "@mui/icons-material";
 import NotificationSnackbar from "./shared/NotificationSnackbar";
 import {
   useGetTableListQuery,
   useCreateTableMutation,
   useUpdateTableMutation,
+  useLockTableMutation,
+  useUnlockTableMutation,
 } from "../store/api/apiSlice";
+import { useSelector } from "react-redux";
+import { selectUserPermissions } from "../store/slices/authSlice";
+import { USER_HIERARCHY } from "../utils/userHierarchy";
 
 const TableManagement = () => {
   const [openCreate, setOpenCreate] = useState(false);
@@ -61,6 +71,12 @@ const TableManagement = () => {
   const { data: tableList = [], isLoading, error } = useGetTableListQuery();
   const [createTable, { isLoading: isCreating }] = useCreateTableMutation();
   const [updateTable, { isLoading: isUpdating }] = useUpdateTableMutation();
+  const [lockTable, { isLoading: isLocking }] = useLockTableMutation();
+  const [unlockTable, { isLoading: isUnlocking }] = useUnlockTableMutation();
+
+  // Get user permissions
+  const userPermissions = useSelector(selectUserPermissions);
+  const canLockTables = userPermissions?.isHSZC || userPermissions?.isSuperadmin;
 
   const handleCreateTable = async () => {
     if (!newTable.name.trim()) {
@@ -119,6 +135,34 @@ const TableManagement = () => {
     setSelectedTable(null);
     setEditedTable({ name: "", isAvailable: true });
     setOpenEdit(false);
+  };
+
+  const handleLockTable = async (tableId, tableName) => {
+    try {
+      await lockTable(tableId).unwrap();
+      showNotification(`Tábla "${tableName}" sikeresen lezárva!`);
+    } catch (error) {
+      console.error("Tábla lezárása sikertelen:", error);
+      showNotification(
+        "Hiba történt a tábla lezárása során: " +
+          (error.data?.message || error.message),
+        "error"
+      );
+    }
+  };
+
+  const handleUnlockTable = async (tableId, tableName) => {
+    try {
+      await unlockTable(tableId).unwrap();
+      showNotification(`Tábla "${tableName}" sikeresen feloldva!`);
+    } catch (error) {
+      console.error("Tábla feloldása sikertelen:", error);
+      showNotification(
+        "Hiba történt a tábla feloldása során: " +
+          (error.data?.message || error.message),
+        "error"
+      );
+    }
   };
 
   if (isLoading) {
@@ -273,6 +317,7 @@ const TableManagement = () => {
                   <TableCell>ID</TableCell>
                   <TableCell>Név</TableCell>
                   <TableCell>Státusz</TableCell>
+                  {canLockTables && <TableCell>Lezárva</TableCell>}
                   <TableCell>Létrehozva</TableCell>
                   <TableCell>Frissítve</TableCell>
                   <TableCell align="center">Műveletek</TableCell>
@@ -281,7 +326,7 @@ const TableManagement = () => {
               <TableBody>
                 {tableList.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} align="center">
+                    <TableCell colSpan={canLockTables ? 7 : 6} align="center">
                       Nincs elérhető tábla
                     </TableCell>
                   </TableRow>
@@ -310,6 +355,16 @@ const TableManagement = () => {
                           size="small"
                         />
                       </TableCell>
+                      {canLockTables && (
+                        <TableCell>
+                          <Chip
+                            label={table.isLocked ? "Lezárva" : "Aktív"}
+                            color={table.isLocked ? "error" : "success"}
+                            size="small"
+                            icon={table.isLocked ? <LockIcon /> : <UnlockIcon />}
+                          />
+                        </TableCell>
+                      )}
                       <TableCell>
                         {table.createdAt
                           ? new Date(table.createdAt).toLocaleDateString(
@@ -325,13 +380,36 @@ const TableManagement = () => {
                           : "-"}
                       </TableCell>
                       <TableCell align="center">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEditTable(table)}
-                          color="primary"
-                        >
-                          <EditIcon />
-                        </IconButton>
+                        <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditTable(table)}
+                            color="primary"
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          {canLockTables && (
+                            table.isLocked ? (
+                              <IconButton
+                                size="small"
+                                onClick={() => handleUnlockTable(table.id, table.name)}
+                                color="success"
+                                disabled={isUnlocking}
+                              >
+                                <UnlockIcon />
+                              </IconButton>
+                            ) : (
+                              <IconButton
+                                size="small"
+                                onClick={() => handleLockTable(table.id, table.name)}
+                                color="error"
+                                disabled={isLocking}
+                              >
+                                <LockIcon />
+                              </IconButton>
+                            )
+                          )}
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))

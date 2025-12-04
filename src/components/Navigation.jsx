@@ -56,6 +56,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { useRecentPages } from "../hooks/useRecentPages";
+import AliasModeBanner from "./AliasModeBanner";
 
 // Page numbering map based on the user's requirements
 const PageNumbering = {
@@ -1488,6 +1489,8 @@ export default function Navigation({ children }) {
 
   return (
     <>
+      {/* Alias Mode Banner - Shows when in alias mode */}
+      <AliasModeBanner />
       <Box minH="100vh" bg={useColorModeValue("gray.100", "gray.900")}>
         <SidebarContent
           onClose={() => setIsOpen(false)}
