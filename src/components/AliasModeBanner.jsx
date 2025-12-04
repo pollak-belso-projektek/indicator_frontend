@@ -1,5 +1,18 @@
-import { Alert, Box, Button, Typography } from "@mui/material";
-import { ExitToApp as ExitIcon, Person as PersonIcon } from "@mui/icons-material";
+import { useState } from "react";
+import {
+  Alert,
+  Box,
+  Button,
+  Typography,
+  IconButton,
+  Collapse,
+} from "@mui/material";
+import {
+  ExitToApp as ExitIcon,
+  Person as PersonIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+} from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import {
   disableAliasMode,
@@ -11,12 +24,14 @@ import {
 /**
  * Banner that appears at the top of the page when in alias mode
  * Shows which user is being impersonated and allows exiting alias mode
+ * Starts collapsed by default, can be expanded to see details
  */
 const AliasModeBanner = () => {
   const dispatch = useDispatch();
   const isInAliasMode = useSelector(selectIsInAliasMode);
   const aliasUser = useSelector(selectAliasUser);
   const originalUser = useSelector(selectOriginalUser);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleExitAliasMode = () => {
     dispatch(disableAliasMode());
@@ -28,45 +43,52 @@ const AliasModeBanner = () => {
 
   return (
     <Alert
-      severity="warning"
+      severity="error"
       sx={{
         position: "sticky",
         top: 0,
         zIndex: 1200,
         borderRadius: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        py: 1.5,
-        px: 3,
-        boxShadow: 2,
+        py: isExpanded ? 1.5 : 0,
+        cursor: "pointer",
       }}
       icon={<PersonIcon />}
+      onClick={() => setIsExpanded(!isExpanded)}
+      action={
+        <IconButton size="small" color="inherit">
+          {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+        </IconButton>
+      }
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1 }}>
-        <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-          Alias mód aktív
+        <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+          Alias mód: {aliasUser.name}
         </Typography>
-        <Typography variant="body2">
-          Az oldalt {aliasUser.name} ({aliasUser.email}) felhasználóként látod.
-          Eredeti fiók: {originalUser.name} ({originalUser.role || "Superadmin"})
-        </Typography>
+        <Collapse in={isExpanded} orientation="horizontal">
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Typography variant="body2">({aliasUser.email})</Typography>
+            <Button
+              variant="contained"
+              color="inherit"
+              size="small"
+              startIcon={<ExitIcon />}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleExitAliasMode();
+              }}
+              sx={{
+                ml: 2,
+                backgroundColor: "rgba(0, 0, 0, 0.1)",
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.2)",
+                },
+              }}
+            >
+              Kilépés
+            </Button>
+          </Box>
+        </Collapse>
       </Box>
-      <Button
-        variant="contained"
-        color="inherit"
-        startIcon={<ExitIcon />}
-        onClick={handleExitAliasMode}
-        sx={{
-          ml: 2,
-          backgroundColor: "rgba(0, 0, 0, 0.1)",
-          "&:hover": {
-            backgroundColor: "rgba(0, 0, 0, 0.2)",
-          },
-        }}
-      >
-        Kilépés az alias módból
-      </Button>
     </Alert>
   );
 };

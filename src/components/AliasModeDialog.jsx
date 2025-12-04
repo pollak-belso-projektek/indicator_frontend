@@ -22,21 +22,27 @@ import {
   School as SchoolIcon,
   Email as EmailIcon,
 } from "@mui/icons-material";
-import { useGetFilteredUsersQuery } from "../store/api/apiSlice";
-import { getUserTypeLabel } from "../utils/userHierarchy";
+import { useGetUsersQuery } from "../store/api/apiSlice";
+import {
+  getUserTypeLabel,
+  getPermissionsFromLevel,
+  getUserTypeFromLevel,
+} from "../utils/userHierarchy";
 
 /**
  * Dialog for superadmins to select a user to impersonate
+ * Uses full user data from getUsers endpoint to include permissions and tableAccess
  */
 const AliasModeDialog = ({ open, onClose, onSelectUser }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
 
+  // Use getUsers instead of getFilteredUsers to get full user data including tableAccess
   const {
     data: users = [],
     isLoading,
     error,
-  } = useGetFilteredUsersQuery(undefined, {
+  } = useGetUsersQuery(undefined, {
     skip: !open,
   });
 
@@ -46,7 +52,41 @@ const AliasModeDialog = ({ open, onClose, onSelectUser }) => {
 
   const handleConfirm = () => {
     if (selectedUser) {
-      onSelectUser(selectedUser);
+      // Build complete user object with permissions for alias mode
+      const userType = getUserTypeFromLevel(selectedUser.permissions);
+
+      // Use permissionsDetails from API if available, otherwise generate from level
+      const permissionsObject =
+        selectedUser.permissionsDetails ||
+        getPermissionsFromLevel(selectedUser.permissions);
+
+      const completeAliasUser = {
+        ...selectedUser,
+        // Ensure permissions object is properly set (either from API or generated)
+        permissions: permissionsObject,
+        // Include tableAccess from the user data
+        tableAccess: selectedUser.tableAccess || [],
+        // Set role based on permissions
+        role: permissionsObject.isSuperadmin
+          ? "Superadmin"
+          : permissionsObject.isAdmin
+          ? "Admin"
+          : permissionsObject.isHSZC
+          ? "HSZC"
+          : permissionsObject.isPrivileged
+          ? "Privileged"
+          : "Standard",
+        // Keep school info (alapadatokId for school ID reference)
+        school: selectedUser.alapadatokId || selectedUser.school,
+        // Store user type for reference
+        userType: userType,
+      };
+
+      console.log("Alias mode - Complete user data:", completeAliasUser);
+      console.log("Alias mode - TableAccess:", completeAliasUser.tableAccess);
+      console.log("Alias mode - Permissions:", completeAliasUser.permissions);
+
+      onSelectUser(completeAliasUser);
       setSelectedUser(null);
       setSearchTerm("");
       onClose();
@@ -62,10 +102,11 @@ const AliasModeDialog = ({ open, onClose, onSelectUser }) => {
   // Filter users based on search term
   const filteredUsers = users.filter((user) => {
     const searchLower = searchTerm.toLowerCase();
+    const schoolName = user.alapadatok?.iskola_neve || user.school || "";
     return (
       user.name?.toLowerCase().includes(searchLower) ||
       user.email?.toLowerCase().includes(searchLower) ||
-      user.school?.toLowerCase().includes(searchLower)
+      schoolName.toLowerCase().includes(searchLower)
     );
   });
 
@@ -74,13 +115,15 @@ const AliasModeDialog = ({ open, onClose, onSelectUser }) => {
       <DialogTitle>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <PersonIcon />
-          <Typography variant="h6">Felhasználó kiválasztása alias módhoz</Typography>
+          <Typography variant="h6">
+            Felhasználó kiválasztása alias módhoz
+          </Typography>
         </Box>
       </DialogTitle>
       <DialogContent>
         <Alert severity="info" sx={{ mb: 2 }}>
-          Válassz ki egy felhasználót, hogy az oldalt az ő jogosultságaival lásd.
-          Az alias mód során nem tudsz adatokat módosítani vagy törölni.
+          Válassz ki egy felhasználót, hogy az oldalt az ő jogosultságaival
+          lásd. Az alias mód során nem tudsz adatokat módosítani vagy törölni.
         </Alert>
 
         <TextField
@@ -119,46 +162,81 @@ const AliasModeDialog = ({ open, onClose, onSelectUser }) => {
                 />
               </ListItem>
             ) : (
-              filteredUsers.map((user) => (
-                <ListItemButton
-                  key={user.id}
-                  selected={selectedUser?.id === user.id}
-                  onClick={() => handleSelectUser(user)}
-                >
-                  <ListItemIcon>
-                    <PersonIcon />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-                          {user.name}
-                        </Typography>
-                        <Chip
-                          label={getUserTypeLabel(user.userType)}
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                        />
-                      </Box>
-                    }
-                    secondary={
-                      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                          <EmailIcon fontSize="small" />
-                          <Typography variant="body2">{user.email}</Typography>
+              filteredUsers.map((user) => {
+                // Get userType from permissions level for display
+                const userType = getUserTypeFromLevel(user.permissions);
+                // Get school name from alapadatok or fallback
+                const schoolName =
+                  user.alapadatok?.iskola_neve || user.school || null;
+
+                return (
+                  <ListItemButton
+                    key={user.id}
+                    selected={selectedUser?.id === user.id}
+                    onClick={() => handleSelectUser(user)}
+                  >
+                    <ListItemIcon>
+                      <PersonIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <Typography
+                            variant="body1"
+                            sx={{ fontWeight: "bold" }}
+                          >
+                            {user.name}
+                          </Typography>
+                          <Chip
+                            label={getUserTypeLabel(userType)}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                          />
                         </Box>
-                        {user.school && (
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                            <SchoolIcon fontSize="small" />
-                            <Typography variant="body2">{user.school}</Typography>
+                      }
+                      secondary={
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.5,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                            }}
+                          >
+                            <EmailIcon fontSize="small" />
+                            <Typography variant="body2">
+                              {user.email}
+                            </Typography>
                           </Box>
-                        )}
-                      </Box>
-                    }
-                  />
-                </ListItemButton>
-              ))
+                          {schoolName && (
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                              }}
+                            >
+                              <SchoolIcon fontSize="small" />
+                              <Typography variant="body2">
+                                {schoolName}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      }
+                    />
+                  </ListItemButton>
+                );
+              })
             )}
           </List>
         )}
