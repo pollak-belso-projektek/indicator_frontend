@@ -40,7 +40,6 @@ import {
 } from "../store/api/apiSlice";
 import { useSelector } from "react-redux";
 import { selectUserPermissions } from "../store/slices/authSlice";
-import { USER_HIERARCHY } from "../utils/userHierarchy";
 
 const TableManagement = () => {
   const [openCreate, setOpenCreate] = useState(false);

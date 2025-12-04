@@ -7,7 +7,6 @@ import {
   selectAliasUser,
   selectOriginalUser,
 } from "../store/slices/authSlice";
-import { getUserTypeLabel } from "../utils/userHierarchy";
 
 /**
  * Banner that appears at the top of the page when in alias mode
@@ -50,7 +49,7 @@ const AliasModeBanner = () => {
         </Typography>
         <Typography variant="body2">
           Az oldalt {aliasUser.name} ({aliasUser.email}) felhasználóként látod.
-          Eredeti fiók: {originalUser.name} ({getUserTypeLabel(originalUser.userType || "superadmin")})
+          Eredeti fiók: {originalUser.name} ({originalUser.role || "Superadmin"})
         </Typography>
       </Box>
       <Button
