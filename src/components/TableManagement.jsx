@@ -325,6 +325,7 @@ const TableManagement = () => {
               <TableBody>
                 {tableList.length === 0 ? (
                   <TableRow>
+                    {/* Columns: ID, Név, Státusz, [Lezárva if canLockTables], Létrehozva, Frissítve, Műveletek */}
                     <TableCell colSpan={canLockTables ? 7 : 6} align="center">
                       Nincs elérhető tábla
                     </TableCell>

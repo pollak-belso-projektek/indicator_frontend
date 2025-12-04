@@ -230,6 +230,7 @@ export const isTableLocked = (tableList, tableName) => {
  */
 export const canModifyTable = (tableList, tableAccess, tableName, isSuperadmin = false) => {
   // Superadmins can always modify (they can also unlock)
+  // This is intentional - superadmins need to be able to unlock tables and fix issues
   if (isSuperadmin) {
     return { canModify: true, reason: "" };
   }

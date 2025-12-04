@@ -194,6 +194,8 @@ const authSlice = createSlice({
     // Alias mode actions
     enableAliasMode: (state, action) => {
       // Only allow superadmins to use alias mode
+      // NOTE: This is frontend validation only. Backend should also validate
+      // alias mode requests to prevent client-side manipulation
       if (state.user?.permissions?.isSuperadmin && !state.aliasMode) {
         state.aliasMode = true;
         state.originalUser = state.user;
