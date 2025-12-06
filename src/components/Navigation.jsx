@@ -59,7 +59,7 @@ import { useRecentPages } from "../hooks/useRecentPages";
 import AliasModeBanner from "./AliasModeBanner";
 
 // Page numbering map based on the user's requirements
-const PageNumbering = {
+export const PageNumbering = {
   "/tanulo_letszam": 1,
   "/felvettek_szama": 2,
   "/oktato_per_diak": 3,
@@ -372,7 +372,10 @@ const getAccessibleNavItems = (tableAccess, userPermissions) => {
 
       // Table management - only for superadmins
       if (item.link === "/table-management") {
-        return userPermissions?.isSuperadmin;
+        return (
+          userPermissions?.isSuperadmin ||
+          (userPermissions?.isHSZC && userPermissions?.isAdmin)
+        );
       }
 
       // Alapadatok - only if user has alapadatok table access

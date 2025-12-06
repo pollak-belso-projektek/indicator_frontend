@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Box,
   Typography,
@@ -23,6 +23,7 @@ import {
   Chip,
   Alert,
   CircularProgress,
+  Input,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -40,12 +41,15 @@ import {
 } from "../store/api/apiSlice";
 import { useSelector } from "react-redux";
 import { selectUserPermissions } from "../store/slices/authSlice";
+import { PageNumbering } from "./Navigation";
 
 const TableManagement = () => {
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
   const [newTable, setNewTable] = useState({ name: "", isAvailable: true });
+  const [search, setSearch] = useState("");
+
   const [editedTable, setEditedTable] = useState({
     name: "",
     isAvailable: true,
@@ -73,9 +77,28 @@ const TableManagement = () => {
   const [lockTable, { isLoading: isLocking }] = useLockTableMutation();
   const [unlockTable, { isLoading: isUnlocking }] = useUnlockTableMutation();
 
+  // Create enhanced table list with page numbering prefix (immutable approach)
+  const enhancedTableList = useMemo(() => {
+    return tableList.map((table) => {
+      const prefix = PageNumbering["/" + table.name];
+      if (prefix && table.alias) {
+        return {
+          ...table,
+          displayAlias: `${prefix}. ${table.alias}`,
+        };
+      }
+      return {
+        ...table,
+        displayAlias: table.alias || table.name,
+      };
+    });
+  }, [tableList]);
+
   // Get user permissions
   const userPermissions = useSelector(selectUserPermissions);
-  const canLockTables = userPermissions?.isHSZC || userPermissions?.isSuperadmin;
+  const canLockTables =
+    (userPermissions?.isHSZC && userPermissions?.isAdmin) ||
+    userPermissions?.isSuperadmin;
 
   const handleCreateTable = async () => {
     if (!newTable.name.trim()) {
@@ -290,6 +313,13 @@ const TableManagement = () => {
       <Card sx={{ boxShadow: 3 }}>
         <CardContent sx={{ p: 3 }}>
           {/* Header with Create Button */}
+          <Box>
+            <Input
+              placeholder="Keresés táblák között név alapján..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </Box>
           <Box
             sx={{
               display: "flex",
@@ -313,7 +343,7 @@ const TableManagement = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>ID</TableCell>
+                  {userPermissions?.isSuperadmin && <TableCell>ID</TableCell>}
                   <TableCell>Név</TableCell>
                   <TableCell>Státusz</TableCell>
                   {canLockTables && <TableCell>Lezárva</TableCell>}
@@ -323,7 +353,7 @@ const TableManagement = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {tableList.length === 0 ? (
+                {enhancedTableList.length === 0 ? (
                   <TableRow>
                     {/* Columns: ID, Név, Státusz, [Lezárva if canLockTables], Létrehozva, Frissítve, Műveletek */}
                     <TableCell colSpan={canLockTables ? 7 : 6} align="center">
@@ -331,88 +361,111 @@ const TableManagement = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  tableList.map((table) => (
-                    <TableRow key={table.id}>
-                      <TableCell>
-                        <Typography
-                          variant="body2"
-                          sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}
-                        >
-                          {table.id}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body1" fontWeight="medium">
-                          {table.name}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={
-                            table.isAvailable ? "Elérhető" : "Nem elérhető"
-                          }
-                          color={table.isAvailable ? "success" : "default"}
-                          size="small"
-                        />
-                      </TableCell>
-                      {canLockTables && (
+                  //also search via number
+                  enhancedTableList
+                    .filter((table) =>
+                      (table.displayAlias || "")
+                        .toLowerCase()
+                        .includes(search.toLowerCase())
+                    )
+                    .map((table) => (
+                      <TableRow key={table.id}>
+                        {userPermissions?.isSuperadmin && (
+                          <TableCell>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontFamily: "monospace",
+                                fontSize: "0.8rem",
+                              }}
+                            >
+                              {table.id}
+                            </Typography>
+                          </TableCell>
+                        )}
+                        <TableCell>
+                          <Typography variant="body1" fontWeight="medium">
+                            {table.displayAlias}
+                          </Typography>
+                        </TableCell>
                         <TableCell>
                           <Chip
-                            label={table.isLocked ? "Lezárva" : "Aktív"}
-                            color={table.isLocked ? "error" : "success"}
+                            label={
+                              table.isAvailable ? "Elérhető" : "Nem elérhető"
+                            }
+                            color={table.isAvailable ? "success" : "default"}
                             size="small"
-                            icon={table.isLocked ? <LockIcon /> : <UnlockIcon />}
                           />
                         </TableCell>
-                      )}
-                      <TableCell>
-                        {table.createdAt
-                          ? new Date(table.createdAt).toLocaleDateString(
-                              "hu-HU"
-                            )
-                          : "-"}
-                      </TableCell>
-                      <TableCell>
-                        {table.updatedAt
-                          ? new Date(table.updatedAt).toLocaleDateString(
-                              "hu-HU"
-                            )
-                          : "-"}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
-                          <IconButton
-                            size="small"
-                            onClick={() => handleEditTable(table)}
-                            color="primary"
+                        {canLockTables && (
+                          <TableCell>
+                            <Chip
+                              label={table.isLocked ? "Lezárva" : "Aktív"}
+                              color={table.isLocked ? "error" : "success"}
+                              size="small"
+                              icon={
+                                table.isLocked ? <LockIcon /> : <UnlockIcon />
+                              }
+                            />
+                          </TableCell>
+                        )}
+                        <TableCell>
+                          {table.createdAt
+                            ? new Date(table.createdAt).toLocaleDateString(
+                                "hu-HU"
+                              )
+                            : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {table.updatedAt
+                            ? new Date(table.updatedAt).toLocaleDateString(
+                                "hu-HU"
+                              )
+                            : "-"}
+                        </TableCell>
+                        <TableCell align="center">
+                          <Box
+                            sx={{
+                              display: "flex",
+                              gap: 1,
+                              justifyContent: "center",
+                            }}
                           >
-                            <EditIcon />
-                          </IconButton>
-                          {canLockTables && (
-                            table.isLocked ? (
-                              <IconButton
-                                size="small"
-                                onClick={() => handleUnlockTable(table.id, table.name)}
-                                color="success"
-                                disabled={isUnlocking}
-                              >
-                                <UnlockIcon />
-                              </IconButton>
-                            ) : (
-                              <IconButton
-                                size="small"
-                                onClick={() => handleLockTable(table.id, table.name)}
-                                color="error"
-                                disabled={isLocking}
-                              >
-                                <LockIcon />
-                              </IconButton>
-                            )
-                          )}
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                            <IconButton
+                              size="small"
+                              onClick={() => handleEditTable(table)}
+                              color="primary"
+                            >
+                              <EditIcon />
+                            </IconButton>
+                            {canLockTables &&
+                              (table.isLocked ? (
+                                <IconButton
+                                  size="small"
+                                  onClick={() =>
+                                    handleUnlockTable(table.id, table.name)
+                                  }
+                                  color="success"
+                                  disabled={isUnlocking}
+                                >
+                                  <UnlockIcon />
+                                </IconButton>
+                              ) : (
+                                <IconButton
+                                  size="small"
+                                  onClick={() =>
+                                    handleLockTable(table.id, table.name)
+                                  }
+                                  color="error"
+                                  disabled={isLocking}
+                                >
+                                  <LockIcon />
+                                </IconButton>
+                              ))}
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))
                 )}
               </TableBody>
             </Table>
