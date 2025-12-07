@@ -83,6 +83,10 @@ const initialState = {
   loading: false,
   error: null,
   selectedSchool: null, // Add selected school to state
+  // Alias mode state
+  aliasMode: false, // Whether alias mode is active
+  originalUser: null, // The actual logged-in superadmin
+  aliasUser: null, // The user being impersonated
 };
 
 const authSlice = createSlice({
@@ -129,6 +133,10 @@ const authSlice = createSlice({
       state.error = null;
       state.loading = false;
       state.selectedSchool = null; // Clear selected school on logout
+      // Clear alias mode state on logout
+      state.aliasMode = false;
+      state.originalUser = null;
+      state.aliasUser = null;
     },
     clearError: (state) => {
       state.error = null;
@@ -183,6 +191,31 @@ const authSlice = createSlice({
     clearSelectedSchool: (state) => {
       state.selectedSchool = null;
     },
+    // Alias mode actions
+    enableAliasMode: (state, action) => {
+      // Only allow superadmins to use alias mode
+      // NOTE: This is frontend validation only. Backend should also validate
+      // alias mode requests to prevent client-side manipulation
+      if (state.user?.permissions?.isSuperadmin && !state.aliasMode) {
+        state.aliasMode = true;
+        state.originalUser = state.user;
+        state.aliasUser = action.payload; // The user to impersonate
+        // Update current user to be the alias user
+        state.user = action.payload;
+        // Clear selected school when entering alias mode
+        state.selectedSchool = null;
+      }
+    },
+    disableAliasMode: (state) => {
+      if (state.aliasMode && state.originalUser) {
+        state.aliasMode = false;
+        state.user = state.originalUser; // Restore original user
+        state.originalUser = null;
+        state.aliasUser = null;
+        // Clear selected school when exiting alias mode
+        state.selectedSchool = null;
+      }
+    },
   },
 });
 
@@ -196,6 +229,8 @@ export const {
   checkTokenValidity,
   setSelectedSchool,
   clearSelectedSchool,
+  enableAliasMode,
+  disableAliasMode,
 } = authSlice.actions;
 
 export default authSlice.reducer;
@@ -230,3 +265,9 @@ export const selectIsTokenExpiringSoon = (state) => {
   const token = state.auth.accessToken;
   return token ? isTokenExpiringSoon(token) : true;
 };
+
+// Alias mode selectors
+export const selectAliasMode = (state) => state.auth.aliasMode;
+export const selectOriginalUser = (state) => state.auth.originalUser;
+export const selectAliasUser = (state) => state.auth.aliasUser;
+export const selectIsInAliasMode = (state) => state.auth.aliasMode === true;

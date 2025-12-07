@@ -32,6 +32,10 @@ import {
   FormControl,
   InputLabel,
   Grid,
+  Tabs,
+  Tab,
+  Container,
+  Fade,
 } from "@mui/material";
 import {
   Save as SaveIcon,
@@ -40,6 +44,8 @@ import {
   Delete as DeleteIcon,
   Close as CloseIcon,
   Add as AddIcon,
+  Assessment as AssessmentIcon,
+  BarChart as BarChartIcon,
 } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import {
@@ -49,6 +55,12 @@ import {
   useDeleteEgyOktatoraJutoTanuloMutation,
   useGetAllAlapadatokQuery,
 } from "../store/api/apiSlice";
+import GenericYearlyChart from "../components/GenericYearlyChart";
+import PageWrapper from "./PageWrapper";
+import LockStatusIndicator from "../components/LockStatusIndicator";
+import LockedTableWrapper from "../components/LockedTableWrapper";
+import InfoEgyOktatoraJutoTanulo from "./indicators/3_oktato_per_diak/info_oktato_per_diak";
+import TitleEgyOktatoraJutoTanulo from "./indicators/3_oktato_per_diak/title_oktato_per_diak";
 
 export default function EgyOktatoraJutoTanulo() {
   const schoolYears = generateSchoolYears();
@@ -73,6 +85,7 @@ export default function EgyOktatoraJutoTanulo() {
   const [teacherRatioData, setTeacherRatioData] = useState([]);
   const [isModified, setIsModified] = useState(false);
   const [modifiedIds, setModifiedIds] = useState(new Set());
+  const [activeTab, setActiveTab] = useState(0);
 
   // UI state
   const [notification, setNotification] = useState({
@@ -96,6 +109,10 @@ export default function EgyOktatoraJutoTanulo() {
       oktatok_szama: 0,
     },
   });
+
+  const handleTabChange = (_event, newValue) => {
+    setActiveTab(newValue);
+  };
 
   // Transform and organize API data
   const organizedData = useMemo(() => {
@@ -172,8 +189,8 @@ export default function EgyOktatoraJutoTanulo() {
       for (const item of itemsToUpdate) {
         await updateTeacherRatioData({
           id: item.id,
-          tanulok_szama: parseInt(item.tanulok_szama) || 0,
-          oktatok_szama: parseInt(item.oktatok_szama) || 0,
+          tanulok_szama: parseInt(item.tanulok_szama),
+          oktatok_szama: parseInt(item.oktatok_szama),
         }).unwrap();
       }
 
@@ -189,9 +206,8 @@ export default function EgyOktatoraJutoTanulo() {
       console.error("Error saving teacher ratio data:", error);
       setNotification({
         open: true,
-        message: `Hiba történt a mentés során: ${
-          error.data?.message || error.message
-        }`,
+        message: `Hiba történt a mentés során: ${error.data?.message || error.message
+          }`,
         severity: "error",
       });
     }
@@ -222,9 +238,8 @@ export default function EgyOktatoraJutoTanulo() {
       console.error("Error deleting teacher ratio data:", error);
       setNotification({
         open: true,
-        message: `Hiba történt a törlés során: ${
-          error.data?.message || error.message
-        }`,
+        message: `Hiba történt a törlés során: ${error.data?.message || error.message
+          }`,
         severity: "error",
       });
     }
@@ -290,9 +305,8 @@ export default function EgyOktatoraJutoTanulo() {
 
       setNotification({
         open: true,
-        message: `Új oktató/tanuló arány rekord sikeresen hozzáadva: ${
-          addDialog.newRecord.selectedSchool?.iskola_neve || "Ismeretlen iskola"
-        } - ${newRecord.tanev_kezdete}/${newRecord.tanev_kezdete + 1}`,
+        message: `Új oktató/tanuló arány rekord sikeresen hozzáadva: ${addDialog.newRecord.selectedSchool?.iskola_neve || "Ismeretlen iskola"
+          } - ${newRecord.tanev_kezdete}/${newRecord.tanev_kezdete + 1}`,
         severity: "success",
       });
 
@@ -301,9 +315,8 @@ export default function EgyOktatoraJutoTanulo() {
       console.error("Error adding new teacher ratio data:", error);
       setNotification({
         open: true,
-        message: `Hiba történt az új rekord hozzáadása során: ${
-          error.data?.message || error.message
-        }`,
+        message: `Hiba történt az új rekord hozzáadása során: ${error.data?.message || error.message
+          }`,
         severity: "error",
       });
     }
@@ -340,577 +353,651 @@ export default function EgyOktatoraJutoTanulo() {
   }, [teacherRatioData]);
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Loading State */}
-      {isFetching && (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="200px"
-        >
-          <CircularProgress />
-        </Box>
-      )}
+    <PageWrapper
+      titleContent={<TitleEgyOktatoraJutoTanulo />}
+      infoContent={<InfoEgyOktatoraJutoTanulo />}
+    >
+      <Box sx={{ p: 3 }}>
+        <LockStatusIndicator tableName="egy_oktatora_juto_tanulo" />
 
-      {/* Error State */}
-      {fetchError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Hiba történt az adatok betöltése során: {fetchError.message}
-        </Alert>
-      )}
-
-      <Typography variant="h4" component="h1" gutterBottom>
-        Egy oktatóra jutó tanulók száma
-      </Typography>
-
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Az oktató-tanuló arány nyomon követése iskolánként és tanévenként. Ez az
-        indikátor az oktatás minőségének és terhelésének egyik fontos mutatója.
-      </Typography>
-
-      {/* Summary Statistics */}
-      <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Összesített statisztikák
-          </Typography>
-          {Object.keys(summaryStats).length === 0 ? (
-            <Box sx={{ textAlign: "center", py: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Nincs statisztikai adat megjelenítésre
-              </Typography>
-            </Box>
-          ) : (
-            <TableContainer component={Paper} variant="outlined">
-              <Table size="small">
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                    <TableCell sx={{ fontWeight: "bold" }}>Tanév</TableCell>
-                    <TableCell
-                      align="center"
-                      sx={{ fontWeight: "bold", backgroundColor: "#d4edda" }}
-                    >
-                      Összes tanuló (fő)
-                    </TableCell>
-                    <TableCell
-                      align="center"
-                      sx={{ fontWeight: "bold", backgroundColor: "#e6f3ff" }}
-                    >
-                      Összes oktató (fő)
-                    </TableCell>
-                    <TableCell
-                      align="center"
-                      sx={{ fontWeight: "bold", backgroundColor: "#fff3cd" }}
-                    >
-                      Átlagos arány (tanuló/oktató)
-                    </TableCell>
-                    <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                      Intézmények száma
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {Object.entries(summaryStats).map(([year, stats]) => (
-                    <TableRow key={year}>
-                      <TableCell sx={{ fontWeight: "medium" }}>
-                        {year}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ backgroundColor: "#d4edda40" }}
-                      >
-                        {stats.totalTanulok}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ backgroundColor: "#e6f3ff40" }}
-                      >
-                        {stats.totalOktatok}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{
-                          backgroundColor: "#fff3cd40",
-                          fontWeight: "bold",
-                          color: "primary.main",
-                        }}
-                      >
-                        {stats.atlagArany}
-                      </TableCell>
-                      <TableCell align="center">{stats.count}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Instructions Card */}
-      <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Oktató-tanuló arány értelmezése
-          </Typography>
-          <Box component="ul" sx={{ pl: 3, mb: 2 }}>
-            <li>
-              <Typography variant="body2">
-                <strong>Optimális arány:</strong> Általában 15-25 tanuló juthat
-                egy oktatóra a hatékony oktatás érdekében
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Alacsony arány (10 alatt):</strong> Kis csoportméret,
-                intenzívebb figyelem, de nagyobb költség
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Magas arány (30 felett):</strong> Nagy csoportméret,
-                megnövekedett oktató terhelés
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>Szakmai képzésben:</strong> A gyakorlati oktatásnál
-                alacsonyabb arány szükséges
-              </Typography>
-            </li>
-          </Box>
-
+        {/* Loading State */}
+        {isFetching && (
           <Box
-            sx={{ mt: 3, p: 2, backgroundColor: "#fff2cc", borderRadius: 1 }}
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            minHeight="200px"
           >
-            <Typography variant="body2" sx={{ fontStyle: "italic" }}>
-              <strong>Számítási módszer:</strong>
-              <br />
-              Egy oktatóra jutó tanulók száma = Összes tanuló száma / Összes
-              oktató száma
-            </Typography>
+            <CircularProgress />
           </Box>
-        </CardContent>
-      </Card>
+        )}
 
-      {/* Detailed Data by School */}
-      <Card>
-        <CardContent>
-          <Typography variant="h6" component="h2" gutterBottom>
-            Részletes oktató-tanuló arány adatok iskolák szerint
-          </Typography>
+        {/* Error State */}
+        {fetchError && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            Hiba történt az adatok betöltése során: {fetchError.message}
+          </Alert>
+        )}
 
-          {/* Show empty state if no data */}
-          {!teacherRatioData || teacherRatioData.length === 0 ? (
-            <Box sx={{ textAlign: "center", py: 4 }}>
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                📊 Nincs megjeleníthető adat
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {isFetching
-                  ? "Adatok betöltése folyamatban..."
-                  : "Nincsenek oktató-tanuló arány adatok a kiválasztott időszakra."}
-              </Typography>
-            </Box>
-          ) : (
-            Object.entries(organizedData).map(([schoolName, schoolData]) => (
-              <Accordion key={schoolName} sx={{ mb: 2 }}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                    {schoolName}
+        {/* Summary Statistics */}
+        <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
+          <CardContent>
+            <Typography variant="h6" component="h3" gutterBottom>
+              Összesített statisztikák
+            </Typography>
+            {Object.keys(summaryStats).length === 0 ? (
+              <Box sx={{ textAlign: "center", py: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Nincs statisztikai adat megjelenítésre
+                </Typography>
+              </Box>
+            ) : (
+              <TableContainer component={Paper} variant="outlined">
+                <Table size="small">
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                      <TableCell sx={{ fontWeight: "bold" }}>Tanév</TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ fontWeight: "bold", backgroundColor: "#d4edda" }}
+                      >
+                        Összes tanuló (fő)
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ fontWeight: "bold", backgroundColor: "#e6f3ff" }}
+                      >
+                        Összes oktató (fő)
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ fontWeight: "bold", backgroundColor: "#fff3cd" }}
+                      >
+                        Átlagos arány (tanuló/oktató)
+                      </TableCell>
+                      <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                        Intézmények száma
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {Object.entries(summaryStats).map(([year, stats]) => (
+                      <TableRow key={year}>
+                        <TableCell sx={{ fontWeight: "medium" }}>
+                          {year}
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ backgroundColor: "#d4edda40" }}
+                        >
+                          {stats.totalTanulok}
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ backgroundColor: "#e6f3ff40" }}
+                        >
+                          {stats.totalOktatok}
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{
+                            backgroundColor: "#fff3cd40",
+                            fontWeight: "bold",
+                            color: "primary.main",
+                          }}
+                        >
+                          {stats.atlagArany}
+                        </TableCell>
+                        <TableCell align="center">{stats.count}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Tab Navigation */}
+        <Card sx={{ mb: 3 }}>
+          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              aria-label="Oktató-tanuló arány tabs"
+              variant="fullWidth"
+            >
+              <Tab
+                icon={<AssessmentIcon />}
+                label="Adatok és táblázatok"
+                sx={{ fontWeight: "bold", fontSize: "1rem" }}
+              />
+              <Tab
+                icon={<BarChartIcon />}
+                label="Grafikon nézet"
+                sx={{ fontWeight: "bold", fontSize: "1rem" }}
+              />
+            </Tabs>
+          </Box>
+        </Card>
+
+        {/* Tab Content */}
+        {activeTab === 0 && (
+          <Box>
+            {/* Instructions Card */}
+            <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
+              <CardContent>
+                <Typography variant="h6" component="h3" gutterBottom>
+                  Oktató-tanuló arány értelmezése
+                </Typography>
+                <Box component="ul" sx={{ pl: 3, mb: 2 }}>
+                  <li>
+                    <Typography variant="body2">
+                      <strong>Optimális arány:</strong> Általában 15-25 tanuló juthat
+                      egy oktatóra a hatékony oktatás érdekében
+                    </Typography>
+                  </li>
+                  <li>
+                    <Typography variant="body2">
+                      <strong>Alacsony arány (10 alatt):</strong> Kis csoportméret,
+                      intenzívebb figyelem, de nagyobb költség
+                    </Typography>
+                  </li>
+                  <li>
+                    <Typography variant="body2">
+                      <strong>Magas arány (30 felett):</strong> Nagy csoportméret,
+                      megnövekedett oktató terhelés
+                    </Typography>
+                  </li>
+                  <li>
+                    <Typography variant="body2">
+                      <strong>Szakmai képzésben:</strong> A gyakorlati oktatásnál
+                      alacsonyabb arány szükséges
+                    </Typography>
+                  </li>
+                </Box>
+
+                <Box
+                  sx={{ mt: 3, p: 2, backgroundColor: "#fff2cc", borderRadius: 1 }}
+                >
+                  <Typography variant="body2" sx={{ fontStyle: "italic" }}>
+                    <strong>Számítási módszer:</strong>
+                    <br />
+                    Egy oktatóra jutó tanulók száma = Összes tanuló száma / Összes
+                    oktató száma
                   </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <TableContainer component={Paper} variant="outlined">
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                          <TableCell sx={{ fontWeight: "bold" }}>
-                            Tanév
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            sx={{
-                              fontWeight: "bold",
-                              backgroundColor: "#d4edda",
-                            }}
-                          >
-                            Tanulók száma (fő)
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            sx={{
-                              fontWeight: "bold",
-                              backgroundColor: "#e6f3ff",
-                            }}
-                          >
-                            Oktatók száma (fő)
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            sx={{
-                              fontWeight: "bold",
-                              backgroundColor: "#fff3cd",
-                            }}
-                          >
-                            Egy oktatóra jutó tanulók
-                          </TableCell>
-                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                            Műveletek
-                          </TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {Object.entries(schoolData).map(([year, data]) => (
-                          <TableRow key={year}>
-                            <TableCell sx={{ fontWeight: "medium" }}>
-                              {year}
-                            </TableCell>
-                            <TableCell
-                              align="center"
-                              sx={{ backgroundColor: "#d4edda40" }}
-                            >
-                              <TextField
-                                type="number"
-                                value={data.tanulok_szama || 0}
-                                onChange={(e) =>
-                                  handleDataChange(
-                                    data.id,
-                                    "tanulok_szama",
-                                    e.target.value
-                                  )
-                                }
-                                size="small"
-                                inputProps={{
-                                  min: 0,
-                                  style: { textAlign: "center" },
-                                }}
-                                sx={{ width: "80px" }}
-                              />
-                            </TableCell>
-                            <TableCell
-                              align="center"
-                              sx={{ backgroundColor: "#e6f3ff40" }}
-                            >
-                              <TextField
-                                type="number"
-                                value={data.oktatok_szama || 0}
-                                onChange={(e) =>
-                                  handleDataChange(
-                                    data.id,
-                                    "oktatok_szama",
-                                    e.target.value
-                                  )
-                                }
-                                size="small"
-                                inputProps={{
-                                  min: 0,
-                                  style: { textAlign: "center" },
-                                }}
-                                sx={{ width: "80px" }}
-                              />
-                            </TableCell>
-                            <TableCell
-                              align="center"
-                              sx={{
-                                backgroundColor: "#fff3cd40",
-                                fontWeight: "bold",
-                                color: "primary.main",
-                              }}
-                            >
-                              {data.oktato_per_tanulo_arany}
-                            </TableCell>
-                            <TableCell align="center">
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() =>
-                                  openDeleteDialog(data.id, schoolName, year)
-                                }
-                                title={`Törlés: ${schoolName} - ${year}`}
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </AccordionDetails>
-              </Accordion>
-            ))
-          )}
+                </Box>
+              </CardContent>
+            </Card>
 
-          {/* Action Buttons */}
-          <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSave}
-              disabled={!isModified || isAdding || isUpdating || isDeleting}
+            {/* Detailed Data by School */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" component="h2" gutterBottom>
+                  Részletes oktató-tanuló arány adatok iskolák szerint
+                </Typography>
+
+                {/* Show empty state if no data */}
+                {!teacherRatioData || teacherRatioData.length === 0 ? (
+                  <Box sx={{ textAlign: "center", py: 4 }}>
+                    <Typography variant="h6" color="text.secondary" gutterBottom>
+                      📊 Nincs megjeleníthető adat
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {isFetching
+                        ? "Adatok betöltése folyamatban..."
+                        : "Nincsenek oktató-tanuló arány adatok a kiválasztott időszakra."}
+                    </Typography>
+                  </Box>
+                ) : (
+                  Object.entries(organizedData).map(([schoolName, schoolData]) => (
+                    <Accordion key={schoolName} sx={{ mb: 2 }}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                          {schoolName}
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <TableContainer component={Paper} variant="outlined">
+                          <Table size="small">
+                            <TableHead>
+                              <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                                <TableCell sx={{ fontWeight: "bold" }}>
+                                  Tanév
+                                </TableCell>
+                                <TableCell
+                                  align="center"
+                                  sx={{
+                                    fontWeight: "bold",
+                                    backgroundColor: "#d4edda",
+                                  }}
+                                >
+                                  Tanulók száma (fő)
+                                </TableCell>
+                                <TableCell
+                                  align="center"
+                                  sx={{
+                                    fontWeight: "bold",
+                                    backgroundColor: "#e6f3ff",
+                                  }}
+                                >
+                                  Oktatók száma (fő)
+                                </TableCell>
+                                <TableCell
+                                  align="center"
+                                  sx={{
+                                    fontWeight: "bold",
+                                    backgroundColor: "#fff3cd",
+                                  }}
+                                >
+                                  Egy oktatóra jutó tanulók
+                                </TableCell>
+                                <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                                  Műveletek
+                                </TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {Object.entries(schoolData).map(([year, data]) => (
+                                <TableRow key={year}>
+                                  <TableCell sx={{ fontWeight: "medium" }}>
+                                    {year}
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{ backgroundColor: "#d4edda40" }}
+                                  >
+                                    <TextField
+                                      type="number"
+                                      value={data.tanulok_szama || 0}
+                                      onChange={(e) =>
+                                        handleDataChange(
+                                          data.id,
+                                          "tanulok_szama",
+                                          e.target.value
+                                        )
+                                      }
+                                      size="small"
+                                      inputProps={{
+                                        min: 0,
+                                        style: { textAlign: "center" },
+                                      }}
+                                      sx={{ width: "80px" }}
+                                    />
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{ backgroundColor: "#e6f3ff40" }}
+                                  >
+                                    <TextField
+                                      type="number"
+                                      value={data.oktatok_szama || 0}
+                                      onChange={(e) =>
+                                        handleDataChange(
+                                          data.id,
+                                          "oktatok_szama",
+                                          e.target.value
+                                        )
+                                      }
+                                      size="small"
+                                      inputProps={{
+                                        min: 0,
+                                        style: { textAlign: "center" },
+                                      }}
+                                      sx={{ width: "80px" }}
+                                    />
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{
+                                      backgroundColor: "#fff3cd40",
+                                      fontWeight: "bold",
+                                      color: "primary.main",
+                                    }}
+                                  >
+                                    {data.oktato_per_tanulo_arany}
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      onClick={() =>
+                                        openDeleteDialog(data.id, schoolName, year)
+                                      }
+                                      title={`Törlés: ${schoolName} - ${year}`}
+                                    >
+                                      <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </AccordionDetails>
+                    </Accordion>
+                  ))
+                )}
+
+                {/* Action Buttons */}
+                <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+                  <LockedTableWrapper tableName="egy_oktatora_juto_tanulo">
+                    <Button
+                      variant="contained"
+                      startIcon={<SaveIcon />}
+                      onClick={handleSave}
+                      disabled={!isModified || isAdding || isUpdating || isDeleting}
+                    >
+                      {isAdding || isUpdating ? "Mentés..." : "Mentés"}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      startIcon={<RefreshIcon />}
+                      onClick={handleReset}
+                      disabled={!isModified || isAdding || isUpdating || isDeleting}
+                    >
+                      Visszaállítás
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      startIcon={<AddIcon />}
+                      onClick={openAddDialog}
+                      disabled={isAdding || isUpdating || isDeleting}
+                    >
+                      Új rekord hozzáadása
+                    </Button>
+                  </LockedTableWrapper>
+                </Stack>
+
+                {/* Status Messages */}
+                {isModified && (
+                  <Alert severity="warning" sx={{ mt: 2 }}>
+                    Mentetlen módosítások vannak. Ne felejtsd el menteni a
+                    változtatásokat!
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Legend */}
+            <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
+              <CardContent>
+                <Typography variant="h6" component="h3" gutterBottom>
+                  Jelmagyarázat
+                </Typography>
+                <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap">
+                  <Chip
+                    label="Tanulók száma"
+                    variant="outlined"
+                    sx={{ backgroundColor: "#d4edda" }}
+                  />
+                  <Chip
+                    label="Oktatók száma"
+                    variant="outlined"
+                    sx={{ backgroundColor: "#e6f3ff" }}
+                  />
+                  <Chip
+                    label="Oktató-tanuló arány"
+                    variant="outlined"
+                    sx={{ backgroundColor: "#fff3cd" }}
+                  />
+                </Stack>
+                <Typography variant="body2">
+                  A táblázat az oktató-tanuló arányt jeleníti meg iskolák és tanévek
+                  szerint. Az arány automatikusan számítódik a tanulók és oktatók
+                  száma alapján. Alacsonyabb érték kisebb csoportméretet jelent.
+                </Typography>
+              </CardContent>
+            </Card>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+              open={deleteDialog.open}
+              onClose={() =>
+                setDeleteDialog({
+                  open: false,
+                  id: null,
+                  schoolName: "",
+                  year: "",
+                })
+              }
             >
-              {isAdding || isUpdating ? "Mentés..." : "Mentés"}
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleReset}
-              disabled={!isModified || isAdding || isUpdating || isDeleting}
-            >
-              Visszaállítás
-            </Button>
-            <Button
-              variant="contained"
-              color="success"
-              startIcon={<AddIcon />}
-              onClick={openAddDialog}
-              disabled={isAdding || isUpdating || isDeleting}
-            >
-              Új rekord hozzáadása
-            </Button>
-          </Stack>
-
-          {/* Status Messages */}
-          {isModified && (
-            <Alert severity="warning" sx={{ mt: 2 }}>
-              Mentetlen módosítások vannak. Ne felejtsd el menteni a
-              változtatásokat!
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Legend */}
-      <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Jelmagyarázat
-          </Typography>
-          <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap">
-            <Chip
-              label="Tanulók száma"
-              variant="outlined"
-              sx={{ backgroundColor: "#d4edda" }}
-            />
-            <Chip
-              label="Oktatók száma"
-              variant="outlined"
-              sx={{ backgroundColor: "#e6f3ff" }}
-            />
-            <Chip
-              label="Oktató-tanuló arány"
-              variant="outlined"
-              sx={{ backgroundColor: "#fff3cd" }}
-            />
-          </Stack>
-          <Typography variant="body2">
-            A táblázat az oktató-tanuló arányt jeleníti meg iskolák és tanévek
-            szerint. Az arány automatikusan számítódik a tanulók és oktatók
-            száma alapján. Alacsonyabb érték kisebb csoportméretet jelent.
-          </Typography>
-        </CardContent>
-      </Card>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialog.open}
-        onClose={() =>
-          setDeleteDialog({
-            open: false,
-            id: null,
-            schoolName: "",
-            year: "",
-          })
-        }
-      >
-        <DialogTitle>Törlés megerősítése</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Biztosan törölni szeretnéd a következő oktató-tanuló arány adatokat?
-            <br />
-            <strong>Iskola:</strong> {deleteDialog.schoolName}
-            <br />
-            <strong>Tanév:</strong> {deleteDialog.year}
-            <br />
-            <br />
-            Ez a művelet nem vonható vissza!
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() =>
-              setDeleteDialog({
-                open: false,
-                id: null,
-                schoolName: "",
-                year: "",
-              })
-            }
-          >
-            Mégse
-          </Button>
-          <Button
-            onClick={() => handleDelete(deleteDialog.id)}
-            color="error"
-            variant="contained"
-            disabled={isDeleting}
-          >
-            {isDeleting ? "Törlés..." : "Törlés"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Add New Record Dialog */}
-      <Dialog
-        open={addDialog.open}
-        onClose={closeAddDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Új oktató-tanuló arány rekord hozzáadása</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Iskola *</InputLabel>
-                <Select
-                  value={addDialog.newRecord.selectedSchool?.id || ""}
-                  label="Iskola *"
-                  onChange={(e) => {
-                    const selectedSchool = schoolsData?.find(
-                      (school) => school.id === e.target.value
-                    );
-                    handleNewRecordChange("selectedSchool", selectedSchool);
-                    handleNewRecordChange("alapadatok_id", e.target.value);
-                  }}
-                  disabled={isLoadingSchools}
-                  required
-                >
-                  {schoolsData?.map((school) => (
-                    <MenuItem key={school.id} value={school.id}>
-                      {school.iskola_neve}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Tanév kezdete</InputLabel>
-                <Select
-                  value={addDialog.newRecord.tanev_kezdete}
-                  label="Tanév kezdete"
-                  onChange={(e) =>
-                    handleNewRecordChange("tanev_kezdete", e.target.value)
+              <DialogTitle>Törlés megerősítése</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  Biztosan törölni szeretnéd a következő oktató-tanuló arány adatokat?
+                  <br />
+                  <strong>Iskola:</strong> {deleteDialog.schoolName}
+                  <br />
+                  <strong>Tanév:</strong> {deleteDialog.year}
+                  <br />
+                  <br />
+                  Ez a művelet nem vonható vissza!
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button
+                  onClick={() =>
+                    setDeleteDialog({
+                      open: false,
+                      id: null,
+                      schoolName: "",
+                      year: "",
+                    })
                   }
-                  required
                 >
-                  {schoolYears.map((year) => {
-                    const startYear = parseInt(year.split("/")[0]);
-                    return (
-                      <MenuItem key={startYear} value={startYear}>
-                        {year}
+                  Mégse
+                </Button>
+                <Button
+                  onClick={() => handleDelete(deleteDialog.id)}
+                  color="error"
+                  variant="contained"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Törlés..." : "Törlés"}
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </Box>
+        )}
+
+        {/* Chart Tab Content */}
+        {activeTab === 1 && (
+          <Box>
+            {(() => {
+              // Prepare chart data - aggregate by year
+              const chartData = schoolYears.map((year) => {
+                let totalStudents = 0;
+                let totalTeachers = 0;
+
+                // Aggregate data across all schools for this year
+                Object.values(organizedData).forEach((schoolData) => {
+                  if (schoolData[year]) {
+                    totalStudents += schoolData[year].tanulok_szama || 0;
+                    totalTeachers += schoolData[year].oktatok_szama || 0;
+                  }
+                });
+
+                const ratio = totalTeachers > 0 ? (totalStudents / totalTeachers) : 0;
+
+                return {
+                  year: year,
+                  studentTeacherRatio: parseFloat(ratio.toFixed(2)),
+                  totalStudents: totalStudents,
+                  totalTeachers: totalTeachers,
+                };
+              });
+
+              const chartDataKeys = ["studentTeacherRatio"];
+              const chartKeyLabels = {
+                studentTeacherRatio: "Egy oktatóra jutó tanulók száma",
+              };
+
+              return (
+                <GenericYearlyChart
+                  data={chartData}
+                  dataKeys={chartDataKeys}
+                  keyLabels={chartKeyLabels}
+                  yAxisLabel="Oktató-tanuló arány"
+                  height={450}
+                  title="Oktató-tanuló arány alakulása"
+                />
+              );
+            })()}
+          </Box>
+        )}
+
+        {/* Add New Record Dialog */}
+        <Dialog
+          open={addDialog.open}
+          onClose={closeAddDialog}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>Új oktató-tanuló arány rekord hozzáadása</DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Iskola *</InputLabel>
+                  <Select
+                    value={addDialog.newRecord.selectedSchool?.id || ""}
+                    label="Iskola *"
+                    onChange={(e) => {
+                      const selectedSchool = schoolsData?.find(
+                        (school) => school.id === e.target.value
+                      );
+                      handleNewRecordChange("selectedSchool", selectedSchool);
+                      handleNewRecordChange("alapadatok_id", e.target.value);
+                    }}
+                    disabled={isLoadingSchools}
+                    required
+                  >
+                    {schoolsData?.map((school) => (
+                      <MenuItem key={school.id} value={school.id}>
+                        {school.iskola_neve}
                       </MenuItem>
-                    );
-                  })}
-                </Select>
-              </FormControl>
-            </Grid>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Tanulók száma (fő)"
-                type="number"
-                value={addDialog.newRecord.tanulok_szama}
-                onChange={(e) =>
-                  handleNewRecordChange("tanulok_szama", e.target.value)
-                }
-                inputProps={{ min: 0 }}
-                helperText="Az intézményben tanuló diákok száma"
-              />
-            </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Tanév kezdete</InputLabel>
+                  <Select
+                    value={addDialog.newRecord.tanev_kezdete}
+                    label="Tanév kezdete"
+                    onChange={(e) =>
+                      handleNewRecordChange("tanev_kezdete", e.target.value)
+                    }
+                    required
+                  >
+                    {schoolYears.map((year) => {
+                      const startYear = parseInt(year.split("/")[0]);
+                      return (
+                        <MenuItem key={startYear} value={startYear}>
+                          {year}
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                </FormControl>
+              </Grid>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Oktatók száma (fő)"
-                type="number"
-                value={addDialog.newRecord.oktatok_szama}
-                onChange={(e) =>
-                  handleNewRecordChange("oktatok_szama", e.target.value)
-                }
-                inputProps={{ min: 0 }}
-                helperText="Az intézményben dolgozó oktatók száma"
-              />
-            </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Tanulók száma (fő)"
+                  type="number"
+                  value={addDialog.newRecord.tanulok_szama}
+                  onChange={(e) =>
+                    handleNewRecordChange("tanulok_szama", e.target.value)
+                  }
+                  inputProps={{ min: 0 }}
+                  helperText="Az intézményben tanuló diákok száma"
+                />
+              </Grid>
 
-            <Grid item xs={12}>
-              <Typography
-                variant="body2"
-                sx={{
-                  mt: 2,
-                  p: 2,
-                  backgroundColor: "#fff2cc",
-                  borderRadius: 1,
-                }}
-              >
-                <strong>Számított oktató-tanuló arány:</strong>{" "}
-                {addDialog.newRecord.oktatok_szama > 0
-                  ? (
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Oktatók száma (fő)"
+                  type="number"
+                  value={addDialog.newRecord.oktatok_szama}
+                  onChange={(e) =>
+                    handleNewRecordChange("oktatok_szama", e.target.value)
+                  }
+                  inputProps={{ min: 0 }}
+                  helperText="Az intézményben dolgozó oktatók száma"
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: 2,
+                    p: 2,
+                    backgroundColor: "#fff2cc",
+                    borderRadius: 1,
+                  }}
+                >
+                  <strong>Számított oktató-tanuló arány:</strong>{" "}
+                  {addDialog.newRecord.oktatok_szama > 0
+                    ? (
                       addDialog.newRecord.tanulok_szama /
                       addDialog.newRecord.oktatok_szama
                     ).toFixed(2)
-                  : 0}{" "}
-                tanuló/oktató
-              </Typography>
+                    : 0}{" "}
+                  tanuló/oktató
+                </Typography>
+              </Grid>
             </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeAddDialog}>Mégse</Button>
-          <Button
-            onClick={handleAddNewRecord}
-            variant="contained"
-            color="success"
-            disabled={
-              !addDialog.newRecord.selectedSchool ||
-              !addDialog.newRecord.tanev_kezdete ||
-              isAdding
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={closeAddDialog}>Mégse</Button>
+            <Button
+              onClick={handleAddNewRecord}
+              variant="contained"
+              color="success"
+              disabled={
+                !addDialog.newRecord.selectedSchool ||
+                !addDialog.newRecord.tanev_kezdete ||
+                isAdding
+              }
+            >
+              {isAdding ? "Hozzáadás..." : "Hozzáadás"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Notification Snackbar */}
+        <Snackbar
+          open={notification.open}
+          autoHideDuration={6000}
+          onClose={handleNotificationClose}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        >
+          <Alert
+            onClose={handleNotificationClose}
+            severity={notification.severity}
+            sx={{ width: "100%" }}
+            action={
+              <IconButton
+                size="small"
+                color="inherit"
+                onClick={handleNotificationClose}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
             }
           >
-            {isAdding ? "Hozzáadás..." : "Hozzáadás"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Notification Snackbar */}
-      <Snackbar
-        open={notification.open}
-        autoHideDuration={6000}
-        onClose={handleNotificationClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          onClose={handleNotificationClose}
-          severity={notification.severity}
-          sx={{ width: "100%" }}
-          action={
-            <IconButton
-              size="small"
-              color="inherit"
-              onClick={handleNotificationClose}
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          }
-        >
-          {notification.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+            {notification.message}
+          </Alert>
+        </Snackbar>
+      </Box>
+    </PageWrapper>
   );
 }

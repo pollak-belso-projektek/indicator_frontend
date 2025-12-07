@@ -186,12 +186,11 @@ export const indicatorApi = createApi({
           await queryFulfilled;
           // Force refetch of related queries
           dispatch(
-            indicatorApi.util.invalidateTags([
-              "TanuloLetszam",
-              "TanugyiAdatok"
-            ])
+            indicatorApi.util.invalidateTags(["TanuloLetszam", "TanugyiAdatok"])
           );
-        } catch {}
+        } catch (e) {
+          console.error("Error in addTanuloLetszam onQueryStarted:", e);
+        }
       },
     }),
     updateTanuloLetszam: build.mutation({
@@ -218,12 +217,11 @@ export const indicatorApi = createApi({
           await queryFulfilled;
           // Force refetch of related queries
           dispatch(
-            indicatorApi.util.invalidateTags([
-              "TanuloLetszam",
-              "TanugyiAdatok"
-            ])
+            indicatorApi.util.invalidateTags(["TanuloLetszam", "TanugyiAdatok"])
           );
-        } catch {}
+        } catch (e) {
+          console.error("Error in updateTanuloLetszam onQueryStarted:", e);
+        }
       },
     }),
     addTanugyiAdatok: build.mutation({
@@ -249,12 +247,11 @@ export const indicatorApi = createApi({
           await queryFulfilled;
           // Force refetch of related queries
           dispatch(
-            indicatorApi.util.invalidateTags([
-              "TanugyiAdatok",
-              "TanuloLetszam"
-            ])
+            indicatorApi.util.invalidateTags(["TanugyiAdatok", "TanuloLetszam"])
           );
-        } catch {}
+        } catch (e) {
+          console.error("Error in addTanugyiAdatok onQueryStarted:", e);
+        }
       },
     }),
     addAlkalmazottAdatok: build.mutation({
@@ -314,6 +311,21 @@ export const indicatorApi = createApi({
         url: `tablelist/${id}`,
         method: "PUT",
         body: updatedTable,
+      }),
+      invalidatesTags: ["TableList"],
+    }),
+    // Lock/unlock table mutations
+    lockTable: build.mutation({
+      query: (tableId) => ({
+        url: `tablelist/${tableId}/lock`,
+        method: "POST",
+      }),
+      invalidatesTags: ["TableList"],
+    }),
+    unlockTable: build.mutation({
+      query: (tableId) => ({
+        url: `tablelist/${tableId}/unlock`,
+        method: "POST",
       }),
       invalidatesTags: ["TableList"],
     }),
@@ -754,12 +766,19 @@ export const indicatorApi = createApi({
 
     // EgyOktatoraJutoTanulo (Students per Teacher)
     getAllEgyOktatoraJutoTanulo: build.query({
-      query: () => "egyoktatorajutotanulo",
+      query: () => "egy_oktatora_juto_tanulo",
       providesTags: ["EgyOktatoraJutoTanulo"],
+    }),
+    getEgyOktatoraJutoTanuloByAlapadatok: build.query({
+      query: ({ alapadatok_id, year }) =>
+        `egy_oktatora_juto_tanulo/${alapadatok_id}/${year}`,
+      providesTags: (result, error, alapadatok_id) => [
+        { type: "EgyOktatoraJutoTanulo", id: alapadatok_id },
+      ],
     }),
     addEgyOktatoraJutoTanulo: build.mutation({
       query: (data) => ({
-        url: "egyoktatorajutotanulo",
+        url: "egy_oktatora_juto_tanulo",
         method: "POST",
         body: data,
       }),
@@ -767,16 +786,9 @@ export const indicatorApi = createApi({
     }),
     updateEgyOktatoraJutoTanulo: build.mutation({
       query: ({ id, ...data }) => ({
-        url: `egyoktatorajutotanulo/${id}`,
+        url: `egy_oktatora_juto_tanulo/${id}`,
         method: "PUT",
         body: data,
-      }),
-      invalidatesTags: ["EgyOktatoraJutoTanulo"],
-    }),
-    deleteEgyOktatoraJutoTanulo: build.mutation({
-      query: (id) => ({
-        url: `egyoktatorajutotanulo/${id}`,
-        method: "DELETE",
       }),
       invalidatesTags: ["EgyOktatoraJutoTanulo"],
     }),
@@ -990,6 +1002,8 @@ export const {
   useGetTableListQuery,
   useCreateTableMutation,
   useUpdateTableMutation,
+  useLockTableMutation,
+  useUnlockTableMutation,
   // Educational Indicators hooks
   useGetElhelyezkedesByYearQuery,
   useGetElhelyezkedesBySchoolAndYearQuery,
@@ -1038,9 +1052,9 @@ export const {
   useUpdateSZMSZMutation,
   useDeleteSZMSZMutation,
   useGetAllEgyOktatoraJutoTanuloQuery,
+  useGetEgyOktatoraJutoTanuloByAlapadatokQuery,
   useAddEgyOktatoraJutoTanuloMutation,
   useUpdateEgyOktatoraJutoTanuloMutation,
-  useDeleteEgyOktatoraJutoTanuloMutation,
   useGetIntezmenyiNeveltsegByYearQuery,
   useGetAllIntezmenyiNeveltsegQuery,
   useAddIntezmenyiNeveltsegMutation,

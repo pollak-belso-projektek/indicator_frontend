@@ -109,8 +109,10 @@ export default function TableProtectedRoute({ children, tableName = null }) {
     targetTableName === "table-management" ||
     location.pathname === "/table-management"
   ) {
-    const isSuperadmin = userPermissions?.isSuperadmin;
-    if (!isSuperadmin) {
+    const isSuperadminOrHSZCAdmin =
+      userPermissions?.isSuperadmin ||
+      (userPermissions?.isHSZC && userPermissions?.isAdmin);
+    if (!isSuperadminOrHSZCAdmin) {
       console.warn(
         `Access denied to table management - superadmin permissions required for route: ${location.pathname}`
       );

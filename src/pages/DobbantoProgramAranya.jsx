@@ -2,9 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import {
   Box,
-  Card,
-  CardContent,
-  Typography,
   Table,
   TableBody,
   TableCell,
@@ -17,6 +14,8 @@ import {
   Stack,
   Alert,
   CircularProgress,
+  Container,
+  Fade,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
@@ -31,6 +30,12 @@ import {
   TableLoadingOverlay,
   NotificationSnackbar,
 } from "../components/shared";
+import PageWrapper from "./PageWrapper";
+import LockStatusIndicator from "../components/LockStatusIndicator";
+import LockedTableWrapper from "../components/LockedTableWrapper";
+import InfoDobbantoProgramAranya from "./indicators/20_dobbanto_program_aranya/info_dobbanto_program_aranya";
+import TitleDobbantoProgramAranya from "./indicators/20_dobbanto_program_aranya/title_dobbanto_program_aranya";
+
 
 export default function DobbantoProgramAránya() {
   const schoolYears = generateSchoolYears();
@@ -385,328 +390,334 @@ export default function DobbantoProgramAránya() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Dobbantó programban tanulók aránya a teljes létszámhoz viszonyítva [%]
-      </Typography>
+    <Container maxWidth="xl">
+      <PageWrapper
+        titleContent={<TitleDobbantoProgramAranya />}
+        infoContent={<InfoDobbantoProgramAranya />}
+      >
+        <Fade in={true} timeout={800}>
+          <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
+            <LockStatusIndicator tableName="dobbanto" />
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Adott tanévben a tanulói jogviszonnyal rendelkező tanulók létszáma
-        (tanulói összlétszám) és a Dobbantó programban résztvevők aránya.
-      </Typography>
+            {/* Loading State */}
+            {(isFetching || isDobbantoFetching) && (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                <CircularProgress />
+              </Box>
+            )}
 
-      {/* Selected School Alert */}
-      {!selectedSchool && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Nincs iskola kiválasztva - válasszon ki egy iskolát a mentéshez!
-        </Alert>
-      )}
+            {/* Content - only show when not loading */}
+            {!isFetching && !isDobbantoFetching && (
+              <>
+                {/* Selected School Alert */}
+                {!selectedSchool && (
+                  <Alert severity="warning" sx={{ mb: 2 }}>
+                    Nincs iskola kiválasztva - válasszon ki egy iskolát a mentéshez!
+                  </Alert>
+                )}
 
-      {selectedSchool && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
-        </Alert>
-      )}
+                {selectedSchool && (
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
+                  </Alert>
+                )}
 
-      {/* Loading State */}
-      {(isFetching || isDobbantoFetching) && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          <CircularProgress size={20} sx={{ mr: 1 }} />
-          {isFetching && isDobbantoFetching
-            ? "Tanulói létszám és Dobbantó adatok betöltése..."
-            : isFetching
-            ? "Tanulói létszám adatok betöltése..."
-            : "Dobbantó program adatok betöltése..."}
-        </Alert>
-      )}
+                {/* Main Data Tables */}
+                {/* Action Buttons */}
+                <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 2 }}>
+                  <LockedTableWrapper tableName="dobbanto">
+                    <Button
+                      variant="contained"
+                      startIcon={<SaveIcon />}
+                      onClick={handleSave}
+                      disabled={
+                        !isModified ||
+                        !selectedSchool?.id ||
+                        isSaving ||
+                        hasValidationErrors()
+                      }
+                    >
+                      {isSaving ? "Mentés..." : "Mentés"}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      startIcon={<RefreshIcon />}
+                      onClick={handleReset}
+                      disabled={!isModified || !savedData || isSaving}
+                    >
+                      Visszaállítás
+                    </Button>
+                  </LockedTableWrapper>
+                </Stack>
 
-      {/* Main Data Tables */}
-      {/* Action Buttons */}
-      <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 2 }}>
-        <Button
-          variant="contained"
-          startIcon={<SaveIcon />}
-          onClick={handleSave}
-          disabled={
-            !isModified ||
-            !selectedSchool?.id ||
-            isSaving ||
-            hasValidationErrors()
-          }
-        >
-          {isSaving ? "Mentés..." : "Mentés"}
-        </Button>
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={handleReset}
-          disabled={!isModified || !savedData || isSaving}
-        >
-          Visszaállítás
-        </Button>
-      </Stack>
 
-      {/* Status Messages */}
-      {isModified && (
-        <Alert severity="warning" sx={{ mt: 2 }}>
-          Mentetlen módosítások vannak. Ne felejtsd el menteni a
-          változtatásokat!
-        </Alert>
-      )}
+                {/* Status Messages */}
+                {isModified && (
+                  <Alert severity="warning" sx={{ mt: 2 }}>
+                    Mentetlen módosítások vannak. Ne felejtsd el menteni a
+                    változtatásokat!
+                  </Alert>
+                )}
 
-      {/* Percentage over 100% warning */}
-      {hasValidationErrors() && (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          ⚠️ Figyelem: Egy vagy több tanévben a Dobbantó programban résztvevők
-          aránya meghaladja a 100%-ot! Ellenőrizze, hogy a résztvevők száma nem
-          haladja meg a tanulói összlétszámot. A mentés le van tiltva, amíg a
-          hibák fennállnak.
-        </Alert>
-      )}
-      {/* Percentage Overview Table */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography
-            variant="h6"
-            component="h2"
-            gutterBottom
-            sx={{
-              color: "#d32f2f",
-              fontWeight: "bold",
-              textAlign: "center",
-            }}
-          >
-            Dobbantó programban tanulók aránya
-          </Typography>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mb: 2, textAlign: "center" }}
-          >
-            Tanulói és felnőttképzési jogviszony (%) - Automatikusan kalkulált
-          </Typography>
-
-          <TableContainer
-            component={Paper}
-            variant="outlined"
-            sx={{ overflowX: "auto", position: "relative" }}
-          >
-            <TableLoadingOverlay
-              isLoading={isSaving}
-              message="Dobbantó program adatok mentése folyamatban..."
-            />
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#ffebee" }}>
-                  {schoolYears.map((year) => (
-                    <TableCell
-                      key={year}
-                      align="center"
+                {/* Percentage over 100% warning */}
+                {hasValidationErrors() && (
+                  <Alert severity="error" sx={{ mt: 2 }}>
+                    ⚠️ Figyelem: Egy vagy több tanévben a Dobbantó programban résztvevők
+                    aránya meghaladja a 100%-ot! Ellenőrizze, hogy a résztvevők száma nem
+                    haladja meg a tanulói összlétszámot. A mentés le van tiltva, amíg a
+                    hibák fennállnak.
+                  </Alert>
+                )}
+                {/* Percentage Overview Table */}
+                <Card sx={{ mb: 3 }}>
+                  <CardContent>
+                    <Typography
+                      variant="h6"
+                      component="h2"
+                      gutterBottom
                       sx={{
+                        color: "#d32f2f",
                         fontWeight: "bold",
-                        minWidth: 120,
-                        backgroundColor: "#e8f4fd",
+                        textAlign: "center",
                       }}
                     >
-                      {year}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow sx={{ backgroundColor: "#fff3e0" }}>
-                  {schoolYears.map((year) => {
-                    const percentage = parseFloat(
-                      dobbantoData.percentage_overall[year] || "0.0"
-                    );
-                    const isOver100 = percentage > 100;
-
-                    return (
-                      <TableCell
-                        key={year}
-                        align="center"
-                        sx={{
-                          backgroundColor: isOver100 ? "#ffebee" : "#f8fdf8",
-                          fontWeight: "medium",
-                          fontSize: "1.1rem",
-                          color: isOver100 ? "#d32f2f" : "inherit",
-                        }}
-                      >
-                        {dobbantoData.percentage_overall[year] || "0.0"}%
-                        {isOver100 && " ⚠️"}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
-
-      {/* Dobbantó Students Count Table */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography
-            variant="h6"
-            component="h2"
-            gutterBottom
-            sx={{
-              color: "#1976d2",
-              fontWeight: "bold",
-              textAlign: "center",
-            }}
-          >
-            Dobbantó programban tanulók száma
-          </Typography>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mb: 2, textAlign: "center" }}
-          >
-            Tanulói és felnőttképzési jogviszony (fő)
-          </Typography>
-
-          <TableContainer
-            component={Paper}
-            variant="outlined"
-            sx={{ overflowX: "auto", position: "relative" }}
-          >
-            <TableLoadingOverlay
-              isLoading={isSaving}
-              message="Dobbantó program adatok mentése folyamatban..."
-            />
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
-                  {schoolYears.map((year) => (
-                    <TableCell
-                      key={year}
-                      align="center"
-                      sx={{
-                        fontWeight: "bold",
-                        minWidth: 120,
-                        backgroundColor: "#e8f4fd",
-                      }}
+                      Dobbantó programban tanulók aránya
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 2, textAlign: "center" }}
                     >
-                      {year}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
-                  {schoolYears.map((year) => (
-                    <TableCell key={year} align="center">
-                      <TextField
-                        type="number"
-                        value={dobbantoData.dobbanto_students[year] || "0"}
-                        onChange={(e) =>
-                          handleDataChange(
-                            "dobbanto_students",
-                            year,
-                            e.target.value
-                          )
-                        }
-                        size="small"
-                        inputProps={{
-                          min: 0,
-                          step: 1,
-                          style: { textAlign: "center" },
-                        }}
-                        sx={{ width: "80px" }}
-                        placeholder="0"
+                      Tanulói és felnőttképzési jogviszony (%) - Automatikusan kalkulált
+                    </Typography>
+
+                    <TableContainer
+                      component={Paper}
+                      variant="outlined"
+                      sx={{ overflowX: "auto", position: "relative" }}
+                    >
+                      <TableLoadingOverlay
+                        isLoading={isSaving}
+                        message="Dobbantó program adatok mentése folyamatban..."
                       />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ backgroundColor: "#ffebee" }}>
+                            {schoolYears.map((year) => (
+                              <TableCell
+                                key={year}
+                                align="center"
+                                sx={{
+                                  fontWeight: "bold",
+                                  minWidth: 120,
+                                  backgroundColor: "#e8f4fd",
+                                }}
+                              >
+                                {year}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          <TableRow sx={{ backgroundColor: "#fff3e0" }}>
+                            {schoolYears.map((year) => {
+                              const percentage = parseFloat(
+                                dobbantoData.percentage_overall[year] || "0.0"
+                              );
+                              const isOver100 = percentage > 100;
 
-      {/* Total Students Table */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography
-            variant="h6"
-            component="h2"
-            gutterBottom
-            sx={{
-              color: "#1976d2",
-              fontWeight: "bold",
-              textAlign: "center",
-            }}
-          >
-            Tanulói összlétszám
-          </Typography>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mb: 2, textAlign: "center" }}
-          >
-            Tanulói és felnőttképzési jogviszony (fő)
-          </Typography>
+                              return (
+                                <TableCell
+                                  key={year}
+                                  align="center"
+                                  sx={{
+                                    backgroundColor: isOver100 ? "#ffebee" : "#f8fdf8",
+                                    fontWeight: "medium",
+                                    fontSize: "1.1rem",
+                                    color: isOver100 ? "#d32f2f" : "inherit",
+                                  }}
+                                >
+                                  {dobbantoData.percentage_overall[year] || "0.0"}%
+                                  {isOver100 && " ⚠️"}
+                                </TableCell>
+                              );
+                            })}
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </Card>
 
-          <TableContainer
-            component={Paper}
-            variant="outlined"
-            sx={{ overflowX: "auto", position: "relative" }}
-          >
-            <TableLoadingOverlay
-              isLoading={isSaving}
-              message="Dobbantó program adatok mentése folyamatban..."
-            />
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#e8f5e8" }}>
-                  {schoolYears.map((year) => (
-                    <TableCell
-                      key={year}
-                      align="center"
+                {/* Dobbantó Students Count Table */}
+                <Card sx={{ mb: 3 }}>
+                  <CardContent>
+                    <Typography
+                      variant="h6"
+                      component="h2"
+                      gutterBottom
                       sx={{
+                        color: "#1976d2",
                         fontWeight: "bold",
-                        minWidth: 120,
-                        backgroundColor: "#e8f4fd",
+                        textAlign: "center",
                       }}
                     >
-                      {year}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
-                  {schoolYears.map((year) => (
-                    <TableCell
-                      key={year}
-                      align="center"
-                      sx={{
-                        backgroundColor: "#fafafa",
-                        fontWeight: "medium",
-                        fontSize: "1.1rem",
-                      }}
+                      Dobbantó programban tanulók száma
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 2, textAlign: "center" }}
                     >
-                      {dobbantoData.total_students[year] || 0}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+                      Tanulói és felnőttképzési jogviszony (fő)
+                    </Typography>
 
-      {/* Notification Snackbar */}
-      <NotificationSnackbar
-        open={snackbarOpen}
-        message={snackbarMessage}
-        severity={snackbarSeverity}
-        onClose={handleSnackbarClose}
-        autoHideDuration={6000}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      />
-    </Box>
+                    <TableContainer
+                      component={Paper}
+                      variant="outlined"
+                      sx={{ overflowX: "auto", position: "relative" }}
+                    >
+                      <TableLoadingOverlay
+                        isLoading={isSaving}
+                        message="Dobbantó program adatok mentése folyamatban..."
+                      />
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+                            {schoolYears.map((year) => (
+                              <TableCell
+                                key={year}
+                                align="center"
+                                sx={{
+                                  fontWeight: "bold",
+                                  minWidth: 120,
+                                  backgroundColor: "#e8f4fd",
+                                }}
+                              >
+                                {year}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
+                            {schoolYears.map((year) => (
+                              <TableCell key={year} align="center">
+                                <TextField
+                                  type="number"
+                                  value={dobbantoData.dobbanto_students[year] || "0"}
+                                  onChange={(e) =>
+                                    handleDataChange(
+                                      "dobbanto_students",
+                                      year,
+                                      e.target.value
+                                    )
+                                  }
+                                  size="small"
+                                  inputProps={{
+                                    min: 0,
+                                    step: 1,
+                                    style: { textAlign: "center" },
+                                  }}
+                                  sx={{ width: "80px" }}
+                                  placeholder="0"
+                                />
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Total Students Table */}
+                <Card sx={{ mb: 3 }}>
+                  <CardContent>
+                    <Typography
+                      variant="h6"
+                      component="h2"
+                      gutterBottom
+                      sx={{
+                        color: "#1976d2",
+                        fontWeight: "bold",
+                        textAlign: "center",
+                      }}
+                    >
+                      Tanulói összlétszám
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 2, textAlign: "center" }}
+                    >
+                      Tanulói és felnőttképzési jogviszony (fő)
+                    </Typography>
+
+                    <TableContainer
+                      component={Paper}
+                      variant="outlined"
+                      sx={{ overflowX: "auto", position: "relative" }}
+                    >
+                      <TableLoadingOverlay
+                        isLoading={isSaving}
+                        message="Dobbantó program adatok mentése folyamatban..."
+                      />
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ backgroundColor: "#e8f5e8" }}>
+                            {schoolYears.map((year) => (
+                              <TableCell
+                                key={year}
+                                align="center"
+                                sx={{
+                                  fontWeight: "bold",
+                                  minWidth: 120,
+                                  backgroundColor: "#e8f4fd",
+                                }}
+                              >
+                                {year}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
+                            {schoolYears.map((year) => (
+                              <TableCell
+                                key={year}
+                                align="center"
+                                sx={{
+                                  backgroundColor: "#fafafa",
+                                  fontWeight: "medium",
+                                  fontSize: "1.1rem",
+                                }}
+                              >
+                                {dobbantoData.total_students[year] || 0}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Notification Snackbar */}
+                <NotificationSnackbar
+                  open={snackbarOpen}
+                  message={snackbarMessage}
+                  severity={snackbarSeverity}
+                  onClose={handleSnackbarClose}
+                  autoHideDuration={6000}
+                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                />
+              </>
+            )}
+          </Box>
+        </Fade>
+      </PageWrapper>
+    </Container>
   );
 }
+

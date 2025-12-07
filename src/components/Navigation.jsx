@@ -25,12 +25,12 @@ import {
   MdAssessment,
   MdEvent,
   MdTrendingUp,
-  MdAccessible,
   MdGavel,
   MdWork,
   MdClose,
   MdSearch,
   MdInfo,
+  MdAccessible,
 } from "react-icons/md";
 
 import { useColorModeValue } from "./ui/color-mode";
@@ -56,13 +56,14 @@ import {
   Tooltip,
 } from "@mui/material";
 import { useRecentPages } from "../hooks/useRecentPages";
+import AliasModeBanner from "./AliasModeBanner";
 
 // Page numbering map based on the user's requirements
-const PageNumbering = {
+export const PageNumbering = {
   "/tanulo_letszam": 1,
   "/felvettek_szama": 2,
   "/oktato_per_diak": 3,
-  "/szmsz": 4, // Note: This page doesn't exist yet in navigation
+  "/szakkepzesi-munkaszerződes-arany": 4, // Note: This page doesn't exist yet in navigation
   "/felnottkepzes": 5,
   "/kompetencia": 6,
   "/nszfh-meresek": 7,
@@ -81,11 +82,11 @@ const PageNumbering = {
   "/dobbanto-program-aranya": 20,
   "/muhelyiskolai-reszszakmat": 21,
   "/szakmai-tovabbkepzesek": 22, // Note: This page doesn't exist yet in navigation
-  "/oktatok-egyeb-tev": 23,
+  "/oktato-egyeb-tev": 23,
   "/palyazatok": 24, // Note: This page doesn't exist yet in navigation
   "/tanulmani-eredmeny": 25, // Note: This page doesn't exist yet in navigation
   "/hianyzas": 26, // Note: This page doesn't exist yet in navigation
-  "/egy-oktatora-juto-ossz-diak": 27, // Note: This page doesn't exist yet in navigation
+  "/egy-oktatora-juto-ossz-diak": 27,
   "/nyelvvizsgak-szama": 28, // Note: This page doesn't exist yet in navigation
   "/projektek": 29, // Note: This page doesn't exist yet in navigation
   "/dualis-kepzohelyek-szama": 30, // Note: This page doesn't exist yet in navigation
@@ -146,7 +147,7 @@ const NavigationCategories = {
         tableName: "felvettek_szama",
       },
       {
-        name: "Sajátos nevelésű",
+        name: "Sajátos nevelésű (SNI)",
         icon: MdAccessible,
         link: "/sajatos-nevelesi-igenyu-tanulok-aranya",
         tableName: "sajatos_nevelesu_tanulok",
@@ -233,7 +234,7 @@ const NavigationCategories = {
         name: "Szakképzési munkaszerződés",
         icon: MdWork,
         link: "/szakkepzesi-munkaszerződes-arany",
-        tableName: "szakmai_vizsga_eredmenyek",
+        tableName: "szmsz",
       },
     ],
   },
@@ -272,22 +273,22 @@ const NavigationCategories = {
     icon: MdEvent,
     items: [
       {
-        name: "Szakmai bemutatók",
-        icon: MdEvent,
-        link: "/szakmai-bemutatok-konferenciak",
-        tableName: "oktato_egyeb_tev",
-      },
-      {
         name: "Egy oktatóra jutó diákok",
         icon: MdBookmark,
         link: "/oktato_per_diak",
         tableName: "egy_oktatora_juto_tanulo",
       },
       {
+        name: "Egy oktatóra jutó össz diák",
+        icon: MdBookmark,
+        link: "/egy-oktatora-juto-ossz-diak",
+        tableName: "egy_oktatora_juto_tanulo",
+      },
+      {
         name: "Oktatók egyéb tev.",
         icon: MdWork,
-        link: "/oktatok-egyeb-tev",
-        tableName: "oktato_egyeb_tev",
+        link: "/oktato-egyeb-tev",
+        tableName: "oktato-egyeb-tev",
       },
     ],
   },
@@ -371,7 +372,10 @@ const getAccessibleNavItems = (tableAccess, userPermissions) => {
 
       // Table management - only for superadmins
       if (item.link === "/table-management") {
-        return userPermissions?.isSuperadmin;
+        return (
+          userPermissions?.isSuperadmin ||
+          (userPermissions?.isHSZC && userPermissions?.isAdmin)
+        );
       }
 
       // Alapadatok - only if user has alapadatok table access
@@ -457,21 +461,26 @@ const SidebarContent = ({ onClose, ...rest }) => {
   useEffect(() => {
     const handleKeyPress = (event) => {
       // Only trigger shortcuts when not in an input field
-      if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+      if (
+        event.target.tagName === "INPUT" ||
+        event.target.tagName === "TEXTAREA"
+      ) {
         return;
       }
 
       // Ctrl/Cmd + K to focus search
-      if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+      if ((event.ctrlKey || event.metaKey) && event.key === "k") {
         event.preventDefault();
-        const searchInput = document.querySelector('input[placeholder*="Keresés"]');
+        const searchInput = document.querySelector(
+          'input[placeholder*="Keresés"]'
+        );
         if (searchInput) {
           searchInput.focus();
         }
       }
-      
+
       // Escape to clear search or close mobile menu
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         if (itemSearch) {
           setItemSearch("");
         } else if (onClose) {
@@ -480,9 +489,9 @@ const SidebarContent = ({ onClose, ...rest }) => {
       }
 
       // Ctrl/Cmd + H to go to dashboard
-      if ((event.ctrlKey || event.metaKey) && event.key === 'h') {
+      if ((event.ctrlKey || event.metaKey) && event.key === "h") {
         event.preventDefault();
-        navigate('/dashboard');
+        navigate("/dashboard");
         if (onClose) onClose();
       }
     };
@@ -723,7 +732,11 @@ const SidebarContent = ({ onClose, ...rest }) => {
       {...rest}
     >
       {/* Header */}
-      <Box bg={useColorModeValue("white", "gray.50")} borderBottom="1px" borderColor={useColorModeValue("gray.100", "gray.200")}>
+      <Box
+        bg={useColorModeValue("white", "gray.50")}
+        borderBottom="1px"
+        borderColor={useColorModeValue("gray.100", "gray.200")}
+      >
         <Flex h="20" alignItems="center" mx="6" justifyContent="space-between">
           <Link to="/dashboard" onClick={onClose}>
             <Image
@@ -756,27 +769,29 @@ const SidebarContent = ({ onClose, ...rest }) => {
             fullWidth
             variant="outlined"
             sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '12px',
-                transition: 'all 0.2s ease-in-out',
-                backgroundColor: 'rgba(0,0,0,0.02)',
-                '&:hover': {
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                  backgroundColor: 'rgba(0,0,0,0.03)'
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "12px",
+                transition: "all 0.2s ease-in-out",
+                backgroundColor: "rgba(0,0,0,0.02)",
+                "&:hover": {
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  backgroundColor: "rgba(0,0,0,0.03)",
                 },
-                '&.Mui-focused': {
-                  boxShadow: '0 2px 12px rgba(66, 153, 225, 0.3)',
-                  backgroundColor: 'white'
-                }
+                "&.Mui-focused": {
+                  boxShadow: "0 2px 12px rgba(66, 153, 225, 0.3)",
+                  backgroundColor: "white",
+                },
               },
-              '& .MuiOutlinedInput-input': {
-                fontSize: '14px'
-              }
+              "& .MuiOutlinedInput-input": {
+                fontSize: "14px",
+              },
             }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <MdSearch style={{ color: itemSearch ? '#4299E1' : '#9CA3AF' }} />
+                  <MdSearch
+                    style={{ color: itemSearch ? "#4299E1" : "#9CA3AF" }}
+                  />
                 </InputAdornment>
               ),
               endAdornment:
@@ -788,20 +803,22 @@ const SidebarContent = ({ onClose, ...rest }) => {
                         setItemSearch("");
                         // Refocus the search input after clearing
                         setTimeout(() => {
-                          const searchInput = document.querySelector('input[placeholder*="Keresés"]');
+                          const searchInput = document.querySelector(
+                            'input[placeholder*="Keresés"]'
+                          );
                           if (searchInput) searchInput.focus();
                         }, 100);
                       }}
                       edge="end"
                       size="small"
-                      sx={{ 
-                        color: 'gray.500',
-                        transition: 'all 0.2s ease-in-out',
-                        '&:hover': { 
-                          color: 'red.500', 
-                          bg: 'red.50',
-                          transform: 'scale(1.1)'
-                        }
+                      sx={{
+                        color: "gray.500",
+                        transition: "all 0.2s ease-in-out",
+                        "&:hover": {
+                          color: "red.500",
+                          bg: "red.50",
+                          transform: "scale(1.1)",
+                        },
                       }}
                     >
                       <MdClose />
@@ -813,7 +830,8 @@ const SidebarContent = ({ onClose, ...rest }) => {
           {/* Search Results Count */}
           {itemSearch && (
             <Text fontSize="xs" color="gray.500" mt="2" ml="1">
-              {Object.keys(filteredCategories).length === 0 && filteredScrollableItems.length === 0
+              {Object.keys(filteredCategories).length === 0 &&
+              filteredScrollableItems.length === 0
                 ? "Nincs találat"
                 : `${filteredScrollableItems.length} találat`}
             </Text>
@@ -850,15 +868,15 @@ const SidebarContent = ({ onClose, ...rest }) => {
                 ? "blue.100"
                 : useColorModeValue("gray.100", "gray.200"),
               transform: "translateY(-1px)",
-              boxShadow: "sm"
+              boxShadow: "sm",
             }}
             _focus={{
               boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.6)",
-              outline: "none"
+              outline: "none",
             }}
             onClick={() => toggleCategory("FIXED_GENERAL")}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+              if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 toggleCategory("FIXED_GENERAL");
               }
@@ -895,8 +913,8 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
           {/* Fixed Category Items */}
           {expandedCategories["FIXED_GENERAL"] && (
-            <Box 
-              overflow="hidden" 
+            <Box
+              overflow="hidden"
               transition="all 0.3s ease-in-out"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -994,15 +1012,15 @@ const SidebarContent = ({ onClose, ...rest }) => {
                         ? "blue.100"
                         : useColorModeValue("gray.100", "gray.200"),
                       transform: "translateY(-1px)",
-                      boxShadow: "sm"
+                      boxShadow: "sm",
                     }}
                     _focus={{
                       boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.6)",
-                      outline: "none"
+                      outline: "none",
                     }}
                     onClick={() => toggleCategory(categoryKey)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
+                      if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
                         toggleCategory(categoryKey);
                       }
@@ -1047,8 +1065,8 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
                   {/* Category Items */}
                   {expandedCategories[categoryKey] && (
-                    <Box 
-                      overflow="hidden" 
+                    <Box
+                      overflow="hidden"
                       transition="all 0.3s ease-in-out"
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
@@ -1139,8 +1157,6 @@ const SidebarContent = ({ onClose, ...rest }) => {
           </Box>
         )}
       </Box>
-
-
     </Box>
   );
 };
@@ -1158,7 +1174,7 @@ const NavItem = ({ icon, children, onClick, link, ...rest }) => {
 
   // Handle keyboard navigation
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       handleClick(e);
     }
@@ -1175,15 +1191,15 @@ const NavItem = ({ icon, children, onClick, link, ...rest }) => {
       cursor="pointer"
       style={{ textDecoration: "none" }}
       transition="all 0.2s ease-in-out"
-      _focus={{ 
+      _focus={{
         boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.6)",
-        outline: "none"
+        outline: "none",
       }}
       _hover={{
         bg: isActive ? "blue.600" : "blue.50",
         color: isActive ? "white" : "blue.700",
         transform: "translateX(4px)",
-        boxShadow: "md"
+        boxShadow: "md",
       }}
       bg={isActive ? "blue.500" : "transparent"}
       color={isActive ? "white" : "gray.700"}
@@ -1205,8 +1221,8 @@ const NavItem = ({ icon, children, onClick, link, ...rest }) => {
           as={icon}
         />
       )}
-      <Text 
-        fontSize="sm" 
+      <Text
+        fontSize="sm"
         fontWeight={isActive ? "semibold" : "medium"}
         noOfLines={1}
         flex="1"
@@ -1352,13 +1368,13 @@ const MobileNav = ({ onOpen, ...rest }) => {
           size="lg"
           borderRadius="xl"
           transition="all 0.2s ease-in-out"
-          _hover={{ 
-            bg: "blue.50", 
+          _hover={{
+            bg: "blue.50",
             borderColor: "blue.200",
-            transform: "scale(1.05)"
+            transform: "scale(1.05)",
           }}
           _active={{
-            transform: "scale(0.95)"
+            transform: "scale(0.95)",
           }}
         >
           <MdMenu size={20} />
@@ -1418,7 +1434,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
               transition="all 0.2s ease-in-out"
               _hover={{
                 bg: "orange.200",
-                transform: "scale(1.1)"
+                transform: "scale(1.1)",
               }}
             >
               <MdInfo size={18} />
@@ -1488,6 +1504,8 @@ export default function Navigation({ children }) {
 
   return (
     <>
+      {/* Alias Mode Banner - Shows when in alias mode */}
+      <AliasModeBanner />
       <Box minH="100vh" bg={useColorModeValue("gray.100", "gray.900")}>
         <SidebarContent
           onClose={() => setIsOpen(false)}

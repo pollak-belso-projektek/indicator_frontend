@@ -134,6 +134,10 @@ export const parseApiError = (error) => {
     if (error.includes("500") || error.includes("Internal Server Error")) {
       return "Szerver hiba történt. Kérjük, próbáld újra később.";
     }
+    //rate limit
+    if (error.includes("429") || error.includes("rate limit")) {
+      return "Túl sok kérés érkezett rövid időn belül. Kérjük, próbáld újra később.";
+    } 
     return error;
   }
 
@@ -201,4 +205,52 @@ export const getAvailableTables = (tableList) => {
   if (!isValidTableList(tableList)) return [];
 
   return tableList.filter((table) => table.isAvailable);
+};
+
+/**
+ * Check if a table is locked
+ * @param {Array} tableList - Table list from API
+ * @param {string} tableName - Name of the table to check
+ * @returns {boolean} - True if table is locked
+ */
+export const isTableLocked = (tableList, tableName) => {
+  if (!Array.isArray(tableList)) return false;
+
+  const table = tableList.find((t) => t.name === tableName);
+  return table?.isLocked || false;
+};
+
+/**
+ * Check if user can modify a table (not locked and has write permissions)
+ * @param {Array} tableList - Table list from API
+ * @param {Array} tableAccess - User's table access array
+ * @param {string} tableName - Name of the table to check
+ * @param {boolean} isSuperadmin - Whether user is superadmin
+ * @returns {Object} - { canModify: boolean, reason: string }
+ */
+export const canModifyTable = (tableList, tableAccess, tableName, isSuperadmin = false) => {
+  // Superadmins can always modify (they can also unlock)
+  // This is intentional - superadmins need to be able to unlock tables and fix issues
+  if (isSuperadmin) {
+    return { canModify: true, reason: "" };
+  }
+
+  // Check if table is locked
+  if (isTableLocked(tableList, tableName)) {
+    return {
+      canModify: false,
+      reason: "Ez a tábla jelenleg le van zárva. Kérjük, vedd fel a kapcsolatot a HSZC adminisztrátorral.",
+    };
+  }
+
+  // Check if user has write permission
+  const hasWrite = hasTablePermission(tableAccess, tableName, TABLE_ACCESS_LEVELS.WRITE);
+  if (!hasWrite) {
+    return {
+      canModify: false,
+      reason: "Nincs jogosultságod ennek a táblának a módosítására.",
+    };
+  }
+
+  return { canModify: true, reason: "" };
 };

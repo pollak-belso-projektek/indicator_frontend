@@ -5,34 +5,34 @@ const tableKeyValues = {
   kompetencia: "Kompetencia",
   felvettek_szama: "Felvettek száma",
   tanugyi_adatok: "Tanügyi adatok",
-  
+
   // Competition and achievements
   versenyek: "Versenyek",
   vizsgaeredmenyek: "Vizsgaeredmények",
-  szakmai_vizsga_eredmenyek: "Szakmai vizsga eredmények",
+  szmsz: "Szakmai vizsga eredmények",
   intezmenyi_neveltseg: "Intézményi neveltség",
-  
+
   // Assessment and satisfaction
   nszfh: "NSZFH",
   elegedettseg_meres: "Elégedettség mérés",
   elegedettseg: "Elégedettség",
-  
+
   // Student categories
   sajatos_nevelesu_tanulok: "Sajátos nevelésű tanulók",
   hh_es_hhh_nevelesu_tanulok: "HH és HHH nevelésű tanulók",
-  
+
   // Career and employment
   elhelyezkedes: "Elhelyezkedés",
   alkalmazottak_munkaugy: "Alkalmazottak munkaügy",
-  
+
   // Special programs
   muhelyiskola: "Műhelyiskola",
   dobbanto: "Dobbantó",
-  
+
   // Staff and activities
   egy_oktatora_juto_tanulo: "Egy oktatóra jutó tanuló",
   oktato_egyeb_tev: "Oktató egyéb tevékenység",
-  
+
   // System
   user: "Felhasználók",
   log: "Rendszer naplók",
@@ -79,9 +79,10 @@ const routeToTableMapping = {
   "/sajatos-nevelesi-igenyu-tanulok-aranya": "sajatos_nevelesu_tanulok",
   "/hatranyos-helyezu-tanulok-aranya": "hh_es_hhh_nevelesu_tanulok",
   "/intezmenyi-nevelesi-mutatok": "intezmenyi_neveltseg",
-  "/szakkepzesi-munkaszerződes-arany": "szakmai_vizsga_eredmenyek",
+  "/szakkepzesi-munkaszerződes-arany": "szmsz",
   "/oktatok-egyeb-tev": "oktato_egyeb_tev",
   "/oktato_per_diak": "egy_oktatora_juto_tanulo",
+  "/egy-oktatora-juto-ossz-diak": "egy_oktatora_juto_tanulo",
   "/logs": "log",
 };
 

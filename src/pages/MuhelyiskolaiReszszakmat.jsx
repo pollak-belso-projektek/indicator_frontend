@@ -16,6 +16,9 @@ import {
   Button,
   Stack,
   Alert,
+  Container,
+  Fade,
+  CircularProgress,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
@@ -30,6 +33,12 @@ import {
   TableLoadingOverlay,
   NotificationSnackbar,
 } from "../components/shared";
+import PageWrapper from "./PageWrapper";
+import LockStatusIndicator from "../components/LockStatusIndicator";
+import LockedTableWrapper from "../components/LockedTableWrapper";
+import InfoMuhelyiskolaiReszszakmat from "./indicators/21_muhelyiskolai_reszszakmat/info_muhelyiskolai_reszszakmat";
+import TitleMuhelyiskolaiReszszakmat from "./indicators/21_muhelyiskolai_reszszakmat/title_muhelyiskolai_reszszakmat";
+
 
 export default function MuhelyiskolaiReszszakmat() {
   const schoolYears = generateSchoolYears();
@@ -375,351 +384,352 @@ export default function MuhelyiskolaiReszszakmat() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Loading overlay */}
-      {(isFetching || isWorkshopFetching || isSaving) && (
-        <TableLoadingOverlay />
-      )}
+    <Container maxWidth="xl">
+      <PageWrapper
+        titleContent={<TitleMuhelyiskolaiReszszakmat />}
+        infoContent={<InfoMuhelyiskolaiReszszakmat />}
+      >
+        <Fade in={true} timeout={800}>
+          <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
+            <LockStatusIndicator tableName="muhelyiskola" />
 
-      <Typography variant="h6" component="h6" gutterBottom>
-        Műhelyiskola
-      </Typography>
+            {/* Loading overlay */}
 
-      <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 3 }}>
-        <Button
-          variant="contained"
-          startIcon={<SaveIcon />}
-          onClick={handleSave}
-          disabled={!isModified || isSaving}
-        >
-          {isSaving ? "Mentés..." : "Mentés"}
-        </Button>
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={handleReset}
-          disabled={!isModified || isSaving}
-        >
-          Visszaállítás
-        </Button>
-      </Stack>
-      {/* Instructions Card */}
+            {/* Content - only show when not loading */}
 
-      {/* Status Messages */}
-      {!selectedSchool && (
-        <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
-          Kérjük, válasszon ki egy iskolát az adatok betöltéséhez és mentéséhez.
-        </Alert>
-      )}
+            <>
 
-      {hasPercentageWarning() && (
-        <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
-          Figyelem! A részszakmát szerző tanulók száma meghaladja az
-          összlétszámot egy vagy több tanévben. Az arány 100% felett van!
-          Kérjük, ellenőrizze az adatokat.
-        </Alert>
-      )}
+              <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 3, position: 'sticky', top: 2, zIndex: 10, backgroundColor: 'white', padding: 1, borderRadius: 1 }}>
+                <LockedTableWrapper tableName="muhelyiskola">
+                  <Button
+                    variant="contained"
+                    startIcon={<SaveIcon />}
+                    onClick={handleSave}
+                    disabled={!isModified || isSaving}
+                  >
+                    {isSaving ? "Mentés..." : "Mentés"}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<RefreshIcon />}
+                    onClick={handleReset}
+                    disabled={!isModified || isSaving}
+                  >
+                    Visszaállítás
+                  </Button>
+                </LockedTableWrapper>
+              </Stack>
 
-      {isModified && (
-        <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
-          Mentetlen módosítások vannak. Ne felejtsd el menteni a
-          változtatásokat!
-        </Alert>
-      )}
+              {/* Instructions Card */}
 
-      {savedData && !isModified && (
-        <Alert severity="success" sx={{ mt: 2, mb: 2 }}>
-          Az adatok sikeresen mentve!
-        </Alert>
-      )}
+              {/* Status Messages */}
+              {!selectedSchool && (
+                <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+                  Kérjük, válasszon ki egy iskolát az adatok betöltéséhez és mentéséhez.
+                </Alert>
+              )}
 
-      {saveError && (
-        <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
-          Hiba történt a mentés során:{" "}
-          {saveError?.data?.message || saveError.message}
-        </Alert>
-      )}
+              {hasPercentageWarning() && (
+                <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
+                  Figyelem! A részszakmát szerző tanulók száma meghaladja az
+                  összlétszámot egy vagy több tanévben. Az arány 100% felett van!
+                  Kérjük, ellenőrizze az adatokat.
+                </Alert>
+              )}
 
-      {/* Main Data Tables */}
+              {isModified && (
+                <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+                  Mentetlen módosítások vannak. Ne felejtsd el menteni a
+                  változtatásokat!
+                </Alert>
+              )}
 
-      {/* Percentage Overview Table */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography
-            variant="h6"
-            component="h2"
-            gutterBottom
-            sx={{
-              color: "#d32f2f",
-              fontWeight: "bold",
-              textAlign: "center",
-            }}
-          >
-            Műhelyiskolában részszakmát szerzők aránya (%)
-          </Typography>
+              {/* Main Data Tables */}
 
-          <TableContainer
-            component={Paper}
-            variant="outlined"
-            sx={{ overflowX: "auto" }}
-          >
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#ffebee" }}>
-                  {schoolYears.map((year) => (
-                    <TableCell
-                      key={year}
-                      align="center"
+              {/* Percentage Overview Table */}
+              <Card sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography
+                    variant="h6"
+                    component="h2"
+                    gutterBottom
+                    sx={{
+                      color: "#d32f2f",
+                      fontWeight: "bold",
+                      textAlign: "center",
+                    }}
+                  >
+                    Műhelyiskolában részszakmát szerzők aránya (%)
+                  </Typography>
+
+                  <TableContainer
+                    component={Paper}
+                    variant="outlined"
+                    sx={{ overflowX: "auto" }}
+                  >
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow sx={{ backgroundColor: "#ffebee" }}>
+                          {schoolYears.map((year) => (
+                            <TableCell
+                              key={year}
+                              align="center"
+                              sx={{
+                                fontWeight: "bold",
+                                minWidth: 120,
+                                backgroundColor: "#e8f4fd",
+                              }}
+                            >
+                              {year}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        <TableRow sx={{ backgroundColor: "#fff3e0" }}>
+                          {schoolYears.map((year) => {
+                            const percentage = parseFloat(calculatePercentage(year));
+                            const isOverLimit = percentage > 100;
+
+                            return (
+                              <TableCell key={year} align="center">
+                                <TextField
+                                  type="number"
+                                  value={workshopData.percentage_overall[year] || "0"}
+                                  size="small"
+                                  inputProps={{
+                                    min: 0,
+                                    max: 100,
+                                    step: 0.1,
+                                    style: {
+                                      textAlign: "center",
+                                      color: isOverLimit ? "#d32f2f" : "inherit",
+                                      fontWeight: isOverLimit ? "bold" : "normal",
+                                    },
+                                  }}
+                                  sx={{
+                                    width: "80px",
+                                    "& .MuiOutlinedInput-root": {
+                                      backgroundColor: isOverLimit
+                                        ? "#ffebee"
+                                        : "inherit",
+                                      "& fieldset": {
+                                        borderColor: isOverLimit
+                                          ? "#d32f2f"
+                                          : "inherit",
+                                      },
+                                    },
+                                  }}
+                                  placeholder="0-100"
+                                  disabled // Auto-calculated field
+                                />
+                                {isOverLimit && (
+                                  <Typography
+                                    variant="caption"
+                                    color="error"
+                                    sx={{ display: "block", mt: 0.5 }}
+                                  >
+                                    Túllépi!
+                                  </Typography>
+                                )}
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+
+              {/* Participant Count Table */}
+              <Card sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography
+                    variant="h6"
+                    component="h2"
+                    gutterBottom
+                    sx={{
+                      color: "#1976d2",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Részszakmát szerző tanulók száma
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Tanulói és felnőttképzési jogviszony (fő)
+                  </Typography>
+
+                  <TableContainer
+                    component={Paper}
+                    variant="outlined"
+                    sx={{ overflowX: "auto" }}
+                  >
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+                          {schoolYears.map((year) => (
+                            <TableCell
+                              key={year}
+                              align="center"
+                              sx={{
+                                fontWeight: "bold",
+                                minWidth: 120,
+                                backgroundColor: "#e8f4fd",
+                              }}
+                            >
+                              {year}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
+                          {schoolYears.map((year) => (
+                            <TableCell key={year} align="center">
+                              <TextField
+                                type="number"
+                                value={workshopData.participants_count[year] || "0"}
+                                onChange={(e) =>
+                                  handleDataChange(
+                                    "participants_count",
+                                    year,
+                                    e.target.value
+                                  )
+                                }
+                                size="small"
+                                inputProps={{
+                                  min: 0,
+                                  step: 1,
+                                  style: { textAlign: "center" },
+                                }}
+                                sx={{ width: "80px" }}
+                                placeholder="0"
+                              />
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+
+              {/* Total Students Table */}
+              <Card sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography
+                    variant="h6"
+                    component="h2"
+                    gutterBottom
+                    sx={{
+                      color: "#1976d2",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Műhelyiskolai tanulói összlétszám
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Tanulói és felnőttképzési jogviszony (fő)
+                  </Typography>
+
+                  <TableContainer
+                    component={Paper}
+                    variant="outlined"
+                    sx={{ overflowX: "auto" }}
+                  >
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow sx={{ backgroundColor: "#e8f5e8" }}>
+                          {schoolYears.map((year) => (
+                            <TableCell
+                              key={year}
+                              align="center"
+                              sx={{
+                                fontWeight: "bold",
+                                minWidth: 120,
+                                backgroundColor: "#e8f4fd",
+                              }}
+                            >
+                              {year}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
+                          {schoolYears.map((year) => (
+                            <TableCell key={year} align="center">
+                              <TextField
+                                type="number"
+                                value={workshopData.total_students[year] || "0"}
+                                size="small"
+                                inputProps={{
+                                  min: 0,
+                                  step: 1,
+                                  style: { textAlign: "center" },
+                                }}
+                                sx={{ width: "80px" }}
+                                placeholder="0"
+                                disabled // Read-only field from API
+                              />
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+              <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
+                <CardContent>
+                  <Box
+                    sx={{
+                      p: 2,
+                      backgroundColor: "#f0f8ff",
+                      borderRadius: 1,
+                      border: "1px solid #90caf9",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ fontStyle: "italic", flex: 1 }}>
+                      <strong>Számítási képlet:</strong>
+                      <br />
+                      (Részszakmát szerző tanulók és felnőttképzési jogviszonyú tanulók
+                      száma / Műhelyiskolai tanulói és felnőttképzési jogviszonyú
+                      tanulók összlétszáma) × 100
+                    </Typography>
+                    <Box
                       sx={{
+                        fontSize: "2rem",
                         fontWeight: "bold",
-                        minWidth: 120,
-                        backgroundColor: "#e8f4fd",
+                        color: "#1976d2",
+                        textAlign: "center",
+                        minWidth: "100px",
                       }}
                     >
-                      {year}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow sx={{ backgroundColor: "#fff3e0" }}>
-                  {schoolYears.map((year) => {
-                    const percentage = parseFloat(calculatePercentage(year));
-                    const isOverLimit = percentage > 100;
+                      = %
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+              {/* Action Buttons */}
 
-                    return (
-                      <TableCell key={year} align="center">
-                        <TextField
-                          type="number"
-                          value={workshopData.percentage_overall[year] || "0"}
-                          size="small"
-                          inputProps={{
-                            min: 0,
-                            max: 100,
-                            step: 0.1,
-                            style: {
-                              textAlign: "center",
-                              color: isOverLimit ? "#d32f2f" : "inherit",
-                              fontWeight: isOverLimit ? "bold" : "normal",
-                            },
-                          }}
-                          sx={{
-                            width: "80px",
-                            "& .MuiOutlinedInput-root": {
-                              backgroundColor: isOverLimit
-                                ? "#ffebee"
-                                : "inherit",
-                              "& fieldset": {
-                                borderColor: isOverLimit
-                                  ? "#d32f2f"
-                                  : "inherit",
-                              },
-                            },
-                          }}
-                          placeholder="0-100"
-                          disabled // Auto-calculated field
-                        />
-                        {isOverLimit && (
-                          <Typography
-                            variant="caption"
-                            color="error"
-                            sx={{ display: "block", mt: 0.5 }}
-                          >
-                            Túllépi!
-                          </Typography>
-                        )}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+              {/* Notification Snackbar */}
+              <NotificationSnackbar
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={() => setSnackbarOpen(false)}
+              />
+            </>
 
-      {/* Participant Count Table */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography
-            variant="h6"
-            component="h2"
-            gutterBottom
-            sx={{
-              color: "#1976d2",
-              fontWeight: "bold",
-            }}
-          >
-            részszakmát szerző tanulók száma
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Tanulói és felnőttképzési jogviszony (fő)
-          </Typography>
-
-          <TableContainer
-            component={Paper}
-            variant="outlined"
-            sx={{ overflowX: "auto" }}
-          >
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
-                  {schoolYears.map((year) => (
-                    <TableCell
-                      key={year}
-                      align="center"
-                      sx={{
-                        fontWeight: "bold",
-                        minWidth: 120,
-                        backgroundColor: "#e8f4fd",
-                      }}
-                    >
-                      {year}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
-                  {schoolYears.map((year) => (
-                    <TableCell key={year} align="center">
-                      <TextField
-                        type="number"
-                        value={workshopData.participants_count[year] || "0"}
-                        onChange={(e) =>
-                          handleDataChange(
-                            "participants_count",
-                            year,
-                            e.target.value
-                          )
-                        }
-                        size="small"
-                        inputProps={{
-                          min: 0,
-                          step: 1,
-                          style: { textAlign: "center" },
-                        }}
-                        sx={{ width: "80px" }}
-                        placeholder="0"
-                      />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
-
-      {/* Total Students Table */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography
-            variant="h6"
-            component="h2"
-            gutterBottom
-            sx={{
-              color: "#1976d2",
-              fontWeight: "bold",
-            }}
-          >
-            Műhelyiskolai tanulói összlétszám
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Tanulói és felnőttképzési jogviszony (fő)
-          </Typography>
-
-          <TableContainer
-            component={Paper}
-            variant="outlined"
-            sx={{ overflowX: "auto" }}
-          >
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#e8f5e8" }}>
-                  {schoolYears.map((year) => (
-                    <TableCell
-                      key={year}
-                      align="center"
-                      sx={{
-                        fontWeight: "bold",
-                        minWidth: 120,
-                        backgroundColor: "#e8f4fd",
-                      }}
-                    >
-                      {year}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
-                  {schoolYears.map((year) => (
-                    <TableCell key={year} align="center">
-                      <TextField
-                        type="number"
-                        value={workshopData.total_students[year] || "0"}
-                        size="small"
-                        inputProps={{
-                          min: 0,
-                          step: 1,
-                          style: { textAlign: "center" },
-                        }}
-                        sx={{ width: "80px" }}
-                        placeholder="0"
-                        disabled // Read-only field from API
-                      />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
-      <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
-        <CardContent>
-          <Box
-            sx={{
-              p: 2,
-              backgroundColor: "#f0f8ff",
-              borderRadius: 1,
-              border: "1px solid #90caf9",
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
-            <Typography variant="body2" sx={{ fontStyle: "italic", flex: 1 }}>
-              <strong>Számítási képlet:</strong>
-              <br />
-              (Részszakmát szerző tanulók és felnőttképzési jogviszonyú tanulók
-              száma / Műhelyiskolai tanulói és felnőttképzési jogviszonyú
-              tanulók összlétszáma) × 100
-            </Typography>
-            <Box
-              sx={{
-                fontSize: "2rem",
-                fontWeight: "bold",
-                color: "#1976d2",
-                textAlign: "center",
-                minWidth: "100px",
-              }}
-            >
-              = %
-            </Box>
           </Box>
-        </CardContent>
-      </Card>
-      {/* Action Buttons */}
+        </Fade>
+      </PageWrapper>
+    </Container>
 
-      {/* Notification Snackbar */}
-      <NotificationSnackbar
-        open={snackbarOpen}
-        message={snackbarMessage}
-        severity={snackbarSeverity}
-        onClose={() => setSnackbarOpen(false)}
-      />
-    </Box>
   );
 }
