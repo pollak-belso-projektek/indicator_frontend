@@ -19,10 +19,14 @@ import {
   Fade,
   Stack,
 } from "@mui/material";
-import { School as SchoolIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import { selectSelectedSchool } from "../store/slices/authSlice";
 import { useGetTanuloLetszamQuery } from "../store/api/apiSlice";
+import PageWrapper from "./PageWrapper";
+import LockStatusIndicator from "../components/LockStatusIndicator";
+import InfoFelnottkepzes from "./indicators/5_felnottkepzes/info_felnottkepzes";
+import TitleFelnottkepzes from "./indicators/5_felnottkepzes/title_felnottkepzes";
+
 
 export default function Felnottkepzes() {
   const years = generateSchoolYears();
@@ -190,199 +194,183 @@ export default function Felnottkepzes() {
 
   return (
     <Container maxWidth="xl">
-      <Fade in={true} timeout={800}>
-        <Box sx={{ minHeight: 'calc(100vh - 120px)' }}>
-          {/* Header Section */}
-          <Card 
-            elevation={6} 
-            sx={{ 
-              mb: 2, 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              borderRadius: 3,
-              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
-            }}
-          >
-            <CardContent sx={{ p: 2 }}>
-              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-                <SchoolIcon sx={{ fontSize: 40, color: '#ffeb3b' }} />
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-                  5. Felnőttképzés
-                </Typography>
-              </Stack>
-            
-              <Typography variant="body1" sx={{ opacity: 0.8 }}>
-                Felnőttképzési jogviszonyú tanulók adatai és statisztikái
-              </Typography>
-            </CardContent>
-          </Card>
+      <PageWrapper
+        titleContent={<TitleFelnottkepzes />}
+        infoContent={<InfoFelnottkepzes />}
+      >
+        <Fade in={true} timeout={800}>
+          <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
+            <LockStatusIndicator tableName="felnottkepzes" />
 
-          {/* Loading State */}
-          {isFetching && (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-              <CircularProgress />
-            </Box>
-          )}
+            {/* Loading State */}
+            {isFetching && (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                <CircularProgress />
+              </Box>
+            )}
 
-      {/* Content - only show when not loading */}
-      {!isFetching && (
-        <>
-          {/* Selected School Alert */}
-          {selectedSchool && (
-            <Alert severity="info" sx={{ mb: 2 }}>
-              Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
-            </Alert>
-          )}
+            {/* Content - only show when not loading */}
+            {!isFetching && (
+              <>
 
-          {!selectedSchool && (
-            <Alert severity="info" sx={{ mb: 2 }}>
-              Nincs iskola kiválasztva - az összes iskola adatait összegzi a
-              rendszer.
-            </Alert>
-          )}
+                {/* Selected School Alert */}
+                {selectedSchool && (
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
+                  </Alert>
+                )}
 
-          {/* First Table - Read Only (Percentages) */}
-          <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" component="h2" gutterBottom>
-            Felnőttképzési jogviszonyú tanulók aránya (%)
-          </Typography>
+                {!selectedSchool && (
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    Nincs iskola kiválasztva - az összes iskola adatait összegzi a
+                    rendszer.
+                  </Alert>
+                )}
 
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Ez a táblázat automatikusan számított értékeket tartalmaz és nem
-            módosítható.
-          </Typography>
+                {/* First Table - Read Only (Percentages) */}
+                <Card sx={{ mb: 3 }}>
+                  <CardContent>
+                    <Typography variant="h6" component="h2" gutterBottom>
+                      Felnőttképzési jogviszonyú tanulók aránya (%)
+                    </Typography>
 
-          <TableContainer component={Paper} variant="outlined">
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                  {years.map((year) => (
-                    <TableCell
-                      key={year}
-                      align="center"
-                      sx={{ fontWeight: "bold" }}
-                    >
-                      {year}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow>
-                  {years.map((year) => (
-                    <TableCell key={year} align="center">
-                      {felnottkepzesiArany[year]}%
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Ez a táblázat automatikusan számított értékeket tartalmaz és nem
+                      módosítható.
+                    </Typography>
 
-      <Divider sx={{ my: 3 }} />
+                    <TableContainer component={Paper} variant="outlined">
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                            {years.map((year) => (
+                              <TableCell
+                                key={year}
+                                align="center"
+                                sx={{ fontWeight: "bold" }}
+                              >
+                                {year}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          <TableRow>
+                            {years.map((year) => (
+                              <TableCell key={year} align="center">
+                                {felnottkepzesiArany[year]}%
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </Card>
 
-      {/* Third Table - Adult Education Numbers (Read Only) */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" component="h2" gutterBottom>
-            Felnőttképzési jogviszonyú tanulók száma (fő)
-          </Typography>
+                <Divider sx={{ my: 3 }} />
 
-          <TableContainer component={Paper} variant="outlined">
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#e8f5e8" }}>
-                  {years.map((year) => (
-                    <TableCell
-                      key={year}
-                      align="center"
-                      sx={{ fontWeight: "bold" }}
-                    >
-                      {year}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow>
-                  {years.map((year) => (
-                    <TableCell
-                      key={year}
-                      align="center"
-                      sx={{ backgroundColor: "#f8fdf8", fontWeight: "medium" }}
-                    >
-                      {felnottkepzesiJogviszony[year]}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+                {/* Third Table - Adult Education Numbers (Read Only) */}
+                <Card sx={{ mb: 3 }}>
+                  <CardContent>
+                    <Typography variant="h6" component="h2" gutterBottom>
+                      Felnőttképzési jogviszonyú tanulók száma (fő)
+                    </Typography>
 
-      <Divider sx={{ my: 3 }} />
+                    <TableContainer component={Paper} variant="outlined">
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ backgroundColor: "#e8f5e8" }}>
+                            {years.map((year) => (
+                              <TableCell
+                                key={year}
+                                align="center"
+                                sx={{ fontWeight: "bold" }}
+                              >
+                                {year}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          <TableRow>
+                            {years.map((year) => (
+                              <TableCell
+                                key={year}
+                                align="center"
+                                sx={{ backgroundColor: "#f8fdf8", fontWeight: "medium" }}
+                              >
+                                {felnottkepzesiJogviszony[year]}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </Card>
 
-      {/* Second Table - Total Student Numbers (Read Only from API) */}
-      <Card>
-        <CardContent>
-          <Typography variant="h6" component="h2" gutterBottom>
-            Szakmai oktatásban tanulók összlétszáma (fő)
-          </Typography>
-          <TableContainer component={Paper} variant="outlined">
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                  {years.map((year) => (
-                    <TableCell
-                      key={year}
-                      align="center"
-                      sx={{ fontWeight: "bold" }}
-                    >
-                      {year}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow>
-                  {years.map((year) => (
-                    <TableCell
-                      key={year}
-                      align="center"
-                      sx={{ backgroundColor: "#fafafa", fontWeight: "medium" }}
-                    >
-                      {szakmaiOktatás[year]}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+                <Divider sx={{ my: 3 }} />
 
-      {/* Formula Information */}
-      <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Számítási formula
-          </Typography>
-          <Typography variant="body2" component="div">
-            <strong>Felnőttképzési jogviszonyú tanulók aránya =</strong>
-            <br />
-            (felnőttképzési jogviszonyú rendszerekben tanulók száma / szakmai
-            oktatásban tanulók összlétszáma) × 100
-          </Typography>
-        </CardContent>
-      </Card>
-        </>
-      )}
-        </Box>
-      </Fade>
+                {/* Second Table - Total Student Numbers (Read Only from API) */}
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" component="h2" gutterBottom>
+                      Szakmai oktatásban tanulók összlétszáma (fő)
+                    </Typography>
+                    <TableContainer component={Paper} variant="outlined">
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                            {years.map((year) => (
+                              <TableCell
+                                key={year}
+                                align="center"
+                                sx={{ fontWeight: "bold" }}
+                              >
+                                {year}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          <TableRow>
+                            {years.map((year) => (
+                              <TableCell
+                                key={year}
+                                align="center"
+                                sx={{ backgroundColor: "#fafafa", fontWeight: "medium" }}
+                              >
+                                {szakmaiOktatás[year]}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Formula Information */}
+                <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
+                  <CardContent>
+                    <Typography variant="h6" component="h3" gutterBottom>
+                      Számítási formula
+                    </Typography>
+                    <Typography variant="body2" component="div">
+                      <strong>Felnőttképzési jogviszonyú tanulók aránya =</strong>
+                      <br />
+                      (felnőttképzési jogviszonyú rendszerekben tanulók száma / szakmai
+                      oktatásban tanulók összlétszáma) × 100
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </Box>
+        </Fade>
+      </PageWrapper>
     </Container>
+
   );
 }

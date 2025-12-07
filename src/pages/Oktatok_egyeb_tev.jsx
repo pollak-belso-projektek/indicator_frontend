@@ -21,7 +21,7 @@ import {
   Container,
   Fade,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon, Work as WorkIcon } from "@mui/icons-material";
+import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
 import { selectSelectedSchool, selectUserId } from "../store/slices/authSlice";
 import TableLoadingOverlay from "../components/shared/TableLoadingOverlay";
@@ -32,6 +32,12 @@ import {
 } from "../store/api/oktatokEgyebTevSlice";
 import { useGetAlkalmazottAdatokQuery } from "../store/api/apiSlice";
 import { NotificationSnackbar } from "../components/shared";
+import PageWrapper from "./PageWrapper";
+import LockStatusIndicator from "../components/LockStatusIndicator";
+import LockedTableWrapper from "../components/LockedTableWrapper";
+import InfoOktatoEgyebTev from "./indicators/23_oktato_egyeb_tev/info_oktato_egyeb_tev";
+import TitleOktatoEgyebTev from "./indicators/23_oktato_egyeb_tev/title_oktato_egyeb_tev";
+
 
 export default function OktatokEgyebTev() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -298,7 +304,7 @@ export default function OktatokEgyebTev() {
       schoolYearsRef.current.forEach((year) => {
         const yearStart = parseInt(year.split("/")[0]);
         const record = apiData.find((r) => r.tanev_kezdete === yearStart);
-        
+
         // Get oktatok_letszama from alkalmazott data
         const oktatokLetszamaFromAlkalmazott = getOktatokLetszamaForYear(year);
 
@@ -333,8 +339,8 @@ export default function OktatokEgyebTev() {
           tankonyv_jegyzetiro: record?.tankonyv_jegyzetiro?.toString() || "",
           szakmai_tisztsegviselo:
             record?.szakmai_tisztsegviselo?.toString() || "",
-          oktatok_letszama: oktatokLetszamaFromAlkalmazott > 0 
-            ? oktatokLetszamaFromAlkalmazott.toString() 
+          oktatok_letszama: oktatokLetszamaFromAlkalmazott > 0
+            ? oktatokLetszamaFromAlkalmazott.toString()
             : (record?.oktatok_letszama || record?.oktatokLetszama)?.toString() || "",
           _recordId: record?.id,
         };
@@ -363,7 +369,7 @@ export default function OktatokEgyebTev() {
           };
         }
       });
-      
+
       setData(dataWithOktatok);
       setIsDataInitialized(true);
     }
@@ -391,11 +397,11 @@ export default function OktatokEgyebTev() {
     if (isDataInitialized && Object.keys(data).length > 0) {
       const updatedData = { ...data };
       let hasChanges = false;
-      
+
       schoolYearsRef.current.forEach((year) => {
         const oktatokLetszamaFromAlkalmazott = getOktatokLetszamaForYear(year);
-        if (oktatokLetszamaFromAlkalmazott > 0 && 
-            updatedData[year]?.oktatok_letszama !== oktatokLetszamaFromAlkalmazott.toString()) {
+        if (oktatokLetszamaFromAlkalmazott > 0 &&
+          updatedData[year]?.oktatok_letszama !== oktatokLetszamaFromAlkalmazott.toString()) {
           updatedData[year] = {
             ...updatedData[year],
             oktatok_letszama: oktatokLetszamaFromAlkalmazott.toString(),
@@ -403,7 +409,7 @@ export default function OktatokEgyebTev() {
           hasChanges = true;
         }
       });
-      
+
       if (hasChanges) {
         setData(updatedData);
       }
@@ -420,7 +426,7 @@ export default function OktatokEgyebTev() {
         return; // Don't allow edit if data exists from alkalmazott
       }
     }
-    
+
     // Validate input - only allow non-negative integers
     if (value !== "" && (isNaN(value) || parseInt(value) < 0)) {
       return; // Don't update if invalid
@@ -599,7 +605,7 @@ export default function OktatokEgyebTev() {
       schoolYearsRef.current.forEach((year) => {
         const yearStart = parseInt(year.split("/")[0]);
         const record = apiData.find((r) => r.tanev_kezdete === yearStart);
-        
+
         // Get oktatok_letszama from alkalmazott data
         const oktatokLetszamaFromAlkalmazott = getOktatokLetszamaForYear(year);
 
@@ -634,8 +640,8 @@ export default function OktatokEgyebTev() {
           tankonyv_jegyzetiro: record?.tankonyv_jegyzetiro?.toString() || "",
           szakmai_tisztsegviselo:
             record?.szakmai_tisztsegviselo?.toString() || "",
-          oktatok_letszama: oktatokLetszamaFromAlkalmazott > 0 
-            ? oktatokLetszamaFromAlkalmazott.toString() 
+          oktatok_letszama: oktatokLetszamaFromAlkalmazott > 0
+            ? oktatokLetszamaFromAlkalmazott.toString()
             : (record?.oktatok_letszama || record?.oktatokLetszama)?.toString() || "",
           _recordId: record?.id,
         };
@@ -692,390 +698,376 @@ export default function OktatokEgyebTev() {
 
   return (
     <Container maxWidth="xl">
-      <Fade in={true} timeout={800}>
-        <Box sx={{ minHeight: 'calc(100vh - 120px)' }}>
-          {/* Header Section */}
-          <Card 
-            elevation={6} 
-            sx={{ 
-              mb: 2, 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              borderRadius: 3,
-              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
-            }}
-          >
-            <CardContent sx={{ p: 2 }}>
-              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-                <WorkIcon sx={{ fontSize: 40, color: '#ffeb3b' }} />
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-                  23. Oktatók egyéb tevékenységei
+      <PageWrapper
+        titleContent={<TitleOktatoEgyebTev />}
+        infoContent={<InfoOktatoEgyebTev />}
+      >
+        <Fade in={true} timeout={800}>
+          <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
+            <LockStatusIndicator tableName="oktatok_egyeb_tev" />
+
+            {/* Loading State */}
+            {isLoading && (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                <CircularProgress />
+              </Box>
+            )}
+
+            {/* Content - only show when not loading */}
+            {!isLoading && (
+              <>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  💡 A módosított cellák sárga háttérrel vannak jelölve. Csak a módosított
+                  adatok kerülnek mentésre. Csak nem-negatív egész számok adhatók meg.
+                  Az "Oktatók létszáma" mező automatikusan kitöltődik az alkalmazotti adatokból,
+                  vagy manuálisan szerkeszthető, ha nincs exportált adat.
                 </Typography>
-              </Stack>
-            
-              <Typography variant="body1" sx={{ opacity: 0.8 }}>
-                Az oktatók iskolarendszeren kívüli egyéb tevékenységei különböző kategóriákban.
-              </Typography>
-            </CardContent>
-          </Card>
 
-      {/* Loading State */}
-      {isLoading && (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-          <CircularProgress />
-        </Box>
-      )}
-
-      {/* Content - only show when not loading */}
-      {!isLoading && (
-        <>
-          <Typography variant="body2" color="text.secondary" paragraph>
-            💡 A módosított cellák sárga háttérrel vannak jelölve. Csak a módosított
-            adatok kerülnek mentésre. Csak nem-negatív egész számok adhatók meg.
-            Az "Oktatók létszáma" mező automatikusan kitöltődik az alkalmazotti adatokból, 
-            vagy manuálisan szerkeszthető, ha nincs exportált adat.
-          </Typography>
-
-          {/* Action buttons */}
-          <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSave}
-              disabled={!isModified || isLoading}
-            >
-              {isLoading ? <CircularProgress size={20} /> : "Mentés"}
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleReset}
-              disabled={!isModified || isLoading}
-            >
-          Visszaállítás
-        </Button>
-        {isModified && (
-          <Chip
-            label="Van nem mentett módosítás"
-            color="warning"
-            variant="outlined"
-          />
-        )}
-      </Stack>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
-
-      {/* Data table */}
-      <Card sx={{ position: "relative" }}>
-        <TableLoadingOverlay
-          isLoading={isLoading}
-          message="Adatok mentése folyamatban, kérjük várjon..."
-        />
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Oktatók egyéb tevékenységei tanévenkénti bontásban
-          </Typography>
-
-          <TableContainer component={Paper} sx={{ mt: 2 }}>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: "bold", minWidth: 300 }}>
-                    Tevékenység típusa
-                  </TableCell>
-                  {schoolYears.map((year) => (
-                    <TableCell
-                      key={year}
-                      align="center"
-                      sx={{ fontWeight: "bold", minWidth: 120 }}
+                {/* Action buttons */}
+                <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+                  <LockedTableWrapper tableName="oktatok_egyeb_tev">
+                    <Button
+                      variant="contained"
+                      startIcon={<SaveIcon />}
+                      onClick={handleSave}
+                      disabled={!isModified || isLoading}
                     >
-                      {year}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {Object.entries(categoryLabels).map(
-                  ([categoryKey, categoryLabel]) => {
-                    const isObjectCategory =
-                      typeof data[schoolYears[0]]?.[categoryKey] === "object" &&
-                      data[schoolYears[0]]?.[categoryKey] !== null;
+                      {isLoading ? <CircularProgress size={20} /> : "Mentés"}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      startIcon={<RefreshIcon />}
+                      onClick={handleReset}
+                      disabled={!isModified || isLoading}
+                    >
+                      Visszaállítás
+                    </Button>
+                  </LockedTableWrapper>
+                  {isModified && (
+                    <Chip
+                      label="Van nem mentett módosítás"
+                      color="warning"
+                      variant="outlined"
+                    />
+                  )}
+                </Stack>
 
-                    if (isObjectCategory) {
-                      // Handle nested objects
-                      return [
-                        // Category header row
-                        <TableRow key={`${categoryKey}-header`}>
-                          <TableCell
-                            colSpan={schoolYears.length + 1}
-                            sx={{
-                              backgroundColor: "primary.light",
-                              color: "primary.contrastText",
-                              fontWeight: "bold",
-                              textAlign: "center",
-                            }}
-                          >
-                            {categoryLabel}
-                          </TableCell>
-                        </TableRow>,
-                        // Field rows for this category
-                        ...Object.entries(fieldLabels)
-                          .filter(([fieldKey]) =>
-                            data[schoolYears[0]]?.[categoryKey]?.hasOwnProperty(
-                              fieldKey
-                            )
-                          )
-                          .map(([fieldKey, fieldLabel]) => (
-                            <TableRow key={`${categoryKey}-${fieldKey}`}>
-                              <TableCell sx={{ pl: 3 }}>{fieldLabel}</TableCell>
-                              {schoolYears.map((year) => (
-                                <TableCell key={year} align="center">
-                                  <TextField
-                                    size="small"
-                                    type="number"
-                                    value={
-                                      data[year]?.[categoryKey]?.[fieldKey] ||
-                                      ""
-                                    }
-                                    onChange={(e) =>
-                                      handleInputChange(
-                                        categoryKey,
-                                        fieldKey,
-                                        year,
-                                        e.target.value
-                                      )
-                                    }
-                                    inputProps={{
-                                      min: 0,
-                                      step: 1,
-                                      style: { textAlign: "center" },
-                                    }}
-                                    sx={{
-                                      width: 80,
-                                      borderRadius: 2,
-                                      border: isCellModified(
-                                        categoryKey,
-                                        fieldKey,
-                                        year
-                                      )
-                                        ? "2px solid #ff9800"
-                                        : "1px solid transparent",
-                                    }}
-                                  />
-                                </TableCell>
-                              ))}
-                            </TableRow>
-                          )),
-                        // Category total row
-                        <TableRow key={`${categoryKey}-total`}>
-                          <TableCell
-                            sx={{
-                              fontWeight: "bold",
-                              backgroundColor: "grey.100",
-                              pl: 3,
-                            }}
-                          >
-                            {categoryLabel} - Összesen
-                          </TableCell>
-                          {schoolYears.map((year) => (
-                            <TableCell
-                              key={year}
-                              align="center"
-                              sx={{
-                                fontWeight: "bold",
-                                backgroundColor: "grey.100",
-                              }}
-                            >
-                              {calculateCategoryTotal(data[year], categoryKey)}
-                            </TableCell>
-                          ))}
-                        </TableRow>,
-                      ];
-                    } else {
-                      // Handle direct fields
-                      return (
-                        <TableRow key={categoryKey}>
-                          <TableCell>{categoryLabel}</TableCell>
-                          {schoolYears.map((year) => (
-                            <TableCell key={year} align="center">
-                              <TextField
-                                size="small"
-                                type="number"
-                                value={data[year]?.[categoryKey] || ""}
-                                onChange={(e) =>
-                                  handleInputChange(
-                                    categoryKey,
-                                    null,
-                                    year,
-                                    e.target.value
-                                  )
-                                }
-                                inputProps={{
-                                  min: 0,
-                                  step: 1,
-                                  style: { textAlign: "center" },
-                                }}
-                                sx={{
-                                  width: 80,
-                                  borderRadius: 2,
-                                  border: isCellModified(
-                                    categoryKey,
-                                    null,
-                                    year
-                                  )
-                                    ? "2px solid #ff9800"
-                                    : "1px solid transparent",
-                                }}
-                              />
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      );
-                    }
-                  }
+
+                {error && (
+                  <Alert severity="error" sx={{ mb: 3 }}>
+                    {error}
+                  </Alert>
                 )}
 
-                {/* Overall total row */}
-                <TableRow>
-                  <TableCell
-                    sx={{
-                      fontWeight: "bold",
-                      backgroundColor: "orange",
-                      color: "primary.contrastText",
-                    }}
-                  >
-                    ÖSSZESEN
-                  </TableCell>
-                  {schoolYears.map((year) => (
-                    <TableCell
-                      key={year}
-                      align="center"
-                      sx={{
-                        fontWeight: "bold",
-                        backgroundColor: "orange",
-                        color: "primary.contrastText",
-                      }}
-                    >
-                      {calculateYearTotal(data[year])}
-                    </TableCell>
-                  ))}
-                </TableRow>
-                {/* Oktatók létszáma */}
-                <TableRow
-                  sx={{
-                    backgroundColor: "lightgray",
-                    fontWeight: "bold",
-                  }}
-                >
-                  <TableCell
-                    sx={{
-                      fontWeight: "bold",
-                      borderTop: "2px solid #333",
-                    }}
-                  >
-                    Oktatók létszáma (fő)
-                  </TableCell>
-                  {schoolYears.map((year) => (
-                    <TableCell
-                      key={year}
-                      sx={{
-                        borderTop: "2px solid #333",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {(() => {
-                        const oktatokLetszamaFromAlkalmazott = getOktatokLetszamaForYear(year);
-                        const isReadOnly = oktatokLetszamaFromAlkalmazott > 0;
-                        
-                        return (
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={data[year]?.oktatok_letszama || ""}
-                            onChange={(e) =>
-                              handleInputChange(
-                                "oktatok_letszama",
-                                null,
-                                year,
-                                e.target.value
-                              )
+                {/* Data table */}
+                <Card sx={{ position: "relative" }}>
+                  <TableLoadingOverlay
+                    isLoading={isLoading}
+                    message="Adatok mentése folyamatban, kérjük várjon..."
+                  />
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Oktatók egyéb tevékenységei tanévenkénti bontásban
+                    </Typography>
+
+                    <TableContainer component={Paper} sx={{ mt: 2 }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell sx={{ fontWeight: "bold", minWidth: 300 }}>
+                              Tevékenység típusa
+                            </TableCell>
+                            {schoolYears.map((year) => (
+                              <TableCell
+                                key={year}
+                                align="center"
+                                sx={{ fontWeight: "bold", minWidth: 120 }}
+                              >
+                                {year}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {Object.entries(categoryLabels).map(
+                            ([categoryKey, categoryLabel]) => {
+                              const isObjectCategory =
+                                typeof data[schoolYears[0]]?.[categoryKey] === "object" &&
+                                data[schoolYears[0]]?.[categoryKey] !== null;
+
+                              if (isObjectCategory) {
+                                // Handle nested objects
+                                return [
+                                  // Category header row
+                                  <TableRow key={`${categoryKey}-header`}>
+                                    <TableCell
+                                      colSpan={schoolYears.length + 1}
+                                      sx={{
+                                        backgroundColor: "primary.light",
+                                        color: "primary.contrastText",
+                                        fontWeight: "bold",
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      {categoryLabel}
+                                    </TableCell>
+                                  </TableRow>,
+                                  // Field rows for this category
+                                  ...Object.entries(fieldLabels)
+                                    .filter(([fieldKey]) =>
+                                      data[schoolYears[0]]?.[categoryKey]?.hasOwnProperty(
+                                        fieldKey
+                                      )
+                                    )
+                                    .map(([fieldKey, fieldLabel]) => (
+                                      <TableRow key={`${categoryKey}-${fieldKey}`}>
+                                        <TableCell sx={{ pl: 3 }}>{fieldLabel}</TableCell>
+                                        {schoolYears.map((year) => (
+                                          <TableCell key={year} align="center">
+                                            <TextField
+                                              size="small"
+                                              type="number"
+                                              value={
+                                                data[year]?.[categoryKey]?.[fieldKey] ||
+                                                ""
+                                              }
+                                              onChange={(e) =>
+                                                handleInputChange(
+                                                  categoryKey,
+                                                  fieldKey,
+                                                  year,
+                                                  e.target.value
+                                                )
+                                              }
+                                              inputProps={{
+                                                min: 0,
+                                                step: 1,
+                                                style: { textAlign: "center" },
+                                              }}
+                                              sx={{
+                                                width: 80,
+                                                borderRadius: 2,
+                                                border: isCellModified(
+                                                  categoryKey,
+                                                  fieldKey,
+                                                  year
+                                                )
+                                                  ? "2px solid #ff9800"
+                                                  : "1px solid transparent",
+                                              }}
+                                            />
+                                          </TableCell>
+                                        ))}
+                                      </TableRow>
+                                    )),
+                                  // Category total row
+                                  <TableRow key={`${categoryKey}-total`}>
+                                    <TableCell
+                                      sx={{
+                                        fontWeight: "bold",
+                                        backgroundColor: "grey.100",
+                                        pl: 3,
+                                      }}
+                                    >
+                                      {categoryLabel} - Összesen
+                                    </TableCell>
+                                    {schoolYears.map((year) => (
+                                      <TableCell
+                                        key={year}
+                                        align="center"
+                                        sx={{
+                                          fontWeight: "bold",
+                                          backgroundColor: "grey.100",
+                                        }}
+                                      >
+                                        {calculateCategoryTotal(data[year], categoryKey)}
+                                      </TableCell>
+                                    ))}
+                                  </TableRow>,
+                                ];
+                              } else {
+                                // Handle direct fields
+                                return (
+                                  <TableRow key={categoryKey}>
+                                    <TableCell>{categoryLabel}</TableCell>
+                                    {schoolYears.map((year) => (
+                                      <TableCell key={year} align="center">
+                                        <TextField
+                                          size="small"
+                                          type="number"
+                                          value={data[year]?.[categoryKey] || ""}
+                                          onChange={(e) =>
+                                            handleInputChange(
+                                              categoryKey,
+                                              null,
+                                              year,
+                                              e.target.value
+                                            )
+                                          }
+                                          inputProps={{
+                                            min: 0,
+                                            step: 1,
+                                            style: { textAlign: "center" },
+                                          }}
+                                          sx={{
+                                            width: 80,
+                                            borderRadius: 2,
+                                            border: isCellModified(
+                                              categoryKey,
+                                              null,
+                                              year
+                                            )
+                                              ? "2px solid #ff9800"
+                                              : "1px solid transparent",
+                                          }}
+                                        />
+                                      </TableCell>
+                                    ))}
+                                  </TableRow>
+                                );
+                              }
                             }
-                            inputProps={{
-                              min: 0,
-                              step: 1,
-                              style: { textAlign: "center" },
-                              readOnly: isReadOnly,
-                            }}
-                            disabled={isReadOnly}
-                            sx={{
-                              "& .MuiInputBase-input": {
-                                textAlign: "center",
+                          )}
+
+                          {/* Overall total row */}
+                          <TableRow>
+                            <TableCell
+                              sx={{
                                 fontWeight: "bold",
-                                backgroundColor: isReadOnly ? "#f5f5f5" : "white",
-                                cursor: isReadOnly ? "not-allowed" : "text",
-                              },
-                              border: !isReadOnly && isCellModified(
-                                "oktatok_letszama",
-                                null,
-                                year
-                              )
-                                ? "2px solid #ff9800"
-                                : "1px solid transparent",
+                                backgroundColor: "orange",
+                                color: "primary.contrastText",
+                              }}
+                            >
+                              ÖSSZESEN
+                            </TableCell>
+                            {schoolYears.map((year) => (
+                              <TableCell
+                                key={year}
+                                align="center"
+                                sx={{
+                                  fontWeight: "bold",
+                                  backgroundColor: "orange",
+                                  color: "primary.contrastText",
+                                }}
+                              >
+                                {calculateYearTotal(data[year])}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                          {/* Oktatók létszáma */}
+                          <TableRow
+                            sx={{
+                              backgroundColor: "lightgray",
+                              fontWeight: "bold",
                             }}
-                          />
-                        );
-                      })()}
-                    </TableCell>
-                  ))}
-                </TableRow>
+                          >
+                            <TableCell
+                              sx={{
+                                fontWeight: "bold",
+                                borderTop: "2px solid #333",
+                              }}
+                            >
+                              Oktatók létszáma (fő)
+                            </TableCell>
+                            {schoolYears.map((year) => (
+                              <TableCell
+                                key={year}
+                                sx={{
+                                  borderTop: "2px solid #333",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                {(() => {
+                                  const oktatokLetszamaFromAlkalmazott = getOktatokLetszamaForYear(year);
+                                  const isReadOnly = oktatokLetszamaFromAlkalmazott > 0;
 
-                {/* Szakértői tevékenységet folytató oktatók aránya */}
-                <TableRow
-                  sx={{
-                    backgroundColor: "lightblue",
-                    fontWeight: "bold",
-                  }}
-                >
-                  <TableCell
-                    sx={{
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Szakértői tevékenységet folytató oktatók aránya (%)
-                  </TableCell>
-                  {schoolYears.map((year) => (
-                    <TableCell
-                      key={year}
-                      sx={{
-                        textAlign: "center",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {calculateSzakertoimPercentage(data[year])}%
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+                                  return (
+                                    <TextField
+                                      size="small"
+                                      type="number"
+                                      value={data[year]?.oktatok_letszama || ""}
+                                      onChange={(e) =>
+                                        handleInputChange(
+                                          "oktatok_letszama",
+                                          null,
+                                          year,
+                                          e.target.value
+                                        )
+                                      }
+                                      inputProps={{
+                                        min: 0,
+                                        step: 1,
+                                        style: { textAlign: "center" },
+                                        readOnly: isReadOnly,
+                                      }}
+                                      disabled={isReadOnly}
+                                      sx={{
+                                        "& .MuiInputBase-input": {
+                                          textAlign: "center",
+                                          fontWeight: "bold",
+                                          backgroundColor: isReadOnly ? "#f5f5f5" : "white",
+                                          cursor: isReadOnly ? "not-allowed" : "text",
+                                        },
+                                        border: !isReadOnly && isCellModified(
+                                          "oktatok_letszama",
+                                          null,
+                                          year
+                                        )
+                                          ? "2px solid #ff9800"
+                                          : "1px solid transparent",
+                                      }}
+                                    />
+                                  );
+                                })()}
+                              </TableCell>
+                            ))}
+                          </TableRow>
 
-      {/* Notification Snackbar */}
-      <NotificationSnackbar 
-        open={notification.open}
-        message={notification.message}
-        severity={notification.severity}
-        onClose={closeNotification}
-      />
-        </>
-      )}
-        </Box>
-      </Fade>
+                          {/* Szakértői tevékenységet folytató oktatók aránya */}
+                          <TableRow
+                            sx={{
+                              backgroundColor: "lightblue",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            <TableCell
+                              sx={{
+                                fontWeight: "bold",
+                              }}
+                            >
+                              Szakértői tevékenységet folytató oktatók aránya (%)
+                            </TableCell>
+                            {schoolYears.map((year) => (
+                              <TableCell
+                                key={year}
+                                sx={{
+                                  textAlign: "center",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                {calculateSzakertoimPercentage(data[year])}%
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Notification Snackbar */}
+                <NotificationSnackbar
+                  open={notification.open}
+                  message={notification.message}
+                  severity={notification.severity}
+                  onClose={closeNotification}
+                />
+              </>
+            )}
+          </Box>
+        </Fade>
+      </PageWrapper>
     </Container>
+
   );
 }

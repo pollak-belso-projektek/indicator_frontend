@@ -26,11 +26,7 @@ const LockStatusIndicator = ({ tableName, showChip = false }) => {
   }
 
   return (
-    <Alert
-      severity="warning"
-      icon={<LockIcon />}
-      sx={{ mb: 2 }}
-    >
+    <Alert severity="error" icon={<LockIcon />} sx={{ mb: 2 }}>
       <Box>
         <strong>Ez a tábla jelenleg le van zárva.</strong>
         {lockMessage && <Box sx={{ mt: 0.5 }}>{lockMessage}</Box>}

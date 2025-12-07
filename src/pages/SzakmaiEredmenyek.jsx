@@ -34,6 +34,12 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { generateSchoolYears } from "../utils/schoolYears";
+import PageWrapper from "./PageWrapper";
+import LockStatusIndicator from "../components/LockStatusIndicator";
+import LockedTableWrapper from "../components/LockedTableWrapper";
+import InfoSzakmaiEredmenyek from "./indicators/8_szakmai_eredmenyek/info_szakmai_eredmenyek";
+import TitleSzakmaiEredmenyek from "./indicators/8_szakmai_eredmenyek/title_szakmai_eredmenyek";
+
 
 export default function SzakmaiEredmenyek() {
   // Predefined competition categories and names
@@ -229,345 +235,343 @@ export default function SzakmaiEredmenyek() {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        8. Szakmai, közismereti, kulturális és sporteredmények
-      </Typography>
+    <PageWrapper
+      titleContent={<TitleSzakmaiEredmenyek />}
+      infoContent={<InfoSzakmaiEredmenyek />}
+    >
+      <Box sx={{ p: 3 }}>
+        <LockStatusIndicator tableName="szakmai_eredmenyek" />
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
-        (nemzetközi, országos, regionális, megyei és település szinten)
-      </Typography>
+        {/* Instructions Card */}
+        <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
+          <CardContent>
+            <Typography variant="h6" component="h3" gutterBottom>
+              Megjegyzés
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Az indikátor számításánál figyelembe vehetők a tanulói és a
+              felnőttképzési jogviszonyban elért eredmények egyaránt.
+            </Typography>
+            <Typography variant="body2">
+              <strong>Kérdés:</strong> Itt szóba jöhet az, hogy új versenyt visz
+              majd fel valaki, vagy az egyébhez írja be mindenki?
+            </Typography>
+          </CardContent>
+        </Card>
 
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Az eredmények tanévenkénti bemutatása és a tanévenkénti eredmények
-        összehasonlítása nemzetközi, országos, regionális, megyei és település
-        szinten.
-      </Typography>
-
-      {/* Instructions Card */}
-      <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Megjegyzés
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Az indikátor számításánál figyelembe vehetők a tanulói és a
-            felnőttképzési jogviszonyban elért eredmények egyaránt.
-          </Typography>
-          <Typography variant="body2">
-            <strong>Kérdés:</strong> Itt szóba jöhet az, hogy új versenyt visz
-            majd fel valaki, vagy az egyébhez írja be mindenki?
-          </Typography>
-        </CardContent>
-      </Card>
-
-      {/* Add Competition Button */}
-      <Box sx={{ mb: 3 }}>
-        <Button
-          variant="outlined"
-          startIcon={<AddIcon />}
-          onClick={() => setOpenAddDialog(true)}
-        >
-          Új verseny hozzáadása
-        </Button>
-      </Box>
-
-      {/* Main Data Table */}
-      <Card>
-        <CardContent>
-          <Typography variant="h6" component="h2" gutterBottom>
-            Versenyek eredményei
-          </Typography>
-
-          <TableContainer
-            component={Paper}
-            variant="outlined"
-            sx={{ overflowX: "auto" }}
-          >
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                  <TableCell
-                    rowSpan={2}
-                    sx={{
-                      fontWeight: "bold",
-                      verticalAlign: "middle",
-                      minWidth: 300,
-                      textAlign: "center",
-                    }}
-                  >
-                    Verseny megnevezése
-                  </TableCell>
-                  {schoolYears.map((year) => (
-                    <TableCell
-                      key={year}
-                      colSpan={placementTypes.length}
-                      align="center"
-                      sx={{ fontWeight: "bold", minWidth: 300 }}
-                    >
-                      {year}
-                    </TableCell>
-                  ))}
-                  <TableCell
-                    rowSpan={2}
-                    sx={{
-                      fontWeight: "bold",
-                      verticalAlign: "middle",
-                      minWidth: 60,
-                      textAlign: "center",
-                    }}
-                  >
-                    Műveletek
-                  </TableCell>
-                </TableRow>
-                <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                  {schoolYears.map((year) =>
-                    placementTypes.map((placement) => (
-                      <TableCell
-                        key={`${year}-${placement.key}`}
-                        align="center"
-                        sx={{
-                          fontWeight: "bold",
-                          minWidth: 70,
-                          backgroundColor: placement.color,
-                          fontSize: "0.75rem",
-                        }}
-                      >
-                        {placement.label}
-                        <br />
-                        (fő)
-                      </TableCell>
-                    ))
-                  )}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {Object.keys(competitionData).map((category) => {
-                  const competitions = Object.keys(competitionData[category]);
-                  return competitions.map((competition, competitionIndex) => (
-                    <TableRow key={`${category}-${competition}`}>
-                      <TableCell sx={{ fontWeight: "medium", pl: 2 }}>
-                        {competitionIndex === 0 && (
-                          <Typography
-                            variant="subtitle2"
-                            sx={{ fontWeight: "bold", mb: 1 }}
-                          >
-                            {category}
-                          </Typography>
-                        )}
-                        <Box sx={{ pl: competitionIndex === 0 ? 2 : 4 }}>
-                          {competition}
-                        </Box>
-                      </TableCell>
-                      {schoolYears.map((year) =>
-                        placementTypes.map((placement) => (
-                          <TableCell
-                            key={`${year}-${placement.key}`}
-                            align="center"
-                          >
-                            <TextField
-                              type="number"
-                              value={
-                                competitionData[category][competition][year]?.[
-                                  placement.key
-                                ] || "0"
-                              }
-                              onChange={(e) =>
-                                handleDataChange(
-                                  category,
-                                  competition,
-                                  year,
-                                  placement.key,
-                                  e.target.value
-                                )
-                              }
-                              size="small"
-                              inputProps={{
-                                min: 0,
-                                style: { textAlign: "center" },
-                              }}
-                              sx={{ width: "60px" }}
-                            />
-                          </TableCell>
-                        ))
-                      )}
-                      <TableCell align="center">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() =>
-                            handleRemoveCompetition(category, competition)
-                          }
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ));
-                })}
-
-                {/* Totals Row */}
-                <TableRow
-                  sx={{ backgroundColor: "#fff2cc", fontWeight: "bold" }}
-                >
-                  <TableCell sx={{ fontWeight: "bold", fontSize: "1rem" }}>
-                    Összesen
-                  </TableCell>
-                  {schoolYears.map((year) =>
-                    placementTypes.map((placement) => (
-                      <TableCell
-                        key={`total-${year}-${placement.key}`}
-                        align="center"
-                        sx={{ fontWeight: "bold" }}
-                      >
-                        {totals[year]?.[placement.key] || 0}
-                      </TableCell>
-                    ))
-                  )}
-                  <TableCell></TableCell>
-                </TableRow>
-
-                {/* Summary Row */}
-                <TableRow sx={{ backgroundColor: "#e8f4fd" }}>
-                  <TableCell sx={{ fontWeight: "bold" }}>
-                    Tanulói jogviszonyban álló tanulók száma (fő)
-                  </TableCell>
-                  {schoolYears.map((year) =>
-                    placementTypes.map((placement) => (
-                      <TableCell
-                        key={`summary-${year}-${placement.key}`}
-                        align="center"
-                      >
-                        <TextField
-                          type="number"
-                          size="small"
-                          inputProps={{
-                            min: 0,
-                            style: { textAlign: "center" },
-                          }}
-                          sx={{ width: "60px" }}
-                          placeholder="0"
-                        />
-                      </TableCell>
-                    ))
-                  )}
-                  <TableCell></TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          {/* Action Buttons */}
-          <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSave}
-              disabled={!isModified}
-            >
-              Mentés
-            </Button>
+        {/* Add Competition Button */}
+        <Box sx={{ mb: 3 }}>
+          <LockedTableWrapper tableName="szakmai_eredmenyek">
             <Button
               variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleReset}
-              disabled={!isModified || !savedData}
+              startIcon={<AddIcon />}
+              onClick={() => setOpenAddDialog(true)}
             >
-              Visszaállítás
+              Új verseny hozzáadása
             </Button>
-          </Stack>
+          </LockedTableWrapper>
+        </Box>
 
-          {/* Status Messages */}
-          {isModified && (
-            <Alert severity="warning" sx={{ mt: 2 }}>
-              Mentetlen módosítások vannak. Ne felejtsd el menteni a
-              változtatásokat!
-            </Alert>
-          )}
 
-          {savedData && !isModified && (
-            <Alert severity="success" sx={{ mt: 2 }}>
-              Az adatok sikeresen mentve!
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
+        {/* Main Data Table */}
+        <Card>
+          <CardContent>
+            <Typography variant="h6" component="h2" gutterBottom>
+              Versenyek eredményei
+            </Typography>
 
-      {/* Add Competition Dialog */}
-      <Dialog
-        open={openAddDialog}
-        onClose={() => setOpenAddDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Új verseny hozzáadása</DialogTitle>
-        <DialogContent>
-          <Stack spacing={3} sx={{ mt: 1 }}>
-            <FormControl fullWidth>
-              <InputLabel>Kategória</InputLabel>
-              <Select
-                value={newCompetition.category}
+            <TableContainer
+              component={Paper}
+              variant="outlined"
+              sx={{ overflowX: "auto" }}
+            >
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                    <TableCell
+                      rowSpan={2}
+                      sx={{
+                        fontWeight: "bold",
+                        verticalAlign: "middle",
+                        minWidth: 300,
+                        textAlign: "center",
+                      }}
+                    >
+                      Verseny megnevezése
+                    </TableCell>
+                    {schoolYears.map((year) => (
+                      <TableCell
+                        key={year}
+                        colSpan={placementTypes.length}
+                        align="center"
+                        sx={{ fontWeight: "bold", minWidth: 300 }}
+                      >
+                        {year}
+                      </TableCell>
+                    ))}
+                    <TableCell
+                      rowSpan={2}
+                      sx={{
+                        fontWeight: "bold",
+                        verticalAlign: "middle",
+                        minWidth: 60,
+                        textAlign: "center",
+                      }}
+                    >
+                      Műveletek
+                    </TableCell>
+                  </TableRow>
+                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                    {schoolYears.map((year) =>
+                      placementTypes.map((placement) => (
+                        <TableCell
+                          key={`${year}-${placement.key}`}
+                          align="center"
+                          sx={{
+                            fontWeight: "bold",
+                            minWidth: 70,
+                            backgroundColor: placement.color,
+                            fontSize: "0.75rem",
+                          }}
+                        >
+                          {placement.label}
+                          <br />
+                          (fő)
+                        </TableCell>
+                      ))
+                    )}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {Object.keys(competitionData).map((category) => {
+                    const competitions = Object.keys(competitionData[category]);
+                    return competitions.map((competition, competitionIndex) => (
+                      <TableRow key={`${category}-${competition}`}>
+                        <TableCell sx={{ fontWeight: "medium", pl: 2 }}>
+                          {competitionIndex === 0 && (
+                            <Typography
+                              variant="subtitle2"
+                              sx={{ fontWeight: "bold", mb: 1 }}
+                            >
+                              {category}
+                            </Typography>
+                          )}
+                          <Box sx={{ pl: competitionIndex === 0 ? 2 : 4 }}>
+                            {competition}
+                          </Box>
+                        </TableCell>
+                        {schoolYears.map((year) =>
+                          placementTypes.map((placement) => (
+                            <TableCell
+                              key={`${year}-${placement.key}`}
+                              align="center"
+                            >
+                              <TextField
+                                type="number"
+                                value={
+                                  competitionData[category][competition][year]?.[
+                                  placement.key
+                                  ] || "0"
+                                }
+                                onChange={(e) =>
+                                  handleDataChange(
+                                    category,
+                                    competition,
+                                    year,
+                                    placement.key,
+                                    e.target.value
+                                  )
+                                }
+                                size="small"
+                                inputProps={{
+                                  min: 0,
+                                  style: { textAlign: "center" },
+                                }}
+                                sx={{ width: "60px" }}
+                              />
+                            </TableCell>
+                          ))
+                        )}
+                        <TableCell align="center">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() =>
+                              handleRemoveCompetition(category, competition)
+                            }
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ));
+                  })}
+
+                  {/* Totals Row */}
+                  <TableRow
+                    sx={{ backgroundColor: "#fff2cc", fontWeight: "bold" }}
+                  >
+                    <TableCell sx={{ fontWeight: "bold", fontSize: "1rem" }}>
+                      Összesen
+                    </TableCell>
+                    {schoolYears.map((year) =>
+                      placementTypes.map((placement) => (
+                        <TableCell
+                          key={`total-${year}-${placement.key}`}
+                          align="center"
+                          sx={{ fontWeight: "bold" }}
+                        >
+                          {totals[year]?.[placement.key] || 0}
+                        </TableCell>
+                      ))
+                    )}
+                    <TableCell></TableCell>
+                  </TableRow>
+
+                  {/* Summary Row */}
+                  <TableRow sx={{ backgroundColor: "#e8f4fd" }}>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      Tanulói jogviszonyban álló tanulók száma (fő)
+                    </TableCell>
+                    {schoolYears.map((year) =>
+                      placementTypes.map((placement) => (
+                        <TableCell
+                          key={`summary-${year}-${placement.key}`}
+                          align="center"
+                        >
+                          <TextField
+                            type="number"
+                            size="small"
+                            inputProps={{
+                              min: 0,
+                              style: { textAlign: "center" },
+                            }}
+                            sx={{ width: "60px" }}
+                            placeholder="0"
+                          />
+                        </TableCell>
+                      ))
+                    )}
+                    <TableCell></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {/* Action Buttons */}
+            <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+              <LockedTableWrapper tableName="szakmai_eredmenyek">
+                <Button
+                  variant="contained"
+                  startIcon={<SaveIcon />}
+                  onClick={handleSave}
+                  disabled={!isModified}
+                >
+                  Mentés
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<RefreshIcon />}
+                  onClick={handleReset}
+                  disabled={!isModified || !savedData}
+                >
+                  Visszaállítás
+                </Button>
+              </LockedTableWrapper>
+            </Stack>
+
+            {/* Status Messages */}
+            {isModified && (
+              <Alert severity="warning" sx={{ mt: 2 }}>
+                Mentetlen módosítások vannak. Ne felejtsd el menteni a
+                változtatásokat!
+              </Alert>
+            )}
+
+            {savedData && !isModified && (
+              <Alert severity="success" sx={{ mt: 2 }}>
+                Az adatok sikeresen mentve!
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Add Competition Dialog */}
+        <Dialog
+          open={openAddDialog}
+          onClose={() => setOpenAddDialog(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Új verseny hozzáadása</DialogTitle>
+          <DialogContent>
+            <Stack spacing={3} sx={{ mt: 1 }}>
+              <FormControl fullWidth>
+                <InputLabel>Kategória</InputLabel>
+                <Select
+                  value={newCompetition.category}
+                  onChange={(e) =>
+                    setNewCompetition({
+                      ...newCompetition,
+                      category: e.target.value,
+                    })
+                  }
+                  label="Kategória"
+                >
+                  {Object.keys(competitionCategories).map((category) => (
+                    <MenuItem key={category} value={category}>
+                      {category}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                fullWidth
+                label="Verseny neve"
+                value={newCompetition.name}
                 onChange={(e) =>
-                  setNewCompetition({
-                    ...newCompetition,
-                    category: e.target.value,
-                  })
+                  setNewCompetition({ ...newCompetition, name: e.target.value })
                 }
-                label="Kategória"
-              >
-                {Object.keys(competitionCategories).map((category) => (
-                  <MenuItem key={category} value={category}>
-                    {category}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
-              fullWidth
-              label="Verseny neve"
-              value={newCompetition.name}
-              onChange={(e) =>
-                setNewCompetition({ ...newCompetition, name: e.target.value })
-              }
-              placeholder="pl. Új verseny neve"
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenAddDialog(false)}>Mégse</Button>
-          <Button
-            onClick={handleAddCompetition}
-            variant="contained"
-            disabled={!newCompetition.category || !newCompetition.name}
-          >
-            Hozzáadás
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Legend */}
-      <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
-        <CardContent>
-          <Typography variant="h6" component="h3" gutterBottom>
-            Jelmagyarázat
-          </Typography>
-          <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap">
-            {placementTypes.map((placement) => (
-              <Chip
-                key={placement.key}
-                label={placement.label}
-                variant="outlined"
-                sx={{ backgroundColor: placement.color }}
+                placeholder="pl. Új verseny neve"
               />
-            ))}
-          </Stack>
-          <Typography variant="body2">
-            A táblázat a különböző szintű versenyeken elért eredményeket mutatja
-            be tanévenként. Új versenyek hozzáadhatók a "Új verseny hozzáadása"
-            gombbal.
-          </Typography>
-        </CardContent>
-      </Card>
-    </Box>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenAddDialog(false)}>Mégse</Button>
+            <Button
+              onClick={handleAddCompetition}
+              variant="contained"
+              disabled={!newCompetition.category || !newCompetition.name}
+            >
+              Hozzáadás
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Legend */}
+        <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
+          <CardContent>
+            <Typography variant="h6" component="h3" gutterBottom>
+              Jelmagyarázat
+            </Typography>
+            <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap">
+              {placementTypes.map((placement) => (
+                <Chip
+                  key={placement.key}
+                  label={placement.label}
+                  variant="outlined"
+                  sx={{ backgroundColor: placement.color }}
+                />
+              ))}
+            </Stack>
+            <Typography variant="body2">
+              A táblázat a különböző szintű versenyeken elért eredményeket mutatja
+              be tanévenként. Új versenyek hozzáadhatók a "Új verseny hozzáadása"
+              gombbal.
+            </Typography>
+          </CardContent>
+        </Card>
+      </Box>
+    </PageWrapper>
   );
 }
