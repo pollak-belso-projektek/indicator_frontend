@@ -54,7 +54,7 @@ const TableNameToRoute = {
   alkalmazottak_munkaugy: "/felnottkepzes",
   kompetencia: "/kompetencia",
   nszfh: "/nszfh-meresek",
-  versenyek: "/szakmai-eredmenyek",
+  versenyek: "/versenyek",
   elhelyezkedes: "/elhelyezkedesi-mutato",
   elegedettseg: "/vegzettek-elegedettsege",
   vizsgaeredmenyek: "/vizsgaeredmenyek",

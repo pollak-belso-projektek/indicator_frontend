@@ -217,14 +217,14 @@ export default function EgyOktatoraJutoOsszDiak() {
       titleContent={<TitleEgyOktatoraJutoOsszDiak />}
       infoContent={<InfoEgyOktatoraJutoOsszDiak />}
     >
-      <Container maxWidth="xl">
+  
         <Fade in={true} timeout={800}>
           <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
-            <LockStatusIndicator tableName="egy_oktatora_juto_ossz_diak" />
+            <LockStatusIndicator tableName="egy_oktatora_juto_tanulo" />
 
             {/* Action Buttons */}
             <Card
-              elevation={3}
+        
               sx={{
                 mb: 2,
                 bgcolor: "linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%)",
@@ -232,16 +232,16 @@ export default function EgyOktatoraJutoOsszDiak() {
                 border: "1px solid rgba(0,0,0,0.08)",
               }}
             >
-              <CardContent sx={{ py: 1.5, px: 3 }}>
+              
                 <Stack
                   direction="row"
                   spacing={2}
                   alignItems="center"
                   justifyContent="space-between"
                 >
-                  <Stack direction="row" spacing={2}>
-                    <LockedTableWrapper tableName="egy_oktatora_juto_ossz_diak">
-                      <Tooltip title="Módosítások mentése">
+                  <Stack direction="row"  spacing={2} sx={{ p: 2 }}>
+                    <LockedTableWrapper tableName="egy_oktatora_juto_tanulo">
+                     
                         <Button
                           variant="contained"
                           color="primary"
@@ -258,8 +258,8 @@ export default function EgyOktatoraJutoOsszDiak() {
                         >
                           Mentés
                         </Button>
-                      </Tooltip>
-                      <Tooltip title="Eredeti értékek visszaállítása">
+               
+           
                         <Button
                           variant="outlined"
                           startIcon={<RefreshIcon />}
@@ -269,10 +269,9 @@ export default function EgyOktatoraJutoOsszDiak() {
                         >
                           Visszaállítás
                         </Button>
-                      </Tooltip>
+            
                     </LockedTableWrapper>
-                  </Stack>
-                  {isModified && (
+                        {isModified && (
                     <Chip
                       label="Módosítva"
                       color="warning"
@@ -280,8 +279,10 @@ export default function EgyOktatoraJutoOsszDiak() {
                       sx={{ fontWeight: 600, animation: "pulse 2s infinite" }}
                     />
                   )}
+                  </Stack>
+              
                 </Stack>
-              </CardContent>
+            
             </Card>
 
             {/* Tabs Navigation */}
@@ -1155,7 +1156,7 @@ export default function EgyOktatoraJutoOsszDiak() {
             </Snackbar>
           </Box>
         </Fade>
-      </Container>
+
     </PageWrapper>
   );
 }

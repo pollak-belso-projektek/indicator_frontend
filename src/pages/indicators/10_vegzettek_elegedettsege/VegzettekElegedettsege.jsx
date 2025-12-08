@@ -84,8 +84,8 @@ export default function VegzettekElegedettsege() {
       titleContent={<TitleVegzettekElegedettsege />}
       infoContent={<InfoVegzettekElegedettsege />}
     >
-      <Box sx={{ p: 3 }}>
-        <LockStatusIndicator tableName="vegzettek_elegedettsege" />
+      <Box >
+        <LockStatusIndicator tableName="elegedettseg" />
 
         {/* Instructions Card */}
         <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
@@ -112,10 +112,44 @@ export default function VegzettekElegedettsege() {
             </Box>
           </CardContent>
         </Card>
+ {isModified && (
+              <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+                Mentetlen módosítások vannak. Ne felejtsd el menteni a
+                változtatásokat!
+              </Alert>
+            )}
 
+            {savedData && !isModified && (
+              <Alert severity="success" sx={{ mt: 2, mb: 2 }}>
+                Az adatok sikeresen mentve!
+              </Alert>
+            )}
         {/* Main Data Table */}
         <Card>
           <CardContent>
+             <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+              <LockedTableWrapper tableName="elegedettseg">
+                <Button
+                  variant="contained"
+                  startIcon={<SaveIcon />}
+                  onClick={handleSave}
+                  disabled={!isModified}
+                >
+                  Mentés
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<RefreshIcon />}
+                  onClick={handleReset}
+                  disabled={!isModified || !savedData}
+                >
+                  Visszaállítás
+                </Button>
+              </LockedTableWrapper>
+            </Stack>
+
+            {/* Status Messages */}
+           
             <Typography variant="h6" component="h2" gutterBottom>
               Végzetteket foglalkoztató munkáadók elégedettsége (%)
             </Typography>
@@ -200,40 +234,7 @@ export default function VegzettekElegedettsege() {
             </TableContainer>
 
             {/* Action Buttons */}
-            <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-              <LockedTableWrapper tableName="vegzettek_elegedettsege">
-                <Button
-                  variant="contained"
-                  startIcon={<SaveIcon />}
-                  onClick={handleSave}
-                  disabled={!isModified}
-                >
-                  Mentés
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<RefreshIcon />}
-                  onClick={handleReset}
-                  disabled={!isModified || !savedData}
-                >
-                  Visszaállítás
-                </Button>
-              </LockedTableWrapper>
-            </Stack>
-
-            {/* Status Messages */}
-            {isModified && (
-              <Alert severity="warning" sx={{ mt: 2 }}>
-                Mentetlen módosítások vannak. Ne felejtsd el menteni a
-                változtatásokat!
-              </Alert>
-            )}
-
-            {savedData && !isModified && (
-              <Alert severity="success" sx={{ mt: 2 }}>
-                Az adatok sikeresen mentve!
-              </Alert>
-            )}
+           
           </CardContent>
         </Card>
 

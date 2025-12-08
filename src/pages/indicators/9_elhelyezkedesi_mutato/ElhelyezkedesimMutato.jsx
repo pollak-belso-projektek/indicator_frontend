@@ -493,7 +493,7 @@ export default function ElhelyezkedesimMutato() {
       titleContent={<TitleElhelyezkedesiMutato />}
       infoContent={<InfoElhelyezkedesiMutato />}
     >
-      <Box sx={{ p: 3 }}>
+      <Box >
         <LockStatusIndicator tableName="elhelyezkedes" />
 
         {/* Loading State */}
@@ -843,6 +843,7 @@ export default function ElhelyezkedesimMutato() {
 
             {/* Action Buttons */}
             <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+              <LockedTableWrapper tableName="elhelyezkedes">
               <Button
                 variant="contained"
                 startIcon={<SaveIcon />}
@@ -868,6 +869,7 @@ export default function ElhelyezkedesimMutato() {
               >
                 Új rekord hozzáadása
               </Button>
+              </LockedTableWrapper>
             </Stack>
 
             {/* Status Messages */}

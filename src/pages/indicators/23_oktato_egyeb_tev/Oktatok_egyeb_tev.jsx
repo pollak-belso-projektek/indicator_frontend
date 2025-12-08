@@ -22,21 +22,21 @@ import {
   Fade,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
-import { generateSchoolYears } from "../utils/schoolYears";
-import { selectSelectedSchool, selectUserId } from "../store/slices/authSlice";
-import TableLoadingOverlay from "../components/shared/TableLoadingOverlay";
+import { generateSchoolYears } from "../../../utils/schoolYears";
+import { selectSelectedSchool, selectUserId } from "../../../store/slices/authSlice";
+import TableLoadingOverlay from "../../../components/shared/TableLoadingOverlay";
 import {
   useGetOktatokEgyebTevByAlapadatokQuery,
   useAddOktatokEgyebTevMutation,
   useUpdateOktatokEgyebTevMutation,
-} from "../store/api/oktatokEgyebTevSlice";
-import { useGetAlkalmazottAdatokQuery } from "../store/api/apiSlice";
-import { NotificationSnackbar } from "../components/shared";
-import PageWrapper from "./PageWrapper";
-import LockStatusIndicator from "../components/LockStatusIndicator";
-import LockedTableWrapper from "../components/LockedTableWrapper";
-import InfoOktatoEgyebTev from "./indicators/23_oktato_egyeb_tev/info_oktato_egyeb_tev";
-import TitleOktatoEgyebTev from "./indicators/23_oktato_egyeb_tev/title_oktato_egyeb_tev";
+} from "../../../store/api/oktatokEgyebTevSlice";
+import { useGetAlkalmazottAdatokQuery } from "../../../store/api/apiSlice";
+import { NotificationSnackbar } from "../../../components/shared";
+import PageWrapper from "../../PageWrapper";
+import LockStatusIndicator from "../../../components/LockStatusIndicator";
+import LockedTableWrapper from "../../../components/LockedTableWrapper";
+import InfoOktatoEgyebTev from "./info_oktato_egyeb_tev";
+import TitleOktatoEgyebTev from "./title_oktato_egyeb_tev";
 
 
 export default function OktatokEgyebTev() {
@@ -704,7 +704,7 @@ export default function OktatokEgyebTev() {
       >
         <Fade in={true} timeout={800}>
           <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
-            <LockStatusIndicator tableName="oktatok_egyeb_tev" />
+            <LockStatusIndicator tableName="oktato-egyeb-tev" />
 
             {/* Loading State */}
             {isLoading && (
@@ -725,7 +725,7 @@ export default function OktatokEgyebTev() {
 
                 {/* Action buttons */}
                 <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-                  <LockedTableWrapper tableName="oktatok_egyeb_tev">
+                  <LockedTableWrapper tableName="oktato-egyeb-tev">
                     <Button
                       variant="contained"
                       startIcon={<SaveIcon />}

@@ -149,19 +149,23 @@ export default function ElegedettsegMeresEredmenyei() {
       </Card>
 
       <Box>
+
+ <LockStatusIndicator tableName="elegedettseg" sx={{mb:1}}/>
         {isModified && (
-          <Alert severity="warning" sx={{ mt: 2 }}>
+          <Alert severity="warning" sx={{mb:3}}>
             Mentetlen módosítások vannak. Ne felejtsd el menteni a
             változtatásokat!
           </Alert>
         )}
-
+         
         {savedData && !isModified && (
-          <Alert severity="success" sx={{ mt: 2 }}>
+          <Alert severity="success" >
             Az adatok sikeresen mentve!
           </Alert>
         )}
-        <LockStatusIndicator tableName="elegedettseg" />
+    
+     
+      
 
         {/* Main Data Table */}
         <Card>

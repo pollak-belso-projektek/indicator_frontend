@@ -67,7 +67,7 @@ export const PageNumbering = {
   "/felnottkepzes": 5,
   "/kompetencia": 6,
   "/nszfh-meresek": 7,
-  "/szakmai-eredmenyek": 8, // Versenyek
+  "/versenyek": 8, // Versenyek
   "/elhelyezkedesi-mutato": 9,
   "/vegzettek-elegedettsege": 10,
   "/vizsgaeredmenyek": 11,
@@ -203,7 +203,7 @@ const NavigationCategories = {
       {
         name: "Versenyek",
         icon: MdStar,
-        link: "/szakmai-eredmenyek",
+        link: "/versenyek",
         tableName: "versenyek",
       },
       {
@@ -231,7 +231,7 @@ const NavigationCategories = {
         tableName: "elegedettseg",
       },
       {
-        name: "Szakképzési munkaszerződés",
+        name: "Szakképzési munkaszerződés - SZMSZ",
         icon: MdWork,
         link: "/szakkepzesi-munkaszerződes-arany",
         tableName: "szmsz",

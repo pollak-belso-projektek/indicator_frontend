@@ -6,7 +6,7 @@ import { useTableLockStatus } from "../hooks/useTableLock";
  * Component to display lock status for a table
  * Shows a warning banner if table is locked
  */
-const LockStatusIndicator = ({ tableName, showChip = false }) => {
+const LockStatusIndicator = ({ tableName, showChip = false, sx }) => {
   const { isLocked, lockMessage } = useTableLockStatus(tableName);
 
   if (!isLocked) {
@@ -26,7 +26,7 @@ const LockStatusIndicator = ({ tableName, showChip = false }) => {
   }
 
   return (
-    <Alert severity="error" icon={<LockIcon />} sx={{ mb: 2 }}>
+    <Alert severity="error" icon={<LockIcon />} sx={{ mb: 2, ...sx }}>
       <Box>
         <strong>Ez a tábla jelenleg le van zárva.</strong>
         {lockMessage && <Box sx={{ mt: 0.5 }}>{lockMessage}</Box>}

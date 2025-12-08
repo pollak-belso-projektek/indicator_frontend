@@ -67,7 +67,7 @@ const routeToTableMapping = {
   "/felvettek_szama": "felvettek_szama",
   "/users": "user",
   "/nszfh-meresek": "nszfh",
-  "/szakmai-eredmenyek": "versenyek",
+  "/versenyek": "versenyek",
   "/elhelyezkedesi-mutato": "elhelyezkedes",
   "/vegzettek-elegedettsege": "elegedettseg",
   "/vizsgaeredmenyek": "vizsgaeredmenyek",

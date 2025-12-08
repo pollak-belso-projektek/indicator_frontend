@@ -104,60 +104,48 @@ export default function IntezményiNevelesiMutatok() {
       titleContent={<TitleIntezményiNevelesiMutatok />}
       infoContent={<InfoIntezményiNevelesiMutatok />}
     >
-      <Box sx={{ p: 3 }}>
-        <LockStatusIndicator tableName="intezmenyi_nevelesi_mutatok" />
+      <Box>
+        <LockStatusIndicator tableName="intezmenyi_neveltseg" />
 
         {/* Instructions Card */}
-        <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
-          <CardContent>
-            <Typography variant="h6" component="h3" gutterBottom>
-              Osztálystatisztikákból szinte minden megtalálható, exportál
-              dolgozhatunk. Kézzel kell feltölteni: oktató testületi dicséretek,
-              esetleg a megrovásokról párat...
-            </Typography>
-            <Typography variant="body2" color="text.primary" sx={{ mb: 2 }}>
-              A mutató az adott tanévre vonatkozóan tartalmazza információt a
-              fegyelmi esetek, dicséretek és az igazgatói mulasztások számáról a
-              tanulói jogviszonyban tanulók esetén.
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              A mutató az intézmény házirendjében szabályozott fegyelmezési
-              intézkedések formáira vonatkozóan kell számítani (pl. szakmai
-              fegyelmezetés, igazgatói intés, ...).
-            </Typography>
+      
+          {isModified && (
+          <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+            Mentetlen módosítások vannak. Ne felejtsd el menteni a
+            változtatásokat!
+          </Alert>
+        )}
 
-            <Box
-              sx={{ mt: 2, p: 2, backgroundColor: "#f0f8ff", borderRadius: 1 }}
+        {savedData && !isModified && (
+          <Alert severity="success" sx={{ mt: 2, mb: 2 }}>
+            Az adatok sikeresen mentve!
+          </Alert>
+        )}
+        <Card sx={{ mb: 3, p:2 }}>
+  
+          <LockedTableWrapper tableName="intezmenyi_neveltseg">
+            <Button
+              variant="contained"
+              startIcon={<SaveIcon />}
+              onClick={handleSave}
+              disabled={!isModified}
             >
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Példa:</strong>
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                Fegyelmi esetek száma: 186 db/tanév (A mutató megcsináló
-                típusokként is: igazgatói figyelmeztetés 21 db/tanév, igazgatói
-                megrovás 2 db/tanév stb.)
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                Dicséretek száma: 253 db/tanév
-              </Typography>
-              <Typography variant="body2">
-                Igazgatói mulasztások: 10984 óra/tanév
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{ mt: 2, p: 2, backgroundColor: "#fff8f0", borderRadius: 1 }}
+              Mentés
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleReset}
+              disabled={!isModified || !savedData}
             >
-              <Typography variant="body2">
-                <strong>Megjegyzés:</strong> A mutató olyan bontásban számítandó,
-                amelynek felhasználása segítséget jelent a pedagógiai munka
-                fejlesztése során (osztályonként, szakmánként, jogviszonyonként).
-                <br />A hiányzások a 26. HSZC indikátornál található meg
-              </Typography>
-            </Box>
-          </CardContent>
+              Visszaállítás
+            </Button>
+          </LockedTableWrapper>
+       
         </Card>
 
+        {/* Status Messages */}
+      
         {/* Main Data Table */}
         <Card sx={{ mb: 3 }}>
           <CardContent>
@@ -366,40 +354,7 @@ export default function IntezményiNevelesiMutatok() {
         </Card>
 
         {/* Action Buttons */}
-        <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-          <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSave}
-              disabled={!isModified}
-            >
-              Mentés
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleReset}
-              disabled={!isModified || !savedData}
-            >
-              Visszaállítás
-            </Button>
-          </LockedTableWrapper>
-        </Stack>
-
-        {/* Status Messages */}
-        {isModified && (
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            Mentetlen módosítások vannak. Ne felejtsd el menteni a
-            változtatásokat!
-          </Alert>
-        )}
-
-        {savedData && !isModified && (
-          <Alert severity="success" sx={{ mt: 2 }}>
-            Az adatok sikeresen mentve!
-          </Alert>
-        )}
+   
 
         {/* Educational Indicators Information */}
         <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>

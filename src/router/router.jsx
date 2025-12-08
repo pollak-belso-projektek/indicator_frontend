@@ -22,7 +22,6 @@ const TanuloletszamPage = lazy(() =>
 const KompetenciaPage = lazy(() =>
   import("../pages/indicators/6_kompetencia/Kompetencia.jsx")
 );
-const VersenyekPage = lazy(() => import("../pages/Versenyek.jsx"));
 const UsersPage = lazy(() => import("../pages/Users.jsx"));
 const TableManagementPage = lazy(() =>
   import("../pages/TableManagementPage.jsx")
@@ -89,7 +88,7 @@ const FelvettekPage = lazy(() =>
 );
 const LogsPage = lazy(() => import("../pages/Logs.jsx"));
 const OktatokEgyebTevPage = lazy(() =>
-  import("../pages/Oktatok_egyeb_tev.jsx")
+  import("../pages/indicators/23_oktato_egyeb_tev/Oktatok_egyeb_tev.jsx")
 );
 
 // List of pages that require school selection
@@ -103,7 +102,7 @@ const SCHOOL_REQUIRED_PAGES = [
   "/nszfh-meresek",
   "/vizsgaeredmenyek",
   "/elegedettseg-meres-eredmenyei",
-  "/szakmai-eredmenyek",
+  "/versenyek",
   "/intezmenyi-elismeresek",
   "/elhelyezkedesi-mutato",
   "/vegzettek-elegedettsege",
@@ -207,16 +206,7 @@ export default function Router() {
                   </TableProtectedRoute>
                 }
               />
-              <Route
-                path="/versenyek"
-                element={
-                  <TableProtectedRoute tableName="versenyek">
-                    <NavigationWithLoading>
-                      <VersenyekPage />
-                    </NavigationWithLoading>
-                  </TableProtectedRoute>
-                }
-              />
+            
               <Route
                 path="/users"
                 element={
@@ -297,13 +287,13 @@ export default function Router() {
                 }
               />
               <Route
-                path="/szakmai-eredmenyek"
+                path="/versenyek"
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <SzakmaiEredmenyekPage />,
-                        "/szakmai-eredmenyek"
+                        "/versenyek"
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>

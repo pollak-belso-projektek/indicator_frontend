@@ -135,7 +135,7 @@ const NavigationCategories = {
       {
         name: "Versenyek",
         icon: StarIcon,
-        link: "/szakmai-eredmenyek",
+        link: "/versenyek",
         tableName: "versenyek",
       },
       {
@@ -321,7 +321,7 @@ export default function Dashboard() {
           description: "Szakmai, közismereti és kulturális eredmények",
           icon: <TrendingUpIcon />,
           color: "info",
-          route: "/szakmai-eredmenyek",
+          route: "/versenyek",
         });
       }
 

@@ -40,7 +40,6 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoSzakmaiEredmenyek from "./info_szakmai_eredmenyek";
 import TitleSzakmaiEredmenyek from "./title_szakmai_eredmenyek";
 
-
 export default function SzakmaiEredmenyek() {
   // Predefined competition categories and names
   const competitionCategories = {
@@ -239,8 +238,8 @@ export default function SzakmaiEredmenyek() {
       titleContent={<TitleSzakmaiEredmenyek />}
       infoContent={<InfoSzakmaiEredmenyek />}
     >
-      <Box sx={{ p: 3 }}>
-        <LockStatusIndicator tableName="szakmai_eredmenyek" />
+      <Box>
+        <LockStatusIndicator tableName="versenyek" />
 
         {/* Instructions Card */}
         <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
@@ -260,8 +259,8 @@ export default function SzakmaiEredmenyek() {
         </Card>
 
         {/* Add Competition Button */}
-        <Box sx={{ mb: 3 }}>
-          <LockedTableWrapper tableName="szakmai_eredmenyek">
+        <Stack direction="row" spacing={2} sx={{ mt: 3, mb:3 }}>
+          <LockedTableWrapper tableName="versenyek">
             <Button
               variant="outlined"
               startIcon={<AddIcon />}
@@ -269,9 +268,24 @@ export default function SzakmaiEredmenyek() {
             >
               Új verseny hozzáadása
             </Button>
+            <Button
+              variant="contained"
+              startIcon={<SaveIcon />}
+              onClick={handleSave}
+              disabled={!isModified}
+            >
+              Mentés
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleReset}
+              disabled={!isModified || !savedData}
+            >
+              Visszaállítás
+            </Button>
           </LockedTableWrapper>
-        </Box>
-
+        </Stack>
 
         {/* Main Data Table */}
         <Card>
@@ -369,9 +383,9 @@ export default function SzakmaiEredmenyek() {
                               <TextField
                                 type="number"
                                 value={
-                                  competitionData[category][competition][year]?.[
-                                  placement.key
-                                  ] || "0"
+                                  competitionData[category][competition][
+                                    year
+                                  ]?.[placement.key] || "0"
                                 }
                                 onChange={(e) =>
                                   handleDataChange(
@@ -459,26 +473,6 @@ export default function SzakmaiEredmenyek() {
             </TableContainer>
 
             {/* Action Buttons */}
-            <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-              <LockedTableWrapper tableName="szakmai_eredmenyek">
-                <Button
-                  variant="contained"
-                  startIcon={<SaveIcon />}
-                  onClick={handleSave}
-                  disabled={!isModified}
-                >
-                  Mentés
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<RefreshIcon />}
-                  onClick={handleReset}
-                  disabled={!isModified || !savedData}
-                >
-                  Visszaállítás
-                </Button>
-              </LockedTableWrapper>
-            </Stack>
 
             {/* Status Messages */}
             {isModified && (
@@ -565,9 +559,9 @@ export default function SzakmaiEredmenyek() {
               ))}
             </Stack>
             <Typography variant="body2">
-              A táblázat a különböző szintű versenyeken elért eredményeket mutatja
-              be tanévenként. Új versenyek hozzáadhatók a "Új verseny hozzáadása"
-              gombbal.
+              A táblázat a különböző szintű versenyeken elért eredményeket
+              mutatja be tanévenként. Új versenyek hozzáadhatók a "Új verseny
+              hozzáadása" gombbal.
             </Typography>
           </CardContent>
         </Card>

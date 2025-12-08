@@ -23,15 +23,11 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoIntezményiElismeresek from "./info_intezmenyi_elismeresek";
 import TitleIntezményiElismeresek from "./title_intezmenyi_elismeresek";
+import {generateSchoolYears } from "../../../utils/schoolYears";
 
 
 export default function IntezményiElismeresek() {
-  const schoolYears = [
-    "2020/2021. tanév",
-    "2021/2022. tanév",
-    "2022/2023. tanév",
-    "2023/2024. tanév",
-  ];
+ const schoolYears = generateSchoolYears();
 
   const recognitionCategories = [
     {
@@ -144,9 +140,45 @@ export default function IntezményiElismeresek() {
       titleContent={<TitleIntezményiElismeresek />}
       infoContent={<InfoIntezményiElismeresek />}
     >
-      <Box sx={{ p: 3 }}>
-        <LockStatusIndicator tableName="intezmenyi_elismeresek" />
+      <Box >
+        <LockStatusIndicator tableName="intezmenyi_neveltseg" />
 
+      <Card sx={{ mb: 3, p: 2, display: "flex", flexDirection: "row", gap:2 }}>
+
+          <LockedTableWrapper tableName="intezmenyi_neveltseg">
+            <Button
+              variant="contained"
+              startIcon={<SaveIcon />}
+              onClick={handleSave}
+              disabled={!isModified}
+            >
+              Mentés
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleReset}
+              disabled={!isModified || !savedData}
+            >
+              Visszaállítás
+            </Button>
+          </LockedTableWrapper>
+       
+      </Card>
+
+        {/* Status Messages */}
+        {isModified && (
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            Mentetlen módosítások vannak. Ne felejtsd el menteni a
+            változtatásokat!
+          </Alert>
+        )}
+
+        {savedData && !isModified && (
+          <Alert severity="success" sx={{ mt: 2 }}>
+            Az adatok sikeresen mentve!
+          </Alert>
+        )}
         {/* Main Data Tables */}
         {recognitionCategories.map((categoryData, categoryIndex) => (
           <Card key={categoryData.category} sx={{ mb: 3 }}>
@@ -352,40 +384,7 @@ export default function IntezményiElismeresek() {
         ))}
 
         {/* Action Buttons */}
-        <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-          <LockedTableWrapper tableName="intezmenyi_elismeresek">
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSave}
-              disabled={!isModified}
-            >
-              Mentés
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleReset}
-              disabled={!isModified || !savedData}
-            >
-              Visszaállítás
-            </Button>
-          </LockedTableWrapper>
-        </Stack>
-
-        {/* Status Messages */}
-        {isModified && (
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            Mentetlen módosítások vannak. Ne felejtsd el menteni a
-            változtatásokat!
-          </Alert>
-        )}
-
-        {savedData && !isModified && (
-          <Alert severity="success" sx={{ mt: 2 }}>
-            Az adatok sikeresen mentve!
-          </Alert>
-        )}
+ 
 
         {/* Categories Information */}
         <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>

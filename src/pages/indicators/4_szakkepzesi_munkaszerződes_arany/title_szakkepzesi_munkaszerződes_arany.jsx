@@ -5,7 +5,7 @@ const TitleSzakkepzesiMunkaszerzodes = () => {
   return (
     <IndicatorTitle
       icon={DescriptionIcon}
-      title="4. Szakképzési munkaszerződéssel rendelkezők aránya"
+      title="4. SZMSZ - Szakképzési munkaszerződéssel rendelkezők aránya"
       description="   A szakképző intézményben szakképzési munkaszerződéssel
                 rendelkezők aránya az intézmény szakirányú oktatásában
                 résztvevők között"

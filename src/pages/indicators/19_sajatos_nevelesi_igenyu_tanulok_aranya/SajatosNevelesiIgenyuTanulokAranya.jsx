@@ -475,6 +475,46 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
                     <Card>
                       <CardContent>
+                         <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
+                          <LockedTableWrapper tableName="sajatos_nevelesu_tanulok">
+                            <Button
+                              variant="contained"
+                              startIcon={<SaveIcon />}
+                              onClick={handleSave}
+                              disabled={
+                                !isModified ||
+                                isAdding ||
+                                isUpdating ||
+                                isDeleting
+                              }
+                            >
+                              {isAdding || isUpdating ? "Mentés..." : "Mentés"}
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              startIcon={<RefreshIcon />}
+                              onClick={handleReset}
+                              disabled={
+                                !isModified ||
+                                isAdding ||
+                                isUpdating ||
+                                isDeleting
+                              }
+                            >
+                              Visszaállítás
+                            </Button>
+                            <Button
+                              variant="contained"
+                              color="success"
+                              startIcon={<AddIcon />}
+                              onClick={openAddDialog}
+                              disabled={isAdding || isUpdating || isDeleting}
+                            >
+                              Új rekord hozzáadása
+                            </Button>
+                          </LockedTableWrapper>
+                        </Stack>
+
                         <Typography variant="h6" component="h2" gutterBottom>
                           Részletes SNI tanuló arány adatok
                         </Typography>
@@ -632,46 +672,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                         )}
 
                         {/* Action Buttons */}
-                        <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-                          <LockedTableWrapper tableName="sajatos_nevelesu_tanulok">
-                            <Button
-                              variant="contained"
-                              startIcon={<SaveIcon />}
-                              onClick={handleSave}
-                              disabled={
-                                !isModified ||
-                                isAdding ||
-                                isUpdating ||
-                                isDeleting
-                              }
-                            >
-                              {isAdding || isUpdating ? "Mentés..." : "Mentés"}
-                            </Button>
-                            <Button
-                              variant="outlined"
-                              startIcon={<RefreshIcon />}
-                              onClick={handleReset}
-                              disabled={
-                                !isModified ||
-                                isAdding ||
-                                isUpdating ||
-                                isDeleting
-                              }
-                            >
-                              Visszaállítás
-                            </Button>
-                            <Button
-                              variant="contained"
-                              color="success"
-                              startIcon={<AddIcon />}
-                              onClick={openAddDialog}
-                              disabled={isAdding || isUpdating || isDeleting}
-                            >
-                              Új rekord hozzáadása
-                            </Button>
-                          </LockedTableWrapper>
-                        </Stack>
-
+                       
                         {/* Status Messages */}
                         {isModified && (
                           <Alert severity="warning" sx={{ mt: 2 }}>
