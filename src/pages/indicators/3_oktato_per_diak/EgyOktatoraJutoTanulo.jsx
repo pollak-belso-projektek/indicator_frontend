@@ -47,20 +47,20 @@ import {
   Assessment as AssessmentIcon,
   BarChart as BarChartIcon,
 } from "@mui/icons-material";
-import { generateSchoolYears } from "../utils/schoolYears";
+import { generateSchoolYears } from "../../../utils/schoolYears";
 import {
   useGetAllEgyOktatoraJutoTanuloQuery,
   useAddEgyOktatoraJutoTanuloMutation,
   useUpdateEgyOktatoraJutoTanuloMutation,
   useDeleteEgyOktatoraJutoTanuloMutation,
   useGetAllAlapadatokQuery,
-} from "../store/api/apiSlice";
-import GenericYearlyChart from "../components/GenericYearlyChart";
-import PageWrapper from "./PageWrapper";
-import LockStatusIndicator from "../components/LockStatusIndicator";
-import LockedTableWrapper from "../components/LockedTableWrapper";
-import InfoEgyOktatoraJutoTanulo from "./indicators/3_oktato_per_diak/info_oktato_per_diak";
-import TitleEgyOktatoraJutoTanulo from "./indicators/3_oktato_per_diak/title_oktato_per_diak";
+} from "../../../store/api/apiSlice";
+import GenericYearlyChart from "../../../components/GenericYearlyChart";
+import PageWrapper from "../../PageWrapper";
+import LockStatusIndicator from "../../../components/LockStatusIndicator";
+import LockedTableWrapper from "../../../components/LockedTableWrapper";
+import InfoEgyOktatoraJutoTanulo from "./info_oktato_per_diak";
+import TitleEgyOktatoraJutoTanulo from "./title_oktato_per_diak";
 
 export default function EgyOktatoraJutoTanulo() {
   const schoolYears = generateSchoolYears();

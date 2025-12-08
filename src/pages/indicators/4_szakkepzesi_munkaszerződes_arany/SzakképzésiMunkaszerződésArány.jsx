@@ -1544,98 +1544,14 @@ export default function SzakképzésiMunkaszerződésArány() {
 
   return (
     <Container maxWidth="xl">
-      <Fade in={true} timeout={800}>
       <PageWrapper
       titleContent={<TitleSzakkepzesiMunkaszerzodes/>}
       infoContent={<InfoSzakkepzesiMunkaszerzodes/>}
       >
-
+        <Fade in={true} timeout={800}>
         <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
-          {/* Header Section */}
-          <Card
-            elevation={6}
-            sx={{
-              mb: 2,
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              color: "white",
-              borderRadius: 3,
-              boxShadow: "0 8px 32px rgba(102, 126, 234, 0.3)",
-            }}
-          >
-            <CardContent sx={{ p: 2 }}>
-              <Stack
-                direction="row"
-                alignItems="center"
-                spacing={2}
-                sx={{ mb: 2 }}
-              >
-                <DescriptionIcon sx={{ fontSize: 40, color: "#ffeb3b" }} />
-                <Typography
-                  variant="h4"
-                  component="h1"
-                  sx={{ fontWeight: 600 }}
-                >
-                  4. Szakképzési munkaszerződéssel rendelkezők aránya
-                </Typography>
-              </Stack>
 
-              <Typography variant="body1" sx={{ opacity: 0.8 }}>
-                A szakképző intézményben szakképzési munkaszerződéssel
-                rendelkezők aránya az intézmény szakirányú oktatásában
-                résztvevők között
-              </Typography>
-            </CardContent>
-          </Card>
-          {/* Instructions Card */}
-          <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
-            <CardContent>
-              <Typography variant="body2" color="text.primary" sx={{ mb: 2 }}>
-                <strong>Megjegyzés:</strong>
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 2 }}>
-                Az érettségi utáni képzések első évfolyamán tanulók szakképzési
-                munkaszerződésének száma az október 1-jei adatban még nem
-                jelenik meg, mert csak az első félvét lezáró időszaki
-                alapvizsgát követően tudnak munkaszerződést kötni. Az adatok
-                értékelésénél, elemzésénél ezt az időbeli eltérést érdemes
-                figyelembe venni.
-              </Typography>
-
-              <Box
-                sx={{
-                  p: 2,
-                  backgroundColor: "#f0f8ff",
-                  borderRadius: 1,
-                  border: "1px solid #90caf9",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{ fontStyle: "italic", flex: 1 }}
-                >
-                  <strong>Számítási képlet:</strong>
-                  <br />
-                  (Szakképzési munkaszerződéssel rendelkezők száma / szakirányú
-                  oktatásban részt vevő tanulók összlétszáma) × 100
-                </Typography>
-                <Box
-                  sx={{
-                    fontSize: "2rem",
-                    fontWeight: "bold",
-                    color: "#1976d2",
-                    textAlign: "center",
-                    minWidth: "100px",
-                  }}
-                >
-                  = %
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-          <LockStatusIndicator tableName={szmsz} />
+          <LockStatusIndicator tableName={"szmsz"} />
          
           <Stack
             direction="row"
@@ -1647,7 +1563,9 @@ export default function SzakképzésiMunkaszerződésArány() {
               top: 2,
               backgroundColor: "white",
               zIndex: 10,
-              py: 1,
+              p: 2,
+              borderRadius: 2,
+              boxShadow: 1,
             }}
           >
              <LockedTableWrapper tableName="szmsz">
@@ -1745,8 +1663,8 @@ export default function SzakképzésiMunkaszerződésArány() {
             </Alert>
           </Snackbar>
         </Box>
+        </Fade>
         </PageWrapper>
-      </Fade>
 
     </Container>
   );

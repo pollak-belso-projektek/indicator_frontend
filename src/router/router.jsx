@@ -36,7 +36,7 @@ const NszfhMeresekPage = lazy(() =>
   import("../pages/indicators/7_nszfh_meresek/NszfhMeresek.jsx")
 );
 const SzakmaiEredmenyekPage = lazy(() =>
-  import("../pages/indicators/8_szakmai_eredmenyek/SzakmaiEredmenyek.jsx");
+  import("../pages/indicators/8_szakmai_eredmenyek/SzakmaiEredmenyek.jsx")
 );
 const ElhelyezkedesimMutatoPage = lazy(() =>
   import("../pages/indicators/9_elhelyezkedesi_mutato/ElhelyezkedesimMutato.jsx")

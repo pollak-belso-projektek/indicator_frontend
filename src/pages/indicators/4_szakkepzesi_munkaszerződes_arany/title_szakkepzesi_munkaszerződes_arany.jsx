@@ -1,12 +1,14 @@
-import WorkIcon from "@mui/icons-material/Work";
+import DescriptionIcon from "@mui/icons-material/Description";
 import IndicatorTitle from "../../../components/shared/IndicatorTitle";
 
 const TitleSzakkepzesiMunkaszerzodes = () => {
   return (
     <IndicatorTitle
-      icon={WorkIcon}
-      title="4. Szakképzési munkaszerződés arány"
-      description="A szakképzési munkaszerződéssel rendelkező tanulók aránya az összes tanulóhoz viszonyítva"
+      icon={DescriptionIcon}
+      title="4. Szakképzési munkaszerződéssel rendelkezők aránya"
+      description="   A szakképző intézményben szakképzési munkaszerződéssel
+                rendelkezők aránya az intézmény szakirányú oktatásában
+                résztvevők között"
     />
   );
 };
