@@ -18,12 +18,12 @@ import {
   Chip,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
-import { getCurrentSchoolYear } from "../utils/schoolYears";
-import PageWrapper from "./PageWrapper";
-import LockStatusIndicator from "../components/LockStatusIndicator";
-import LockedTableWrapper from "../components/LockedTableWrapper";
-import InfoIntezményiNevelesiMutatok from "./indicators/17_intezmenyi_nevelesi_mutatok/info_intezmenyi_nevelesi_mutatok";
-import TitleIntezményiNevelesiMutatok from "./indicators/17_intezmenyi_nevelesi_mutatok/title_intezmenyi_nevelesi_mutatok";
+import { getCurrentSchoolYear } from "../../../utils/schoolYears";
+import PageWrapper from "../../PageWrapper";
+import LockStatusIndicator from "../../../components/LockStatusIndicator";
+import LockedTableWrapper from "../../../components/LockedTableWrapper";
+import InfoIntezményiNevelesiMutatok from "./info_intezmenyi_nevelesi_mutatok";
+import TitleIntezményiNevelesiMutatok from "./title_intezmenyi_nevelesi_mutatok";
 
 export default function IntezményiNevelesiMutatok() {
   const schoolYear = getCurrentSchoolYear();

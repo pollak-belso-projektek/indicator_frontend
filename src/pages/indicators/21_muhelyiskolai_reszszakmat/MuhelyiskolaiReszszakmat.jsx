@@ -21,23 +21,23 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
-import { generateSchoolYears } from "../utils/schoolYears";
-import { selectSelectedSchool } from "../store/slices/authSlice";
+import { generateSchoolYears } from "../../../utils/schoolYears";
+import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import {
   useGetTanuloLetszamQuery,
   useAddMuhelyiskolaMutation,
   useUpdateMuhelyiskolaMutation,
   useGetMuhelyiskolaQuery,
-} from "../store/api/apiSlice";
+} from "../../../store/api/apiSlice";
 import {
   TableLoadingOverlay,
   NotificationSnackbar,
-} from "../components/shared";
-import PageWrapper from "./PageWrapper";
-import LockStatusIndicator from "../components/LockStatusIndicator";
-import LockedTableWrapper from "../components/LockedTableWrapper";
-import InfoMuhelyiskolaiReszszakmat from "./indicators/21_muhelyiskolai_reszszakmat/info_muhelyiskolai_reszszakmat";
-import TitleMuhelyiskolaiReszszakmat from "./indicators/21_muhelyiskolai_reszszakmat/title_muhelyiskolai_reszszakmat";
+} from "../../../components/shared";
+import PageWrapper from "../../PageWrapper";
+import LockStatusIndicator from "../../../components/LockStatusIndicator";
+import LockedTableWrapper from "../../../components/LockedTableWrapper";
+import InfoMuhelyiskolaiReszszakmat from "./info_muhelyiskolai_reszszakmat";
+import TitleMuhelyiskolaiReszszakmat from "./title_muhelyiskolai_reszszakmat";
 
 
 export default function MuhelyiskolaiReszszakmat() {

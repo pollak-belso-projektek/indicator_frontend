@@ -18,11 +18,11 @@ import {
   Chip,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
-import PageWrapper from "./PageWrapper";
-import LockStatusIndicator from "../components/LockStatusIndicator";
-import LockedTableWrapper from "../components/LockedTableWrapper";
-import InfoIntezményiElismeresek from "./indicators/13_intezmenyi_elismeresek/info_intezmenyi_elismeresek";
-import TitleIntezményiElismeresek from "./indicators/13_intezmenyi_elismeresek/title_intezmenyi_elismeresek";
+import PageWrapper from "../../PageWrapper";
+import LockStatusIndicator from "../../../components/LockStatusIndicator";
+import LockedTableWrapper from "../../../components/LockedTableWrapper";
+import InfoIntezményiElismeresek from "./info_intezmenyi_elismeresek";
+import TitleIntezményiElismeresek from "./title_intezmenyi_elismeresek";
 
 
 export default function IntezményiElismeresek() {

@@ -42,19 +42,19 @@ import {
   Close as CloseIcon,
   Add as AddIcon,
 } from "@mui/icons-material";
-import { generateSchoolYears } from "../utils/schoolYears";
+import { generateSchoolYears } from "../../../utils/schoolYears";
 import {
   useGetAllElhelyezkedesQuery,
   useAddElhelyezkedesMutation,
   useUpdateElhelyezkedesMutation,
   useDeleteElhelyezkedesBySchoolAndYearMutation,
   useGetAllAlapadatokQuery,
-} from "../store/api/apiSlice";
-import PageWrapper from "./PageWrapper";
-import LockStatusIndicator from "../components/LockStatusIndicator";
-import LockedTableWrapper from "../components/LockedTableWrapper";
-import InfoElhelyezkedesiMutato from "./indicators/9_elhelyezkedesi_mutato/info_elhelyezkedesi_mutato";
-import TitleElhelyezkedesiMutato from "./indicators/9_elhelyezkedesi_mutato/title_elhelyezkedesi_mutato";
+} from "../../../store/api/apiSlice";
+import PageWrapper from "../../PageWrapper";
+import LockStatusIndicator from "../../../components/LockStatusIndicator";
+import LockedTableWrapper from "../../../components/LockedTableWrapper";
+import InfoElhelyezkedesiMutato from "./info_elhelyezkedesi_mutato";
+import TitleElhelyezkedesiMutato from "./title_elhelyezkedesi_mutato";
 
 
 export default function ElhelyezkedesimMutato() {

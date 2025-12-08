@@ -18,23 +18,23 @@ import {
   Fade,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
-import { generateSchoolYears } from "../utils/schoolYears";
-import { selectSelectedSchool } from "../store/slices/authSlice";
+import { generateSchoolYears } from "../../../utils/schoolYears";
+import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import {
   useGetTanuloLetszamQuery,
   useAddDobbantoMutation,
   useUpdateDobbantoMutation,
   useGetDobbantoQuery,
-} from "../store/api/apiSlice";
+} from "../../../store/api/apiSlice";
 import {
   TableLoadingOverlay,
   NotificationSnackbar,
-} from "../components/shared";
-import PageWrapper from "./PageWrapper";
-import LockStatusIndicator from "../components/LockStatusIndicator";
-import LockedTableWrapper from "../components/LockedTableWrapper";
-import InfoDobbantoProgramAranya from "./indicators/20_dobbanto_program_aranya/info_dobbanto_program_aranya";
-import TitleDobbantoProgramAranya from "./indicators/20_dobbanto_program_aranya/title_dobbanto_program_aranya";
+} from "../../../components/shared";
+import PageWrapper from "../../PageWrapper";
+import LockStatusIndicator from "../../../components/LockStatusIndicator";
+import LockedTableWrapper from "../../../components/LockedTableWrapper";
+import InfoDobbantoProgramAranya from "./info_dobbanto_program_aranya";
+import TitleDobbantoProgramAranya from "./title_dobbanto_program_aranya";
 
 
 export default function DobbantoProgramAránya() {

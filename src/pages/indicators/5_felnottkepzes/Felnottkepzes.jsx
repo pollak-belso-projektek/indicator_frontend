@@ -19,13 +19,13 @@ import {
   Fade,
   Stack,
 } from "@mui/material";
-import { generateSchoolYears } from "../utils/schoolYears";
-import { selectSelectedSchool } from "../store/slices/authSlice";
-import { useGetTanuloLetszamQuery } from "../store/api/apiSlice";
-import PageWrapper from "./PageWrapper";
-import LockStatusIndicator from "../components/LockStatusIndicator";
-import InfoFelnottkepzes from "./indicators/5_felnottkepzes/info_felnottkepzes";
-import TitleFelnottkepzes from "./indicators/5_felnottkepzes/title_felnottkepzes";
+import { generateSchoolYears } from "../../../utils/schoolYears";
+import { selectSelectedSchool } from "../../../store/slices/authSlice";
+import { useGetTanuloLetszamQuery } from "../../../store/api/apiSlice";
+import PageWrapper from "../../PageWrapper";
+import LockStatusIndicator from "../../../components/LockStatusIndicator";
+import InfoFelnottkepzes from "./info_felnottkepzes";
+import TitleFelnottkepzes from "./title_felnottkepzes";
 
 
 export default function Felnottkepzes() {

@@ -26,15 +26,20 @@ import {
   Refresh as RefreshIcon,
   Description as DescriptionIcon,
 } from "@mui/icons-material";
-import { generateSchoolYears } from "../utils/schoolYears";
+import { generateSchoolYears } from "../../../utils/schoolYears";
 import {
   useGetTanugyiAdatokQuery,
   useGetAllSZMSZQuery,
   useAddSZMSZMutation,
   useUpdateSZMSZMutation,
-} from "../store/api/apiSlice";
+} from "../../../store/api/apiSlice";
 import { useSelector } from "react-redux";
-import { selectSelectedSchool } from "../store/slices/authSlice";
+import { selectSelectedSchool } from "../../../store/slices/authSlice";
+import PageWrapper from "../../PageWrapper";
+import LockStatusIndicator from "../../../components/LockStatusIndicator";
+import LockedTableWrapper from "../../../components/LockedTableWrapper";
+import InfoSzakkepzesiMunkaszerzodes from "./info_szakkepzesi_munkaszerződes_arany";
+import TitleSzakkepzesiMunkaszerzodes from "./title_szakkepzesi_munkaszerződes_arany";
 
 export default function SzakképzésiMunkaszerződésArány() {
   const schoolYears = generateSchoolYears();
@@ -1540,6 +1545,11 @@ export default function SzakképzésiMunkaszerződésArány() {
   return (
     <Container maxWidth="xl">
       <Fade in={true} timeout={800}>
+      <PageWrapper
+      titleContent={<TitleSzakkepzesiMunkaszerzodes/>}
+      infoContent={<InfoSzakkepzesiMunkaszerzodes/>}
+      >
+
         <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
           {/* Header Section */}
           <Card
@@ -1625,6 +1635,8 @@ export default function SzakképzésiMunkaszerződésArány() {
               </Box>
             </CardContent>
           </Card>
+          <LockStatusIndicator tableName={szmsz} />
+         
           <Stack
             direction="row"
             spacing={2}
@@ -1638,6 +1650,7 @@ export default function SzakképzésiMunkaszerződésArány() {
               py: 1,
             }}
           >
+             <LockedTableWrapper tableName="szmsz">
             <Button
               variant="contained"
               startIcon={<SaveIcon />}
@@ -1656,6 +1669,7 @@ export default function SzakképzésiMunkaszerződésArány() {
             >
               Visszaállítás
             </Button>
+            </LockedTableWrapper>
           </Stack>
           {/* Percentage Table */}
           {renderTableSection(
@@ -1731,7 +1745,9 @@ export default function SzakképzésiMunkaszerződésArány() {
             </Alert>
           </Snackbar>
         </Box>
+        </PageWrapper>
       </Fade>
+
     </Container>
   );
 }

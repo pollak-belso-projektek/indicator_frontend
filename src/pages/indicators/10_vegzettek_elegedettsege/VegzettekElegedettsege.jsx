@@ -18,12 +18,12 @@ import {
   Chip,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
-import { generateSchoolYears } from "../utils/schoolYears";
-import PageWrapper from "./PageWrapper";
-import LockStatusIndicator from "../components/LockStatusIndicator";
-import LockedTableWrapper from "../components/LockedTableWrapper";
-import InfoVegzettekElegedettsege from "./indicators/10_vegzettek_elegedettsege/info_vegzettek_elegedettsege";
-import TitleVegzettekElegedettsege from "./indicators/10_vegzettek_elegedettsege/title_vegzettek_elegedettsege";
+import { generateSchoolYears } from "../../../utils/schoolYears";
+import PageWrapper from "../../PageWrapper";
+import LockStatusIndicator from "../../../components/LockStatusIndicator";
+import LockedTableWrapper from "../../../components/LockedTableWrapper";
+import InfoVegzettekElegedettsege from "./info_vegzettek_elegedettsege";
+import TitleVegzettekElegedettsege from "./title_vegzettek_elegedettsege";
 
 
 export default function VegzettekElegedettsege() {

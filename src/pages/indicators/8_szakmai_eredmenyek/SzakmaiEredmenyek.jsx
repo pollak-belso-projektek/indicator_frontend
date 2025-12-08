@@ -33,12 +33,12 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
-import { generateSchoolYears } from "../utils/schoolYears";
-import PageWrapper from "./PageWrapper";
-import LockStatusIndicator from "../components/LockStatusIndicator";
-import LockedTableWrapper from "../components/LockedTableWrapper";
-import InfoSzakmaiEredmenyek from "./indicators/8_szakmai_eredmenyek/info_szakmai_eredmenyek";
-import TitleSzakmaiEredmenyek from "./indicators/8_szakmai_eredmenyek/title_szakmai_eredmenyek";
+import { generateSchoolYears } from "../../../utils/schoolYears";
+import PageWrapper from "../../PageWrapper";
+import LockStatusIndicator from "../../../components/LockStatusIndicator";
+import LockedTableWrapper from "../../../components/LockedTableWrapper";
+import InfoSzakmaiEredmenyek from "./info_szakmai_eredmenyek";
+import TitleSzakmaiEredmenyek from "./title_szakmai_eredmenyek";
 
 
 export default function SzakmaiEredmenyek() {

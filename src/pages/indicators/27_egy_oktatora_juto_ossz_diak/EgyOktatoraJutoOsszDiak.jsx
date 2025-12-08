@@ -37,13 +37,13 @@ import {
   Functions as FunctionsIcon,
   BarChart as BarChartIcon,
 } from "@mui/icons-material";
-import { generateSchoolYears } from "../utils/schoolYears";
-import GenericYearlyChart from "../components/GenericYearlyChart";
-import PageWrapper from "./PageWrapper";
-import LockStatusIndicator from "../components/LockStatusIndicator";
-import LockedTableWrapper from "../components/LockedTableWrapper";
-import InfoEgyOktatoraJutoOsszDiak from "./indicators/27_egy_oktatora_juto_ossz_diak/info_egy_oktatora_juto_ossz_diak";
-import TitleEgyOktatoraJutoOsszDiak from "./indicators/27_egy_oktatora_juto_ossz_diak/title_egy_oktatora_juto_ossz_diak";
+import { generateSchoolYears } from "../../../utils/schoolYears";
+import GenericYearlyChart from "../../../components/GenericYearlyChart";
+import PageWrapper from "../../PageWrapper";
+import LockStatusIndicator from "../../../components/LockStatusIndicator";
+import LockedTableWrapper from "../../../components/LockedTableWrapper";
+import InfoEgyOktatoraJutoOsszDiak from "./info_egy_oktatora_juto_ossz_diak";
+import TitleEgyOktatoraJutoOsszDiak from "./title_egy_oktatora_juto_ossz_diak";
 
 // TabPanel component for tab content
 function TabPanel({ children, value, index, ...other }) {
