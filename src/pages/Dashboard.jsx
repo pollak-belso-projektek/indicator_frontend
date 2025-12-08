@@ -1,5 +1,6 @@
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import {
   Box,
   Card,
@@ -39,6 +40,7 @@ import {
   Timer as TimerIcon,
   History as HistoryIcon,
   Close as CloseIcon,
+  SupervisorAccount as SupervisorAccountIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import TokenDebugPanel from "../components/TokenDebugPanel";
@@ -48,9 +50,12 @@ import {
   selectUserTableAccess,
   selectUser,
   selectSelectedSchool,
+  selectIsInAliasMode,
+  enableAliasMode,
 } from "../store/slices/authSlice";
 import CacheDebugPanel from "../components/CacheDebugPanel";
 import { useRecentPages } from "../hooks/useRecentPages";
+import AliasModeDialog from "../components/AliasModeDialog";
 
 import { useCheckHealthQuery } from "../store/api/healthSlice";
 import { useRedirectNotification } from "../hooks/useRedirectNotification";
@@ -130,7 +135,7 @@ const NavigationCategories = {
       {
         name: "Versenyek",
         icon: StarIcon,
-        link: "/szakmai-eredmenyek",
+        link: "/versenyek",
         tableName: "versenyek",
       },
       {
@@ -181,7 +186,9 @@ const NavigationCategories = {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [showDebugPanels, setShowDebugPanels] = useState(false);
+  const [showAliasModeDialog, setShowAliasModeDialog] = useState(false);
 
   // Use redirect notification hook to handle access denied notifications
   useRedirectNotification();
@@ -190,6 +197,7 @@ export default function Dashboard() {
   const userPermissions = useSelector(selectUserPermissions);
   const tableAccess = useSelector(selectUserTableAccess);
   const selectedSchool = useSelector(selectSelectedSchool);
+  const isInAliasMode = useSelector(selectIsInAliasMode);
 
   // Initialize recent pages hook
   const { recentPages, clearRecentPages, removeRecentPage } =
@@ -198,6 +206,10 @@ export default function Dashboard() {
   const isSuperadmin = userPermissions?.isSuperadmin || false;
   const isAdmin = userPermissions?.isAdmin || false;
   const isHSZC = userPermissions?.isHSZC || false;
+
+  const handleEnableAliasMode = (selectedUser) => {
+    dispatch(enableAliasMode(selectedUser));
+  };
 
   const { data: healthResponse, error: healthError } = useCheckHealthQuery();
 
@@ -309,7 +321,7 @@ export default function Dashboard() {
           description: "Szakmai, közismereti és kulturális eredmények",
           icon: <TrendingUpIcon />,
           color: "info",
-          route: "/szakmai-eredmenyek",
+          route: "/versenyek",
         });
       }
 
@@ -411,8 +423,32 @@ export default function Dashboard() {
               {getUserTypeDescription()}
             </Typography>
           </Box>
+          {/* Alias Mode Button for Superadmins */}
+          {isSuperadmin && !isInAliasMode && (
+            <Button
+              variant="contained"
+              color="inherit"
+              startIcon={<SupervisorAccountIcon />}
+              onClick={() => setShowAliasModeDialog(true)}
+              sx={{
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 255, 255, 0.3)",
+                },
+              }}
+            >
+              Alias mód
+            </Button>
+          )}
         </Box>
       </Paper>
+
+      {/* Alias Mode Dialog */}
+      <AliasModeDialog
+        open={showAliasModeDialog}
+        onClose={() => setShowAliasModeDialog(false)}
+        onSelectUser={handleEnableAliasMode}
+      />
       {/* Recently Used Pages Section */}
       {recentPages && recentPages.length > 0 && (
         <>

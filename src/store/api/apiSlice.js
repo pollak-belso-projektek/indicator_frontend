@@ -314,6 +314,21 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["TableList"],
     }),
+    // Lock/unlock table mutations
+    lockTable: build.mutation({
+      query: (tableId) => ({
+        url: `tablelist/${tableId}/lock`,
+        method: "POST",
+      }),
+      invalidatesTags: ["TableList"],
+    }),
+    unlockTable: build.mutation({
+      query: (tableId) => ({
+        url: `tablelist/${tableId}/unlock`,
+        method: "POST",
+      }),
+      invalidatesTags: ["TableList"],
+    }),
 
     // ========== Educational Indicators Endpoints ==========
 
@@ -987,6 +1002,8 @@ export const {
   useGetTableListQuery,
   useCreateTableMutation,
   useUpdateTableMutation,
+  useLockTableMutation,
+  useUnlockTableMutation,
   // Educational Indicators hooks
   useGetElhelyezkedesByYearQuery,
   useGetElhelyezkedesBySchoolAndYearQuery,

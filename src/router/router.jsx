@@ -16,64 +16,79 @@ const LoginPage = lazy(() => import("../pages/Login"));
 const DashboardPage = lazy(() => import("../pages/Dashboard"));
 const AlapadatokPage = lazy(() => import("../pages/Alapadatok"));
 const DataImportPage = lazy(() => import("../pages/DataImport"));
-const TanuloletszamPage = lazy(() => import("../pages/Tanuloletszam.jsx"));
-const KompetenciaPage = lazy(() => import("../pages/Kompetencia.jsx"));
-const VersenyekPage = lazy(() => import("../pages/Versenyek.jsx"));
+const TanuloletszamPage = lazy(() =>
+  import("../pages/indicators/1_tanulo_letszam/Tanuloletszam.jsx")
+);
+const KompetenciaPage = lazy(() =>
+  import("../pages/indicators/6_kompetencia/Kompetencia.jsx")
+);
 const UsersPage = lazy(() => import("../pages/Users.jsx"));
 const TableManagementPage = lazy(() =>
   import("../pages/TableManagementPage.jsx")
 );
 const SchoolsPage = lazy(() => import("../pages/Schools.jsx"));
-const FelnottkepzesPage = lazy(() => import("../pages/Felnottkepzes.jsx"));
+const FelnottkepzesPage = lazy(() => import("../pages/indicators/5_felnottkepzes/Felnottkepzes.jsx"));
 const OrszagosKompetenciameresPage = lazy(() =>
   import("../pages/OrszagosKompetenciameres.jsx")
 );
-const NszfhMeresekPage = lazy(() => import("../pages/NszfhMeresek.jsx"));
+const NszfhMeresekPage = lazy(() =>
+  import("../pages/indicators/7_nszfh_meresek/NszfhMeresek.jsx")
+);
 const SzakmaiEredmenyekPage = lazy(() =>
-  import("../pages/SzakmaiEredmenyek.jsx")
+  import("../pages/indicators/8_szakmai_eredmenyek/SzakmaiEredmenyek.jsx")
 );
 const ElhelyezkedesimMutatoPage = lazy(() =>
-  import("../pages/ElhelyezkedesimMutato.jsx")
+  import("../pages/indicators/9_elhelyezkedesi_mutato/ElhelyezkedesimMutato.jsx")
 );
 const VegzettekElegedettsegePage = lazy(() =>
-  import("../pages/VegzettekElegedettsege.jsx")
+  import("../pages/indicators/10_vegzettek_elegedettsege/VegzettekElegedettsege.jsx")
 );
 const VizsgaeredmenyekPage = lazy(() =>
-  import("../pages/Vizsgaeredmenyek.jsx")
+  import("../pages/indicators/11_vizsgaeredmenyek/Vizsgaeredmenyek.jsx")
 );
 const IntezményiElismeresekPage = lazy(() =>
-  import("../pages/IntezményiElismeresek.jsx")
+  import("../pages/indicators/13_intezmenyi_elismeresek/IntezményiElismeresek.jsx")
 );
 const SzakmaiBemutatokKonferenciakPage = lazy(() =>
   import("../pages/SzakmaiBemutatokKonferenciak.jsx")
 );
 const ElegedettsegMeresEredmenyeiPage = lazy(() =>
-  import("../pages/ElegedettsegMeresEredmenyei.jsx")
+  import(
+    "../pages/indicators/16_elegedettseg_meres_eredmenyei/ElegedettsegMeresEredmenyei.jsx"
+  )
 );
 const MuhelyiskolaiReszszakmatPage = lazy(() =>
-  import("../pages/MuhelyiskolaiReszszakmat.jsx")
+  import("../pages/indicators/21_muhelyiskolai_reszszakmat/MuhelyiskolaiReszszakmat.jsx")
 );
 const DobbantoProgramAranyaPage = lazy(() =>
-  import("../pages/DobbantoProgramAranya.jsx")
+  import("../pages/indicators/20_dobbanto_program_aranya/DobbantoProgramAranya.jsx")
 );
 const SajatosNevelesiIgenyuTanulokAranyaPage = lazy(() =>
-  import("../pages/SajatosNevelesiIgenyuTanulokAranya.jsx")
+  import(
+    "../pages/indicators/19_sajatos_nevelesi_igenyu_tanulok_aranya/SajatosNevelesiIgenyuTanulokAranya.jsx"
+  )
 );
 const HatanyosHelyzetuTanulokAranyaPage = lazy(() =>
-  import("../pages/HatanyosHelyzetuTanulokAranya.jsx")
+  import(
+    "../pages/indicators/18_hatranyos_helyezu_tanulok_aranya/HatanyosHelyzetuTanulokAranya.jsx"
+  )
 );
 const IntezményiNevelesiMutatokPage = lazy(() =>
-  import("../pages/IntezményiNevelesiMutatok.jsx")
+  import("../pages/indicators/17_intezmenyi_nevelesi_mutatok/IntezményiNevelesiMutatok.jsx")
 );
 const SzakképzésiMunkaszerződésArányPage = lazy(() =>
-  import("../pages/SzakképzésiMunkaszerződésArány.jsx")
+  import("../pages/indicators/4_szakkepzesi_munkaszerződes_arany/SzakképzésiMunkaszerződésArány.jsx")
 );
 const OktatoPerDiak = lazy(() => import("../pages/tables/Oktatoperdiak.jsx"));
-const EgyOktatoraJutoOsszDiak = lazy(() => import("../pages/EgyOktatoraJutoOsszDiak.jsx"));
-const FelvettekPage = lazy(() => import("../pages/tables/FelvettekSzama.jsx"));
+const EgyOktatoraJutoOsszDiak = lazy(() =>
+  import("../pages/indicators/27_egy_oktatora_juto_ossz_diak/EgyOktatoraJutoOsszDiak.jsx")
+);
+const FelvettekPage = lazy(() =>
+  import("../pages/indicators/2_felvettek_szama/FelvettekSzama.jsx")
+);
 const LogsPage = lazy(() => import("../pages/Logs.jsx"));
 const OktatokEgyebTevPage = lazy(() =>
-  import("../pages/Oktatok_egyeb_tev.jsx")
+  import("../pages/indicators/23_oktato_egyeb_tev/Oktatok_egyeb_tev.jsx")
 );
 
 // List of pages that require school selection
@@ -87,7 +102,7 @@ const SCHOOL_REQUIRED_PAGES = [
   "/nszfh-meresek",
   "/vizsgaeredmenyek",
   "/elegedettseg-meres-eredmenyei",
-  "/szakmai-eredmenyek",
+  "/versenyek",
   "/intezmenyi-elismeresek",
   "/elhelyezkedesi-mutato",
   "/vegzettek-elegedettsege",
@@ -191,16 +206,7 @@ export default function Router() {
                   </TableProtectedRoute>
                 }
               />
-              <Route
-                path="/versenyek"
-                element={
-                  <TableProtectedRoute tableName="versenyek">
-                    <NavigationWithLoading>
-                      <VersenyekPage />
-                    </NavigationWithLoading>
-                  </TableProtectedRoute>
-                }
-              />
+            
               <Route
                 path="/users"
                 element={
@@ -281,13 +287,13 @@ export default function Router() {
                 }
               />
               <Route
-                path="/szakmai-eredmenyek"
+                path="/versenyek"
                 element={
                   <TableProtectedRoute>
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <SzakmaiEredmenyekPage />,
-                        "/szakmai-eredmenyek"
+                        "/versenyek"
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>

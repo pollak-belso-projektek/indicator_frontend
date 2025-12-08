@@ -49,7 +49,7 @@ export const AccessNotificationProvider = ({ children }) => {
       '/felnottkepzes': 'Felnőttképzés',
       '/orszagos-kompetenciameres': 'Országos kompetenciamérés',
       '/nszfh-meresek': 'NSZFH mérések',
-      '/szakmai-eredmenyek': 'Szakmai eredmények',
+      '/versenyek': 'Szakmai eredmények',
       '/elhelyezkedesi-mutato': 'Elhelyezkedési mutató',
       '/vegzettek-elegedettsege': 'Végzettek elégedettsége',
       '/vizsgaeredmenyek': 'Vizsgaeredmények',
