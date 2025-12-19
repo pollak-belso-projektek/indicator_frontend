@@ -1,11 +1,17 @@
 import { useState, useEffect } from "react";
 import { fields } from "../tableData/tanuloTanugyiData";
 import { mapEmployeeData } from "../tableData/alkalmazottMunkaugyiData";
+import { mapTanuloAdatszolgaltatasData } from "../tableData/tanuloAdatszolgaltatasData";
+import { mapOktatoAdatszolgaltatasData } from "../tableData/oktatoAdatszolgaltatasData";
 import {
   useAddTanugyiAdatokMutation,
   useGetTanugyiAdatokQuery,
   useAddAlkalmazottAdatokMutation,
   useGetAlkalmazottAdatokQuery,
+  useAddTanuloAdatszolgaltatasMutation,
+  useGetTanuloAdatszolgaltatasQuery,
+  useAddOktatoAdatszolgaltatasMutation,
+  useGetOktatoAdatszolgaltatasQuery,
 } from "../store/api/apiSlice";
 import {
   Box,
@@ -25,18 +31,25 @@ import { selectSelectedSchool } from "../store/slices/authSlice";
 import {
   validateTanugyiFile,
   validateAlkalmazottFile,
+  validateTanuloAdatszolgaltatasFile,
+  validateOktatoAdatszolgaltatasFile,
 } from "../utils/fileValidation";
-import { generateSchoolYears } from "../utils/schoolYears";
 
 export default function DataImport() {
   const [tanugyiData, setTanugyiData] = useState(null);
   const [alkalmazottData, setAlkalmazottData] = useState(null);
+  const [tanuloAdatszolgaltatasData, setTanuloAdatszolgaltatasData] = useState(null);
   const [tabValue, setTabValue] = useState(0);
   const [tanugyiValidationError, setTanugyiValidationError] = useState(null);
-  const [alkalmazottValidationError, setAlkalmazottValidationError] =
-    useState(null);
+  const [alkalmazottValidationError, setAlkalmazottValidationError] = useState(null);
+  const [tanuloAdatszolgaltatasValidationError, setTanuloAdatszolgaltatasValidationError] = useState(null);
+  const [oktatoAdatszolgaltatasData, setOktatoAdatszolgaltatasData] = useState(null);
+  const [oktatoAdatszolgaltatasValidationError, setOktatoAdatszolgaltatasValidationError] = useState(null);
 
   const selectedSchool = useSelector(selectSelectedSchool);
+
+  // Always use the current school year start
+  const currentYearStart = new Date().getMonth() >= 8 ? new Date().getFullYear() : new Date().getFullYear() - 1;
 
   // Tanügyi adatok API hooks
   const [addTanugyiAdatok, tanugyiResult] = useAddTanugyiAdatokMutation();
@@ -46,47 +59,57 @@ export default function DataImport() {
     isLoading: tanugyiLoading,
   } = useGetTanugyiAdatokQuery({
     alapadatok_id: selectedSchool?.id,
-    tanev_kezdete:
-      new Date().getMonth() >= 8
-        ? new Date().getFullYear()
-        : new Date().getFullYear() - 1,
+    tanev_kezdete: currentYearStart,
   });
 
   // Alkalmazott adatok API hooks
-  const [addAlkalmazottAdatok, alkalmazottResult] =
-    useAddAlkalmazottAdatokMutation();
+  const [addAlkalmazottAdatok, alkalmazottResult] = useAddAlkalmazottAdatokMutation();
   const {
     data: alkalmazottDataFromAPI,
     error: alkalmazottError,
     isLoading: alkalmazottLoading,
   } = useGetAlkalmazottAdatokQuery({
     alapadatok_id: selectedSchool?.id,
-    tanev_kezdete:
-      new Date().getMonth() >= 8
-        ? new Date().getFullYear()
-        : new Date().getFullYear() - 1,
+    tanev_kezdete: currentYearStart,
   });
+
+  // Tanuló adatszolgáltatás API hooks
+  const [addTanuloAdatszolgaltatas, tanuloAdatszelgaltatasResult] = useAddTanuloAdatszolgaltatasMutation();
+  const {
+    data: tanuloAdatszolgaltatasDataFromAPI,
+    error: tanuloAdatszolgaltatasError,
+    isLoading: tanuloAdatszolgaltatasLoading,
+  } = useGetTanuloAdatszolgaltatasQuery({
+    alapadatok_id: selectedSchool?.id,
+    tanev_kezdete: currentYearStart,
+  });
+
+  // Oktató adatszolgáltatás API hooks
+  const [addOktatoAdatszolgaltatas, oktatoAdatszolgaltatasResult] = useAddOktatoAdatszolgaltatasMutation();
+  const {
+    data: oktatoAdatszolgaltatasDataFromAPI,
+    error: oktatoAdatszolgaltatasError,
+    isLoading: oktatoAdatszolgaltatasLoading,
+  } = useGetOktatoAdatszolgaltatasQuery({
+    alapadatok_id: selectedSchool?.id,
+    tanev_kezdete: currentYearStart,
+  });
+
 
   // Tanügyi adatok effect
   useEffect(() => {
-    console.log(tanugyiData);
     if (tanugyiData && !tanugyiValidationError) {
       addTanugyiAdatok({
         alapadatok_id: selectedSchool?.id,
-        tanev_kezdete:
-          new Date().getMonth() >= 8
-            ? new Date().getFullYear()
-            : new Date().getFullYear() - 1,
+        tanev_kezdete: currentYearStart,
         tanugyi_adatok: tanugyiData,
       });
     }
-  }, [tanugyiData, addTanugyiAdatok, tanugyiValidationError]);
+  }, [tanugyiData, addTanugyiAdatok, tanugyiValidationError, selectedSchool, currentYearStart]);
 
-  // Alkalmazott adatok effect - csak oktatókat szűrve
+  // Alkalmazott adatok effect
   useEffect(() => {
-    console.log(alkalmazottData);
     if (alkalmazottData && !alkalmazottValidationError) {
-      // Szűrés: csak azok, akiknek munkakörében szerepel az "oktató" vagy "tanár" szó
       const oktatokData = alkalmazottData.filter((item) => {
         const munkakor = item.Munkakor || item.munkakor || "";
         return (
@@ -95,60 +118,35 @@ export default function DataImport() {
         );
       });
 
-      console.log(
-        "Oktatók száma:",
-        oktatokData.length,
-        "az összes",
-        alkalmazottData.length,
-        "alkalmazottból"
-      );
-
       if (oktatokData.length > 0) {
-        // Adatok transzformálása a backend API formátumához
         const transformedData = oktatokData.map((item) => {
           const transformedItem = { ...item };
-
-          // Integer mezők konverziója
           if (transformedItem.TanevKezdete) {
-            transformedItem.TanevKezdete =
-              parseInt(transformedItem.TanevKezdete) || 2024;
+            transformedItem.TanevKezdete = parseInt(transformedItem.TanevKezdete) || currentYearStart;
           } else {
-            transformedItem.TanevKezdete = 2024;
+            transformedItem.TanevKezdete = currentYearStart;
           }
-
+          // ... (rest of transformation)
           if (transformedItem.KotelezoOraszama) {
-            transformedItem.KotelezoOraszama =
-              parseInt(String(transformedItem.KotelezoOraszama).trim()) || 0;
+            transformedItem.KotelezoOraszama = parseInt(String(transformedItem.KotelezoOraszama).trim()) || 0;
           } else {
             transformedItem.KotelezoOraszama = 0;
           }
-
-          // Decimal mezők konverziója
           if (transformedItem.Oraszam) {
-            transformedItem.Oraszam =
-              parseFloat(String(transformedItem.Oraszam).trim()) || 0.0;
+            transformedItem.Oraszam = parseFloat(String(transformedItem.Oraszam).trim()) || 0.0;
           } else {
             transformedItem.Oraszam = 0.0;
           }
-
           if (transformedItem.FeladattalTerheltOraszam) {
-            transformedItem.FeladattalTerheltOraszam =
-              parseFloat(
-                String(transformedItem.FeladattalTerheltOraszam).trim()
-              ) || 0.0;
+            transformedItem.FeladattalTerheltOraszam = parseFloat(String(transformedItem.FeladattalTerheltOraszam).trim()) || 0.0;
           } else {
             transformedItem.FeladattalTerheltOraszam = 0.0;
           }
-
           if (transformedItem.PedagogusHetiOraszama) {
-            transformedItem.PedagogusHetiOraszama =
-              parseFloat(
-                String(transformedItem.PedagogusHetiOraszama).trim()
-              ) || 0.0;
+            transformedItem.PedagogusHetiOraszama = parseFloat(String(transformedItem.PedagogusHetiOraszama).trim()) || 0.0;
           } else {
             transformedItem.PedagogusHetiOraszama = 0.0;
           }
-
           return transformedItem;
         });
 
@@ -158,55 +156,63 @@ export default function DataImport() {
         });
       }
     }
-  }, [alkalmazottData, addAlkalmazottAdatok, alkalmazottValidationError]);
+  }, [alkalmazottData, addAlkalmazottAdatok, alkalmazottValidationError, selectedSchool, currentYearStart]);
 
+  // Tanuló adatszolgáltatás effect
   useEffect(() => {
-    console.log("Tanügyi eredmény:", tanugyiResult);
-  }, [tanugyiResult]);
+    if (tanuloAdatszolgaltatasData && !tanuloAdatszolgaltatasValidationError) {
+      addTanuloAdatszolgaltatas({
+        alapadatok_id: selectedSchool?.id,
+        tanev_kezdete: currentYearStart,
+        tanulo_adatszolgaltatas: tanuloAdatszolgaltatasData,
+      });
+    }
+  }, [tanuloAdatszolgaltatasData, addTanuloAdatszolgaltatas, tanuloAdatszolgaltatasValidationError, selectedSchool, currentYearStart]);
 
+  // Oktató adatszolgáltatás effect
   useEffect(() => {
-    console.log("Alkalmazott eredmény:", alkalmazottResult);
-  }, [alkalmazottResult]);
+    if (oktatoAdatszolgaltatasData && !oktatoAdatszolgaltatasValidationError) {
+      addOktatoAdatszolgaltatas({
+        alapadatok_id: selectedSchool?.id,
+        tanev_kezdete: currentYearStart,
+        oktato_adatszolgaltatas: oktatoAdatszolgaltatasData,
+      });
+    }
+  }, [oktatoAdatszolgaltatasData, addOktatoAdatszolgaltatas, oktatoAdatszolgaltatasValidationError, selectedSchool, currentYearStart]);
+
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
-    // Validációs hibák törlése tab váltáskor
     setTanugyiValidationError(null);
     setAlkalmazottValidationError(null);
+    setTanuloAdatszolgaltatasValidationError(null);
+    setOktatoAdatszolgaltatasValidationError(null);
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return "Nincs adat";
-    return (
-      dateString.split("T")[0].replace(/-/g, ".") +
-      ". " +
-      dateString.split("T")[1].slice(0, 8)
-    );
+    try {
+      return (
+        dateString.split("T")[0].replace(/-/g, ".") +
+        ". " +
+        dateString.split("T")[1].slice(0, 8)
+      );
+    } catch (e) {
+      return dateString;
+    }
   };
 
-  const isLoading = tanugyiLoading || alkalmazottLoading;
-  const hasError = tanugyiError || alkalmazottError;
+  const isLoading = tanugyiLoading || alkalmazottLoading || tanuloAdatszolgaltatasLoading || oktatoAdatszolgaltatasLoading;
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {isLoading ? (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="70vh"
-        >
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="70vh">
           <CircularProgress size={60} />
         </Box>
       ) : (
         <>
-          <Typography
-            variant="h4"
-            component="h1"
-            gutterBottom
-            align="center"
-            sx={{ mb: 4 }}
-          >
+          <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 4 }}>
             Adatok Feltöltése
           </Typography>
 
@@ -214,6 +220,8 @@ export default function DataImport() {
             <Tabs value={tabValue} onChange={handleTabChange} centered>
               <Tab label="Tanügyi Adatok" />
               <Tab label="Alkalmazottak Munkaugyi Adatai" />
+              <Tab label="Tanuló Adatszolgáltatás" />
+              <Tab label="Oktató Adatszolgáltatás" />
             </Tabs>
 
             {/* Tanügyi Adatok Tab */}
@@ -222,48 +230,32 @@ export default function DataImport() {
                 <Typography variant="h5" gutterBottom>
                   Tanügyi Adatok Feltöltése
                 </Typography>
-
                 <Alert severity="info" sx={{ mb: 3 }}>
                   <AlertTitle>Tanügyi fájl követelmények</AlertTitle>A fájlnak
                   tartalmaznia kell legalább egyet az alábbi oszlopok közül:
-                  <strong>
-                    {" "}
-                    Oktatási azonosítója, Osztály, Bejáró, Tankötelezettséget
-                    teljesítő
-                  </strong>
+                  <strong> Oktatási azonosítója, Osztály, Bejáró, Tankötelezettséget teljesítő</strong>
                 </Alert>
-
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="body1" color="text.secondary">
-                    <strong>Legutóbb betöltött adatok:</strong>{" "}
-                    {tanugyiDataFromAPI &&
-                    Array.isArray(tanugyiDataFromAPI) &&
-                    tanugyiDataFromAPI.length > 0
+                    <strong>Tárgyévi betöltött adatok:</strong>{" "}
+                    {tanugyiDataFromAPI && Array.isArray(tanugyiDataFromAPI) && tanugyiDataFromAPI.length > 0
                       ? (() => {
-                          const maxItem = tanugyiDataFromAPI.reduce(
-                            (max, item) =>
-                              new Date(item.createAt) > new Date(max.createAt)
-                                ? item
-                                : max
-                          );
-                          return formatDate(maxItem.createAt);
-                        })()
-                      : "Nincs adat"}
+                        const maxItem = tanugyiDataFromAPI.reduce((max, item) =>
+                          new Date(item.createAt) > new Date(max.createAt) ? item : max
+                        );
+                        return formatDate(maxItem.createAt);
+                      })()
+                      : "Nincs adat erre a tanévre"}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
-                    <strong>Rendszerben lévő összes adat száma:</strong>{" "}
+                    <strong>Rendszerben lévő összes adat száma erre a tanévre:</strong>{" "}
                     <Chip
-                      label={
-                        tanugyiDataFromAPI && Array.isArray(tanugyiDataFromAPI)
-                          ? tanugyiDataFromAPI.length
-                          : 0
-                      }
+                      label={tanugyiDataFromAPI && Array.isArray(tanugyiDataFromAPI) ? tanugyiDataFromAPI.length : 0}
                       color="primary"
                       size="small"
                     />
                   </Typography>
                 </Box>
-
                 <Paper variant="outlined" sx={{ p: 3 }}>
                   {tanugyiValidationError && (
                     <Alert severity="error" sx={{ mb: 3 }}>
@@ -271,30 +263,16 @@ export default function DataImport() {
                       {tanugyiValidationError}
                     </Alert>
                   )}
-
                   <CustomSheetUploader
                     onFileUpload={async (data, file) => {
-                      console.log("Tanügyi - Feltöltött fájl:", file.name);
-
-                      // Fejlécek kinyerése (első sor)
-                      const headers =
-                        data.length > 0 ? Object.keys(data[0]) : [];
-                      console.log("Tanügyi - Fejlécek:", headers);
-
-                      // Fájl validáció
+                      const headers = data.length > 0 ? Object.keys(data[0]) : [];
                       const validation = validateTanugyiFile(headers);
-                      console.log("Tanügyi - Validáció eredménye:", validation);
-
                       if (!validation.isValid) {
                         setTanugyiValidationError(validation.error);
                         setTanugyiData(null);
                         return;
                       }
-
-                      // Ha sikerült a validáció, töröljük a hibát
                       setTanugyiValidationError(null);
-
-                      console.log("Tanügyi - Adatok:", data);
                       setTanugyiData(
                         data.map((item) => {
                           const newItem = {};
@@ -306,10 +284,7 @@ export default function DataImport() {
                       );
                     }}
                     onError={(error) => {
-                      console.error("Tanügyi uploader hiba:", error);
-                      setTanugyiValidationError(
-                        `Fájl beolvasási hiba: ${error.message || error}`
-                      );
+                      setTanugyiValidationError(`Fájl beolvasási hiba: ${error.message || error}`);
                     }}
                     maxFileSize={5 * 1024 * 1024}
                     showPreview={true}
@@ -317,7 +292,6 @@ export default function DataImport() {
                     uploadMessage="Húzd ide a tanügyi Excel vagy CSV fájlt vagy kattints a tallózáshoz"
                     loadingMessage="Tanügyi fájl feldolgozása..."
                   />
-
                   {tanugyiData && !tanugyiValidationError && (
                     <Alert severity="success" sx={{ mt: 2 }}>
                       <AlertTitle>Sikeresen feldolgozva!</AlertTitle>
@@ -334,52 +308,33 @@ export default function DataImport() {
                 <Typography variant="h5" gutterBottom>
                   Alkalmazottak Munkaugyi Adatai
                 </Typography>
-
                 <Alert severity="info" sx={{ mb: 3 }}>
                   <AlertTitle>Fontos tudnivalók</AlertTitle>
-                  • Csak azok az alkalmazottak kerülnek feltöltésre, akiknek a
-                  munkakör oszlopában szerepel az "oktató" vagy "tanár" szó.
-                  <br />• A fájlnak tartalmaznia kell legalább egyet az alábbi
-                  oszlopok közül:
-                  <strong>
-                    {" "}
-                    Munkakör, Pedagógus fokozat, Foglalkoztatási jogviszony,
-                    Pedagógus oktatási azonosító
-                  </strong>
+                  • Csak azok az alkalmazottak kerülnek feltöltésre, akiknek a munkakör oszlopában szerepel az "oktató" vagy "tanár" szó.
+                  <br />• A fájlnak tartalmaznia kell legalább egyet az alábbi oszlopok közül:
+                  <strong> Munkakör, Pedagógus fokozat, Foglalkoztatási jogviszony, Pedagógus oktatási azonosító</strong>
                 </Alert>
-
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="body1" color="text.secondary">
-                    <strong>Legutóbb betöltött adatok:</strong>{" "}
-                    {alkalmazottDataFromAPI &&
-                    Array.isArray(alkalmazottDataFromAPI) &&
-                    alkalmazottDataFromAPI.length > 0
+                    <strong>Tárgyévi betöltött adatok:</strong>{" "}
+                    {alkalmazottDataFromAPI && Array.isArray(alkalmazottDataFromAPI) && alkalmazottDataFromAPI.length > 0
                       ? (() => {
-                          const maxItem = alkalmazottDataFromAPI.reduce(
-                            (max, item) =>
-                              new Date(item.createAt) > new Date(max.createAt)
-                                ? item
-                                : max
-                          );
-                          return formatDate(maxItem.createAt);
-                        })()
-                      : "Nincs adat"}
+                        const maxItem = alkalmazottDataFromAPI.reduce((max, item) =>
+                          new Date(item.createAt) > new Date(max.createAt) ? item : max
+                        );
+                        return formatDate(maxItem.createAt);
+                      })()
+                      : "Nincs adat erre a tanévre"}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
-                    <strong>Betöltött oktatók száma:</strong>{" "}
+                    <strong>Betöltött oktatók száma erre a tanévre:</strong>{" "}
                     <Chip
-                      label={
-                        alkalmazottDataFromAPI &&
-                        Array.isArray(alkalmazottDataFromAPI)
-                          ? alkalmazottDataFromAPI.length
-                          : 0
-                      }
+                      label={alkalmazottDataFromAPI && Array.isArray(alkalmazottDataFromAPI) ? alkalmazottDataFromAPI.length : 0}
                       color="secondary"
                       size="small"
                     />
                   </Typography>
                 </Box>
-
                 <Paper variant="outlined" sx={{ p: 3 }}>
                   {alkalmazottValidationError && (
                     <Alert severity="error" sx={{ mb: 3 }}>
@@ -387,45 +342,21 @@ export default function DataImport() {
                       {alkalmazottValidationError}
                     </Alert>
                   )}
-
                   <CustomSheetUploader
                     onFileUpload={async (data, file) => {
-                      console.log("Alkalmazott - Feltöltött fájl:", file.name);
-
-                      // Fejlécek kinyerése (első sor)
-                      const headers =
-                        data.length > 0 ? Object.keys(data[0]) : [];
-                      console.log("Alkalmazott - Fejlécek:", headers);
-
-                      // Fájl validáció
+                      const headers = data.length > 0 ? Object.keys(data[0]) : [];
                       const validation = validateAlkalmazottFile(headers);
-                      console.log(
-                        "Alkalmazott - Validáció eredménye:",
-                        validation
-                      );
-
                       if (!validation.isValid) {
                         setAlkalmazottValidationError(validation.error);
                         setAlkalmazottData(null);
                         return;
                       }
-
-                      // Ha sikerült a validáció, töröljük a hibát
                       setAlkalmazottValidationError(null);
-
-                      console.log("Alkalmazott - Adatok:", data);
-
-                      // Átalakítás a megfelelő formátumra
                       const mappedData = mapEmployeeData(data);
-
-                      console.log("Alkalmazott - Mapped Data:", mappedData);
                       setAlkalmazottData(mappedData);
                     }}
                     onError={(error) => {
-                      console.error("Alkalmazott uploader hiba:", error);
-                      setAlkalmazottValidationError(
-                        `Fájl beolvasási hiba: ${error.message || error}`
-                      );
+                      setAlkalmazottValidationError(`Fájl beolvasási hiba: ${error.message || error}`);
                     }}
                     maxFileSize={5 * 1024 * 1024}
                     showPreview={true}
@@ -433,13 +364,11 @@ export default function DataImport() {
                     uploadMessage="Húzd ide az alkalmazotti Excel vagy CSV fájlt vagy kattints a tallózáshoz"
                     loadingMessage="Alkalmazotti fájl feldolgozása..."
                   />
-
                   {alkalmazottData && !alkalmazottValidationError && (
                     <Box sx={{ mt: 2 }}>
                       <Alert severity="success">
                         <AlertTitle>Sikeresen feldolgozva!</AlertTitle>
-                        {alkalmazottData.length} alkalmazotti adat lett
-                        feldolgozva.
+                        {alkalmazottData.length} alkalmazotti adat lett feldolgozva.
                       </Alert>
                       {alkalmazottData.filter((item) => {
                         const munkakor = item.Munkakor || item.munkakor || "";
@@ -448,28 +377,167 @@ export default function DataImport() {
                           munkakor.toLowerCase().includes("tanár")
                         );
                       }).length !== alkalmazottData.length && (
-                        <Alert severity="warning" sx={{ mt: 1 }}>
-                          <AlertTitle>Szűrés alkalmazva</AlertTitle>
-                          Csak{" "}
-                          {
-                            alkalmazottData.filter((item) => {
-                              const munkakor =
-                                item.Munkakor || item.munkakor || "";
-                              return (
-                                munkakor.toLowerCase().includes("oktató") ||
-                                munkakor.toLowerCase().includes("tanár")
-                              );
-                            }).length
-                          }{" "}
-                          oktató/tanár kerül feltöltésre a{" "}
-                          {alkalmazottData.length} alkalmazottból.
-                        </Alert>
-                      )}
+                          <Alert severity="warning" sx={{ mt: 1 }}>
+                            <AlertTitle>Szűrés alkalmazva</AlertTitle>
+                            Csak {
+                              alkalmazottData.filter((item) => {
+                                const munkakor = item.Munkakor || item.munkakor || "";
+                                return (
+                                  munkakor.toLowerCase().includes("oktató") ||
+                                  munkakor.toLowerCase().includes("tanár")
+                                );
+                              }).length
+                            } oktató/tanár kerül feltöltésre a {alkalmazottData.length} alkalmazottból.
+                          </Alert>
+                        )}
                     </Box>
                   )}
                 </Paper>
               </Box>
             )}
+
+            {/* Tanuló Adatszolgáltatás Tab */}
+            {tabValue === 2 && (
+              <Box sx={{ p: 4 }}>
+                <Typography variant="h5" gutterBottom>
+                  Tanuló Adatszolgáltatás Feltöltése
+                </Typography>
+                <Alert severity="info" sx={{ mb: 3 }}>
+                  <AlertTitle>Követelmények</AlertTitle>
+                  A fájlnak tartalmaznia kell a tanuló adatszolgáltatáshoz szükséges oszlopokat, pl.:
+                  <strong> Tanuló (Oktatási azonosító), Intézmény OM azonosító</strong>
+                </Alert>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="body1" color="text.secondary">
+                    <strong>Tárgyévi betöltött adatok:</strong>{" "}
+                    {tanuloAdatszolgaltatasDataFromAPI && Array.isArray(tanuloAdatszolgaltatasDataFromAPI) && tanuloAdatszolgaltatasDataFromAPI.length > 0
+                      ? (() => {
+                        const maxItem = tanuloAdatszolgaltatasDataFromAPI.reduce((max, item) =>
+                          new Date(item.createAt) > new Date(max.createAt) ? item : max
+                        );
+                        return formatDate(maxItem.createAt);
+                      })()
+                      : "Nincs adat erre a tanévre"}
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary">
+                    <strong>Betöltött adatok száma erre a tanévre:</strong>{" "}
+                    <Chip
+                      label={tanuloAdatszolgaltatasDataFromAPI && Array.isArray(tanuloAdatszolgaltatasDataFromAPI) ? tanuloAdatszolgaltatasDataFromAPI.length : 0}
+                      color="success"
+                      size="small"
+                    />
+                  </Typography>
+                </Box>
+                <Paper variant="outlined" sx={{ p: 3 }}>
+                  {tanuloAdatszolgaltatasValidationError && (
+                    <Alert severity="error" sx={{ mb: 3 }}>
+                      <AlertTitle>Hibás fájltípus!</AlertTitle>
+                      {tanuloAdatszolgaltatasValidationError}
+                    </Alert>
+                  )}
+                  <CustomSheetUploader
+                    onFileUpload={async (data, file) => {
+                      const headers = data.length > 0 ? Object.keys(data[0]) : [];
+                      const validation = validateTanuloAdatszolgaltatasFile(headers);
+                      if (!validation.isValid) {
+                        setTanuloAdatszolgaltatasValidationError(validation.error);
+                        setTanuloAdatszolgaltatasData(null);
+                        return;
+                      }
+                      setTanuloAdatszolgaltatasValidationError(null);
+                      const mappedData = mapTanuloAdatszolgaltatasData(data);
+                      setTanuloAdatszolgaltatasData(mappedData);
+                    }}
+                    onError={(error) => {
+                      setTanuloAdatszolgaltatasValidationError(`Fájl beolvasási hiba: ${error.message || error}`);
+                    }}
+                    maxFileSize={5 * 1024 * 1024}
+                    showPreview={true}
+                    maxPreviewRows={10}
+                    uploadMessage="Húzd ide a tanuló adatszolgáltatás Excel vagy CSV fájlt vagy kattints a tallózáshoz"
+                    loadingMessage="Fájl feldolgozása..."
+                  />
+                  {tanuloAdatszolgaltatasData && !tanuloAdatszolgaltatasValidationError && (
+                    <Alert severity="success" sx={{ mt: 2 }}>
+                      <AlertTitle>Sikeresen feldolgozva!</AlertTitle>
+                      {tanuloAdatszolgaltatasData.length} adat sor lett feldolgozva.
+                    </Alert>
+                  )}
+                </Paper>
+              </Box>
+            )}
+
+            {/* Oktató Adatszolgáltatás Tab */}
+            {tabValue === 3 && (
+              <Box sx={{ p: 4 }}>
+                <Typography variant="h5" gutterBottom>
+                  Oktató Adatszolgáltatás Feltöltése
+                </Typography>
+                <Alert severity="info" sx={{ mb: 3 }}>
+                  <AlertTitle>Követelmények</AlertTitle>
+                  A fájlnak tartalmaznia kell az oktató adatszolgáltatáshoz szükséges oszlopokat, pl.:
+                  <strong> Oktató (Oktatási azonosító), Intézmény OM azonosító, Oktató oktatott tárgykategória</strong>
+                </Alert>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="body1" color="text.secondary">
+                    <strong>Tárgyévi betöltött adatok:</strong>{" "}
+                    {oktatoAdatszolgaltatasDataFromAPI && Array.isArray(oktatoAdatszolgaltatasDataFromAPI) && oktatoAdatszolgaltatasDataFromAPI.length > 0
+                      ? (() => {
+                        const maxItem = oktatoAdatszolgaltatasDataFromAPI.reduce((max, item) =>
+                          new Date(item.createAt) > new Date(max.createAt) ? item : max
+                        );
+                        return formatDate(maxItem.createAt);
+                      })()
+                      : "Nincs adat erre a tanévre"}
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary">
+                    <strong>Betöltött adatok száma erre a tanévre:</strong>{" "}
+                    <Chip
+                      label={oktatoAdatszolgaltatasDataFromAPI && Array.isArray(oktatoAdatszolgaltatasDataFromAPI) ? oktatoAdatszolgaltatasDataFromAPI.length : 0}
+                      color="secondary"
+                      size="small"
+                    />
+                  </Typography>
+                </Box>
+                <Paper variant="outlined" sx={{ p: 3 }}>
+                  {oktatoAdatszolgaltatasValidationError && (
+                    <Alert severity="error" sx={{ mb: 3 }}>
+                      <AlertTitle>Hibás fájltípus!</AlertTitle>
+                      {oktatoAdatszolgaltatasValidationError}
+                    </Alert>
+                  )}
+                  <CustomSheetUploader
+                    onFileUpload={async (data, file) => {
+                      const headers = data.length > 0 ? Object.keys(data[0]) : [];
+                      const validation = validateOktatoAdatszolgaltatasFile(headers);
+                      if (!validation.isValid) {
+                        setOktatoAdatszolgaltatasValidationError(validation.error);
+                        setOktatoAdatszolgaltatasData(null);
+                        return;
+                      }
+                      setOktatoAdatszolgaltatasValidationError(null);
+                      const mappedData = mapOktatoAdatszolgaltatasData(data);
+                      setOktatoAdatszolgaltatasData(mappedData);
+                    }}
+                    onError={(error) => {
+                      setOktatoAdatszolgaltatasValidationError(`Fájl beolvasási hiba: ${error.message || error}`);
+                    }}
+                    maxFileSize={5 * 1024 * 1024}
+                    showPreview={true}
+                    maxPreviewRows={10}
+                    uploadMessage="Húzd ide az oktató adatszolgáltatás Excel vagy CSV fájlt vagy kattints a tallózáshoz"
+                    loadingMessage="Fájl feldolgozása..."
+                  />
+                  {oktatoAdatszolgaltatasData && !oktatoAdatszolgaltatasValidationError && (
+                    <Alert severity="success" sx={{ mt: 2 }}>
+                      <AlertTitle>Sikeresen feldolgozva!</AlertTitle>
+                      {oktatoAdatszolgaltatasData.length} adat sor lett feldolgozva.
+                    </Alert>
+                  )}
+                </Paper>
+              </Box>
+            )}
+
           </Paper>
         </>
       )}

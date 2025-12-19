@@ -34,6 +34,8 @@ export const indicatorApi = createApi({
     "OktatokEgyebTev",
     "Szakirany",
     "Szakma",
+    "TanuloAdatszolgaltatas",
+    "OktatoAdatszolgaltatas",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -292,6 +294,69 @@ export const indicatorApi = createApi({
       invalidatesTags: (result, error, params) => [
         { type: "Kompetencia", id: params.alapadatok_id },
       ],
+    }),
+    updateKompetencia: build.mutation({
+      query: (params) => ({
+        url: `kompetencia`,
+        method: "PUT",
+        body: {
+          alapadatok_id: params.alapadatok_id,
+          tanev_kezdete: params.tanev_kezdete,
+          mat_orsz_p: params.mat_orsz_p,
+          szoveg_orsz_p: params.szoveg_orsz_p,
+          mat_int_p: params.mat_int_p,
+          szoveg_int_p: params.szoveg_int_p,
+          kepzes_forma: params.kepzes_forma,
+          id: params.id,
+        },
+      }),
+      invalidatesTags: (result, error, params) => [
+        { type: "Kompetencia", id: params.alapadatok_id },
+      ],
+    }),
+    getTanuloAdatszolgaltatas: build.query({
+      query: (params) =>
+        `tanulo_adatszolgaltatas/${params.alapadatok_id}/${params.tanev_kezdete}`,
+      providesTags: (result, error, params) => [
+        {
+          type: "TanuloAdatszolgaltatas",
+          id: `${params.alapadatok_id}_${params.tanev_kezdete}`,
+        },
+      ],
+    }),
+    addTanuloAdatszolgaltatas: build.mutation({
+      query: (params) => ({
+        url: "tanulo_adatszolgaltatas/",
+        method: "POST",
+        body: {
+          alapadatok_id: params.alapadatok_id,
+          tanev_kezdete: params.tanev_kezdete,
+          tanulo_adatszolgaltatas: params.tanulo_adatszolgaltatas,
+        },
+      }),
+      invalidatesTags: ["TanuloAdatszolgaltatas"],
+    }),
+    getOktatoAdatszolgaltatas: build.query({
+      query: (params) =>
+        `oktato_adatszolgaltatas/${params.alapadatok_id}/${params.tanev_kezdete}`,
+      providesTags: (result, error, params) => [
+        {
+          type: "OktatoAdatszolgaltatas",
+          id: `${params.alapadatok_id}_${params.tanev_kezdete}`,
+        },
+      ],
+    }),
+    addOktatoAdatszolgaltatas: build.mutation({
+      query: (params) => ({
+        url: "oktato_adatszolgaltatas/",
+        method: "POST",
+        body: {
+          alapadatok_id: params.alapadatok_id,
+          tanev_kezdete: params.tanev_kezdete,
+          oktato_adatszolgaltatas: params.oktato_adatszolgaltatas,
+        },
+      }),
+      invalidatesTags: ["OktatoAdatszolgaltatas"],
     }),
     // Table management endpoints
     getTableList: build.query({
@@ -985,6 +1050,7 @@ export const {
   useDeleteAlapadatokMutation,
   useGetKompetenciaQuery,
   useAddKompetenciaMutation,
+  useUpdateKompetenciaMutation,
   useGetTanuloLetszamQuery,
   useAddTanuloLetszamMutation,
   useUpdateTanuloLetszamMutation,
@@ -1004,6 +1070,10 @@ export const {
   useUpdateTableMutation,
   useLockTableMutation,
   useUnlockTableMutation,
+  useAddTanuloAdatszolgaltatasMutation,
+  useGetTanuloAdatszolgaltatasQuery,
+  useAddOktatoAdatszolgaltatasMutation,
+  useGetOktatoAdatszolgaltatasQuery,
   // Educational Indicators hooks
   useGetElhelyezkedesByYearQuery,
   useGetElhelyezkedesBySchoolAndYearQuery,

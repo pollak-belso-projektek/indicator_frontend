@@ -186,24 +186,117 @@ export function validateAlkalmazottFile(headers) {
 /**
  * Általános fájl validáció
  */
+// ... existing exports ...
+
+/**
+ * Tanuló adatszolgáltatás jellemző oszlopai
+ */
+const TANULO_ADATSZOLGALTATAS_REQUIRED_COLUMNS = [
+  "tanulo (oktatasi azonosito)",
+  "tanuló (oktatási azonosító)",
+  "intezmeny om azonosito",
+  "intézmény om azonosító",
+  "feladatellatasi hely azonosito/mukodesi hely hosszu azonosito",
+  "feladatellátási hely azonosító/működési hely hosszú azonosító",
+  "programkovetelmenyes szakmai kepzes",
+  "programkövetelményes szakmai képzés",
+];
+
+/**
+ * Oktató adatszolgáltatás jellemző oszlopai
+ */
+const OKTATO_ADATSZOLGALTATAS_REQUIRED_COLUMNS = [
+  "oktato (oktatasi azonosito)",
+  "oktató (oktatási azonosító)",
+  "oktato oktatott targykategoria - 3 szerint",
+  "oktató oktatott tárgykategória - 3 szerint",
+  "oktato tantervi jellemzo szerint",
+  "oktató tantervi jellemző szerint",
+];
+
+export function validateTanuloAdatszolgaltatasFile(headers) {
+  if (!headers || !Array.isArray(headers)) {
+    return {
+      isValid: false,
+      error: "Nem sikerült beolvasni a fájl fejléceit",
+    };
+  }
+
+  const matches = countMatchingColumns(
+    headers,
+    TANULO_ADATSZOLGALTATAS_REQUIRED_COLUMNS
+  );
+
+  if (matches < 1) {
+    return {
+      isValid: false,
+      error:
+        "A fájl nem tartalmazza a szükséges tanuló adatszolgáltatás oszlopait. Keresett oszlopok pl.: Tanuló (Oktatási azonosító), Intézmény OM azonosító...",
+      fileType: "unknown",
+      details: `Nem található elegendő oszlop a fájlban`,
+    };
+  }
+
+  return {
+    isValid: true,
+    fileType: "tanulo_adatszolgaltatas",
+    matchedColumns: matches,
+  };
+}
+
+export function validateOktatoAdatszolgaltatasFile(headers) {
+  if (!headers || !Array.isArray(headers)) {
+    return {
+      isValid: false,
+      error: "Nem sikerült beolvasni a fájl fejléceit",
+    };
+  }
+
+  const matches = countMatchingColumns(
+    headers,
+    OKTATO_ADATSZOLGALTATAS_REQUIRED_COLUMNS
+  );
+
+  // Allow if at least 1 match, similar to others, or maybe stricter if needed.
+  if (matches < 1) {
+    return {
+      isValid: false,
+      error:
+        "A fájl nem tartalmazza a szükséges oktató adatszolgáltatás oszlopait. Keresett oszlopok pl.: Oktató (Oktatási azonosító), Oktató oktatott tárgykategória...",
+      fileType: "unknown",
+      details: `Nem található elegendő oszlop a fájlban`,
+    };
+  }
+
+  return {
+    isValid: true,
+    fileType: "oktato_adatszolgaltatas",
+    matchedColumns: matches,
+  };
+}
+
 export function validateFileHeaders(headers, expectedType = "auto") {
   if (expectedType === "tanugyi") {
     return validateTanugyiFile(headers);
   } else if (expectedType === "alkalmazott") {
     return validateAlkalmazottFile(headers);
+  } else if (expectedType === "tanulo_adatszolgaltatas") {
+    return validateTanuloAdatszolgaltatasFile(headers);
+  } else if (expectedType === "oktato_adatszolgaltatas") {
+    return validateOktatoAdatszolgaltatasFile(headers);
   }
 
   // Auto-detect
-  const tanugyiMatches = countMatchingColumns(
-    headers,
-    TANUGYI_REQUIRED_COLUMNS
-  );
-  const alkalmazottMatches = countMatchingColumns(
-    headers,
-    ALKALMAZOTT_REQUIRED_COLUMNS
-  );
+  const tanugyiMatches = countMatchingColumns(headers, TANUGYI_REQUIRED_COLUMNS);
+  const alkalmazottMatches = countMatchingColumns(headers, ALKALMAZOTT_REQUIRED_COLUMNS);
+  const tanuloAdatszolgaltatasMatches = countMatchingColumns(headers, TANULO_ADATSZOLGALTATAS_REQUIRED_COLUMNS);
+  const oktatoAdatszolgaltatasMatches = countMatchingColumns(headers, OKTATO_ADATSZOLGALTATAS_REQUIRED_COLUMNS);
 
-  if (tanugyiMatches >= alkalmazottMatches) {
+  if (tanuloAdatszolgaltatasMatches >= 2 && tanuloAdatszolgaltatasMatches > tanugyiMatches) {
+    return validateTanuloAdatszolgaltatasFile(headers);
+  } else if (oktatoAdatszolgaltatasMatches >= 1 && oktatoAdatszolgaltatasMatches > tanugyiMatches) {
+    return validateOktatoAdatszolgaltatasFile(headers);
+  } else if (tanugyiMatches >= alkalmazottMatches) {
     return validateTanugyiFile(headers);
   } else {
     return validateAlkalmazottFile(headers);

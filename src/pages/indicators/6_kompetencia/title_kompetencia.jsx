@@ -5,7 +5,7 @@ const TitleKompetencia = () => {
   return (
     <IndicatorTitle
       icon={AssessmentIcon}
-      title="6. Kompetencia"
+      title="6. Országos kompetenciamérés eredményei"
       description="A kompetenciamérési eredmények szövegértés és matematika területén"
     />
   );

@@ -1,5 +1,10 @@
+import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import {
   Box,
+  Card,
+  CardContent,
+  Typography,
   Table,
   TableBody,
   TableCell,
@@ -7,465 +12,454 @@ import {
   TableHead,
   TableRow,
   Paper,
+  TextField,
   Button,
-  CircularProgress,
+  Stack,
   Alert,
+  CircularProgress,
+  Chip,
 } from "@mui/material";
-import { Save as SaveIcon } from "@mui/icons-material";
-
-import React, { useState, useEffect } from "react";
-import {
-  useAddKompetenciaMutation,
-  useGetKompetenciaQuery,
-} from "../../../store/api/apiSlice";
+import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoKompetencia from "./info_kompetencia";
 import TitleKompetencia from "./title_kompetencia";
+import {
+  useGetKompetenciaQuery,
+  useAddKompetenciaMutation,
+  useUpdateKompetenciaMutation,
+} from "../../../store/api/apiSlice";
+import { selectSelectedSchool } from "../../../store/slices/authSlice";
+import { generateSchoolYears } from "../../../utils/schoolYears";
 
-// Create a separate component for editable cells
-function EditableCell({ value, onValueChange }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [cellValue, setCellValue] = useState(value);
+export default function Kompetencia() {
+  const selectedSchool = useSelector(selectSelectedSchool);
+  const years = generateSchoolYears().map(y => parseInt(y.split('/')[0]));
 
+  // Queries
+  const {
+    data: apiData,
+    isLoading,
+    error,
+  } = useGetKompetenciaQuery(
+    { id: selectedSchool?.id },
+    { skip: !selectedSchool?.id }
+  );
+
+  const [addKompetencia, { isLoading: isAdding }] = useAddKompetenciaMutation();
+  const [updateKompetencia, { isLoading: isUpdating }] = useUpdateKompetenciaMutation();
+  const isSaving = isAdding || isUpdating;
+
+  // Local state for the grid
+  // Structure: { [year]: { technikum: { id: null, ... }, szakkepzo: { id: null, ... } } }
+  const [tableData, setTableData] = useState({});
+  const [isModified, setIsModified] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Initialize data
   useEffect(() => {
-    setCellValue(value);
-  }, [value]);
+    if (apiData && Array.isArray(apiData)) {
+      const initialData = {};
 
-  const handleBlur = () => {
-    setIsEditing(false);
-    if (onValueChange) {
-      onValueChange(cellValue);
+      // Pre-fill structure to ensure all cells exist
+      years.forEach(year => {
+        initialData[year] = {
+          technikum: { id: null, mat_orsz: "", mat_int: "", szoveg_orsz: "", szoveg_int: "" },
+          szakkepzo: { id: null, mat_orsz: "", mat_int: "", szoveg_orsz: "", szoveg_int: "" }
+        };
+      });
+
+      // Fill with API data
+      apiData.forEach(item => {
+        // Parse year from date string (e.g. "2024-09-01" -> 2024)
+        let year = item.tanev_kezdete;
+        if (typeof year === 'string') {
+          year = parseInt(year.split('-')[0]);
+        }
+
+        // Map backend form values to local state keys
+        let form = item.kepzes_forma; // "Technikum" or "Szakképző"
+        if (form === "Technikum") form = "technikum";
+        else if (form === "Szakképző" || form === "Szakkepzo") form = "szakkepzo";
+
+        if (initialData[year] && initialData[year][form]) {
+          initialData[year][form] = {
+            id: item.id, // Store ID for updates
+            mat_orsz: item.mat_orsz_p ?? "",
+            mat_int: item.mat_int_p ?? "",
+            szoveg_orsz: item.szoveg_orsz_p ?? "",
+            szoveg_int: item.szoveg_int_p ?? "",
+          };
+        }
+      });
+      setTableData(initialData);
+    } else if (!isLoading) {
+      // Initialize empty if no data yet
+      const emptyData = {};
+      years.forEach(year => {
+        emptyData[year] = {
+          technikum: { id: null, mat_orsz: "", mat_int: "", szoveg_orsz: "", szoveg_int: "" },
+          szakkepzo: { id: null, mat_orsz: "", mat_int: "", szoveg_orsz: "", szoveg_int: "" }
+        };
+      });
+      setTableData(emptyData);
+    }
+    // Reset modified state on load
+    setIsModified(false);
+  }, [apiData, isLoading]);
+
+  const handleDataChange = (year, form, field, value) => {
+    // Prevent negative numbers
+    if (value < 0) return;
+
+    setTableData(prev => ({
+      ...prev,
+      [year]: {
+        ...prev[year],
+        [form]: {
+          ...prev[year][form],
+          [field]: value
+        }
+      }
+    }));
+    setIsModified(true);
+    setSaveSuccess(false);
+  };
+
+  const handleSave = async () => {
+    if (!selectedSchool?.id) return;
+
+    const promises = [];
+
+    // Iterate over years and forms
+    Object.keys(tableData).forEach(year => {
+      ["technikum", "szakkepzo"].forEach(form => {
+        const record = tableData[year][form];
+
+        const payload = {
+          alapadatok_id: selectedSchool.id,
+          tanev_kezdete: parseInt(year),
+          kepzes_forma: form === "technikum" ? "Technikum" : "Szakképző",
+          mat_orsz_p: record.mat_orsz === "" ? 0 : parseFloat(record.mat_orsz),
+          mat_int_p: record.mat_int === "" ? 0 : parseFloat(record.mat_int),
+          szoveg_orsz_p: record.szoveg_orsz === "" ? 0 : parseFloat(record.szoveg_orsz),
+          szoveg_int_p: record.szoveg_int === "" ? 0 : parseFloat(record.szoveg_int),
+          id: record.id,
+        };
+
+        if (record.id) {
+          // Update existing record
+          console.log("Updating payload:", payload);
+          promises.push(updateKompetencia({ ...payload }).unwrap());
+        } else {
+          // Create new record only if it has meaningful data (optional check, but good practice)
+          // Check if any field has data
+          const hasData = record.mat_orsz !== "" || record.mat_int !== "" || record.szoveg_orsz !== "" || record.szoveg_int !== "";
+          if (hasData) {
+            console.log("Saving new payload:", payload);
+            promises.push(addKompetencia(payload).unwrap());
+          }
+        }
+      });
+    });
+
+    try {
+      await Promise.all(promises);
+      setSaveSuccess(true);
+      setIsModified(false);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      console.error("Failed to save data:", err);
+      // Optional: show error message
     }
   };
 
-  if (isEditing) {
+  const handleReset = () => {
+    if (apiData && Array.isArray(apiData)) {
+      const initialData = {};
+      years.forEach(year => {
+        initialData[year] = {
+          technikum: { id: null, mat_orsz: "", mat_int: "", szoveg_orsz: "", szoveg_int: "" },
+          szakkepzo: { id: null, mat_orsz: "", mat_int: "", szoveg_orsz: "", szoveg_int: "" }
+        };
+      });
+      apiData.forEach(item => {
+        // Parse year from date string (e.g. "2024-09-01" -> 2024)
+        let year = item.tanev_kezdete;
+        if (typeof year === 'string') {
+          year = parseInt(year.split('-')[0]);
+        }
+
+        // Map backend form values to local state keys
+        let form = item.kepzes_forma; // "Technikum" or "Szakképző"
+        if (form === "Technikum") form = "technikum";
+        else if (form === "Szakképző" || form === "Szakkepzo") form = "szakkepzo";
+
+        if (initialData[year] && initialData[year][form]) {
+          initialData[year][form] = {
+            id: item.id,
+            mat_orsz: item.mat_orsz_p ?? "",
+            mat_int: item.mat_int_p ?? "",
+            szoveg_orsz: item.szoveg_orsz_p ?? "",
+            szoveg_int: item.szoveg_int_p ?? "",
+          };
+        }
+      });
+      setTableData(initialData);
+      setIsModified(false);
+    }
+  };
+
+  if (isLoading) {
     return (
-      <input
-        className="input"
-        autoFocus
-        type="text"
-        value={cellValue}
-        onChange={(e) => setCellValue(e.target.value)}
-        onBlur={handleBlur}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            handleBlur();
-          }
-        }}
-      />
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageWrapper titleContent={<TitleKompetencia />} infoContent={<InfoKompetencia />}>
+        <Alert severity="error">Hiba történt az adatok betöltésekor: {JSON.stringify(error)}</Alert>
+      </PageWrapper>
     );
   }
 
   return (
-    <p onClick={() => setIsEditing(true)} style={{ cursor: "pointer" }}>
-      {cellValue}
-    </p>
-  );
-}
-
-export default function Kompetencia() {
-  const {
-    data: kompetenciaData,
-    error: kompetenciaError,
-    isLoading: kompetenciaLoading,
-  } = useGetKompetenciaQuery({
-    id: "2e31291b-7c2d-4bd8-bdca-de8580136874",
-  });
-  const [addKompetencia] = useAddKompetenciaMutation();
-
-  console.log("kompetenciaData", kompetenciaData);
-
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = date.getMonth();
-
-  const currentYear = month >= 9 ? year : year - 1;
-
-  const years = [
-    currentYear - 3,
-    currentYear - 2,
-    currentYear - 1,
-    currentYear,
-  ];
-
-  const [data, setData] = useState({});
-
-  useEffect(() => {
-    const initialData = {};
-    years.forEach((year) => {
-      initialData[year] = {
-        matematika: {
-          technikum: { orszagos: 0, intezmenyi: 0 },
-          szakkepzo: { orszagos: 0, intezmenyi: 0 },
-        },
-        szovegertes: {
-          technikum: { orszagos: 0, intezmenyi: 0 },
-          szakkepzo: { orszagos: 0, intezmenyi: 0 },
-        },
-      };
-    });
-
-    // If kompetenciaData exists, populate the initial data
-    if (kompetenciaData && Array.isArray(kompetenciaData)) {
-      kompetenciaData.forEach((item) => {
-        const year = item.tanev_kezdete;
-        const kepzesForma = item.kepzes_forma; // 'technikum' or 'szakkepzo'
-
-        if (initialData[year]) {
-          initialData[year].matematika[kepzesForma] = {
-            orszagos: item.mat_orsz_p || 0,
-            intezmenyi: item.mat_int_p || 0,
-          };
-          initialData[year].szovegertes[kepzesForma] = {
-            orszagos: item.szoveg_orsz_p || 0,
-            intezmenyi: item.szoveg_int_p || 0,
-          };
-        }
-      });
-    }
-
-    setData(initialData);
-  }, [kompetenciaData]);
-
-  const updateValue = (year, subject, type, field, newValue) => {
-    setData((prevData) => ({
-      ...prevData,
-      [year]: {
-        ...prevData[year],
-        [subject]: {
-          ...prevData[year][subject],
-          [type]: {
-            ...prevData[year][subject][type],
-            [field]: newValue,
-          },
-        },
-      },
-    }));
-  };
-
-  const handleSave = () => {
-    /**
-     * obj to send
-     * alapadatok_id: params.alapadatok_id,
-          tanev_kezdete: params.tanev_kezdete,
-          mat_orsz_p: params.mat_orsz_p,
-          szoveg_orsz_p: params.szoveg_orsz_p,
-          mat_int_p: params.mat_int_p,
-          szoveg_int_p: params.szoveg_int_p,
-          kepzes_forma: params.kepzes_forma,
-     */
-    const kompetenciaToSend = [];
-    Object.keys(data).forEach((year) => {
-      const yearData = data[year];
-      kompetenciaToSend.push(
-        {
-          alapadatok_id: "2e31291b-7c2d-4bd8-bdca-de8580136874", // This should be dynamic if needed
-          tanev_kezdete: year,
-          mat_orsz_p: String(yearData.matematika.technikum.orszagos),
-          szoveg_orsz_p: String(yearData.szovegertes.technikum.orszagos),
-          mat_int_p: String(yearData.matematika.technikum.intezmenyi),
-          szoveg_int_p: String(yearData.szovegertes.technikum.intezmenyi),
-          kepzes_forma: "technikum",
-        },
-        {
-          alapadatok_id: "2e31291b-7c2d-4bd8-bdca-de8580136874",
-          tanev_kezdete: year,
-          mat_orsz_p: String(yearData.matematika.szakkepzo.orszagos),
-          szoveg_orsz_p: String(yearData.szovegertes.szakkepzo.orszagos),
-          mat_int_p: String(yearData.matematika.szakkepzo.intezmenyi),
-          szoveg_int_p: String(yearData.szovegertes.szakkepzo.intezmenyi),
-          kepzes_forma: "szakkepzo",
-        }
-      );
-    });
-
-    kompetenciaToSend.forEach((item) => {
-      addKompetencia(item)
-        .unwrap()
-        .then((response) => {
-          console.log("Data saved successfully:", response);
-        })
-        .catch((error) => {
-          console.error("Error saving data:", error);
-        });
-    });
-  };
-
-  return kompetenciaLoading ? (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "400px",
-      }}
-    >
-      <CircularProgress size={40} />
-    </Box>
-  ) : kompetenciaError ? (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "400px",
-      }}
-    >
-      <Alert severity="error">Hiba történt az adatok betöltésekor!</Alert>
-    </Box>
-  ) : (
     <PageWrapper
       titleContent={<TitleKompetencia />}
       infoContent={<InfoKompetencia />}
     >
-      <Box sx={{ p: 3 }}>
+      <Box>
         <LockStatusIndicator tableName="kompetencia" />
 
-        <LockedTableWrapper tableName="kompetencia">
-          <Button
-            variant="contained"
-            startIcon={<SaveIcon />}
-            onClick={handleSave}
-            sx={{ mb: 3 }}
-          >
-            Mentés
-          </Button>
-        </LockedTableWrapper>
+        <Card>
+          <CardContent>
+            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+              <LockedTableWrapper tableName="kompetencia">
+                <Button
+                  variant="contained"
+                  startIcon={<SaveIcon />}
+                  onClick={handleSave}
+                  disabled={!isModified || isSaving}
+                >
+                  {isSaving ? "Mentés..." : "Mentés"}
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<RefreshIcon />}
+                  onClick={handleReset}
+                  disabled={!isModified || isSaving}
+                >
+                  Visszaállítás
+                </Button>
+              </LockedTableWrapper>
+            </Stack>
 
-        <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
-          <Table size="small">
-            <TableHead>
-              <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                <TableCell
-                  rowSpan={2}
-                  sx={{ fontWeight: "bold", verticalAlign: "middle" }}
-                >
-                  Mérési Terület
-                </TableCell>
-                <TableCell
-                  rowSpan={2}
-                  sx={{ fontWeight: "bold", verticalAlign: "middle" }}
-                >
-                  Képzési Forma
-                </TableCell>
-                {years.map((e) => {
-                  return (
+            {saveSuccess && (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                Sikeres mentés!
+              </Alert>
+            )}
+
+            <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                     <TableCell
-                      key={e}
-                      colSpan={2}
-                      align="center"
-                      sx={{ fontWeight: "bold" }}
+                      rowSpan={2}
+                      sx={{ fontWeight: "bold", verticalAlign: "middle", textAlign: "center" }}
                     >
-                      {e}/{e + 1}
+                      Mérési terület
                     </TableCell>
-                  );
-                })}
-              </TableRow>
-              <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                {years.map((e) => {
-                  return (
-                    <React.Fragment key={e}>
-                      <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                        Országos
+                    <TableCell
+                      rowSpan={2}
+                      sx={{ fontWeight: "bold", verticalAlign: "middle", textAlign: "center" }}
+                    >
+                      Képzési forma
+                    </TableCell>
+                    {years.map((year) => (
+                      <TableCell
+                        key={year}
+                        colSpan={2}
+                        align="center"
+                        sx={{ fontWeight: "bold", minWidth: 160 }}
+                      >
+                        {year}
                       </TableCell>
-                      <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                        Intézményi
-                      </TableCell>
-                    </React.Fragment>
-                  );
-                })}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              <TableRow>
-                <TableCell>Matematika</TableCell>
-                <TableCell rowSpan={2} sx={{ verticalAlign: "middle" }}>
-                  Technikum
-                </TableCell>
-                {years.map((e) => {
-                  return (
-                    <React.Fragment key={e}>
-                      <TableCell align="center">
-                        {data[e] ? (
-                          <EditableCell
-                            value={data[e].matematika.technikum.orszagos}
-                            onValueChange={(newValue) =>
-                              updateValue(
-                                e,
-                                "matematika",
-                                "technikum",
-                                "orszagos",
-                                newValue
-                              )
-                            }
+                    ))}
+                  </TableRow>
+                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                    {years.map((year) => (
+                      <React.Fragment key={year}>
+                        <TableCell
+                          align="center"
+                          sx={{ fontWeight: "bold", minWidth: 80, borderLeft: "1px solid #e0e0e0" }}
+                        >
+                          országos
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ fontWeight: "bold", minWidth: 80, color: "red" }}
+                        >
+                          intézményi
+                        </TableCell>
+                      </React.Fragment>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {/* Technikum Rows */}
+                  <TableRow sx={{ "&:hover": { backgroundColor: "#f5f5f5" } }}>
+                    <TableCell sx={{ fontWeight: "medium" }}>matematika</TableCell>
+                    <TableCell rowSpan={2} sx={{ verticalAlign: "middle", fontWeight: "bold", backgroundColor: "#fff2cc" }}>
+                      Technikum
+                    </TableCell>
+                    {years.map(year => (
+                      <React.Fragment key={`tech-mat-${year}`}>
+                        <TableCell align="center" sx={{ borderLeft: "1px solid #e0e0e0" }}>
+                          <TextField
+                            type="number"
+                            size="small"
+                            variant="outlined"
+                            value={tableData[year]?.technikum.mat_orsz ?? ""}
+                            onChange={(e) => handleDataChange(year, "technikum", "mat_orsz", e.target.value)}
+                            sx={{ width: "100px" }}
+                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
                           />
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                      <TableCell align="center">
-                        {data[e] ? (
-                          <EditableCell
-                            value={data[e].matematika.technikum.intezmenyi}
-                            onValueChange={(newValue) =>
-                              updateValue(
-                                e,
-                                "matematika",
-                                "technikum",
-                                "intezmenyi",
-                                newValue
-                              )
-                            }
+                        </TableCell>
+                        <TableCell align="center">
+                          <TextField
+                            type="number"
+                            size="small"
+                            variant="outlined"
+                            value={tableData[year]?.technikum.mat_int ?? ""}
+                            onChange={(e) => handleDataChange(year, "technikum", "mat_int", e.target.value)}
+                            sx={{ width: "100px", "& .MuiInputBase-input": { color: "red" } }}
+                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
                           />
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                    </React.Fragment>
-                  );
-                })}
-              </TableRow>
-              <TableRow>
-                <TableCell>Szövegértés</TableCell>
-                {years.map((e) => {
-                  return (
-                    <React.Fragment key={e}>
-                      <TableCell align="center">
-                        {data[e] ? (
-                          <EditableCell
-                            value={data[e].szovegertes.technikum.orszagos}
-                            onValueChange={(newValue) =>
-                              updateValue(
-                                e,
-                                "szovegertes",
-                                "technikum",
-                                "orszagos",
-                                newValue
-                              )
-                            }
+                        </TableCell>
+                      </React.Fragment>
+                    ))}
+                  </TableRow>
+                  <TableRow sx={{ "&:hover": { backgroundColor: "#f5f5f5" } }}>
+                    <TableCell sx={{ fontWeight: "medium" }}>szövegértés</TableCell>
+                    {/* Technikum rowSpan handled above */}
+                    {years.map(year => (
+                      <React.Fragment key={`tech-szov-${year}`}>
+                        <TableCell align="center" sx={{ borderLeft: "1px solid #e0e0e0" }}>
+                          <TextField
+                            type="number"
+                            size="small"
+                            variant="outlined"
+                            value={tableData[year]?.technikum.szoveg_orsz ?? ""}
+                            onChange={(e) => handleDataChange(year, "technikum", "szoveg_orsz", e.target.value)}
+                            sx={{ width: "100px" }}
+                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
                           />
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                      <TableCell align="center">
-                        {data[e] ? (
-                          <EditableCell
-                            value={data[e].szovegertes.technikum.intezmenyi}
-                            onValueChange={(newValue) =>
-                              updateValue(
-                                e,
-                                "szovegertes",
-                                "technikum",
-                                "intezmenyi",
-                                newValue
-                              )
-                            }
+                        </TableCell>
+                        <TableCell align="center">
+                          <TextField
+                            type="number"
+                            size="small"
+                            variant="outlined"
+                            value={tableData[year]?.technikum.szoveg_int ?? ""}
+                            onChange={(e) => handleDataChange(year, "technikum", "szoveg_int", e.target.value)}
+                            sx={{ width: "100px", "& .MuiInputBase-input": { color: "red" } }}
+                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
                           />
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                    </React.Fragment>
-                  );
-                })}
-              </TableRow>
-              <TableRow>
-                <TableCell>Matematika</TableCell>
-                <TableCell rowSpan={2}>Szakképző</TableCell>
-                {years.map((e) => {
-                  return (
-                    <React.Fragment key={e}>
-                      <TableCell>
-                        {data[e] ? (
-                          <EditableCell
-                            value={data[e].matematika.szakkepzo.orszagos}
-                            onValueChange={(newValue) =>
-                              updateValue(
-                                e,
-                                "matematika",
-                                "szakkepzo",
-                                "orszagos",
-                                newValue
-                              )
-                            }
+                        </TableCell>
+                      </React.Fragment>
+                    ))}
+                  </TableRow>
+
+                  {/* Szakképző Rows */}
+                  <TableRow sx={{ borderTop: "2px solid #e0e0e0", "&:hover": { backgroundColor: "#f5f5f5" } }}>
+                    <TableCell sx={{ fontWeight: "medium" }}>matematika</TableCell>
+                    <TableCell rowSpan={2} sx={{ verticalAlign: "middle", fontWeight: "bold", backgroundColor: "#e8f4fd" }}>
+                      Szakképző
+                    </TableCell>
+                    {years.map(year => (
+                      <React.Fragment key={`szak-mat-${year}`}>
+                        <TableCell align="center" sx={{ borderLeft: "1px solid #e0e0e0" }}>
+                          <TextField
+                            type="number"
+                            size="small"
+                            variant="outlined"
+                            value={tableData[year]?.szakkepzo.mat_orsz ?? ""}
+                            onChange={(e) => handleDataChange(year, "szakkepzo", "mat_orsz", e.target.value)}
+                            sx={{ width: "100px" }}
+                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
                           />
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {data[e] ? (
-                          <EditableCell
-                            value={data[e].matematika.szakkepzo.intezmenyi}
-                            onValueChange={(newValue) =>
-                              updateValue(
-                                e,
-                                "matematika",
-                                "szakkepzo",
-                                "intezmenyi",
-                                newValue
-                              )
-                            }
+                        </TableCell>
+                        <TableCell align="center">
+                          <TextField
+                            type="number"
+                            size="small"
+                            variant="outlined"
+                            value={tableData[year]?.szakkepzo.mat_int ?? ""}
+                            onChange={(e) => handleDataChange(year, "szakkepzo", "mat_int", e.target.value)}
+                            sx={{ width: "100px", "& .MuiInputBase-input": { color: "red" } }}
+                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
                           />
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                    </React.Fragment>
-                  );
-                })}
-              </TableRow>
-              <TableRow>
-                <TableCell>Szövegértés</TableCell>
-                {years.map((e) => {
-                  return (
-                    <React.Fragment key={e}>
-                      <TableCell>
-                        {data[e] ? (
-                          <EditableCell
-                            value={data[e].szovegertes.szakkepzo.orszagos}
-                            onValueChange={(newValue) =>
-                              updateValue(
-                                e,
-                                "szovegertes",
-                                "szakkepzo",
-                                "orszagos",
-                                newValue
-                              )
-                            }
+                        </TableCell>
+                      </React.Fragment>
+                    ))}
+                  </TableRow>
+                  <TableRow sx={{ "&:hover": { backgroundColor: "#f5f5f5" } }}>
+                    <TableCell sx={{ fontWeight: "medium" }}>szövegértés</TableCell>
+                    {/* Szakképző rowSpan handled above */}
+                    {years.map(year => (
+                      <React.Fragment key={`szak-szov-${year}`}>
+                        <TableCell align="center" sx={{ borderLeft: "1px solid #e0e0e0" }}>
+                          <TextField
+                            type="number"
+                            size="small"
+                            variant="outlined"
+                            value={tableData[year]?.szakkepzo.szoveg_orsz ?? ""}
+                            onChange={(e) => handleDataChange(year, "szakkepzo", "szoveg_orsz", e.target.value)}
+                            sx={{ width: "100px" }}
+                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
                           />
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {data[e] ? (
-                          <EditableCell
-                            value={data[e].szovegertes.szakkepzo.intezmenyi}
-                            onValueChange={(newValue) =>
-                              updateValue(
-                                e,
-                                "szovegertes",
-                                "szakkepzo",
-                                "intezmenyi",
-                                newValue
-                              )
-                            }
+                        </TableCell>
+                        <TableCell align="center">
+                          <TextField
+                            type="number"
+                            size="small"
+                            variant="outlined"
+                            value={tableData[year]?.szakkepzo.szoveg_int ?? ""}
+                            onChange={(e) => handleDataChange(year, "szakkepzo", "szoveg_int", e.target.value)}
+                            sx={{ width: "100px", "& .MuiInputBase-input": { color: "red" } }}
+                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
                           />
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                    </React.Fragment>
-                  );
-                })}
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
+                        </TableCell>
+                      </React.Fragment>
+                    ))}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            <Box sx={{ mt: 3, p: 2, backgroundColor: "#fff9e6", borderRadius: 1 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Jelmagyarázat:
+              </Typography>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Box display="flex" alignItems="center">
+                  <Box sx={{ width: 16, height: 16, borderRadius: "50%", border: "1px solid grey", mr: 1 }}></Box>
+                  <Typography variant="body2">Országos átlag</Typography>
+                </Box>
+                <Box display="flex" alignItems="center">
+                  <Box sx={{ width: 16, height: 16, borderRadius: "50%", border: "1px solid red", mr: 1, backgroundColor: "rgba(255,0,0,0.1)" }}></Box>
+                  <Typography variant="body2" color="error">Intézményi eredmény</Typography>
+                </Box>
+              </Stack>
+            </Box>
+
+          </CardContent>
+        </Card>
       </Box>
     </PageWrapper>
   );
