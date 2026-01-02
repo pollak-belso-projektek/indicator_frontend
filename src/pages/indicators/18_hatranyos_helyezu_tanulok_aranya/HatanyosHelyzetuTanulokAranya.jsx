@@ -29,6 +29,7 @@ import {
   Refresh as RefreshIcon,
   BarChart as BarChartIcon,
   Assessment as AssessmentIcon,
+  TrendingUp as TrendingUpIcon,
 } from "@mui/icons-material";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
