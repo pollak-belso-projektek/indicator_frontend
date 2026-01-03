@@ -17,7 +17,6 @@ const LockedTableWrapper = ({
 }) => {
   const { isLocked, canModify, lockMessage } = useTableLockStatus(tableName);
 
-  // If table is not locked and user can modify, return children as-is
   if (!isLocked && canModify) {
     return children;
   }
