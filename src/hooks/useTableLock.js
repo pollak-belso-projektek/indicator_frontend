@@ -14,6 +14,8 @@ import { canModifyTable, isTableLocked } from "../utils/tableAccessUtils";
 export const useTableLockStatus = (tableName) => {
   const { data: tableList = [], isLoading } = useGetTableListQuery();
   const tableAccess = useSelector(selectUserTableAccess);
+  console.log("Table list from API:", tableList);
+  console.log("User table access from Redux:", tableAccess);
   const userPermissions = useSelector(selectUserPermissions);
 
   const isSuperadmin = userPermissions?.isSuperadmin || false;
@@ -25,6 +27,9 @@ export const useTableLockStatus = (tableName) => {
     isSuperadmin
   );
 
+  console.log(
+    `useTableLockStatus for table "${tableName}": isLocked=${locked}, canModify=${modifyResult.canModify}, lockMessage=${modifyResult.reason}, isLoading=${isLoading}`
+  );
   return {
     isLocked: locked,
     canModify: modifyResult.canModify,

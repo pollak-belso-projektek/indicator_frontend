@@ -1,4 +1,3 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -54,18 +53,16 @@ const { store, persistor } = configureAppStore();
 setupListeners(store.dispatch);
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <ThemeProvider theme={muiTheme}>
-      <CssBaseline />
-      <ChakraProvider>
-        <Provider store={store}>
-          <PersistGate loading={null} persistor={persistor}>
-            <AccessNotificationProvider>
-              <Router />
-            </AccessNotificationProvider>
-          </PersistGate>
-        </Provider>
-      </ChakraProvider>
-    </ThemeProvider>
-  </StrictMode>
+  <ThemeProvider theme={muiTheme}>
+    <CssBaseline />
+    <ChakraProvider>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+          <AccessNotificationProvider>
+            <Router />
+          </AccessNotificationProvider>
+        </PersistGate>
+      </Provider>
+    </ChakraProvider>
+  </ThemeProvider>
 );

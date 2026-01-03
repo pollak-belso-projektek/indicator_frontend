@@ -20,6 +20,38 @@ export const TABLE_ACCESS_LEVELS = {
  * @param {number} requiredLevel - Required access level (default: READ)
  * @returns {boolean} - True if user has required access
  */
+/**
+ * Helper to get access level from permission object
+ * Handles both integer 'access' (JWT) and object 'permissions' (API/Alias) formats
+ */
+const resolveAccessLevel = (permissionItem) => {
+  if (!permissionItem) return 0;
+
+  // If access is already defined as number, use it
+  if (typeof permissionItem.access === "number") {
+    return permissionItem.access;
+  }
+
+  // If permissions object exists, calculate access level
+  if (permissionItem.permissions) {
+    let level = 0;
+    if (permissionItem.permissions.canRead) level |= TABLE_ACCESS_LEVELS.READ;
+    if (permissionItem.permissions.canCreate) level |= TABLE_ACCESS_LEVELS.WRITE;
+    if (permissionItem.permissions.canUpdate) level |= TABLE_ACCESS_LEVELS.UPDATE;
+    if (permissionItem.permissions.canDelete) level |= TABLE_ACCESS_LEVELS.DELETE;
+    return level;
+  }
+
+  return 0;
+};
+
+/**
+ * Check if user has specific access level to a table
+ * @param {Array} tableAccess - User's table access array
+ * @param {string} tableName - Name of the table to check
+ * @param {number} requiredLevel - Required access level (default: READ)
+ * @returns {boolean} - True if user has required access
+ */
 export const hasTablePermission = (
   tableAccess,
   tableName,
@@ -28,10 +60,14 @@ export const hasTablePermission = (
   if (!tableAccess || !Array.isArray(tableAccess)) return false;
 
   const tablePermission = tableAccess.find((t) => t.tableName === tableName);
+
+  console.log(`Checking permission for table "${tableName}":`, tablePermission);
   if (!tablePermission) return false;
 
+  const accessLevel = resolveAccessLevel(tablePermission);
+
   // Check if the user's access level includes the required level (bitwise AND)
-  return (tablePermission.access & requiredLevel) === requiredLevel;
+  return (accessLevel & requiredLevel) === requiredLevel;
 };
 
 /**
@@ -47,7 +83,7 @@ export const getAccessibleTables = (
   if (!tableAccess || !Array.isArray(tableAccess)) return [];
 
   return tableAccess
-    .filter((t) => (t.access & minLevel) === minLevel)
+    .filter((t) => (resolveAccessLevel(t) & minLevel) === minLevel)
     .map((t) => t.tableName);
 };
 
@@ -137,7 +173,7 @@ export const parseApiError = (error) => {
     //rate limit
     if (error.includes("429") || error.includes("rate limit")) {
       return "Túl sok kérés érkezett rövid időn belül. Kérjük, próbáld újra később.";
-    } 
+    }
     return error;
   }
 
@@ -228,7 +264,12 @@ export const isTableLocked = (tableList, tableName) => {
  * @param {boolean} isSuperadmin - Whether user is superadmin
  * @returns {Object} - { canModify: boolean, reason: string }
  */
-export const canModifyTable = (tableList, tableAccess, tableName, isSuperadmin = false) => {
+export const canModifyTable = (
+  tableList,
+  tableAccess,
+  tableName,
+  isSuperadmin = false
+) => {
   // Superadmins can always modify (they can also unlock)
   // This is intentional - superadmins need to be able to unlock tables and fix issues
   if (isSuperadmin) {
@@ -239,13 +280,31 @@ export const canModifyTable = (tableList, tableAccess, tableName, isSuperadmin =
   if (isTableLocked(tableList, tableName)) {
     return {
       canModify: false,
-      reason: "Ez a tábla jelenleg le van zárva. Kérjük, vedd fel a kapcsolatot a HSZC adminisztrátorral.",
+      reason:
+        "Ez a tábla jelenleg le van zárva. Kérjük, vedd fel a kapcsolatot a HSZC adminisztrátorral.",
     };
   }
 
-  // Check if user has write permission
-  const hasWrite = hasTablePermission(tableAccess, tableName, TABLE_ACCESS_LEVELS.WRITE);
-  if (!hasWrite) {
+  // Check if user has ANY modification permission (WRITE, UPDATE, or DELETE)
+  const tablePermission = tableAccess.find((t) => t.tableName === tableName);
+  if (!tablePermission) {
+    return {
+      canModify: false,
+      reason: "Nincs jogosultságod ennek a táblának a módosítására.",
+    };
+  }
+
+  const access = resolveAccessLevel(tablePermission);
+  const hasPermission =
+    (access & TABLE_ACCESS_LEVELS.WRITE) ||
+    (access & TABLE_ACCESS_LEVELS.UPDATE) ||
+    (access & TABLE_ACCESS_LEVELS.DELETE);
+
+  console.log(
+    `canModifyTable check for table "${tableName}": access=${access}, hasPermission=${!!hasPermission}`
+  );
+
+  if (!hasPermission) {
     return {
       canModify: false,
       reason: "Nincs jogosultságod ennek a táblának a módosítására.",
