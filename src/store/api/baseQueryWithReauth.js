@@ -20,6 +20,12 @@ const baseQuery = fetchBaseQuery({
     headers.set("Pragma", "no-cache");
     headers.set("Expires", "0");
 
+    // Check for alias mode and add impersonation header
+    const authState = getState().auth;
+    if (authState?.aliasMode && authState?.aliasUser?.id) {
+      headers.set("x-impersonate-user", authState.aliasUser.id);
+    }
+
     return headers;
   },
 });

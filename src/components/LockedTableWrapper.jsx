@@ -17,10 +17,16 @@ const LockedTableWrapper = ({
 }) => {
   const { isLocked, canModify, lockMessage } = useTableLockStatus(tableName);
 
-  // If table is not locked and user can modify, return children as-is
   if (!isLocked && canModify) {
+    console.log(
+      "Table is not locked and user can modify. Rendering children normally."
+    );
     return children;
   }
+
+  console.log(
+    `Table is locked: ${isLocked}, User can modify: ${canModify}. Disabling children.`
+  );
 
   // Determine the message to show
   const tooltipMessage = isLocked
