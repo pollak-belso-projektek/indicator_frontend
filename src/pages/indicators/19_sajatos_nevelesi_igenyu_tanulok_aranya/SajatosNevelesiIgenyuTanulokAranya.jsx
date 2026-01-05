@@ -67,7 +67,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
     data: apiSniData,
     error: fetchError,
     isLoading: isFetching,
-  } = useGetAllSajatosNevelesuTanulokQuery();
+  } = useGetAllSajatosNevelesuTanulokQuery(selectedSchool?.id);
   const selectedSchool = useSelector(selectSelectedSchool);
   const { data: schoolsData, isLoading: isLoadingSchools } =
     useGetAllAlapadatokQuery();
@@ -475,7 +475,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
                     <Card>
                       <CardContent>
-                         <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
+                        <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
                           <LockedTableWrapper tableName="sajatos_nevelesu_tanulok">
                             <Button
                               variant="contained"
@@ -672,7 +672,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                         )}
 
                         {/* Action Buttons */}
-                       
+
                         {/* Status Messages */}
                         {isModified && (
                           <Alert severity="warning" sx={{ mt: 2 }}>

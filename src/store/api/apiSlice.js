@@ -518,7 +518,7 @@ export const indicatorApi = createApi({
       ],
     }),
     getAllSajatosNevelesuTanulok: build.query({
-      query: () => {
+      query: (alapadatok_id) => {
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
         const currentMonth = currentDate.getMonth() + 1;
@@ -530,7 +530,7 @@ export const indicatorApi = createApi({
           currentSchoolYearStart = currentYear - 1;
         }
 
-        return `sajatos_nevelesu_tanulok/${currentSchoolYearStart}`;
+        return `sajatos_nevelesu_tanulok/${alapadatok_id}/${currentSchoolYearStart}`;
       },
       providesTags: ["SajatosNevelesuTanulok"],
     }),
