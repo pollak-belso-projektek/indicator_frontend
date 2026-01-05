@@ -63,12 +63,12 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
   const schoolYears = generateSchoolYears();
 
   // API hooks
+  const selectedSchool = useSelector(selectSelectedSchool);
   const {
     data: apiSniData,
     error: fetchError,
     isLoading: isFetching,
   } = useGetAllSajatosNevelesuTanulokQuery(selectedSchool?.id);
-  const selectedSchool = useSelector(selectSelectedSchool);
   const { data: schoolsData, isLoading: isLoadingSchools } =
     useGetAllAlapadatokQuery();
 
