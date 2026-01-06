@@ -21,7 +21,7 @@ const PageWrapper = ({
   children,
   infoContent,
   titleContent,
-  defaultInfoOpen = true,
+  defaultInfoOpen = false,
   showInfoSection = true,
   sx = {},
 }) => {
