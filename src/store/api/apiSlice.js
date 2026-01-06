@@ -36,6 +36,7 @@ export const indicatorApi = createApi({
     "Szakma",
     "TanuloAdatszolgaltatas",
     "OktatoAdatszolgaltatas",
+    "Changelog",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -794,6 +795,35 @@ export const indicatorApi = createApi({
         method: "DELETE",
       }),
       invalidatesTags: ["NSZFH"],
+    }),
+
+    // Changelog endpoints
+    getChangelog: build.query({
+      query: () => "changelog",
+      providesTags: ["Changelog"],
+    }),
+    addChangelogEntry: build.mutation({
+      query: (data) => ({
+        url: "changelog",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Changelog"],
+    }),
+    updateChangelogEntry: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `changelog/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Changelog"],
+    }),
+    deleteChangelogEntry: build.mutation({
+      query: (id) => ({
+        url: `changelog/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Changelog"],
     }),
 
     // SZMSZ (Vocational Statistics)

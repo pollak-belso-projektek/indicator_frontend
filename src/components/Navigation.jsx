@@ -31,6 +31,7 @@ import {
   MdSearch,
   MdInfo,
   MdAccessible,
+  MdHistory,
 } from "react-icons/md";
 
 import { useColorModeValue } from "./ui/color-mode";
@@ -831,7 +832,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
           {itemSearch && (
             <Text fontSize="xs" color="gray.500" mt="2" ml="1">
               {Object.keys(filteredCategories).length === 0 &&
-              filteredScrollableItems.length === 0
+                filteredScrollableItems.length === 0
                 ? "Nincs találat"
                 : `${filteredScrollableItems.length} találat`}
             </Text>
@@ -989,155 +990,155 @@ const SidebarContent = ({ onClose, ...rest }) => {
         {/* Show categorized navigation */}
         {!itemSearch
           ? // When not searching, show categories
-            Object.entries(filteredCategories).map(
-              ([categoryKey, category]) => (
-                <Box key={categoryKey} mb="2">
-                  {/* Category Header */}
-                  <Flex
-                    align="center"
-                    p="3"
-                    mx="4"
-                    borderRadius="xl"
-                    cursor="pointer"
-                    role="button"
-                    tabIndex={0}
-                    transition="all 0.2s ease-in-out"
-                    bg={
-                      isCategoryActive(categoryKey)
-                        ? "blue.50"
-                        : useColorModeValue("gray.50", "gray.100")
+          Object.entries(filteredCategories).map(
+            ([categoryKey, category]) => (
+              <Box key={categoryKey} mb="2">
+                {/* Category Header */}
+                <Flex
+                  align="center"
+                  p="3"
+                  mx="4"
+                  borderRadius="xl"
+                  cursor="pointer"
+                  role="button"
+                  tabIndex={0}
+                  transition="all 0.2s ease-in-out"
+                  bg={
+                    isCategoryActive(categoryKey)
+                      ? "blue.50"
+                      : useColorModeValue("gray.50", "gray.100")
+                  }
+                  _hover={{
+                    bg: isCategoryActive(categoryKey)
+                      ? "blue.100"
+                      : useColorModeValue("gray.100", "gray.200"),
+                    transform: "translateY(-1px)",
+                    boxShadow: "sm",
+                  }}
+                  _focus={{
+                    boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.6)",
+                    outline: "none",
+                  }}
+                  onClick={() => toggleCategory(categoryKey)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      toggleCategory(categoryKey);
                     }
-                    _hover={{
-                      bg: isCategoryActive(categoryKey)
-                        ? "blue.100"
-                        : useColorModeValue("gray.100", "gray.200"),
-                      transform: "translateY(-1px)",
-                      boxShadow: "sm",
-                    }}
-                    _focus={{
-                      boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.6)",
-                      outline: "none",
-                    }}
-                    onClick={() => toggleCategory(categoryKey)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        toggleCategory(categoryKey);
-                      }
-                    }}
-                    aria-expanded={expandedCategories[categoryKey]}
-                    aria-label={`Toggle ${category.name} section`}
-                  >
-                    <Icon
-                      as={category.icon}
-                      mr="3"
-                      fontSize="18"
-                      color={
-                        isCategoryActive(categoryKey) ? "blue.600" : "gray.600"
-                      }
-                    />
-                    <Text
-                      fontSize="sm"
-                      fontWeight={
-                        isCategoryActive(categoryKey) ? "bold" : "semibold"
-                      }
-                      flex="1"
-                      color={
-                        isCategoryActive(categoryKey) ? "blue.700" : "gray.700"
-                      }
-                    >
-                      {category.name}
-                    </Text>
-                    <Icon
-                      as={FiChevronDown}
-                      fontSize="14"
-                      transform={
-                        expandedCategories[categoryKey]
-                          ? "rotate(180deg)"
-                          : "rotate(0deg)"
-                      }
-                      transition="transform 0.2s ease-in-out"
-                      color={
-                        isCategoryActive(categoryKey) ? "blue.600" : "gray.500"
-                      }
-                    />
-                  </Flex>
-
-                  {/* Category Items */}
-                  {expandedCategories[categoryKey] && (
-                    <Box
-                      overflow="hidden"
-                      transition="all 0.3s ease-in-out"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                    >
-                      <VStack align="stretch" spacing="1" mt="2">
-                        {category.items.map((link, index) => (
-                          <Box
-                            key={link.name}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                          >
-                            <NavItem
-                              icon={link.icon}
-                              as={Link}
-                              to={link.link}
-                              link={link.link}
-                              onClick={() => onClose()}
-                              fontSize="sm"
-                              p="3"
-                              pl="6"
-                            >
-                              {getDisplayName(link)}
-                            </NavItem>
-                          </Box>
-                        ))}
-                      </VStack>
-                    </Box>
-                  )}
-                </Box>
-              )
-            )
-          : // When searching, show flat list
-            filteredScrollableItems
-              .sort((a, b) => {
-                const searchValue = itemSearch.trim();
-                const searchClean = searchValue.replace(/\.$/, ""); // Remove trailing dot
-
-                // If searching by number, prioritize exact number matches and sort numerically
-                if (searchClean && !isNaN(searchClean)) {
-                  const aNumber = getPageNumber(a.link);
-                  const bNumber = getPageNumber(b.link);
-                  const searchNum = parseInt(searchClean);
-
-                  // Exact matches first
-                  if (aNumber === searchNum && bNumber !== searchNum) return -1;
-                  if (bNumber === searchNum && aNumber !== searchNum) return 1;
-
-                  // Then sort numerically if both have numbers
-                  if (aNumber && bNumber) return aNumber - bNumber;
-
-                  // Items with numbers come before items without numbers
-                  if (aNumber && !bNumber) return -1;
-                  if (!aNumber && bNumber) return 1;
-                }
-
-                // Default alphabetical sort
-                return a.name.localeCompare(b.name);
-              })
-              .map((link) => (
-                <NavItem
-                  key={link.name}
-                  icon={link.icon}
-                  as={Link}
-                  to={link.link}
-                  link={link.link}
-                  onClick={() => onClose()}
+                  }}
+                  aria-expanded={expandedCategories[categoryKey]}
+                  aria-label={`Toggle ${category.name} section`}
                 >
-                  {getDisplayName(link)}
-                </NavItem>
-              ))}
+                  <Icon
+                    as={category.icon}
+                    mr="3"
+                    fontSize="18"
+                    color={
+                      isCategoryActive(categoryKey) ? "blue.600" : "gray.600"
+                    }
+                  />
+                  <Text
+                    fontSize="sm"
+                    fontWeight={
+                      isCategoryActive(categoryKey) ? "bold" : "semibold"
+                    }
+                    flex="1"
+                    color={
+                      isCategoryActive(categoryKey) ? "blue.700" : "gray.700"
+                    }
+                  >
+                    {category.name}
+                  </Text>
+                  <Icon
+                    as={FiChevronDown}
+                    fontSize="14"
+                    transform={
+                      expandedCategories[categoryKey]
+                        ? "rotate(180deg)"
+                        : "rotate(0deg)"
+                    }
+                    transition="transform 0.2s ease-in-out"
+                    color={
+                      isCategoryActive(categoryKey) ? "blue.600" : "gray.500"
+                    }
+                  />
+                </Flex>
+
+                {/* Category Items */}
+                {expandedCategories[categoryKey] && (
+                  <Box
+                    overflow="hidden"
+                    transition="all 0.3s ease-in-out"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                  >
+                    <VStack align="stretch" spacing="1" mt="2">
+                      {category.items.map((link, index) => (
+                        <Box
+                          key={link.name}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                        >
+                          <NavItem
+                            icon={link.icon}
+                            as={Link}
+                            to={link.link}
+                            link={link.link}
+                            onClick={() => onClose()}
+                            fontSize="sm"
+                            p="3"
+                            pl="6"
+                          >
+                            {getDisplayName(link)}
+                          </NavItem>
+                        </Box>
+                      ))}
+                    </VStack>
+                  </Box>
+                )}
+              </Box>
+            )
+          )
+          : // When searching, show flat list
+          filteredScrollableItems
+            .sort((a, b) => {
+              const searchValue = itemSearch.trim();
+              const searchClean = searchValue.replace(/\.$/, ""); // Remove trailing dot
+
+              // If searching by number, prioritize exact number matches and sort numerically
+              if (searchClean && !isNaN(searchClean)) {
+                const aNumber = getPageNumber(a.link);
+                const bNumber = getPageNumber(b.link);
+                const searchNum = parseInt(searchClean);
+
+                // Exact matches first
+                if (aNumber === searchNum && bNumber !== searchNum) return -1;
+                if (bNumber === searchNum && aNumber !== searchNum) return 1;
+
+                // Then sort numerically if both have numbers
+                if (aNumber && bNumber) return aNumber - bNumber;
+
+                // Items with numbers come before items without numbers
+                if (aNumber && !bNumber) return -1;
+                if (!aNumber && bNumber) return 1;
+              }
+
+              // Default alphabetical sort
+              return a.name.localeCompare(b.name);
+            })
+            .map((link) => (
+              <NavItem
+                key={link.name}
+                icon={link.icon}
+                as={Link}
+                to={link.link}
+                link={link.link}
+                onClick={() => onClose()}
+              >
+                {getDisplayName(link)}
+              </NavItem>
+            ))}
         {/* Show message if no items found in search */}
         {itemSearch &&
           Object.keys(filteredCategories).length === 0 &&
@@ -1420,6 +1421,28 @@ const MobileNav = ({ onOpen, ...rest }) => {
 */}
 
         <Flex alignItems={"center"} gap={3}>
+          <Tooltip title="Változások naplója">
+            <Link to="/changelog">
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                w="8"
+                h="8"
+                borderRadius="full"
+                bg="blue.100"
+                color="blue.600"
+                cursor="pointer"
+                transition="all 0.2s ease-in-out"
+                _hover={{
+                  bg: "blue.200",
+                  transform: "scale(1.1)",
+                }}
+              >
+                <MdHistory size={18} />
+              </Box>
+            </Link>
+          </Tooltip>
           <Tooltip title="Az oldal fejlesztés alatt áll.">
             <Box
               display="flex"
