@@ -1158,7 +1158,19 @@ const SidebarContent = ({ onClose, ...rest }) => {
           </Box>
         )}
       </Box>
-    </Box>
+
+      {/* Version Display */}
+      <Box
+        p={4}
+        borderTop="1px solid"
+        borderColor={useColorModeValue("gray.200", "gray.700")}
+        textAlign="center"
+      >
+        <Text fontSize="xs" color="gray.500">
+          v{import.meta.env.PACKAGE_VERSION}
+        </Text>
+      </Box>
+    </Box >
   );
 };
 

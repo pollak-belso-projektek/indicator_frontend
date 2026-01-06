@@ -1174,4 +1174,9 @@ export const {
   useGetSzakmaListQuery,
   useRemoveSzakiranyFromSchoolMutation,
   useRemoveSzakmaFromSchoolMutation,
+  // Changelog hooks
+  useGetChangelogQuery,
+  useAddChangelogEntryMutation,
+  useUpdateChangelogEntryMutation,
+  useDeleteChangelogEntryMutation,
 } = indicatorApi;
