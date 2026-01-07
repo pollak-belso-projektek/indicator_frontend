@@ -189,7 +189,10 @@ export const indicatorApi = createApi({
           await queryFulfilled;
           // Force refetch of related queries
           dispatch(
-            indicatorApi.util.invalidateTags(["TanuloLetszam", "TanugyiAdatok"])
+            indicatorApi.util.invalidateTags([
+              "TanuloLetszam",
+              "TanugyiAdatok",
+            ]),
           );
         } catch (e) {
           console.error("Error in addTanuloLetszam onQueryStarted:", e);
@@ -220,7 +223,10 @@ export const indicatorApi = createApi({
           await queryFulfilled;
           // Force refetch of related queries
           dispatch(
-            indicatorApi.util.invalidateTags(["TanuloLetszam", "TanugyiAdatok"])
+            indicatorApi.util.invalidateTags([
+              "TanuloLetszam",
+              "TanugyiAdatok",
+            ]),
           );
         } catch (e) {
           console.error("Error in updateTanuloLetszam onQueryStarted:", e);
@@ -234,6 +240,7 @@ export const indicatorApi = createApi({
         body: {
           alapadatok_id: params.alapadatok_id,
           tanugyi_adatok: params.tanugyi_adatok,
+          userId: params.userId,
         },
       }),
       invalidatesTags: (result, error, params) => [
@@ -250,7 +257,10 @@ export const indicatorApi = createApi({
           await queryFulfilled;
           // Force refetch of related queries
           dispatch(
-            indicatorApi.util.invalidateTags(["TanugyiAdatok", "TanuloLetszam"])
+            indicatorApi.util.invalidateTags([
+              "TanugyiAdatok",
+              "TanuloLetszam",
+            ]),
           );
         } catch (e) {
           console.error("Error in addTanugyiAdatok onQueryStarted:", e);

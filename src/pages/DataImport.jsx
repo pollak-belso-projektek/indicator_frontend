@@ -27,7 +27,7 @@ import {
 } from "@mui/material";
 import { CustomSheetUploader } from "../components/CustomSheetUploader";
 import { useSelector } from "react-redux";
-import { selectSelectedSchool } from "../store/slices/authSlice";
+import { selectUser, selectSelectedSchool } from "../store/slices/authSlice";
 import {
   validateTanugyiFile,
   validateAlkalmazottFile,
@@ -55,6 +55,7 @@ export default function DataImport() {
     setOktatoAdatszolgaltatasValidationError,
   ] = useState(null);
 
+  const currentUser = useSelector(selectUser);
   const selectedSchool = useSelector(selectSelectedSchool);
 
   // Always use the current school year start
@@ -71,7 +72,7 @@ export default function DataImport() {
     isLoading: tanugyiLoading,
   } = useGetTanugyiAdatokQuery({
     alapadatok_id: selectedSchool?.id,
-    tanev_kezdete: currentYearStart,
+    ev: currentYearStart,
   });
 
   // Alkalmazott adatok API hooks
@@ -123,6 +124,7 @@ export default function DataImport() {
         alapadatok_id: selectedSchool?.id,
         tanev_kezdete: currentYearStart,
         tanugyi_adatok: tanugyiData,
+        userId: currentUser?.id,
       });
     }
   }, [
@@ -169,7 +171,7 @@ export default function DataImport() {
           if (transformedItem.FeladattalTerheltOraszam) {
             transformedItem.FeladattalTerheltOraszam =
               parseFloat(
-                String(transformedItem.FeladattalTerheltOraszam).trim()
+                String(transformedItem.FeladattalTerheltOraszam).trim(),
               ) || 0.0;
           } else {
             transformedItem.FeladattalTerheltOraszam = 0.0;
@@ -177,7 +179,7 @@ export default function DataImport() {
           if (transformedItem.PedagogusHetiOraszama) {
             transformedItem.PedagogusHetiOraszama =
               parseFloat(
-                String(transformedItem.PedagogusHetiOraszama).trim()
+                String(transformedItem.PedagogusHetiOraszama).trim(),
               ) || 0.0;
           } else {
             transformedItem.PedagogusHetiOraszama = 0.0;
@@ -288,8 +290,8 @@ export default function DataImport() {
               <Tab label="Tanügyi Adatok" />
               <Tab label="Alkalmazottak Munkaugyi Adatai" />
               {/* TODO: Uncomment when done */}
-              {/* <Tab label="Tanuló Adatszolgáltatás" />
-              <Tab label="Oktató Adatszolgáltatás" /> */}
+              <Tab label="Tanuló Adatszolgáltatás" />
+              <Tab label="Oktató Adatszolgáltatás" />
             </Tabs>
 
             {/* Tanügyi Adatok Tab */}
@@ -302,23 +304,25 @@ export default function DataImport() {
                   <AlertTitle>Tanügyi fájl követelmények</AlertTitle>A fájlnak
                   tartalmaznia kell az alábbi adatokat:
                   <strong>
-                    Oktatási azonosítója, Osztály, Új Szkt Ágazat Tipusa, Új Szkt Szakma Tipusa, Tanuló Jogviszonya                  </strong>
+                    Oktatási azonosítója, Osztály, Új Szkt Ágazat Tipusa, Új
+                    Szkt Szakma Tipusa, Tanuló Jogviszonya{" "}
+                  </strong>
                 </Alert>
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="body1" color="text.secondary">
                     <strong>Tárgyévi betöltött adatok:</strong>{" "}
                     {tanugyiDataFromAPI &&
-                      Array.isArray(tanugyiDataFromAPI) &&
-                      tanugyiDataFromAPI.length > 0
+                    Array.isArray(tanugyiDataFromAPI) &&
+                    tanugyiDataFromAPI.length > 0
                       ? (() => {
-                        const maxItem = tanugyiDataFromAPI.reduce(
-                          (max, item) =>
-                            new Date(item.createAt) > new Date(max.createAt)
-                              ? item
-                              : max
-                        );
-                        return formatDate(maxItem.createAt);
-                      })()
+                          const maxItem = tanugyiDataFromAPI.reduce(
+                            (max, item) =>
+                              new Date(item.createAt) > new Date(max.createAt)
+                                ? item
+                                : max,
+                          );
+                          return formatDate(maxItem.createAt);
+                        })()
                       : "Nincs adat erre a tanévre"}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
@@ -361,12 +365,12 @@ export default function DataImport() {
                             newItem[field.key] = item[field.label] || "";
                           });
                           return newItem;
-                        })
+                        }),
                       );
                     }}
                     onError={(error) => {
                       setTanugyiValidationError(
-                        `Fájl beolvasási hiba: ${error.message || error}`
+                        `Fájl beolvasási hiba: ${error.message || error}`,
                       );
                     }}
                     maxFileSize={5 * 1024 * 1024}
@@ -407,17 +411,17 @@ export default function DataImport() {
                   <Typography variant="body1" color="text.secondary">
                     <strong>Tárgyévi betöltött adatok:</strong>{" "}
                     {alkalmazottDataFromAPI &&
-                      Array.isArray(alkalmazottDataFromAPI) &&
-                      alkalmazottDataFromAPI.length > 0
+                    Array.isArray(alkalmazottDataFromAPI) &&
+                    alkalmazottDataFromAPI.length > 0
                       ? (() => {
-                        const maxItem = alkalmazottDataFromAPI.reduce(
-                          (max, item) =>
-                            new Date(item.createAt) > new Date(max.createAt)
-                              ? item
-                              : max
-                        );
-                        return formatDate(maxItem.createAt);
-                      })()
+                          const maxItem = alkalmazottDataFromAPI.reduce(
+                            (max, item) =>
+                              new Date(item.createAt) > new Date(max.createAt)
+                                ? item
+                                : max,
+                          );
+                          return formatDate(maxItem.createAt);
+                        })()
                       : "Nincs adat erre a tanévre"}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
@@ -425,7 +429,7 @@ export default function DataImport() {
                     <Chip
                       label={
                         alkalmazottDataFromAPI &&
-                          Array.isArray(alkalmazottDataFromAPI)
+                        Array.isArray(alkalmazottDataFromAPI)
                           ? alkalmazottDataFromAPI.length
                           : 0
                       }
@@ -457,7 +461,7 @@ export default function DataImport() {
                     }}
                     onError={(error) => {
                       setAlkalmazottValidationError(
-                        `Fájl beolvasási hiba: ${error.message || error}`
+                        `Fájl beolvasási hiba: ${error.message || error}`,
                       );
                     }}
                     maxFileSize={5 * 1024 * 1024}
@@ -480,23 +484,23 @@ export default function DataImport() {
                           munkakor.toLowerCase().includes("tanár")
                         );
                       }).length !== alkalmazottData.length && (
-                          <Alert severity="warning" sx={{ mt: 1 }}>
-                            <AlertTitle>Szűrés alkalmazva</AlertTitle>
-                            Csak{" "}
-                            {
-                              alkalmazottData.filter((item) => {
-                                const munkakor =
-                                  item.Munkakor || item.munkakor || "";
-                                return (
-                                  munkakor.toLowerCase().includes("oktató") ||
-                                  munkakor.toLowerCase().includes("tanár")
-                                );
-                              }).length
-                            }{" "}
-                            oktató/tanár kerül feltöltésre a{" "}
-                            {alkalmazottData.length} alkalmazottból.
-                          </Alert>
-                        )}
+                        <Alert severity="warning" sx={{ mt: 1 }}>
+                          <AlertTitle>Szűrés alkalmazva</AlertTitle>
+                          Csak{" "}
+                          {
+                            alkalmazottData.filter((item) => {
+                              const munkakor =
+                                item.Munkakor || item.munkakor || "";
+                              return (
+                                munkakor.toLowerCase().includes("oktató") ||
+                                munkakor.toLowerCase().includes("tanár")
+                              );
+                            }).length
+                          }{" "}
+                          oktató/tanár kerül feltöltésre a{" "}
+                          {alkalmazottData.length} alkalmazottból.
+                        </Alert>
+                      )}
                     </Box>
                   )}
                 </Paper>
@@ -521,18 +525,18 @@ export default function DataImport() {
                   <Typography variant="body1" color="text.secondary">
                     <strong>Tárgyévi betöltött adatok:</strong>{" "}
                     {tanuloAdatszolgaltatasDataFromAPI &&
-                      Array.isArray(tanuloAdatszolgaltatasDataFromAPI) &&
-                      tanuloAdatszolgaltatasDataFromAPI.length > 0
+                    Array.isArray(tanuloAdatszolgaltatasDataFromAPI) &&
+                    tanuloAdatszolgaltatasDataFromAPI.length > 0
                       ? (() => {
-                        const maxItem =
-                          tanuloAdatszolgaltatasDataFromAPI.reduce(
-                            (max, item) =>
-                              new Date(item.createAt) > new Date(max.createAt)
-                                ? item
-                                : max
-                          );
-                        return formatDate(maxItem.createAt);
-                      })()
+                          const maxItem =
+                            tanuloAdatszolgaltatasDataFromAPI.reduce(
+                              (max, item) =>
+                                new Date(item.createAt) > new Date(max.createAt)
+                                  ? item
+                                  : max,
+                            );
+                          return formatDate(maxItem.createAt);
+                        })()
                       : "Nincs adat erre a tanévre"}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
@@ -540,7 +544,7 @@ export default function DataImport() {
                     <Chip
                       label={
                         tanuloAdatszolgaltatasDataFromAPI &&
-                          Array.isArray(tanuloAdatszolgaltatasDataFromAPI)
+                        Array.isArray(tanuloAdatszolgaltatasDataFromAPI)
                           ? tanuloAdatszolgaltatasDataFromAPI.length
                           : 0
                       }
@@ -564,7 +568,7 @@ export default function DataImport() {
                         validateTanuloAdatszolgaltatasFile(headers);
                       if (!validation.isValid) {
                         setTanuloAdatszolgaltatasValidationError(
-                          validation.error
+                          validation.error,
                         );
                         setTanuloAdatszolgaltatasData(null);
                         return;
@@ -575,7 +579,7 @@ export default function DataImport() {
                     }}
                     onError={(error) => {
                       setTanuloAdatszolgaltatasValidationError(
-                        `Fájl beolvasási hiba: ${error.message || error}`
+                        `Fájl beolvasási hiba: ${error.message || error}`,
                       );
                     }}
                     maxFileSize={5 * 1024 * 1024}
@@ -615,18 +619,18 @@ export default function DataImport() {
                   <Typography variant="body1" color="text.secondary">
                     <strong>Tárgyévi betöltött adatok:</strong>{" "}
                     {oktatoAdatszolgaltatasDataFromAPI &&
-                      Array.isArray(oktatoAdatszolgaltatasDataFromAPI) &&
-                      oktatoAdatszolgaltatasDataFromAPI.length > 0
+                    Array.isArray(oktatoAdatszolgaltatasDataFromAPI) &&
+                    oktatoAdatszolgaltatasDataFromAPI.length > 0
                       ? (() => {
-                        const maxItem =
-                          oktatoAdatszolgaltatasDataFromAPI.reduce(
-                            (max, item) =>
-                              new Date(item.createAt) > new Date(max.createAt)
-                                ? item
-                                : max
-                          );
-                        return formatDate(maxItem.createAt);
-                      })()
+                          const maxItem =
+                            oktatoAdatszolgaltatasDataFromAPI.reduce(
+                              (max, item) =>
+                                new Date(item.createAt) > new Date(max.createAt)
+                                  ? item
+                                  : max,
+                            );
+                          return formatDate(maxItem.createAt);
+                        })()
                       : "Nincs adat erre a tanévre"}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
@@ -634,7 +638,7 @@ export default function DataImport() {
                     <Chip
                       label={
                         oktatoAdatszolgaltatasDataFromAPI &&
-                          Array.isArray(oktatoAdatszolgaltatasDataFromAPI)
+                        Array.isArray(oktatoAdatszolgaltatasDataFromAPI)
                           ? oktatoAdatszolgaltatasDataFromAPI.length
                           : 0
                       }
@@ -658,7 +662,7 @@ export default function DataImport() {
                         validateOktatoAdatszolgaltatasFile(headers);
                       if (!validation.isValid) {
                         setOktatoAdatszolgaltatasValidationError(
-                          validation.error
+                          validation.error,
                         );
                         setOktatoAdatszolgaltatasData(null);
                         return;
@@ -669,7 +673,7 @@ export default function DataImport() {
                     }}
                     onError={(error) => {
                       setOktatoAdatszolgaltatasValidationError(
-                        `Fájl beolvasási hiba: ${error.message || error}`
+                        `Fájl beolvasási hiba: ${error.message || error}`,
                       );
                     }}
                     maxFileSize={5 * 1024 * 1024}

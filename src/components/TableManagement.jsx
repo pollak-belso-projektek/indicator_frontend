@@ -42,7 +42,7 @@ import {
 } from "../store/api/apiSlice";
 import { useSelector } from "react-redux";
 import { selectUserPermissions } from "../store/slices/authSlice";
-import { PageNumbering } from "./Navigation";
+import PageNumbering from "../common/PageNumbering";
 
 // Mapping from table names (as stored in DB) to their route paths
 // This allows us to look up the page number for each table
@@ -211,7 +211,7 @@ const TableManagement = () => {
   const sortedTableList = useMemo(() => {
     return [...enhancedTableList]
       .filter((table) =>
-        (table.displayAlias || "").toLowerCase().includes(search.toLowerCase())
+        (table.displayAlias || "").toLowerCase().includes(search.toLowerCase()),
       )
       .sort(getComparator(order, orderBy));
   }, [enhancedTableList, search, order, orderBy]);
@@ -232,7 +232,7 @@ const TableManagement = () => {
       showNotification(
         "Hiba történt a tábla létrehozása során: " +
           (error.data?.message || error.message),
-        "error"
+        "error",
       );
     }
   };
@@ -259,7 +259,7 @@ const TableManagement = () => {
       showNotification(
         "Hiba történt a tábla frissítése során: " +
           (error.data?.message || error.message),
-        "error"
+        "error",
       );
     }
   };
@@ -284,7 +284,7 @@ const TableManagement = () => {
       showNotification(
         "Hiba történt a tábla lezárása során: " +
           (error.data?.message || error.message),
-        "error"
+        "error",
       );
     }
   };
@@ -298,7 +298,7 @@ const TableManagement = () => {
       showNotification(
         "Hiba történt a tábla feloldása során: " +
           (error.data?.message || error.message),
-        "error"
+        "error",
       );
     }
   };
@@ -583,14 +583,14 @@ const TableManagement = () => {
                       <TableCell>
                         {table.createdAt
                           ? new Date(table.createdAt).toLocaleDateString(
-                              "hu-HU"
+                              "hu-HU",
                             )
                           : "-"}
                       </TableCell>
                       <TableCell>
                         {table.updatedAt
                           ? new Date(table.updatedAt).toLocaleDateString(
-                              "hu-HU"
+                              "hu-HU",
                             )
                           : "-"}
                       </TableCell>
