@@ -13,14 +13,21 @@ const InfoHatranyosHelyzetu = () => {
       </Typography>
       <Box component="ul" sx={{ m: 0, pl: 2 }}>
         <Typography component="li" variant="body2" color="text.secondary">
-          HH és HHH tanulók száma és aránya
+          <strong>A mutató számítása: </strong> HH tanulók aránya = (HH tanulók száma / tanulói létszám) * 100, illetve HHH tanulók aránya = (HHH tanulók száma / tanulói létszám) * 100
         </Typography>
         <Typography component="li" variant="body2" color="text.secondary">
-          Iskolánkénti és évfolyamonkénti bontás
+          Példa: Adott tanévben a jogviszonnyal rendelkező tanulók létszáma (tanulói összlétszám) 1024 fő. 
+          A hátrányos helyzetű tanulók száma ugyanebben a tanévben 77 fő.
+          A mutató számítása tehát (77 fő / 1024 fő) * 100 = 7,52%.
         </Typography>
         <Typography component="li" variant="body2" color="text.secondary">
-          Támogatási programok és eredmények
+          A hátrányos helyzetű csoportok számára elérhetők az intézmény által kínált képzések.
+          Az intézmény működési környezetét, helyzetét is megmutatja a mutató.
         </Typography>
+        <Typography component="li" variant="body2" color="text.secondary">
+          Adatforrás: Jogviszonnyal rendelkező tanulók (tanulói és felnőttképzési) október 1-jei létszáma: KRÉTA. <br />
+          Hátrányos helyzetű tanulók száma október 1-jén: KRÉTA.
+        </Typography>        
       </Box>
     </Box>
   );
