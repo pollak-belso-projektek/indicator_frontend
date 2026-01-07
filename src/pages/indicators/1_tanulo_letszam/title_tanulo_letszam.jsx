@@ -6,7 +6,7 @@ const TitleTanuloLetszam = () => {
     <IndicatorTitle
       icon={SchoolIcon}
       title="1. Tanulólétszám"
-      description="A szakképző intézményben adott tanév október 1-jén szakmai oktatásban (tanulói jogviszonyban és felnőttképzési jogviszonyban) tanulók száma."
+      description="A szakképző intézményben adott tanév október 1-jén szakmai oktatásban (tanulói jogviszonyban és felnőttképzési jogviszonyban) tanulók száma"
     />
   );
 };

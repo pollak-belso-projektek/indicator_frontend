@@ -19,7 +19,7 @@ const InfoTanuloLetszam = () => {
         [%]
       </Typography>
       <Typography variant="body2" sx={{ mt: 1 }}>
-        A mutató számítása: (az adott tanév létszámadata / az előző tanév létszámadata) * 100
+        <strong>A mutató számítása: (az adott tanév létszámadata / az előző tanév létszámadata) * 100</strong>
       </Typography>
       <Typography variant="body2" sx={{ mt: 1 }}>
         A trendvizsgálat az intézmények figyelmét ráirányítja az egyes évek „kiugró” adatain túlmutató tényezőkre.
@@ -28,7 +28,8 @@ const InfoTanuloLetszam = () => {
       </Typography>
       <Typography variant="body2" sx={{ mt: 1 }}>
         Adatforrás: A szakképző intézményben adott tanév október 1-jén szakmai oktatásban tanulók száma: KRÉTA.
-        Az aktuális tanév tanulólétszám adatainak feltöltéséhez használja az Adatok importálása / Tanügyi adatok menüpontot, ahová töltse fel az intézmény Kréta "Tanuló tanügy adatai" Excel export Fájlját!
+        <br />
+        Az aktuális tanév tanulólétszám adatainak feltöltéséhez először használja az Adatok importálása / Tanügyi adatok menüpontot, ahová töltse fel az intézmény Kréta "Tanuló tanügy adatai" Excel export fájlját!
       </Typography>
     </Box>
   );

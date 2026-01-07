@@ -12,16 +12,16 @@ const InfoFelvettekSzama = () => {
         felvettek számához képest.
         <br />
         <strong>
-          Képlet: Jelentkezések és felvettek aránya = (9. évfolyamra jelentkezők
-          száma) / (9. évfolyamra felvettek száma)
+          A mutató számítása: Jelentkezések és felvettek aránya = (9. évfolyamra jelentkezők
+          száma) / (9. évfolyamra felvettek száma) * 100
         </strong>
       </Typography>
 
       <Typography variant="body2" color="text.secondary">
-        Példa számítás: Ha 96 jelentkező van és 32 felvett, akkor az arány:
-        96/32 = 3
+        Az arány évről évre történő vizsgálata segíti az intézményeket annak eldöntésében, hogy melyik szakmára vonatkozóan kell nagyobb intenzitású pályaorientációs tevékenységet folytatniuk annak 
+        érdekében, hogy az adott szakma osztályszinten indítható legyen.
         <br />
-        Tehát 3-szoros jelentkezési arány szükséges a szakma indításához.
+        Adatforrás: A szakképző intézmény 9. évfolyamára jelentkezők száma és a szakképző intézmény 9. évfolyamára felvettek száma: KIFIR.
       </Typography>
     </Box>
   );
