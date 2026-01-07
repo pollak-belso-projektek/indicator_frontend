@@ -131,7 +131,7 @@ const NavigationCategories = {
       },
     ],
   },
-  STUDENTS: {
+  INDICATORS: {
     name: "Tanulói adatok",
     icon: MdGroup,
     items: [
@@ -159,12 +159,6 @@ const NavigationCategories = {
         link: "/hatranyos-helyezu-tanulok-aranya",
         tableName: "hh_es_hhh_nevelesu_tanulok",
       },
-    ],
-  },
-  EDUCATION: {
-    name: "Oktatási eredmények",
-    icon: MdAssessment,
-    items: [
       {
         name: "Kompetencia",
         icon: MdBook,
@@ -195,12 +189,6 @@ const NavigationCategories = {
         link: "/elegedettseg-meres-eredmenyei",
         tableName: "elegedettseg_meres",
       },
-    ],
-  },
-  ACHIEVEMENTS: {
-    name: "Eredmények és elismerések",
-    icon: MdStar,
-    items: [
       {
         name: "Versenyek",
         icon: MdStar,
@@ -213,12 +201,6 @@ const NavigationCategories = {
         link: "/intezmenyi-elismeresek",
         tableName: "intezmenyi_neveltseg",
       },
-    ],
-  },
-  CAREER: {
-    name: "Pályakövetés",
-    icon: MdWork,
-    items: [
       {
         name: "Elhelyezkedési mutató",
         icon: MdAssessment,
@@ -237,12 +219,6 @@ const NavigationCategories = {
         link: "/szakkepzesi-munkaszerződes-arany",
         tableName: "szmsz",
       },
-    ],
-  },
-  PROGRAMS: {
-    name: "Speciális programok",
-    icon: MdTrendingUp,
-    items: [
       {
         name: "Felnőttképzés",
         icon: MdBook,
@@ -267,12 +243,6 @@ const NavigationCategories = {
         link: "/intezmenyi-nevelesi-mutatok",
         tableName: "intezmenyi_neveltseg",
       },
-    ],
-  },
-  EVENTS: {
-    name: "Események és aktivitás",
-    icon: MdEvent,
-    items: [
       {
         name: "Egy oktatóra jutó diákok",
         icon: MdBookmark,
@@ -293,6 +263,138 @@ const NavigationCategories = {
       },
     ],
   },
+  // EDUCATION: {
+  //   name: "Oktatási eredmények",
+  //   icon: MdAssessment,
+  //   items: [
+  //     {
+  //       name: "Kompetencia",
+  //       icon: MdBook,
+  //       link: "/kompetencia",
+  //       tableName: "kompetencia",
+  //     },
+  //     {
+  //       name: "Országos kompetenciamérés",
+  //       icon: MdAssessment,
+  //       link: "/orszagos-kompetenciameres",
+  //       tableName: "kompetencia",
+  //     },
+  //     {
+  //       name: "NSZFH mérések",
+  //       icon: MdAssessment,
+  //       link: "/nszfh-meresek",
+  //       tableName: "nszfh",
+  //     },
+  //     {
+  //       name: "Vizsgaeredmények",
+  //       icon: MdAssessment,
+  //       link: "/vizsgaeredmenyek",
+  //       tableName: "vizsgaeredmenyek",
+  //     },
+  //     {
+  //       name: "Elégedettség mérés",
+  //       icon: MdAssessment,
+  //       link: "/elegedettseg-meres-eredmenyei",
+  //       tableName: "elegedettseg_meres",
+  //     },
+  //   ],
+  // },
+  // ACHIEVEMENTS: {
+  //   name: "Eredmények és elismerések",
+  //   icon: MdStar,
+  //   items: [
+  //     {
+  //       name: "Versenyek",
+  //       icon: MdStar,
+  //       link: "/versenyek",
+  //       tableName: "versenyek",
+  //     },
+  //     {
+  //       name: "Intézményi elismerések",
+  //       icon: MdStar,
+  //       link: "/intezmenyi-elismeresek",
+  //       tableName: "intezmenyi_neveltseg",
+  //     },
+  //   ],
+  // },
+  // CAREER: {
+  //   name: "Pályakövetés",
+  //   icon: MdWork,
+  //   items: [
+  //     {
+  //       name: "Elhelyezkedési mutató",
+  //       icon: MdAssessment,
+  //       link: "/elhelyezkedesi-mutato",
+  //       tableName: "elhelyezkedes",
+  //     },
+  //     {
+  //       name: "Végzettek elégedettsége",
+  //       icon: MdStar,
+  //       link: "/vegzettek-elegedettsege",
+  //       tableName: "elegedettseg",
+  //     },
+  //     {
+  //       name: "Szakképzési munkaszerződés - SZMSZ",
+  //       icon: MdWork,
+  //       link: "/szakkepzesi-munkaszerződes-arany",
+  //       tableName: "szmsz",
+  //     },
+  //   ],
+  // },
+  // PROGRAMS: {
+  //   name: "Speciális programok",
+  //   icon: MdTrendingUp,
+  //   items: [
+  //     {
+  //       name: "Felnőttképzés",
+  //       icon: MdBook,
+  //       link: "/felnottkepzes",
+  //       tableName: "alkalmazottak_munkaugy",
+  //     },
+  //     {
+  //       name: "Műhelyiskola",
+  //       icon: MdSchool,
+  //       link: "/muhelyiskolai-reszszakmat",
+  //       tableName: "muhelyiskola",
+  //     },
+  //     {
+  //       name: "Dobbantó program",
+  //       icon: MdTrendingUp,
+  //       link: "/dobbanto-program-aranya",
+  //       tableName: "dobbanto",
+  //     },
+  //     {
+  //       name: "Intézményi nevelési mutatók",
+  //       icon: MdGavel,
+  //       link: "/intezmenyi-nevelesi-mutatok",
+  //       tableName: "intezmenyi_neveltseg",
+  //     },
+  //   ],
+  // },
+  // EVENTS: {
+  //   name: "Események és aktivitás",
+  //   icon: MdEvent,
+  //   items: [
+  //     {
+  //       name: "Egy oktatóra jutó diákok",
+  //       icon: MdBookmark,
+  //       link: "/oktato_per_diak",
+  //       tableName: "egy_oktatora_juto_tanulo",
+  //     },
+  //     {
+  //       name: "Egy oktatóra jutó össz diák",
+  //       icon: MdBookmark,
+  //       link: "/egy-oktatora-juto-ossz-diak",
+  //       tableName: "egy_oktatora_juto_tanulo",
+  //     },
+  //     {
+  //       name: "Oktatók egyéb tev.",
+  //       icon: MdWork,
+  //       link: "/oktato-egyeb-tev",
+  //       tableName: "oktato-egyeb-tev",
+  //     },
+  //   ],
+  // },
   ADMIN: {
     name: "Adminisztráció",
     icon: MdSettings,
@@ -330,7 +432,7 @@ const AllLinkItems = Object.values(NavigationCategories).reduce(
   (acc, category) => {
     return [...acc, ...category.items];
   },
-  []
+  [],
 );
 
 // Function to filter navigation items based on user's table access
@@ -366,7 +468,7 @@ const getAccessibleNavItems = (tableAccess, userPermissions) => {
               "tanulo_letszam",
               "kompetencia",
               "tanugyi_adatok",
-            ].includes(name)
+            ].includes(name),
           )
         );
       }
@@ -418,7 +520,7 @@ const getOrganizedAccessibleItems = (tableAccess, userPermissions) => {
   // Group accessible items by category
   Object.entries(NavigationCategories).forEach(([categoryKey, category]) => {
     const categoryItems = category.items.filter((item) =>
-      accessibleItems.some((accessible) => accessible.link === item.link)
+      accessibleItems.some((accessible) => accessible.link === item.link),
     );
 
     if (categoryItems.length > 0) {
@@ -473,7 +575,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
       if ((event.ctrlKey || event.metaKey) && event.key === "k") {
         event.preventDefault();
         const searchInput = document.querySelector(
-          'input[placeholder*="Keresés"]'
+          'input[placeholder*="Keresés"]',
         );
         if (searchInput) {
           searchInput.focus();
@@ -504,7 +606,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
   // Get navigation items that the user has access to
   const accessibleNavItems = getAccessibleNavItems(
     tableAccess,
-    userPermissions
+    userPermissions,
   );
 
   // Initialize recent pages hook
@@ -520,7 +622,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
         item.link === "/adat-import" ||
         item.link === "/schools" ||
         item.link === "/users" ||
-        item.link === "/logs"
+        item.link === "/logs",
     );
 
     // Sort fixed items by page number
@@ -541,7 +643,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
   // Get organized categories
   const organizedCategories = getOrganizedAccessibleItems(
     tableAccess,
-    userPermissions
+    userPermissions,
   );
 
   // Find which category contains the current active page and expand it
@@ -562,7 +664,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
     // Find the category that contains the current path
     Object.entries(NavigationCategories).forEach(([categoryKey, category]) => {
       const hasActiveItem = category.items.some(
-        (item) => item.link === currentPath
+        (item) => item.link === currentPath,
       );
       if (hasActiveItem) {
         activeCategoryKey = categoryKey;
@@ -598,7 +700,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
         item.link !== "/adat-import" &&
         item.link !== "/schools" &&
         item.link !== "/users" &&
-        item.link !== "/logs"
+        item.link !== "/logs",
     );
 
     // Sort scrollable items by page number
@@ -709,7 +811,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
       }
       return acc;
     },
-    {}
+    {},
   );
 
   const toggleCategory = (categoryKey) => {
@@ -805,7 +907,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
                         // Refocus the search input after clearing
                         setTimeout(() => {
                           const searchInput = document.querySelector(
-                            'input[placeholder*="Keresés"]'
+                            'input[placeholder*="Keresés"]',
                           );
                           if (searchInput) searchInput.focus();
                         }, 100);
@@ -832,14 +934,14 @@ const SidebarContent = ({ onClose, ...rest }) => {
           {itemSearch && (
             <Text fontSize="xs" color="gray.500" mt="2" ml="1">
               {Object.keys(filteredCategories).length === 0 &&
-                filteredScrollableItems.length === 0
+              filteredScrollableItems.length === 0
                 ? "Nincs találat"
                 : `${filteredScrollableItems.length} találat`}
             </Text>
           )}
         </Box>
 
-        {/* Recent Pages Section 
+        {/* Recent Pages Section
         <RecentPages
           recentPages={recentPages}
           onRemovePage={removeRecentPage}
@@ -990,155 +1092,155 @@ const SidebarContent = ({ onClose, ...rest }) => {
         {/* Show categorized navigation */}
         {!itemSearch
           ? // When not searching, show categories
-          Object.entries(filteredCategories).map(
-            ([categoryKey, category]) => (
-              <Box key={categoryKey} mb="2">
-                {/* Category Header */}
-                <Flex
-                  align="center"
-                  p="3"
-                  mx="4"
-                  borderRadius="xl"
-                  cursor="pointer"
-                  role="button"
-                  tabIndex={0}
-                  transition="all 0.2s ease-in-out"
-                  bg={
-                    isCategoryActive(categoryKey)
-                      ? "blue.50"
-                      : useColorModeValue("gray.50", "gray.100")
-                  }
-                  _hover={{
-                    bg: isCategoryActive(categoryKey)
-                      ? "blue.100"
-                      : useColorModeValue("gray.100", "gray.200"),
-                    transform: "translateY(-1px)",
-                    boxShadow: "sm",
-                  }}
-                  _focus={{
-                    boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.6)",
-                    outline: "none",
-                  }}
-                  onClick={() => toggleCategory(categoryKey)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      toggleCategory(categoryKey);
+            Object.entries(filteredCategories).map(
+              ([categoryKey, category]) => (
+                <Box key={categoryKey} mb="2">
+                  {/* Category Header */}
+                  <Flex
+                    align="center"
+                    p="3"
+                    mx="4"
+                    borderRadius="xl"
+                    cursor="pointer"
+                    role="button"
+                    tabIndex={0}
+                    transition="all 0.2s ease-in-out"
+                    bg={
+                      isCategoryActive(categoryKey)
+                        ? "blue.50"
+                        : useColorModeValue("gray.50", "gray.100")
                     }
-                  }}
-                  aria-expanded={expandedCategories[categoryKey]}
-                  aria-label={`Toggle ${category.name} section`}
-                >
-                  <Icon
-                    as={category.icon}
-                    mr="3"
-                    fontSize="18"
-                    color={
-                      isCategoryActive(categoryKey) ? "blue.600" : "gray.600"
-                    }
-                  />
-                  <Text
-                    fontSize="sm"
-                    fontWeight={
-                      isCategoryActive(categoryKey) ? "bold" : "semibold"
-                    }
-                    flex="1"
-                    color={
-                      isCategoryActive(categoryKey) ? "blue.700" : "gray.700"
-                    }
+                    _hover={{
+                      bg: isCategoryActive(categoryKey)
+                        ? "blue.100"
+                        : useColorModeValue("gray.100", "gray.200"),
+                      transform: "translateY(-1px)",
+                      boxShadow: "sm",
+                    }}
+                    _focus={{
+                      boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.6)",
+                      outline: "none",
+                    }}
+                    onClick={() => toggleCategory(categoryKey)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleCategory(categoryKey);
+                      }
+                    }}
+                    aria-expanded={expandedCategories[categoryKey]}
+                    aria-label={`Toggle ${category.name} section`}
                   >
-                    {category.name}
-                  </Text>
-                  <Icon
-                    as={FiChevronDown}
-                    fontSize="14"
-                    transform={
-                      expandedCategories[categoryKey]
-                        ? "rotate(180deg)"
-                        : "rotate(0deg)"
-                    }
-                    transition="transform 0.2s ease-in-out"
-                    color={
-                      isCategoryActive(categoryKey) ? "blue.600" : "gray.500"
-                    }
-                  />
-                </Flex>
+                    <Icon
+                      as={category.icon}
+                      mr="3"
+                      fontSize="18"
+                      color={
+                        isCategoryActive(categoryKey) ? "blue.600" : "gray.600"
+                      }
+                    />
+                    <Text
+                      fontSize="sm"
+                      fontWeight={
+                        isCategoryActive(categoryKey) ? "bold" : "semibold"
+                      }
+                      flex="1"
+                      color={
+                        isCategoryActive(categoryKey) ? "blue.700" : "gray.700"
+                      }
+                    >
+                      {category.name}
+                    </Text>
+                    <Icon
+                      as={FiChevronDown}
+                      fontSize="14"
+                      transform={
+                        expandedCategories[categoryKey]
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)"
+                      }
+                      transition="transform 0.2s ease-in-out"
+                      color={
+                        isCategoryActive(categoryKey) ? "blue.600" : "gray.500"
+                      }
+                    />
+                  </Flex>
 
-                {/* Category Items */}
-                {expandedCategories[categoryKey] && (
-                  <Box
-                    overflow="hidden"
-                    transition="all 0.3s ease-in-out"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                  >
-                    <VStack align="stretch" spacing="1" mt="2">
-                      {category.items.map((link, index) => (
-                        <Box
-                          key={link.name}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                        >
-                          <NavItem
-                            icon={link.icon}
-                            as={Link}
-                            to={link.link}
-                            link={link.link}
-                            onClick={() => onClose()}
-                            fontSize="sm"
-                            p="3"
-                            pl="6"
+                  {/* Category Items */}
+                  {expandedCategories[categoryKey] && (
+                    <Box
+                      overflow="hidden"
+                      transition="all 0.3s ease-in-out"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                    >
+                      <VStack align="stretch" spacing="1" mt="2">
+                        {category.items.map((link, index) => (
+                          <Box
+                            key={link.name}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
                           >
-                            {getDisplayName(link)}
-                          </NavItem>
-                        </Box>
-                      ))}
-                    </VStack>
-                  </Box>
-                )}
-              </Box>
+                            <NavItem
+                              icon={link.icon}
+                              as={Link}
+                              to={link.link}
+                              link={link.link}
+                              onClick={() => onClose()}
+                              fontSize="sm"
+                              p="3"
+                              pl="6"
+                            >
+                              {getDisplayName(link)}
+                            </NavItem>
+                          </Box>
+                        ))}
+                      </VStack>
+                    </Box>
+                  )}
+                </Box>
+              ),
             )
-          )
           : // When searching, show flat list
-          filteredScrollableItems
-            .sort((a, b) => {
-              const searchValue = itemSearch.trim();
-              const searchClean = searchValue.replace(/\.$/, ""); // Remove trailing dot
+            filteredScrollableItems
+              .sort((a, b) => {
+                const searchValue = itemSearch.trim();
+                const searchClean = searchValue.replace(/\.$/, ""); // Remove trailing dot
 
-              // If searching by number, prioritize exact number matches and sort numerically
-              if (searchClean && !isNaN(searchClean)) {
-                const aNumber = getPageNumber(a.link);
-                const bNumber = getPageNumber(b.link);
-                const searchNum = parseInt(searchClean);
+                // If searching by number, prioritize exact number matches and sort numerically
+                if (searchClean && !isNaN(searchClean)) {
+                  const aNumber = getPageNumber(a.link);
+                  const bNumber = getPageNumber(b.link);
+                  const searchNum = parseInt(searchClean);
 
-                // Exact matches first
-                if (aNumber === searchNum && bNumber !== searchNum) return -1;
-                if (bNumber === searchNum && aNumber !== searchNum) return 1;
+                  // Exact matches first
+                  if (aNumber === searchNum && bNumber !== searchNum) return -1;
+                  if (bNumber === searchNum && aNumber !== searchNum) return 1;
 
-                // Then sort numerically if both have numbers
-                if (aNumber && bNumber) return aNumber - bNumber;
+                  // Then sort numerically if both have numbers
+                  if (aNumber && bNumber) return aNumber - bNumber;
 
-                // Items with numbers come before items without numbers
-                if (aNumber && !bNumber) return -1;
-                if (!aNumber && bNumber) return 1;
-              }
+                  // Items with numbers come before items without numbers
+                  if (aNumber && !bNumber) return -1;
+                  if (!aNumber && bNumber) return 1;
+                }
 
-              // Default alphabetical sort
-              return a.name.localeCompare(b.name);
-            })
-            .map((link) => (
-              <NavItem
-                key={link.name}
-                icon={link.icon}
-                as={Link}
-                to={link.link}
-                link={link.link}
-                onClick={() => onClose()}
-              >
-                {getDisplayName(link)}
-              </NavItem>
-            ))}
+                // Default alphabetical sort
+                return a.name.localeCompare(b.name);
+              })
+              .map((link) => (
+                <NavItem
+                  key={link.name}
+                  icon={link.icon}
+                  as={Link}
+                  to={link.link}
+                  link={link.link}
+                  onClick={() => onClose()}
+                >
+                  {getDisplayName(link)}
+                </NavItem>
+              ))}
         {/* Show message if no items found in search */}
         {itemSearch &&
           Object.keys(filteredCategories).length === 0 &&
@@ -1170,7 +1272,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
           v{import.meta.env.PACKAGE_VERSION}
         </Text>
       </Box>
-    </Box >
+    </Box>
   );
 };
 
@@ -1304,7 +1406,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
 
       // Add a timeout for the logout API call - shorter timeout for logout
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Logout request timed out")), 3000)
+        setTimeout(() => reject(new Error("Logout request timed out")), 3000),
       );
 
       // Try to call the logout API with timeout
@@ -1393,7 +1495,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
           <MdMenu size={20} />
         </IconButton>
 
-        {/* Recent pages indicator for mobile 
+        {/* Recent pages indicator for mobile
         {recentPages && recentPages.length > 0 && (
           <Box
             position="absolute"
@@ -1421,7 +1523,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
       </Box>
 
       <HStack spacing={{ base: "0", md: "6" }}>
-        {/* Recent Pages Dropdown - Desktop Only 
+        {/* Recent Pages Dropdown - Desktop Only
 
         <Box display={{ base: "none", md: "block" }}>
           <RecentPagesDropdown
