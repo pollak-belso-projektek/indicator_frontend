@@ -1573,6 +1573,15 @@ const MobileNav = ({ onOpen, ...rest }) => {
                     bg: useColorModeValue("gray.50", "gray.800"),
                     cursor: "pointer",
                   }}
+                  onClick={() => navigate("/profile")}
+                >
+                  Profil
+                </Menu.Item>
+                <Menu.Item
+                  _hover={{
+                    bg: useColorModeValue("gray.50", "gray.800"),
+                    cursor: "pointer",
+                  }}
                   onClick={handleLogout}
                 >
                   Kijelentkezés

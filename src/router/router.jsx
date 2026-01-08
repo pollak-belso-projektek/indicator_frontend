@@ -16,80 +16,89 @@ const LoginPage = lazy(() => import("../pages/Login"));
 const DashboardPage = lazy(() => import("../pages/Dashboard"));
 const AlapadatokPage = lazy(() => import("../pages/Alapadatok"));
 const DataImportPage = lazy(() => import("../pages/DataImport"));
-const TanuloletszamPage = lazy(() =>
-  import("../pages/indicators/1_tanulo_letszam/Tanuloletszam.jsx")
+const TanuloletszamPage = lazy(
+  () => import("../pages/indicators/1_tanulo_letszam/Tanuloletszam.jsx"),
 );
-const KompetenciaPage = lazy(() =>
-  import("../pages/indicators/6_kompetencia/Kompetencia.jsx")
+const KompetenciaPage = lazy(
+  () => import("../pages/indicators/6_kompetencia/Kompetencia.jsx"),
 );
 const UsersPage = lazy(() => import("../pages/Users.jsx"));
-const TableManagementPage = lazy(() =>
-  import("../pages/TableManagementPage.jsx")
+const ProfileEditPage = lazy(() => import("../pages/ProfileEdit.jsx"));
+const TableManagementPage = lazy(
+  () => import("../pages/TableManagementPage.jsx"),
 );
 const SchoolsPage = lazy(() => import("../pages/Schools.jsx"));
-const FelnottkepzesPage = lazy(() => import("../pages/indicators/5_felnottkepzes/Felnottkepzes.jsx"));
-const OrszagosKompetenciameresPage = lazy(() =>
-  import("../pages/OrszagosKompetenciameres.jsx")
+const FelnottkepzesPage = lazy(
+  () => import("../pages/indicators/5_felnottkepzes/Felnottkepzes.jsx"),
 );
-const NszfhMeresekPage = lazy(() =>
-  import("../pages/indicators/7_nszfh_meresek/NszfhMeresek.jsx")
+const OrszagosKompetenciameresPage = lazy(
+  () => import("../pages/OrszagosKompetenciameres.jsx"),
 );
-const SzakmaiEredmenyekPage = lazy(() =>
-  import("../pages/indicators/8_szakmai_eredmenyek/SzakmaiEredmenyek.jsx")
+const NszfhMeresekPage = lazy(
+  () => import("../pages/indicators/7_nszfh_meresek/NszfhMeresek.jsx"),
 );
-const ElhelyezkedesimMutatoPage = lazy(() =>
-  import("../pages/indicators/9_elhelyezkedesi_mutato/ElhelyezkedesimMutato.jsx")
+const SzakmaiEredmenyekPage = lazy(
+  () =>
+    import("../pages/indicators/8_szakmai_eredmenyek/SzakmaiEredmenyek.jsx"),
 );
-const VegzettekElegedettsegePage = lazy(() =>
-  import("../pages/indicators/10_vegzettek_elegedettsege/VegzettekElegedettsege.jsx")
+const ElhelyezkedesimMutatoPage = lazy(
+  () =>
+    import("../pages/indicators/9_elhelyezkedesi_mutato/ElhelyezkedesimMutato.jsx"),
 );
-const VizsgaeredmenyekPage = lazy(() =>
-  import("../pages/indicators/11_vizsgaeredmenyek/Vizsgaeredmenyek.jsx")
+const VegzettekElegedettsegePage = lazy(
+  () =>
+    import("../pages/indicators/10_vegzettek_elegedettsege/VegzettekElegedettsege.jsx"),
 );
-const IntezményiElismeresekPage = lazy(() =>
-  import("../pages/indicators/13_intezmenyi_elismeresek/IntezményiElismeresek.jsx")
+const VizsgaeredmenyekPage = lazy(
+  () => import("../pages/indicators/11_vizsgaeredmenyek/Vizsgaeredmenyek.jsx"),
 );
-const SzakmaiBemutatokKonferenciakPage = lazy(() =>
-  import("../pages/SzakmaiBemutatokKonferenciak.jsx")
+const IntezményiElismeresekPage = lazy(
+  () =>
+    import("../pages/indicators/13_intezmenyi_elismeresek/IntezményiElismeresek.jsx"),
 );
-const ElegedettsegMeresEredmenyeiPage = lazy(() =>
-  import(
-    "../pages/indicators/16_elegedettseg_meres_eredmenyei/ElegedettsegMeresEredmenyei.jsx"
-  )
+const SzakmaiBemutatokKonferenciakPage = lazy(
+  () => import("../pages/SzakmaiBemutatokKonferenciak.jsx"),
 );
-const MuhelyiskolaiReszszakmatPage = lazy(() =>
-  import("../pages/indicators/21_muhelyiskolai_reszszakmat/MuhelyiskolaiReszszakmat.jsx")
+const ElegedettsegMeresEredmenyeiPage = lazy(
+  () =>
+    import("../pages/indicators/16_elegedettseg_meres_eredmenyei/ElegedettsegMeresEredmenyei.jsx"),
 );
-const DobbantoProgramAranyaPage = lazy(() =>
-  import("../pages/indicators/20_dobbanto_program_aranya/DobbantoProgramAranya.jsx")
+const MuhelyiskolaiReszszakmatPage = lazy(
+  () =>
+    import("../pages/indicators/21_muhelyiskolai_reszszakmat/MuhelyiskolaiReszszakmat.jsx"),
 );
-const SajatosNevelesiIgenyuTanulokAranyaPage = lazy(() =>
-  import(
-    "../pages/indicators/19_sajatos_nevelesi_igenyu_tanulok_aranya/SajatosNevelesiIgenyuTanulokAranya.jsx"
-  )
+const DobbantoProgramAranyaPage = lazy(
+  () =>
+    import("../pages/indicators/20_dobbanto_program_aranya/DobbantoProgramAranya.jsx"),
 );
-const HatanyosHelyzetuTanulokAranyaPage = lazy(() =>
-  import(
-    "../pages/indicators/18_hatranyos_helyezu_tanulok_aranya/HatanyosHelyzetuTanulokAranya.jsx"
-  )
+const SajatosNevelesiIgenyuTanulokAranyaPage = lazy(
+  () =>
+    import("../pages/indicators/19_sajatos_nevelesi_igenyu_tanulok_aranya/SajatosNevelesiIgenyuTanulokAranya.jsx"),
 );
-const IntezményiNevelesiMutatokPage = lazy(() =>
-  import("../pages/indicators/17_intezmenyi_nevelesi_mutatok/IntezményiNevelesiMutatok.jsx")
+const HatanyosHelyzetuTanulokAranyaPage = lazy(
+  () =>
+    import("../pages/indicators/18_hatranyos_helyezu_tanulok_aranya/HatanyosHelyzetuTanulokAranya.jsx"),
 );
-const SzakképzésiMunkaszerződésArányPage = lazy(() =>
-  import("../pages/indicators/4_szakkepzesi_munkaszerződes_arany/SzakképzésiMunkaszerződésArány.jsx")
+const IntezményiNevelesiMutatokPage = lazy(
+  () =>
+    import("../pages/indicators/17_intezmenyi_nevelesi_mutatok/IntezményiNevelesiMutatok.jsx"),
+);
+const SzakképzésiMunkaszerződésArányPage = lazy(
+  () =>
+    import("../pages/indicators/4_szakkepzesi_munkaszerződes_arany/SzakképzésiMunkaszerződésArány.jsx"),
 );
 const OktatoPerDiak = lazy(() => import("../pages/tables/Oktatoperdiak.jsx"));
-const EgyOktatoraJutoOsszDiak = lazy(() =>
-  import("../pages/indicators/27_egy_oktatora_juto_ossz_diak/EgyOktatoraJutoOsszDiak.jsx")
+const EgyOktatoraJutoOsszDiak = lazy(
+  () =>
+    import("../pages/indicators/27_egy_oktatora_juto_ossz_diak/EgyOktatoraJutoOsszDiak.jsx"),
 );
-const FelvettekPage = lazy(() =>
-  import("../pages/indicators/2_felvettek_szama/FelvettekSzama.jsx")
+const FelvettekPage = lazy(
+  () => import("../pages/indicators/2_felvettek_szama/FelvettekSzama.jsx"),
 );
 const LogsPage = lazy(() => import("../pages/Logs.jsx"));
 const ChangelogPage = lazy(() => import("../pages/Changelog.jsx"));
-const OktatokEgyebTevPage = lazy(() =>
-  import("../pages/indicators/23_oktato_egyeb_tev/Oktatok_egyeb_tev.jsx")
+const OktatokEgyebTevPage = lazy(
+  () => import("../pages/indicators/23_oktato_egyeb_tev/Oktatok_egyeb_tev.jsx"),
 );
 
 // List of pages that require school selection
@@ -191,7 +200,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <TanuloletszamPage />,
-                        "/tanulo_letszam"
+                        "/tanulo_letszam",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -207,7 +216,6 @@ export default function Router() {
                   </TableProtectedRoute>
                 }
               />
-
               <Route
                 path="/users"
                 element={
@@ -216,6 +224,16 @@ export default function Router() {
                       <UsersPage />
                     </NavigationWithLoading>
                   </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <NavigationWithLoading>
+                      <ProfileEditPage />
+                    </NavigationWithLoading>
+                  </ProtectedRoute>
                 }
               />
               <Route
@@ -265,7 +283,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <FelnottkepzesPage />,
-                        "/felnottkepzes"
+                        "/felnottkepzes",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -278,7 +296,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <OrszagosKompetenciameresPage />,
-                        "/orszagos-kompetenciameres"
+                        "/orszagos-kompetenciameres",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -291,7 +309,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <NszfhMeresekPage />,
-                        "/nszfh-meresek"
+                        "/nszfh-meresek",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -304,7 +322,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <SzakmaiEredmenyekPage />,
-                        "/versenyek"
+                        "/versenyek",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -317,7 +335,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <ElhelyezkedesimMutatoPage />,
-                        "/elhelyezkedesi-mutato"
+                        "/elhelyezkedesi-mutato",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -330,7 +348,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <VegzettekElegedettsegePage />,
-                        "/vegzettek-elegedettsege"
+                        "/vegzettek-elegedettsege",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -343,7 +361,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <VizsgaeredmenyekPage />,
-                        "/vizsgaeredmenyek"
+                        "/vizsgaeredmenyek",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -356,7 +374,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <IntezményiElismeresekPage />,
-                        "/intezmenyi-elismeresek"
+                        "/intezmenyi-elismeresek",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -369,7 +387,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <SzakmaiBemutatokKonferenciakPage />,
-                        "/szakmai-bemutatok-konferenciak"
+                        "/szakmai-bemutatok-konferenciak",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -382,7 +400,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <ElegedettsegMeresEredmenyeiPage />,
-                        "/elegedettseg-meres-eredmenyei"
+                        "/elegedettseg-meres-eredmenyei",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -395,7 +413,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <MuhelyiskolaiReszszakmatPage />,
-                        "/muhelyiskolai-reszszakmat"
+                        "/muhelyiskolai-reszszakmat",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -408,7 +426,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <DobbantoProgramAranyaPage />,
-                        "/dobbanto-program-aranya"
+                        "/dobbanto-program-aranya",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -421,7 +439,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <SajatosNevelesiIgenyuTanulokAranyaPage />,
-                        "/sajatos-nevelesi-igenyu-tanulok-aranya"
+                        "/sajatos-nevelesi-igenyu-tanulok-aranya",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -434,7 +452,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <HatanyosHelyzetuTanulokAranyaPage />,
-                        "/hatranyos-helyezu-tanulok-aranya"
+                        "/hatranyos-helyezu-tanulok-aranya",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -447,7 +465,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <IntezményiNevelesiMutatokPage />,
-                        "/intezmenyi-nevelesi-mutatok"
+                        "/intezmenyi-nevelesi-mutatok",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -460,7 +478,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <SzakképzésiMunkaszerződésArányPage />,
-                        "/szakkepzesi-munkaszerződes-arany"
+                        "/szakkepzesi-munkaszerződes-arany",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -473,7 +491,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <OktatokEgyebTevPage />,
-                        "/oktato-egyeb-tev"
+                        "/oktato-egyeb-tev",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -499,7 +517,7 @@ export default function Router() {
                         <SchoolSelectionIndicator>
                           <FelvettekPage />
                         </SchoolSelectionIndicator>,
-                        "/felvettek_szama"
+                        "/felvettek_szama",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -512,7 +530,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <OktatoPerDiak />,
-                        "/oktato_per_diak"
+                        "/oktato_per_diak",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
@@ -525,7 +543,7 @@ export default function Router() {
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <EgyOktatoraJutoOsszDiak />,
-                        "/egy-oktatora-juto-ossz-diak"
+                        "/egy-oktatora-juto-ossz-diak",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
