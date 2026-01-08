@@ -20,8 +20,8 @@ import {
   formatAccessLevel,
 } from "../utils/tableAccessUtils";
 import {
-  useUpdateUserMutation,
-  useChangeUserPasswordMutation,
+  useUpdateMeMutation,
+  useChangeMePasswordMutation,
 } from "../store/api/apiSlice";
 import {
   selectUser,
@@ -42,9 +42,9 @@ function ProfileEdit() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
-  const [changePassword, { isLoading: isChangingPassword }] =
-    useChangeUserPasswordMutation();
+  const [updateMe, { isLoading: isUpdating }] = useUpdateMeMutation();
+  const [changeMePassword, { isLoading: isChangingPassword }] =
+    useChangeMePasswordMutation();
 
   const [profileMessage, setProfileMessage] = useState({ type: "", text: "" });
   const [passwordMessage, setPasswordMessage] = useState({
@@ -64,7 +64,7 @@ function ProfileEdit() {
     setProfileMessage({ type: "", text: "" });
 
     try {
-      await updateUser({
+      await updateMe({
         id: user.id,
         name,
         email,
@@ -94,7 +94,7 @@ function ProfileEdit() {
     }
 
     try {
-      await changePassword({
+      await changeMePassword({
         id: user.id,
         newPassword,
         newPasswordConfirm: confirmPassword,

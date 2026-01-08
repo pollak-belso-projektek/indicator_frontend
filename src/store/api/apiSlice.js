@@ -111,6 +111,25 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: "User", id }],
     }),
+    updateMe: build.mutation({
+      query: ({ id, ...userData }) => ({
+        url: `me/personal`,
+        method: "PUT",
+        body: userData,
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: "User", id }],
+    }),
+    changeMePassword: build.mutation({
+      query: ({ id, newPassword, newPasswordConfirm }) => ({
+        url: `me/password`,
+        method: "PUT",
+        body: {
+          newPassword,
+          newPasswordConfirm,
+        },
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: "User", id }],
+    }),
     getTanugyiAdatok: build.query({
       query: (params) => `tanugyi_adatok/${params.alapadatok_id}/${params.ev}`,
       providesTags: (result, error, params) => [
@@ -1102,6 +1121,8 @@ export const {
   useUpdateUserMutation,
   useDeleteUserMutation,
   useChangeUserPasswordMutation,
+  useUpdateMeMutation,
+  useChangeMePasswordMutation,
   useLoginMutation,
   useLogoutMutation,
   useRefreshTokenMutation,
