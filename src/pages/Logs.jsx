@@ -44,6 +44,7 @@ import {
   useGetLogByIdQuery,
   useDeleteLogsMutation,
   useGetFilteredUsersQuery,
+  useGetUsersQuery,
 } from "../store/api/apiSlice";
 import { selectUserPermissions } from "../store/slices/authSlice";
 import { toaster } from "../components/ui/toaster";
@@ -87,6 +88,8 @@ export default function Logs() {
   });
 
   const { data: userData } = useGetFilteredUsersQuery();
+
+  const { data: users } = useGetUsersQuery();
 
   useEffect(() => {
     console.log("User Data:", userData);
@@ -474,13 +477,25 @@ export default function Logs() {
                 </FormControl>
               </Grid>
               <Grid item xs={12} sm={6} md={2}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Felhasználó ID"
-                  value={filters.userId}
-                  onChange={(e) => handleFilterChange("userId", e.target.value)}
-                />
+                <FormControl fullWidth size="small">
+                  <InputLabel id="user-select-label">Felhasználó</InputLabel>
+                  <Select
+                    labelId="user-select-label"
+                    id="user-select"
+                    value={filters.userId}
+                    placeholder="Válasszon felhasználót"
+                    onChange={(e) =>
+                      handleFilterChange("userId", e.target.value)
+                    }
+                    sx={{ minWidth: "250px" }}
+                  >
+                    {users?.map((user) => (
+                      <MenuItem key={user.id} value={user.id}>
+                        {user.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
               <Grid item xs={12} sm={6} md={2}>
                 <TextField

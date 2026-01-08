@@ -47,24 +47,25 @@ export default function TanuloLetszam() {
   const {
     data: apiStudentData,
     error: _fetchError,
-    isLoading: _isFetching,
+    isLoading: isFetching,
     refetch: refetchTanuloLetszam,
   } = useGetTanuloLetszamQuery(
     { alapadatok_id: selectedSchool?.id },
-    { skip: !selectedSchool?.id }
+    { skip: !selectedSchool?.id },
   );
 
-  const { data: schoolsData, isLoading: _isLoadingSchools } =
+  const { data: schoolsData, isLoading: isLoadingSchools } =
     useGetAllAlapadatokQuery();
 
   // Kréta export
-  const { data: tanugyiData } = useGetTanugyiAdatokQuery({
-    alapadatok_id: selectedSchool?.id,
-    ev:
-      new Date().getMonth() >= 8
-        ? new Date().getFullYear()
-        : new Date().getFullYear() - 1,
-  });
+  const { data: tanugyiData, isLoading: isLoadingTanugyi } =
+    useGetTanugyiAdatokQuery({
+      alapadatok_id: selectedSchool?.id,
+      ev:
+        new Date().getMonth() >= 8
+          ? new Date().getFullYear()
+          : new Date().getFullYear() - 1,
+    });
 
   const [addStudentData, { isLoading: isUpdating }] =
     useAddTanuloLetszamMutation();
@@ -91,7 +92,7 @@ export default function TanuloLetszam() {
     let relevantSchools = schoolsData;
     if (selectedSchool) {
       relevantSchools = schoolsData.filter(
-        (school) => school.id === selectedSchool.id
+        (school) => school.id === selectedSchool.id,
       );
     }
 
@@ -133,7 +134,7 @@ export default function TanuloLetszam() {
               const existingSzakiranyCategory = categories.find(
                 (cat) =>
                   cat.category === `Szakirányonként` &&
-                  cat.szakiranyName === szakiranyName
+                  cat.szakiranyName === szakiranyName,
               );
 
               if (!existingSzakiranyCategory) {
@@ -169,7 +170,7 @@ export default function TanuloLetszam() {
                             });
                           }
                         }
-                      }
+                      },
                     );
                   }
                 });
@@ -212,7 +213,7 @@ export default function TanuloLetszam() {
     // Generate last 4 academic years
     const last4Years = Array.from(
       { length: 4 },
-      (_, i) => academicYearStart - 3 + i
+      (_, i) => academicYearStart - 3 + i,
     );
 
     // Convert tableData to chart format
@@ -359,10 +360,10 @@ export default function TanuloLetszam() {
       ? schoolsData.filter(
           (school) =>
             school.id === selectedSchool.id &&
-            school.intezmeny_tipus === targetInstType
+            school.intezmeny_tipus === targetInstType,
         )
       : schoolsData.filter(
-          (school) => school.intezmeny_tipus === targetInstType
+          (school) => school.intezmeny_tipus === targetInstType,
         );
 
     // Get all szakirány names that belong to this institution type
@@ -442,9 +443,6 @@ export default function TanuloLetszam() {
       let savedCount = 0;
       let updatedCount = 0;
 
-      console.log("🔍 DEBUG: Starting save process");
-      console.log("🔍 DEBUG: apiStudentData available:", apiStudentData);
-
       // Get all displayed program types from the table structure
       const displayedProgramTypes = new Set();
       programTypes.forEach((category) => {
@@ -462,16 +460,10 @@ export default function TanuloLetszam() {
         }
       });
 
-      console.log(
-        "🔍 DEBUG: Displayed program types:",
-        Array.from(displayedProgramTypes)
-      );
-
       // Convert tableData to API format and save/update - only for displayed program types
       for (const [programType, yearData] of Object.entries(tableData)) {
         // Skip if this program type is not displayed in the table
         if (!displayedProgramTypes.has(programType)) {
-          console.log(`⏭️ Skipping non-displayed program type: ${programType}`);
           continue;
         }
 
@@ -498,7 +490,7 @@ export default function TanuloLetszam() {
 
               // Try to find the szakirany this szakma belongs to
               const foundCategory = programTypes.find(
-                (cat) => cat.isSzakirany && cat.subTypes.includes(programType)
+                (cat) => cat.isSzakirany && cat.subTypes.includes(programType),
               );
               if (foundCategory) {
                 szakiranyName = foundCategory.szakiranyName;
@@ -533,19 +525,6 @@ export default function TanuloLetszam() {
               const yearMatch = record.tanev_kezdete === parseInt(year);
               const jogvMatch = record.jogv_tipus === 0; // tanulói jogviszony
 
-              console.log(`🔍 Checking existing record for update (tanulói):`, {
-                programType,
-                szakiranyName,
-                szakmaNev,
-                recordSzakiranyNev,
-                recordSzakmaNev,
-                szakmaMatch,
-                szakiranyMatch,
-                yearMatch,
-                jogvMatch,
-                recordId: record.id,
-              });
-
               return szakmaMatch && szakiranyMatch && yearMatch && jogvMatch;
             });
 
@@ -558,11 +537,6 @@ export default function TanuloLetszam() {
               tanev_kezdete: parseInt(year),
             };
 
-            console.log(
-              `🔍 DEBUG: Record data for tanulói jogviszony:`,
-              recordData
-            );
-
             try {
               if (existingRecord) {
                 // Update existing record
@@ -571,21 +545,15 @@ export default function TanuloLetszam() {
                   ...recordData,
                 }).unwrap();
                 updatedCount++;
-                console.log(
-                  `Updated student record for ${programType} - tanulói jogviszony - ${year}`
-                );
               } else {
                 // Create new record
                 await addStudentData(recordData).unwrap();
                 savedCount++;
-                console.log(
-                  `Created new student record for ${programType} - tanulói jogviszony - ${year}`
-                );
               }
             } catch (recordError) {
               console.error(
                 `Error saving student record for ${programType} - tanulói jogviszony - ${year}:`,
-                recordError
+                recordError,
               );
               throw recordError;
             }
@@ -613,7 +581,7 @@ export default function TanuloLetszam() {
 
               // Try to find the szakirany this szakma belongs to
               const foundCategory = programTypes.find(
-                (cat) => cat.isSzakirany && cat.subTypes.includes(programType)
+                (cat) => cat.isSzakirany && cat.subTypes.includes(programType),
               );
               if (foundCategory) {
                 szakiranyName = foundCategory.szakiranyName;
@@ -648,22 +616,6 @@ export default function TanuloLetszam() {
               const yearMatch = record.tanev_kezdete === parseInt(year);
               const jogvMatch = record.jogv_tipus === 1; // felnőttképzési jogviszony
 
-              console.log(
-                `🔍 Checking existing record for update (felnőttképzési):`,
-                {
-                  programType,
-                  szakiranyName,
-                  szakmaNev,
-                  recordSzakiranyNev,
-                  recordSzakmaNev,
-                  szakmaMatch,
-                  szakiranyMatch,
-                  yearMatch,
-                  jogvMatch,
-                  recordId: record.id,
-                }
-              );
-
               return szakmaMatch && szakiranyMatch && yearMatch && jogvMatch;
             });
 
@@ -676,11 +628,6 @@ export default function TanuloLetszam() {
               tanev_kezdete: parseInt(year),
             };
 
-            console.log(
-              `🔍 DEBUG: Record data for felnőttképzési jogviszony:`,
-              recordData
-            );
-
             try {
               if (existingRecord) {
                 // Update existing record
@@ -689,21 +636,15 @@ export default function TanuloLetszam() {
                   ...recordData,
                 }).unwrap();
                 updatedCount++;
-                console.log(
-                  `Updated student record for ${programType} - felnőttképzési jogviszony - ${year}`
-                );
               } else {
                 // Create new record
                 await addStudentData(recordData).unwrap();
                 savedCount++;
-                console.log(
-                  `Created new student record for ${programType} - felnőttképzési jogviszony - ${year}`
-                );
               }
             } catch (recordError) {
               console.error(
                 `Error saving student record for ${programType} - felnőttképzési jogviszony - ${year}:`,
-                recordError
+                recordError,
               );
               throw recordError;
             }
@@ -713,13 +654,10 @@ export default function TanuloLetszam() {
 
       setSavedData(JSON.parse(JSON.stringify(tableData)));
       setIsModified(false);
-      console.log(
-        `Successfully saved ${savedCount} new student records and updated ${updatedCount} existing records`
-      );
 
       // Show success snackbar
       setSnackbarMessage(
-        `Sikeresen mentve: ${savedCount} új rekord és ${updatedCount} frissített rekord`
+        `Sikeresen mentve: ${savedCount} új rekord és ${updatedCount} frissített rekord`,
       );
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
@@ -765,7 +703,6 @@ export default function TanuloLetszam() {
       return {};
     }
 
-    console.log("Calculating from tanugyi data...");
     const calculatedData = {};
 
     // Track filtering statistics
@@ -817,13 +754,6 @@ export default function TanuloLetszam() {
       // Track institution types and evfolyam values for debugging
       evfolyamStats[evfolyam] = (evfolyamStats[evfolyam] || 0) + 1;
 
-      // Only log first 10 students to avoid console spam
-      if (totalProcessed <= 10) {
-        console.log(
-          `Processing student ${totalProcessed}: szakma="${szakmaNev}", szakirany="${szakiranyName}", evfolyam="${evfolyam}", year=${year}`
-        );
-      }
-
       // Determine institution type from evfolyam - be more inclusive
       const isTechnikum = evfolyam.toLowerCase().includes("technikum");
       const isSzakkepzo = evfolyam.toLowerCase().includes("szakképző");
@@ -864,41 +794,13 @@ export default function TanuloLetszam() {
         // Count the student in the appropriate category
         if (isFelnottkepzesi) {
           calculatedData[programType][year].felnottkepzesi_jogviszony += 1;
-          if (totalProcessed <= 10) {
-            console.log(
-              `✅ INCLUDED (felnőtt): ${programType} - ${evfolyam} - ${year}`
-            );
-          }
         } else {
           calculatedData[programType][year].tanuloi_jogviszony += 1;
-          if (totalProcessed <= 10) {
-            console.log(
-              `✅ INCLUDED (tanulói): ${programType} - ${evfolyam} - ${year}`
-            );
-          }
         }
       } else {
         filteredOut++;
-        if (totalProcessed <= 10) {
-          console.log(
-            `❌ FILTERED OUT: ${programType} - ${evfolyam} - year: ${year}`
-          );
-        }
       }
     });
-
-    // Log filtering statistics
-    console.log("Tanugyi data processing stats:");
-    console.log("- Total records processed:", totalProcessed);
-    console.log("- Records filtered out:", filteredOut);
-    console.log("- Records included:", totalProcessed - filteredOut);
-    console.log("- Evfolyam distribution:", evfolyamStats);
-
-    // Show sample of szakma names found
-    const szakmaNames = Object.keys(calculatedData);
-    console.log("- Sample szakma names found:", szakmaNames.slice(0, 10));
-    console.log("- Total unique szakma names:", szakmaNames.length);
-    console.log("- Final calculated data:", calculatedData);
 
     return calculatedData;
   }, [tanugyiData]);
@@ -906,10 +808,6 @@ export default function TanuloLetszam() {
   // Refetch data when selected school changes
   useEffect(() => {
     if (selectedSchool?.id) {
-      console.log(
-        "Selected school changed, refetching data for school:",
-        selectedSchool.id
-      );
       // Reset states to show loading and clear old data
       setTableData({});
       setIsModified(false);
@@ -928,8 +826,6 @@ export default function TanuloLetszam() {
       apiStudentData.length > 0;
     const hasTanugyiData =
       tanugyiData && Array.isArray(tanugyiData) && tanugyiData.length > 0;
-
-    console.log(tanugyiData);
 
     if (hasTanuloLetszamData) {
       // Priority: Use TanuloLetszam data if available
@@ -954,10 +850,6 @@ export default function TanuloLetszam() {
         const jogvType = record.jogv_tipus;
         const letszam = record.letszam || 0;
 
-        console.log(
-          `🔍 Processing TanuloLetszam record: ${programType}, year: ${year}, jogv: ${jogvType}, letszam: ${letszam}`
-        );
-
         if (!initialTableData[programType]) {
           initialTableData[programType] = {};
         }
@@ -978,7 +870,6 @@ export default function TanuloLetszam() {
 
       // Apply TanugyiAdatok fallback for zero values if TanugyiAdatok is available
       if (hasTanugyiData) {
-        console.log("Applying TanugyiAdatok fallback for zero values...");
         // Use TanugyiAdatok calculation as fallback
         const calculatedData = calculateFromTanugyiData();
 
@@ -1006,9 +897,6 @@ export default function TanuloLetszam() {
             ) {
               initialTableData[programType][year].tanuloi_jogviszony =
                 calculatedValues.tanuloi_jogviszony;
-              console.log(
-                `🔄 Applied fallback for ${programType} ${year} tanulói: ${calculatedValues.tanuloi_jogviszony}`
-              );
             }
             if (
               existingValues.felnottkepzesi_jogviszony === 0 &&
@@ -1016,9 +904,6 @@ export default function TanuloLetszam() {
             ) {
               initialTableData[programType][year].felnottkepzesi_jogviszony =
                 calculatedValues.felnottkepzesi_jogviszony;
-              console.log(
-                `🔄 Applied fallback for ${programType} ${year} felnőtt: ${calculatedValues.felnottkepzesi_jogviszony}`
-              );
             }
           });
         });
@@ -1039,20 +924,13 @@ export default function TanuloLetszam() {
                   calculatedValues.felnottkepzesi_jogviszony &&
                   calculatedValues.felnottkepzesi_jogviszony > 0)
               );
-            })
+            }),
         );
 
         if (hasAppliedFallback) {
           setDataSource("TanuloLetszam + TanugyiAdatok (fallback)");
-          console.log(
-            "Applied TanugyiAdatok fallback data to zero values:",
-            initialTableData
-          );
         } else {
           setDataSource("TanuloLetszam");
-          console.log(
-            "No fallback data was applied - all TanuloLetszam values were non-zero or no matching TanugyiAdatok found"
-          );
         }
       } else {
         setDataSource("TanuloLetszam");
@@ -1060,31 +938,36 @@ export default function TanuloLetszam() {
 
       setTableData(initialTableData);
       setSavedData(JSON.parse(JSON.stringify(initialTableData)));
-      console.log(
-        "Initialized table data from TanuloLetszam API:",
-        initialTableData
-      );
     } else if (hasTanugyiData) {
-      // Fallback: Calculate from tanugyi data when TanuloLetszam data is not available
-      console.log(
-        "TanuloLetszam data not available, calculating from tanugyi data..."
-      );
-
       const calculatedData = calculateFromTanugyiData();
 
       setTableData(calculatedData);
       setSavedData(JSON.parse(JSON.stringify(calculatedData)));
       setDataSource("TanugyiAdatok");
-      console.log("Calculated table data from tanugyi data:", calculatedData);
     }
   }, [apiStudentData, tanugyiData, calculateFromTanugyiData]);
 
-  useEffect(() => {
-    console.log("Program types:", programTypes);
-    console.log("Chart data:", chartData);
-    console.log("Chart years:", years);
-    console.log("Editable data:", editableData);
-  }, [programTypes, chartData, years, editableData]);
+  if (isFetching || isLoadingSchools || isLoadingTanugyi) {
+    return (
+      <Backdrop
+        sx={{
+          position: "fixed",
+          zIndex: 1300,
+          backgroundColor: "rgba(255, 255, 255, 0.8)",
+          color: "primary.main",
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+        }}
+        open={isFetching || isLoadingSchools || isLoadingTanugyi}
+      >
+        <CircularProgress size={50} />
+        <Box sx={{ textAlign: "center", fontWeight: "medium" }}>
+          Adatok betöltése folyamatban, kérjük várjon...
+        </Box>
+      </Backdrop>
+    );
+  }
 
   return (
     <Container maxWidth="xl">
@@ -1119,18 +1002,18 @@ export default function TanuloLetszam() {
                 onChange={handleTabChange}
                 aria-label="Tanulólétszám nézetek"
               >
-                <Tab label="📊 Grafikon nézet" />
                 <Tab label="📋 Táblázat nézet" />
+                <Tab label="📊 Grafikon nézet" />
               </Tabs>
             </Box>
 
-            {activeTab === 0 && (
+            {activeTab === 1 && (
               <Box>
                 <TanuloLetszamChart data={chartData} years={years} />
               </Box>
             )}
 
-            {activeTab === 1 && (
+            {activeTab === 0 && (
               <>
                 {" "}
                 {/* Action Buttons */}
@@ -1299,7 +1182,7 @@ export default function TanuloLetszam() {
                           const startYear = parseInt(schoolYear.split("/")[0]);
                           const change = calculateGrandTotalPercentageChange(
                             startYear,
-                            "total"
+                            "total",
                           );
                           const isPositive = parseFloat(change) > 0;
                           const isNegative = parseFloat(change) < 0;
@@ -1314,8 +1197,8 @@ export default function TanuloLetszam() {
                                 color: isPositive
                                   ? "#2e7d32"
                                   : isNegative
-                                  ? "#d32f2f"
-                                  : "text.primary",
+                                    ? "#d32f2f"
+                                    : "text.primary",
                                 borderBottom: "2px solid #4caf50",
                               }}
                             >
@@ -1329,7 +1212,7 @@ export default function TanuloLetszam() {
                           const startYear = parseInt(schoolYear.split("/")[0]);
                           const change = calculateGrandTotalPercentageChange(
                             startYear,
-                            "tanuloi_jogviszony"
+                            "tanuloi_jogviszony",
                           );
                           const isPositive = parseFloat(change) > 0;
                           const isNegative = parseFloat(change) < 0;
@@ -1344,8 +1227,8 @@ export default function TanuloLetszam() {
                                 color: isPositive
                                   ? "#2e7d32"
                                   : isNegative
-                                  ? "#d32f2f"
-                                  : "text.primary",
+                                    ? "#d32f2f"
+                                    : "text.primary",
                                 borderBottom: "2px solid #4caf50",
                               }}
                             >
@@ -1359,7 +1242,7 @@ export default function TanuloLetszam() {
                           const startYear = parseInt(schoolYear.split("/")[0]);
                           const change = calculateGrandTotalPercentageChange(
                             startYear,
-                            "felnottkepzesi_jogviszony"
+                            "felnottkepzesi_jogviszony",
                           );
                           const isPositive = parseFloat(change) > 0;
                           const isNegative = parseFloat(change) < 0;
@@ -1374,8 +1257,8 @@ export default function TanuloLetszam() {
                                 color: isPositive
                                   ? "#2e7d32"
                                   : isNegative
-                                  ? "#d32f2f"
-                                  : "text.primary",
+                                    ? "#d32f2f"
+                                    : "text.primary",
                                 borderBottom: "2px solid #4caf50",
                               }}
                             >
@@ -1437,13 +1320,13 @@ export default function TanuloLetszam() {
                                 {/* Calculate totals for subcategory */}
                                 {evszamok.map((schoolYear) => {
                                   const startYear = parseInt(
-                                    schoolYear.split("/")[0]
+                                    schoolYear.split("/")[0],
                                   );
                                   let subcategoryTotal = 0;
                                   category.subTypes.forEach((subType) => {
                                     subcategoryTotal += calculateTotal(
                                       subType,
-                                      startYear
+                                      startYear,
                                     );
                                   });
                                   return (
@@ -1466,7 +1349,7 @@ export default function TanuloLetszam() {
                                 {/* Tanulói jogviszony totals */}
                                 {evszamok.map((schoolYear) => {
                                   const startYear = parseInt(
-                                    schoolYear.split("/")[0]
+                                    schoolYear.split("/")[0],
                                   );
                                   let subcategoryTanuloi = 0;
                                   category.subTypes.forEach((subType) => {
@@ -1494,7 +1377,7 @@ export default function TanuloLetszam() {
                                 {/* Felnőttképzési jogviszony totals */}
                                 {evszamok.map((schoolYear) => {
                                   const startYear = parseInt(
-                                    schoolYear.split("/")[0]
+                                    schoolYear.split("/")[0],
                                   );
                                   let subcategoryFelnottkepzesi = 0;
                                   category.subTypes.forEach((subType) => {
@@ -1552,11 +1435,11 @@ export default function TanuloLetszam() {
                                   {/* Összesen (tanulói + felnőttképzési) */}
                                   {evszamok.map((schoolYear) => {
                                     const startYear = parseInt(
-                                      schoolYear.split("/")[0]
+                                      schoolYear.split("/")[0],
                                     );
                                     const total = calculateTotal(
                                       subType,
-                                      startYear
+                                      startYear,
                                     );
                                     const hasData = total > 0;
 
@@ -1580,7 +1463,7 @@ export default function TanuloLetszam() {
                                   {/* Tanulói jogviszony */}
                                   {evszamok.map((schoolYear) => {
                                     const startYear = parseInt(
-                                      schoolYear.split("/")[0]
+                                      schoolYear.split("/")[0],
                                     );
                                     const data =
                                       tableData[subType]?.[startYear];
@@ -1598,7 +1481,7 @@ export default function TanuloLetszam() {
                                               subType,
                                               startYear,
                                               "tanuloi_jogviszony",
-                                              e.target.value
+                                              e.target.value,
                                             )
                                           }
                                           size="small"
@@ -1615,7 +1498,7 @@ export default function TanuloLetszam() {
                                   {/* Felnőttképzési jogviszony */}
                                   {evszamok.map((schoolYear) => {
                                     const startYear = parseInt(
-                                      schoolYear.split("/")[0]
+                                      schoolYear.split("/")[0],
                                     );
                                     const data =
                                       tableData[subType]?.[startYear];
@@ -1635,7 +1518,7 @@ export default function TanuloLetszam() {
                                               subType,
                                               startYear,
                                               "felnottkepzesi_jogviszony",
-                                              e.target.value
+                                              e.target.value,
                                             )
                                           }
                                           size="small"
@@ -1666,8 +1549,8 @@ export default function TanuloLetszam() {
                                       backgroundColor: category.isTotal
                                         ? "#e8f5e8"
                                         : category.isInstitutionType
-                                        ? "#fff3e0"
-                                        : "#f0f8ff",
+                                          ? "#fff3e0"
+                                          : "#f0f8ff",
                                       borderBottom: "2px solid #ddd",
                                       borderRight: "2px solid #ddd",
                                       position: "sticky",
@@ -1687,8 +1570,8 @@ export default function TanuloLetszam() {
                                           backgroundColor: category.isTotal
                                             ? "#e8f5e8"
                                             : category.isInstitutionType
-                                            ? "#fff3e0"
-                                            : "#f0f8ff",
+                                              ? "#fff3e0"
+                                              : "#f0f8ff",
                                         }}
                                       />
                                     ))}
@@ -1741,7 +1624,7 @@ export default function TanuloLetszam() {
                                   {/* Összesen (tanulói + felnőttképzési) */}
                                   {evszamok.map((schoolYear) => {
                                     const startYear = parseInt(
-                                      schoolYear.split("/")[0]
+                                      schoolYear.split("/")[0],
                                     );
 
                                     let total;
@@ -1750,7 +1633,7 @@ export default function TanuloLetszam() {
                                       total = calculateInstitutionTypeTotal(
                                         subType,
                                         startYear,
-                                        "total"
+                                        "total",
                                       );
                                     } else if (
                                       category.isTotal &&
@@ -1759,12 +1642,12 @@ export default function TanuloLetszam() {
                                       // For "Összesen" row, calculate grand total of everything
                                       total = calculateGrandTotal(
                                         startYear,
-                                        "total"
+                                        "total",
                                       );
                                     } else {
                                       total = calculateTotal(
                                         subType,
-                                        startYear
+                                        startYear,
                                       );
                                     }
                                     const hasData = total > 0;
@@ -1803,7 +1686,7 @@ export default function TanuloLetszam() {
                                   {/* Tanulói jogviszony */}
                                   {evszamok.map((schoolYear) => {
                                     const startYear = parseInt(
-                                      schoolYear.split("/")[0]
+                                      schoolYear.split("/")[0],
                                     );
 
                                     if (category.isInstitutionType) {
@@ -1812,7 +1695,7 @@ export default function TanuloLetszam() {
                                         calculateInstitutionTypeTotal(
                                           subType,
                                           startYear,
-                                          "tanuloi_jogviszony"
+                                          "tanuloi_jogviszony",
                                         );
                                       return (
                                         <TableCell
@@ -1837,7 +1720,7 @@ export default function TanuloLetszam() {
                                       // For "Összesen" row, calculate grand total (read-only)
                                       const value = calculateGrandTotal(
                                         startYear,
-                                        "tanuloi_jogviszony"
+                                        "tanuloi_jogviszony",
                                       );
                                       return (
                                         <TableCell
@@ -1877,7 +1760,7 @@ export default function TanuloLetszam() {
                                                 subType,
                                                 startYear,
                                                 "tanuloi_jogviszony",
-                                                e.target.value
+                                                e.target.value,
                                               )
                                             }
                                             size="small"
@@ -1895,7 +1778,7 @@ export default function TanuloLetszam() {
                                   {/* Felnőttképzési jogviszony */}
                                   {evszamok.map((schoolYear) => {
                                     const startYear = parseInt(
-                                      schoolYear.split("/")[0]
+                                      schoolYear.split("/")[0],
                                     );
 
                                     if (category.isInstitutionType) {
@@ -1904,7 +1787,7 @@ export default function TanuloLetszam() {
                                         calculateInstitutionTypeTotal(
                                           subType,
                                           startYear,
-                                          "felnottkepzesi_jogviszony"
+                                          "felnottkepzesi_jogviszony",
                                         );
                                       return (
                                         <TableCell
@@ -1929,7 +1812,7 @@ export default function TanuloLetszam() {
                                       // For "Összesen" row, calculate grand total (read-only)
                                       const value = calculateGrandTotal(
                                         startYear,
-                                        "felnottkepzesi_jogviszony"
+                                        "felnottkepzesi_jogviszony",
                                       );
                                       return (
                                         <TableCell
@@ -1970,7 +1853,7 @@ export default function TanuloLetszam() {
                                                 subType,
                                                 startYear,
                                                 "felnottkepzesi_jogviszony",
-                                                e.target.value
+                                                e.target.value,
                                               )
                                             }
                                             size="small"

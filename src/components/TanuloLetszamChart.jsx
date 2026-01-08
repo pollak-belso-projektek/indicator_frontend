@@ -143,7 +143,7 @@ const TanuloLetszamChart = ({ data, years }) => {
     const allValues = chartData.flatMap((entry) =>
       Object.entries(entry)
         .filter(([key]) => key !== "year" && key !== "yearNum")
-        .map(([, value]) => value)
+        .map(([, value]) => value),
     );
 
     const total = allValues.reduce((sum, val) => sum + val, 0);
@@ -192,8 +192,8 @@ const TanuloLetszamChart = ({ data, years }) => {
       setSelectedAgazatok(
         availableProgramTypes.slice(
           0,
-          Math.min(3, availableProgramTypes.length)
-        )
+          Math.min(3, availableProgramTypes.length),
+        ),
       );
     }
   }, [availableProgramTypes, selectedAgazatok]);
@@ -342,7 +342,7 @@ const TanuloLetszamChart = ({ data, years }) => {
           <Grid item xs={6} md={2.4}>
             <Paper sx={{ p: 2, textAlign: "center" }}>
               <Typography variant="body2" color="text.secondary">
-                Összes létszám
+                Összes feldolgozott adat
               </Typography>
               <Typography variant="h6" fontWeight="bold">
                 {statistics.total.toLocaleString("hu-HU")}
@@ -498,7 +498,7 @@ const TanuloLetszamChart = ({ data, years }) => {
                               control={
                                 <Checkbox
                                   checked={selectedAgazatok.includes(
-                                    programType
+                                    programType,
                                   )}
                                   onChange={(e) => {
                                     if (e.target.checked) {
@@ -509,8 +509,8 @@ const TanuloLetszamChart = ({ data, years }) => {
                                     } else {
                                       setSelectedAgazatok(
                                         selectedAgazatok.filter(
-                                          (a) => a !== programType
-                                        )
+                                          (a) => a !== programType,
+                                        ),
                                       );
                                     }
                                   }}
@@ -538,7 +538,7 @@ const TanuloLetszamChart = ({ data, years }) => {
                         control={
                           <Checkbox
                             checked={selectedCategories.includes(
-                              "Tanulói jogviszony"
+                              "Tanulói jogviszony",
                             )}
                             onChange={(e) => {
                               if (e.target.checked) {
@@ -549,8 +549,8 @@ const TanuloLetszamChart = ({ data, years }) => {
                               } else {
                                 setSelectedCategories(
                                   selectedCategories.filter(
-                                    (c) => c !== "Tanulói jogviszony"
-                                  )
+                                    (c) => c !== "Tanulói jogviszony",
+                                  ),
                                 );
                               }
                             }}
@@ -562,7 +562,7 @@ const TanuloLetszamChart = ({ data, years }) => {
                         control={
                           <Checkbox
                             checked={selectedCategories.includes(
-                              "Felnőttképzési jogviszony"
+                              "Felnőttképzési jogviszony",
                             )}
                             onChange={(e) => {
                               if (e.target.checked) {
@@ -573,8 +573,8 @@ const TanuloLetszamChart = ({ data, years }) => {
                               } else {
                                 setSelectedCategories(
                                   selectedCategories.filter(
-                                    (c) => c !== "Felnőttképzési jogviszony"
-                                  )
+                                    (c) => c !== "Felnőttképzési jogviszony",
+                                  ),
                                 );
                               }
                             }}

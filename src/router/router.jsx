@@ -87,6 +87,7 @@ const FelvettekPage = lazy(() =>
   import("../pages/indicators/2_felvettek_szama/FelvettekSzama.jsx")
 );
 const LogsPage = lazy(() => import("../pages/Logs.jsx"));
+const ChangelogPage = lazy(() => import("../pages/Changelog.jsx"));
 const OktatokEgyebTevPage = lazy(() =>
   import("../pages/indicators/23_oktato_egyeb_tev/Oktatok_egyeb_tev.jsx")
 );
@@ -206,7 +207,7 @@ export default function Router() {
                   </TableProtectedRoute>
                 }
               />
-            
+
               <Route
                 path="/users"
                 element={
@@ -235,6 +236,16 @@ export default function Router() {
                       <LogsPage />
                     </NavigationWithLoading>
                   </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/changelog"
+                element={
+                  <ProtectedRoute>
+                    <NavigationWithLoading>
+                      <ChangelogPage />
+                    </NavigationWithLoading>
+                  </ProtectedRoute>
                 }
               />{" "}
               <Route

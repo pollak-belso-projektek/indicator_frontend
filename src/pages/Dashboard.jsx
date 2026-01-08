@@ -42,6 +42,28 @@ import {
   Close as CloseIcon,
   SupervisorAccount as SupervisorAccountIcon,
 } from "@mui/icons-material";
+import {
+  MdPerson,
+  MdMenu,
+  MdHome,
+  MdStar,
+  MdBookmark,
+  MdUpload,
+  MdSettings,
+  MdGroup,
+  MdBook,
+  MdSchool,
+  MdAssessment,
+  MdEvent,
+  MdTrendingUp,
+  MdGavel,
+  MdWork,
+  MdClose,
+  MdSearch,
+  MdInfo,
+  MdAccessible,
+  MdHistory,
+} from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import TokenDebugPanel from "../components/TokenDebugPanel";
 import CacheBuster from "../components/CacheBuster";
@@ -64,121 +86,182 @@ import { useRedirectNotification } from "../hooks/useRedirectNotification";
 const NavigationCategories = {
   GENERAL: {
     name: "Általános",
-    icon: DashboardIcon,
+    icon: MdHome,
     items: [
-      {
-        name: "Főoldal",
-        icon: DashboardIcon,
-        link: "/dashboard",
-        tableName: null,
-      },
+      { name: "Főoldal", icon: MdHome, link: "/dashboard", tableName: null },
       {
         name: "Alapadatok",
-        icon: SettingsIcon,
+        icon: MdSettings,
         link: "/alapadatok",
         tableName: null,
       },
       {
         name: "Iskolák",
-        icon: SchoolIcon,
+        icon: MdSchool,
         link: "/schools",
         tableName: "alapadatok",
       },
     ],
   },
-  STUDENTS: {
-    name: "Tanulói adatok",
-    icon: GroupIcon,
+  INDICATORS: {
+    name: "Indikátorok",
+    icon: MdGroup,
     items: [
       {
         name: "Tanulólétszám",
-        icon: GroupIcon,
+        icon: MdGroup,
         link: "/tanulo_letszam",
         tableName: "tanulo_letszam",
       },
       {
         name: "Felvettek száma",
-        icon: GroupIcon,
+        icon: MdGroup,
         link: "/felvettek_szama",
         tableName: "felvettek_szama",
       },
-    ],
-  },
-  EDUCATION: {
-    name: "Oktatási eredmények",
-    icon: AssessmentIcon,
-    items: [
+      {
+        name: "Sajátos nevelésű (SNI)",
+        icon: MdAccessible,
+        link: "/sajatos-nevelesi-igenyu-tanulok-aranya",
+        tableName: "sajatos_nevelesu_tanulok",
+      },
+      {
+        name: "HH tanulók aránya",
+        icon: MdAccessible,
+        link: "/hatranyos-helyezu-tanulok-aranya",
+        tableName: "hh_es_hhh_nevelesu_tanulok",
+      },
       {
         name: "Kompetencia",
-        icon: AssessmentIcon,
+        icon: MdBook,
         link: "/kompetencia",
         tableName: "kompetencia",
       },
       {
+        name: "Országos kompetenciamérés",
+        icon: MdAssessment,
+        link: "/orszagos-kompetenciameres",
+        tableName: "kompetencia",
+      },
+      {
         name: "NSZFH mérések",
-        icon: AssessmentIcon,
+        icon: MdAssessment,
         link: "/nszfh-meresek",
         tableName: "nszfh",
       },
       {
         name: "Vizsgaeredmények",
-        icon: AssessmentIcon,
+        icon: MdAssessment,
         link: "/vizsgaeredmenyek",
         tableName: "vizsgaeredmenyek",
       },
-    ],
-  },
-  ACHIEVEMENTS: {
-    name: "Eredmények és elismerések",
-    icon: StarIcon,
-    items: [
+      {
+        name: "Elégedettség mérés",
+        icon: MdAssessment,
+        link: "/elegedettseg-meres-eredmenyei",
+        tableName: "elegedettseg_meres",
+      },
       {
         name: "Versenyek",
-        icon: StarIcon,
+        icon: MdStar,
         link: "/versenyek",
         tableName: "versenyek",
       },
       {
         name: "Intézményi elismerések",
-        icon: StarIcon,
+        icon: MdStar,
         link: "/intezmenyi-elismeresek",
         tableName: "intezmenyi_neveltseg",
       },
-    ],
-  },
-  CAREER: {
-    name: "Pályakövetés",
-    icon: WorkIcon,
-    items: [
       {
         name: "Elhelyezkedési mutató",
-        icon: AssessmentIcon,
+        icon: MdAssessment,
         link: "/elhelyezkedesi-mutato",
         tableName: "elhelyezkedes",
+      },
+      {
+        name: "Végzettek elégedettsége",
+        icon: MdStar,
+        link: "/vegzettek-elegedettsege",
+        tableName: "elegedettseg",
+      },
+      {
+        name: "Szakképzési munkaszerződés - SZMSZ",
+        icon: MdWork,
+        link: "/szakkepzesi-munkaszerződes-arany",
+        tableName: "szmsz",
+      },
+      {
+        name: "Felnőttképzés",
+        icon: MdBook,
+        link: "/felnottkepzes",
+        tableName: "alkalmazottak_munkaugy",
+      },
+      {
+        name: "Műhelyiskola",
+        icon: MdSchool,
+        link: "/muhelyiskolai-reszszakmat",
+        tableName: "muhelyiskola",
+      },
+      {
+        name: "Dobbantó program",
+        icon: MdTrendingUp,
+        link: "/dobbanto-program-aranya",
+        tableName: "dobbanto",
+      },
+      {
+        name: "Intézményi nevelési mutatók",
+        icon: MdGavel,
+        link: "/intezmenyi-nevelesi-mutatok",
+        tableName: "intezmenyi_neveltseg",
+      },
+      {
+        name: "Egy oktatóra jutó diákok",
+        icon: MdBookmark,
+        link: "/oktato_per_diak",
+        tableName: "egy_oktatora_juto_tanulo",
+      },
+      {
+        name: "Egy oktatóra jutó össz diák",
+        icon: MdBookmark,
+        link: "/egy-oktatora-juto-ossz-diak",
+        tableName: "egy_oktatora_juto_tanulo",
+      },
+      {
+        name: "Oktatók egyéb tev.",
+        icon: MdWork,
+        link: "/oktato-egyeb-tev",
+        tableName: "oktato-egyeb-tev",
       },
     ],
   },
   ADMIN: {
     name: "Adminisztráció",
-    icon: SettingsIcon,
+    icon: MdSettings,
     items: [
       {
         name: "Adatok importálása",
-        icon: DataIcon,
+        icon: MdUpload,
         link: "/adat-import",
         tableName: null,
       },
       {
         name: "Felhasználók",
-        icon: PersonIcon,
+        icon: MdPerson,
         link: "/users",
         tableName: "user",
       },
       {
         name: "Tábla kezelés",
-        icon: SettingsIcon,
+        icon: MdSettings,
         link: "/table-management",
         tableName: null,
+      },
+      {
+        name: "Rendszer naplók",
+        icon: MdBookmark,
+        link: "/logs",
+        tableName: "log",
       },
     ],
   },
@@ -255,7 +338,7 @@ export default function Dashboard() {
     const serviceStatuses = Object.values(services);
     const totalServices = serviceStatuses.length;
     const healthyServices = serviceStatuses.filter(
-      (service) => service.status === "healthy"
+      (service) => service.status === "healthy",
     ).length;
     const unhealthyServices = totalServices - healthyServices;
 
@@ -482,9 +565,9 @@ export default function Dashboard() {
           <Grid container spacing={3} sx={{ mb: 4 }}>
             {recentPages.slice(0, 5).map((page, index) => {
               const categoryInfo = Object.values(NavigationCategories).find(
-                (cat) => cat.items.some((item) => item.link === page.link)
+                (cat) => cat.items.some((item) => item.link === page.link),
               );
-              const categoryName = categoryInfo?.name ;
+              const categoryName = categoryInfo?.name;
 
               return (
                 <Grid item xs={12} sm={6} md={4} lg={3} key={page.link}>
@@ -517,6 +600,13 @@ export default function Dashboard() {
                             component="h3"
                             sx={{ mb: 1 }}
                           >
+                            {page.name}
+                          </Typography>
+                          <Typography
+                            variant="h7"
+                            component="h6"
+                            sx={{ mb: 1 }}
+                          >
                             {categoryName}
                           </Typography>
 
@@ -529,7 +619,7 @@ export default function Dashboard() {
                                   day: "numeric",
                                   hour: "2-digit",
                                   minute: "2-digit",
-                                }
+                                },
                               )}
                           </Typography>
                         </Box>
@@ -624,10 +714,10 @@ export default function Dashboard() {
                     {isSuperadmin
                       ? "Fejlesztő"
                       : isAdmin
-                      ? "Admin"
-                      : isHSZC
-                      ? "HSZC"
-                      : "Alapszint"}
+                        ? "Admin"
+                        : isHSZC
+                          ? "HSZC"
+                          : "Alapszint"}
                   </Typography>
                 </Box>
                 <PersonIcon sx={{ fontSize: 40, color: "info.main" }} />
@@ -635,7 +725,6 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </Grid>
-
 
         <Grid item xs={12} sm={6} md={3}>
           <Card>
@@ -684,7 +773,7 @@ export default function Dashboard() {
                         {healthData.services
                           ? `${
                               Object.values(healthData.services).filter(
-                                (service) => service.status === "healthy"
+                                (service) => service.status === "healthy",
                               ).length
                             }/${
                               Object.keys(healthData.services).length
@@ -780,7 +869,7 @@ export default function Dashboard() {
                 <CardContent>
                   <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <CheckCircleIcon sx={{ mr: 1, color: "success.main" }} />
-                    <Typography variant="h6">Szolgáltatások</Typography>
+                    <Typography variant="h6">Backend Szolgáltatások</Typography>
                   </Box>
                   <Box
                     sx={{
@@ -817,7 +906,7 @@ export default function Dashboard() {
                     >
                       {healthData.services
                         ? Object.values(healthData.services).filter(
-                            (service) => service.status === "healthy"
+                            (service) => service.status === "healthy",
                           ).length
                         : 0}
                     </Typography>
@@ -839,7 +928,7 @@ export default function Dashboard() {
                     >
                       {healthData.services
                         ? Object.values(healthData.services).filter(
-                            (service) => service.status !== "healthy"
+                            (service) => service.status !== "healthy",
                           ).length
                         : 0}
                     </Typography>
@@ -856,7 +945,7 @@ export default function Dashboard() {
                     <Typography variant="h6">Gateway</Typography>
                   </Box>
                   <Typography variant="h4" sx={{ mb: 1 }}>
-                    {formatUptime(healthData.uptime)}
+                    {formatUptime(healthData.gateway.uptime)}
                   </Typography>
                   <Typography
                     variant="body2"
@@ -866,10 +955,10 @@ export default function Dashboard() {
                     Működési idő
                   </Typography>
                   <Typography variant="caption" color="textSecondary">
-                    {healthData.version
-                      ? `v${healthData.version}`
+                    {healthData.gateway.version
+                      ? `v${healthData.gateway.version}`
                       : "Verzió ismeretlen"}{" "}
-                    | {formatTimestamp(healthData.timestamp)}
+                    | {formatTimestamp(healthData.gateway.timestamp)}
                   </Typography>
                 </CardContent>
               </Card>
@@ -1075,7 +1164,7 @@ export default function Dashboard() {
                                   </Typography>
                                   <Typography variant="caption">
                                     {formatMemory(
-                                      serviceData.healthData.memory.rss
+                                      serviceData.healthData.memory.rss,
                                     )}
                                   </Typography>
                                 </Box>
@@ -1093,7 +1182,7 @@ export default function Dashboard() {
                                   </Typography>
                                   <Typography variant="caption">
                                     {formatMemory(
-                                      serviceData.healthData.memory.heapUsed
+                                      serviceData.healthData.memory.heapUsed,
                                     )}
                                   </Typography>
                                 </Box>
@@ -1138,7 +1227,7 @@ export default function Dashboard() {
                       </CardContent>
                     </Card>
                   </Grid>
-                )
+                ),
               )}
           </Grid>
         </>
@@ -1180,7 +1269,7 @@ export default function Dashboard() {
             {healthData.services &&
               ` ${
                 Object.values(healthData.services).filter(
-                  (service) => service.status !== "healthy"
+                  (service) => service.status !== "healthy",
                 ).length
               } szolgáltatás problémás a ${
                 Object.keys(healthData.services).length

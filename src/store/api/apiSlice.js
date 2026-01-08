@@ -36,6 +36,7 @@ export const indicatorApi = createApi({
     "Szakma",
     "TanuloAdatszolgaltatas",
     "OktatoAdatszolgaltatas",
+    "Changelog",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -188,7 +189,10 @@ export const indicatorApi = createApi({
           await queryFulfilled;
           // Force refetch of related queries
           dispatch(
-            indicatorApi.util.invalidateTags(["TanuloLetszam", "TanugyiAdatok"])
+            indicatorApi.util.invalidateTags([
+              "TanuloLetszam",
+              "TanugyiAdatok",
+            ]),
           );
         } catch (e) {
           console.error("Error in addTanuloLetszam onQueryStarted:", e);
@@ -219,7 +223,10 @@ export const indicatorApi = createApi({
           await queryFulfilled;
           // Force refetch of related queries
           dispatch(
-            indicatorApi.util.invalidateTags(["TanuloLetszam", "TanugyiAdatok"])
+            indicatorApi.util.invalidateTags([
+              "TanuloLetszam",
+              "TanugyiAdatok",
+            ]),
           );
         } catch (e) {
           console.error("Error in updateTanuloLetszam onQueryStarted:", e);
@@ -233,6 +240,7 @@ export const indicatorApi = createApi({
         body: {
           alapadatok_id: params.alapadatok_id,
           tanugyi_adatok: params.tanugyi_adatok,
+          userId: params.userId,
         },
       }),
       invalidatesTags: (result, error, params) => [
@@ -249,7 +257,10 @@ export const indicatorApi = createApi({
           await queryFulfilled;
           // Force refetch of related queries
           dispatch(
-            indicatorApi.util.invalidateTags(["TanugyiAdatok", "TanuloLetszam"])
+            indicatorApi.util.invalidateTags([
+              "TanugyiAdatok",
+              "TanuloLetszam",
+            ]),
           );
         } catch (e) {
           console.error("Error in addTanugyiAdatok onQueryStarted:", e);
@@ -796,6 +807,35 @@ export const indicatorApi = createApi({
       invalidatesTags: ["NSZFH"],
     }),
 
+    // Changelog endpoints
+    getChangelog: build.query({
+      query: () => "changelog",
+      providesTags: ["Changelog"],
+    }),
+    addChangelogEntry: build.mutation({
+      query: (data) => ({
+        url: "changelog",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Changelog"],
+    }),
+    updateChangelogEntry: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `changelog/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Changelog"],
+    }),
+    deleteChangelogEntry: build.mutation({
+      query: (id) => ({
+        url: `changelog/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Changelog"],
+    }),
+
     // SZMSZ (Vocational Statistics)
     getSZMSZByYear: build.query({
       query: (tanev) => `szmsz/${tanev}`,
@@ -1144,4 +1184,9 @@ export const {
   useGetSzakmaListQuery,
   useRemoveSzakiranyFromSchoolMutation,
   useRemoveSzakmaFromSchoolMutation,
+  // Changelog hooks
+  useGetChangelogQuery,
+  useAddChangelogEntryMutation,
+  useUpdateChangelogEntryMutation,
+  useDeleteChangelogEntryMutation,
 } = indicatorApi;

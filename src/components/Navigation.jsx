@@ -31,6 +31,7 @@ import {
   MdSearch,
   MdInfo,
   MdAccessible,
+  MdHistory,
 } from "react-icons/md";
 
 import { useColorModeValue } from "./ui/color-mode";
@@ -57,46 +58,7 @@ import {
 } from "@mui/material";
 import { useRecentPages } from "../hooks/useRecentPages";
 import AliasModeBanner from "./AliasModeBanner";
-
-// Page numbering map based on the user's requirements
-export const PageNumbering = {
-  "/tanulo_letszam": 1,
-  "/felvettek_szama": 2,
-  "/oktato_per_diak": 3,
-  "/szakkepzesi-munkaszerződes-arany": 4, // Note: This page doesn't exist yet in navigation
-  "/felnottkepzes": 5,
-  "/kompetencia": 6,
-  "/nszfh-meresek": 7,
-  "/versenyek": 8, // Versenyek
-  "/elhelyezkedesi-mutato": 9,
-  "/vegzettek-elegedettsege": 10,
-  "/vizsgaeredmenyek": 11,
-  "/szakmai-vizsga": 12, // Note: This page doesn't exist yet in navigation
-  "/intezmenyi-elismeresek": 13,
-  "/szakmai-bemutatok-konferenciak": 14, // Rendezvények
-  "/lemorzsolodas": 15, // Note: This page doesn't exist yet in navigation
-  "/elegedettseg-meres-eredmenyei": 16,
-  "/intezmenyi-nevelesi-mutatok": 17,
-  "/hatranyos-helyezu-tanulok-aranya": 18, // HH és HHH tanulók
-  "/sajatos-nevelesi-igenyu-tanulok-aranya": 19,
-  "/dobbanto-program-aranya": 20,
-  "/muhelyiskolai-reszszakmat": 21,
-  "/szakmai-tovabbkepzesek": 22, // Note: This page doesn't exist yet in navigation
-  "/oktato-egyeb-tev": 23,
-  "/palyazatok": 24, // Note: This page doesn't exist yet in navigation
-  "/tanulmani-eredmeny": 25, // Note: This page doesn't exist yet in navigation
-  "/hianyzas": 26, // Note: This page doesn't exist yet in navigation
-  "/egy-oktatora-juto-ossz-diak": 27,
-  "/nyelvvizsgak-szama": 28, // Note: This page doesn't exist yet in navigation
-  "/projektek": 29, // Note: This page doesn't exist yet in navigation
-  "/dualis-kepzohelyek-szama": 30, // Note: This page doesn't exist yet in navigation
-  "/palyaorientacio": 31, // Note: This page doesn't exist yet in navigation
-  "/egyuttmukudesek-szama": 32, // Note: This page doesn't exist yet in navigation
-  "/szervezetfejlesztes": 33, // Note: This page doesn't exist yet in navigation
-  "/innovacios-tevekenysegek": 34, // Note: This page doesn't exist yet in navigation
-  "/digitalis-kompetencia": 35, // Note: This page doesn't exist yet in navigation
-  "/szakkepzes-zolditese": 36, // Note: This page doesn't exist yet in navigation
-};
+import PageNumbering from "../common/PageNumbering";
 
 // Function to get the page number for a given link
 const getPageNumber = (link) => {
@@ -130,8 +92,8 @@ const NavigationCategories = {
       },
     ],
   },
-  STUDENTS: {
-    name: "Tanulói adatok",
+  INDICATORS: {
+    name: "Indikátorok",
     icon: MdGroup,
     items: [
       {
@@ -158,12 +120,6 @@ const NavigationCategories = {
         link: "/hatranyos-helyezu-tanulok-aranya",
         tableName: "hh_es_hhh_nevelesu_tanulok",
       },
-    ],
-  },
-  EDUCATION: {
-    name: "Oktatási eredmények",
-    icon: MdAssessment,
-    items: [
       {
         name: "Kompetencia",
         icon: MdBook,
@@ -194,12 +150,6 @@ const NavigationCategories = {
         link: "/elegedettseg-meres-eredmenyei",
         tableName: "elegedettseg_meres",
       },
-    ],
-  },
-  ACHIEVEMENTS: {
-    name: "Eredmények és elismerések",
-    icon: MdStar,
-    items: [
       {
         name: "Versenyek",
         icon: MdStar,
@@ -212,12 +162,6 @@ const NavigationCategories = {
         link: "/intezmenyi-elismeresek",
         tableName: "intezmenyi_neveltseg",
       },
-    ],
-  },
-  CAREER: {
-    name: "Pályakövetés",
-    icon: MdWork,
-    items: [
       {
         name: "Elhelyezkedési mutató",
         icon: MdAssessment,
@@ -236,12 +180,6 @@ const NavigationCategories = {
         link: "/szakkepzesi-munkaszerződes-arany",
         tableName: "szmsz",
       },
-    ],
-  },
-  PROGRAMS: {
-    name: "Speciális programok",
-    icon: MdTrendingUp,
-    items: [
       {
         name: "Felnőttképzés",
         icon: MdBook,
@@ -266,12 +204,6 @@ const NavigationCategories = {
         link: "/intezmenyi-nevelesi-mutatok",
         tableName: "intezmenyi_neveltseg",
       },
-    ],
-  },
-  EVENTS: {
-    name: "Események és aktivitás",
-    icon: MdEvent,
-    items: [
       {
         name: "Egy oktatóra jutó diákok",
         icon: MdBookmark,
@@ -292,6 +224,138 @@ const NavigationCategories = {
       },
     ],
   },
+  // EDUCATION: {
+  //   name: "Oktatási eredmények",
+  //   icon: MdAssessment,
+  //   items: [
+  //     {
+  //       name: "Kompetencia",
+  //       icon: MdBook,
+  //       link: "/kompetencia",
+  //       tableName: "kompetencia",
+  //     },
+  //     {
+  //       name: "Országos kompetenciamérés",
+  //       icon: MdAssessment,
+  //       link: "/orszagos-kompetenciameres",
+  //       tableName: "kompetencia",
+  //     },
+  //     {
+  //       name: "NSZFH mérések",
+  //       icon: MdAssessment,
+  //       link: "/nszfh-meresek",
+  //       tableName: "nszfh",
+  //     },
+  //     {
+  //       name: "Vizsgaeredmények",
+  //       icon: MdAssessment,
+  //       link: "/vizsgaeredmenyek",
+  //       tableName: "vizsgaeredmenyek",
+  //     },
+  //     {
+  //       name: "Elégedettség mérés",
+  //       icon: MdAssessment,
+  //       link: "/elegedettseg-meres-eredmenyei",
+  //       tableName: "elegedettseg_meres",
+  //     },
+  //   ],
+  // },
+  // ACHIEVEMENTS: {
+  //   name: "Eredmények és elismerések",
+  //   icon: MdStar,
+  //   items: [
+  //     {
+  //       name: "Versenyek",
+  //       icon: MdStar,
+  //       link: "/versenyek",
+  //       tableName: "versenyek",
+  //     },
+  //     {
+  //       name: "Intézményi elismerések",
+  //       icon: MdStar,
+  //       link: "/intezmenyi-elismeresek",
+  //       tableName: "intezmenyi_neveltseg",
+  //     },
+  //   ],
+  // },
+  // CAREER: {
+  //   name: "Pályakövetés",
+  //   icon: MdWork,
+  //   items: [
+  //     {
+  //       name: "Elhelyezkedési mutató",
+  //       icon: MdAssessment,
+  //       link: "/elhelyezkedesi-mutato",
+  //       tableName: "elhelyezkedes",
+  //     },
+  //     {
+  //       name: "Végzettek elégedettsége",
+  //       icon: MdStar,
+  //       link: "/vegzettek-elegedettsege",
+  //       tableName: "elegedettseg",
+  //     },
+  //     {
+  //       name: "Szakképzési munkaszerződés - SZMSZ",
+  //       icon: MdWork,
+  //       link: "/szakkepzesi-munkaszerződes-arany",
+  //       tableName: "szmsz",
+  //     },
+  //   ],
+  // },
+  // PROGRAMS: {
+  //   name: "Speciális programok",
+  //   icon: MdTrendingUp,
+  //   items: [
+  //     {
+  //       name: "Felnőttképzés",
+  //       icon: MdBook,
+  //       link: "/felnottkepzes",
+  //       tableName: "alkalmazottak_munkaugy",
+  //     },
+  //     {
+  //       name: "Műhelyiskola",
+  //       icon: MdSchool,
+  //       link: "/muhelyiskolai-reszszakmat",
+  //       tableName: "muhelyiskola",
+  //     },
+  //     {
+  //       name: "Dobbantó program",
+  //       icon: MdTrendingUp,
+  //       link: "/dobbanto-program-aranya",
+  //       tableName: "dobbanto",
+  //     },
+  //     {
+  //       name: "Intézményi nevelési mutatók",
+  //       icon: MdGavel,
+  //       link: "/intezmenyi-nevelesi-mutatok",
+  //       tableName: "intezmenyi_neveltseg",
+  //     },
+  //   ],
+  // },
+  // EVENTS: {
+  //   name: "Események és aktivitás",
+  //   icon: MdEvent,
+  //   items: [
+  //     {
+  //       name: "Egy oktatóra jutó diákok",
+  //       icon: MdBookmark,
+  //       link: "/oktato_per_diak",
+  //       tableName: "egy_oktatora_juto_tanulo",
+  //     },
+  //     {
+  //       name: "Egy oktatóra jutó össz diák",
+  //       icon: MdBookmark,
+  //       link: "/egy-oktatora-juto-ossz-diak",
+  //       tableName: "egy_oktatora_juto_tanulo",
+  //     },
+  //     {
+  //       name: "Oktatók egyéb tev.",
+  //       icon: MdWork,
+  //       link: "/oktato-egyeb-tev",
+  //       tableName: "oktato-egyeb-tev",
+  //     },
+  //   ],
+  // },
   ADMIN: {
     name: "Adminisztráció",
     icon: MdSettings,
@@ -329,7 +393,7 @@ const AllLinkItems = Object.values(NavigationCategories).reduce(
   (acc, category) => {
     return [...acc, ...category.items];
   },
-  []
+  [],
 );
 
 // Function to filter navigation items based on user's table access
@@ -365,7 +429,7 @@ const getAccessibleNavItems = (tableAccess, userPermissions) => {
               "tanulo_letszam",
               "kompetencia",
               "tanugyi_adatok",
-            ].includes(name)
+            ].includes(name),
           )
         );
       }
@@ -417,7 +481,7 @@ const getOrganizedAccessibleItems = (tableAccess, userPermissions) => {
   // Group accessible items by category
   Object.entries(NavigationCategories).forEach(([categoryKey, category]) => {
     const categoryItems = category.items.filter((item) =>
-      accessibleItems.some((accessible) => accessible.link === item.link)
+      accessibleItems.some((accessible) => accessible.link === item.link),
     );
 
     if (categoryItems.length > 0) {
@@ -472,7 +536,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
       if ((event.ctrlKey || event.metaKey) && event.key === "k") {
         event.preventDefault();
         const searchInput = document.querySelector(
-          'input[placeholder*="Keresés"]'
+          'input[placeholder*="Keresés"]',
         );
         if (searchInput) {
           searchInput.focus();
@@ -503,7 +567,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
   // Get navigation items that the user has access to
   const accessibleNavItems = getAccessibleNavItems(
     tableAccess,
-    userPermissions
+    userPermissions,
   );
 
   // Initialize recent pages hook
@@ -519,28 +583,16 @@ const SidebarContent = ({ onClose, ...rest }) => {
         item.link === "/adat-import" ||
         item.link === "/schools" ||
         item.link === "/users" ||
-        item.link === "/logs"
+        item.link === "/logs",
     );
 
-    // Sort fixed items by page number
-    return items.sort((a, b) => {
-      const aNumber = getPageNumber(a.link);
-      const bNumber = getPageNumber(b.link);
-
-      // Items with page numbers come first, sorted numerically
-      if (aNumber && bNumber) return aNumber - bNumber;
-      if (aNumber && !bNumber) return -1;
-      if (!aNumber && bNumber) return 1;
-
-      // If neither has a page number, sort alphabetically
-      return a.name.localeCompare(b.name);
-    });
+    return items;
   }, [accessibleNavItems]);
 
   // Get organized categories
   const organizedCategories = getOrganizedAccessibleItems(
     tableAccess,
-    userPermissions
+    userPermissions,
   );
 
   // Find which category contains the current active page and expand it
@@ -561,7 +613,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
     // Find the category that contains the current path
     Object.entries(NavigationCategories).forEach(([categoryKey, category]) => {
       const hasActiveItem = category.items.some(
-        (item) => item.link === currentPath
+        (item) => item.link === currentPath,
       );
       if (hasActiveItem) {
         activeCategoryKey = categoryKey;
@@ -597,7 +649,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
         item.link !== "/adat-import" &&
         item.link !== "/schools" &&
         item.link !== "/users" &&
-        item.link !== "/logs"
+        item.link !== "/logs",
     );
 
     // Sort scrollable items by page number
@@ -708,7 +760,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
       }
       return acc;
     },
-    {}
+    {},
   );
 
   const toggleCategory = (categoryKey) => {
@@ -804,7 +856,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
                         // Refocus the search input after clearing
                         setTimeout(() => {
                           const searchInput = document.querySelector(
-                            'input[placeholder*="Keresés"]'
+                            'input[placeholder*="Keresés"]',
                           );
                           if (searchInput) searchInput.focus();
                         }, 100);
@@ -838,7 +890,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
           )}
         </Box>
 
-        {/* Recent Pages Section 
+        {/* Recent Pages Section
         <RecentPages
           recentPages={recentPages}
           onRemovePage={removeRecentPage}
@@ -965,8 +1017,8 @@ const SidebarContent = ({ onClose, ...rest }) => {
         overflowX="hidden"
         maxHeight={
           expandedCategories["FIXED_GENERAL"]
-            ? "calc(100% - 535px)"
-            : "calc(100% - 210px)"
+            ? "calc(100% - 600px)"
+            : "calc(100% - 240px)"
         }
         sx={{
           scrollBehavior: "smooth",
@@ -985,6 +1037,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
           },
         }}
         pb="4"
+        py="4"
       >
         {/* Show categorized navigation */}
         {!itemSearch
@@ -1097,7 +1150,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
                     </Box>
                   )}
                 </Box>
-              )
+              ),
             )
           : // When searching, show flat list
             filteredScrollableItems
@@ -1156,6 +1209,18 @@ const SidebarContent = ({ onClose, ...rest }) => {
             </Text>
           </Box>
         )}
+      </Box>
+
+      {/* Version Display */}
+      <Box
+        p={4}
+        borderTop="1px solid"
+        borderColor={useColorModeValue("gray.200", "gray.700")}
+        textAlign="center"
+      >
+        <Text fontSize="xs" color="gray.500">
+          v{import.meta.env.PACKAGE_VERSION}
+        </Text>
       </Box>
     </Box>
   );
@@ -1291,7 +1356,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
 
       // Add a timeout for the logout API call - shorter timeout for logout
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Logout request timed out")), 3000)
+        setTimeout(() => reject(new Error("Logout request timed out")), 3000),
       );
 
       // Try to call the logout API with timeout
@@ -1380,7 +1445,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
           <MdMenu size={20} />
         </IconButton>
 
-        {/* Recent pages indicator for mobile 
+        {/* Recent pages indicator for mobile
         {recentPages && recentPages.length > 0 && (
           <Box
             position="absolute"
@@ -1408,7 +1473,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
       </Box>
 
       <HStack spacing={{ base: "0", md: "6" }}>
-        {/* Recent Pages Dropdown - Desktop Only 
+        {/* Recent Pages Dropdown - Desktop Only
 
         <Box display={{ base: "none", md: "block" }}>
           <RecentPagesDropdown
@@ -1420,6 +1485,28 @@ const MobileNav = ({ onOpen, ...rest }) => {
 */}
 
         <Flex alignItems={"center"} gap={3}>
+          <Tooltip title="Változások naplója">
+            <Link to="/changelog">
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                w="8"
+                h="8"
+                borderRadius="full"
+                bg="blue.100"
+                color="blue.600"
+                cursor="pointer"
+                transition="all 0.2s ease-in-out"
+                _hover={{
+                  bg: "blue.200",
+                  transform: "scale(1.1)",
+                }}
+              >
+                <MdHistory size={18} />
+              </Box>
+            </Link>
+          </Tooltip>
           <Tooltip title="Az oldal fejlesztés alatt áll.">
             <Box
               display="flex"
