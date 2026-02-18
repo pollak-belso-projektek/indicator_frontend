@@ -21,6 +21,7 @@ import {
   loginStart,
   loginSuccess,
   loginFailure,
+  clearError,
   selectIsAuthenticated,
   selectAuthLoading,
   selectAuthError,
@@ -38,11 +39,10 @@ export default function Login() {
   const error = useSelector(selectAuthError);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Reset loading state on component mount to prevent persistent spinning
+  // Clear any stale error/loading state on mount
   useEffect(() => {
-    if (loading) {
-      dispatch(loginFailure(""));
-    }
+    dispatch(clearError());
+    setErrorMessage("");
   }, []); // Run once on mount
 
   // Add timeout for loading state
@@ -93,8 +93,8 @@ export default function Login() {
       dispatch(
         loginFailure(
           err?.data?.message ||
-            err?.message ||
-            "Hiba történt a bejelentkezés során"
+          err?.message ||
+          "Hiba történt a bejelentkezés során"
         )
       );
     }
