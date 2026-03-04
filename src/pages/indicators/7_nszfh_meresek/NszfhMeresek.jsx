@@ -22,6 +22,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoNszfhMeresek from "./info_nszfh_meresek";
 import TitleNszfhMeresek from "./title_nszfh_meresek";
+import { useGetNSZFHByYearQuery } from "../../../store/api/apiSlice";
 
 export default function NszfhMeresek() {
   // Data structure based on the NSZFH measurements requirements
@@ -76,6 +77,8 @@ export default function NszfhMeresek() {
     },
   });
 
+  const { data: nszfhData } = useGetNSZFHByYearQuery(2025);
+
   const [totalStudents, setTotalStudents] = useState({
     technikum_összesen: { matematika: "0", anyanyelv: "0" },
     szakma_megnevezése: { matematika: "0", anyanyelv: "0" },
@@ -115,7 +118,7 @@ export default function NszfhMeresek() {
     competencyArea,
     band,
     measurementType,
-    value
+    value,
   ) => {
     setMeasurementData((prev) => ({
       ...prev,
@@ -137,7 +140,7 @@ export default function NszfhMeresek() {
   const handleTotalStudentsChange = (
     institutionType,
     competencyArea,
-    value
+    value,
   ) => {
     setTotalStudents((prev) => ({
       ...prev,
@@ -297,19 +300,19 @@ export default function NszfhMeresek() {
                                 ? "#fff2cc"
                                 : "#fff2cc" // light yellow for technikum
                               : institutionIndex === 1
-                              ? competencyIndex % 2 === 0
-                                ? "#d5e8d4"
-                                : "#d5e8d4" // light green for szakma
-                              : competencyIndex % 2 === 0
-                              ? "#e8f4fd"
-                              : "#e8f4fd", // light blue for szakképző
+                                ? competencyIndex % 2 === 0
+                                  ? "#d5e8d4"
+                                  : "#d5e8d4" // light green for szakma
+                                : competencyIndex % 2 === 0
+                                  ? "#e8f4fd"
+                                  : "#e8f4fd", // light blue for szakképző
                           "&:hover": {
                             backgroundColor:
                               institutionIndex === 0
                                 ? "#ffe6b3"
                                 : institutionIndex === 1
-                                ? "#c8dcc8"
-                                : "#d4e6f1",
+                                  ? "#c8dcc8"
+                                  : "#d4e6f1",
                           },
                         }}
                       >
@@ -339,6 +342,8 @@ export default function NszfhMeresek() {
                             >
                               <TextField
                                 type="number"
+                                step={1}
+                                min={0}
                                 value={
                                   measurementData[institution.key][
                                     competency.key
@@ -350,7 +355,7 @@ export default function NszfhMeresek() {
                                     competency.key,
                                     band.key,
                                     "bemeneti",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 size="small"
@@ -370,6 +375,8 @@ export default function NszfhMeresek() {
                             >
                               <TextField
                                 type="number"
+                                step={1}
+                                min={0}
                                 value={
                                   measurementData[institution.key][
                                     competency.key
@@ -381,7 +388,7 @@ export default function NszfhMeresek() {
                                     competency.key,
                                     band.key,
                                     "kimeneti",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 size="small"
@@ -400,6 +407,8 @@ export default function NszfhMeresek() {
                         <TableCell align="center">
                           <TextField
                             type="number"
+                            step={1}
+                            min={0}
                             value={
                               totalStudents[institution.key][competency.key]
                             }
@@ -407,7 +416,7 @@ export default function NszfhMeresek() {
                               handleTotalStudentsChange(
                                 institution.key,
                                 competency.key,
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             size="small"
@@ -420,7 +429,7 @@ export default function NszfhMeresek() {
                           />
                         </TableCell>
                       </TableRow>
-                    ))
+                    )),
                   )}
                 </TableBody>
               </Table>
