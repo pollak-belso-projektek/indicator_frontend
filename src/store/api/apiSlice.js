@@ -969,17 +969,17 @@ export const indicatorApi = createApi({
       invalidatesTags: ["EgyOktatoraJutoTanulo"],
     }),
 
-    // Intezmenyi_neveltseg (Institutional Education Level)
+    // intezmenyi_nevelesi_mutatok (Institutional Education Level)
     getIntezmenyiNeveltsegiMutatokByYear: build.query({
       query: ({ alapadatok_id, tanev }) =>
-        `intezmenyi_neveltsegi_mutatok/${alapadatok_id}/${tanev}`,
+        `intezmenyi_nevelesi_mutatoki_mutatok/${alapadatok_id}/${tanev}`,
       providesTags: (result, error, tanev) => [
         { type: "IntezmenyiNeveltsegiMutatok", id: tanev },
       ],
     }),
     addIntezmenyiNeveltsegiMutatok: build.mutation({
       query: (data) => ({
-        url: "intezmenyi_neveltsegi_mutatok",
+        url: "intezmenyi_nevelesi_mutatoki_mutatok",
         method: "POST",
         body: data,
       }),
@@ -987,7 +987,7 @@ export const indicatorApi = createApi({
     }),
     updateIntezmenyiNeveltsegiMutatok: build.mutation({
       query: ({ id, ...data }) => ({
-        url: `intezmenyi_neveltsegi_mutatok/${id}`,
+        url: `intezmenyi_nevelesi_mutatoki_mutatok/${id}`,
         method: "PUT",
         body: data,
       }),

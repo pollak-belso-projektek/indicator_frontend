@@ -171,7 +171,7 @@ const NavigationCategories = {
         name: "Intézményi elismerések",
         icon: MdStar,
         link: "/intezmenyi-elismeresek",
-        tableName: "intezmenyi_neveltseg",
+        tableName: "intezmenyi_nevelesi_mutatok",
       },
       {
         name: "Elhelyezkedési mutató",
@@ -213,7 +213,7 @@ const NavigationCategories = {
         name: "Intézményi nevelési mutatók",
         icon: MdGavel,
         link: "/intezmenyi-nevelesi-mutatok",
-        tableName: "intezmenyi_neveltseg",
+        tableName: "intezmenyi_nevelesi_mutatok",
       },
       {
         name: "Hiányzás",
@@ -777,13 +777,11 @@ export default function Dashboard() {
                         sx={{ mt: 0.5 }}
                       >
                         {healthData.services
-                          ? `${
-                              Object.values(healthData.services).filter(
-                                (service) => service.status === "healthy",
-                              ).length
-                            }/${
-                              Object.keys(healthData.services).length
-                            } szolgáltatás`
+                          ? `${Object.values(healthData.services).filter(
+                            (service) => service.status === "healthy",
+                          ).length
+                          }/${Object.keys(healthData.services).length
+                          } szolgáltatás`
                           : `v${healthData.version || "ismeretlen"}`}
                       </Typography>
                     </Box>
@@ -912,8 +910,8 @@ export default function Dashboard() {
                     >
                       {healthData.services
                         ? Object.values(healthData.services).filter(
-                            (service) => service.status === "healthy",
-                          ).length
+                          (service) => service.status === "healthy",
+                        ).length
                         : 0}
                     </Typography>
                   </Box>
@@ -934,8 +932,8 @@ export default function Dashboard() {
                     >
                       {healthData.services
                         ? Object.values(healthData.services).filter(
-                            (service) => service.status !== "healthy",
-                          ).length
+                          (service) => service.status !== "healthy",
+                        ).length
                         : 0}
                     </Typography>
                   </Box>
@@ -1144,7 +1142,7 @@ export default function Dashboard() {
 
                         {/* Service-specific memory and uptime data - only show if service is healthy */}
                         {serviceData.status === "healthy" &&
-                        serviceData.healthData ? (
+                          serviceData.healthData ? (
                           <>
                             {serviceData.healthData.memory && (
                               <Box sx={{ mb: 1 }}>
@@ -1273,12 +1271,10 @@ export default function Dashboard() {
           <Typography variant="body2">
             Egy vagy több szolgáltatás nem működik megfelelően.
             {healthData.services &&
-              ` ${
-                Object.values(healthData.services).filter(
-                  (service) => service.status !== "healthy",
-                ).length
-              } szolgáltatás problémás a ${
-                Object.keys(healthData.services).length
+              ` ${Object.values(healthData.services).filter(
+                (service) => service.status !== "healthy",
+              ).length
+              } szolgáltatás problémás a ${Object.keys(healthData.services).length
               } szolgáltatásból.`}
           </Typography>
         </Alert>

@@ -23,11 +23,11 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoIntezményiElismeresek from "./info_intezmenyi_elismeresek";
 import TitleIntezményiElismeresek from "./title_intezmenyi_elismeresek";
-import {generateSchoolYears } from "../../../utils/schoolYears";
+import { generateSchoolYears } from "../../../utils/schoolYears";
 
 
 export default function IntezményiElismeresek() {
- const schoolYears = generateSchoolYears();
+  const schoolYears = generateSchoolYears();
 
   const recognitionCategories = [
     {
@@ -141,11 +141,11 @@ export default function IntezményiElismeresek() {
       infoContent={<InfoIntezményiElismeresek />}
     >
       <Box >
-        <LockStatusIndicator tableName="intezmenyi_neveltseg" />
+        <LockStatusIndicator tableName="intezmenyi_nevelesi_mutatok" />
 
-      <Card sx={{ mb: 3, p: 2, display: "flex", flexDirection: "row", gap:2 }}>
+        <Card sx={{ mb: 3, p: 2, display: "flex", flexDirection: "row", gap: 2 }}>
 
-          <LockedTableWrapper tableName="intezmenyi_neveltseg">
+          <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
             <Button
               variant="contained"
               startIcon={<SaveIcon />}
@@ -163,8 +163,8 @@ export default function IntezményiElismeresek() {
               Visszaállítás
             </Button>
           </LockedTableWrapper>
-       
-      </Card>
+
+        </Card>
 
         {/* Status Messages */}
         {isModified && (
@@ -384,7 +384,7 @@ export default function IntezményiElismeresek() {
         ))}
 
         {/* Action Buttons */}
- 
+
 
         {/* Categories Information */}
         <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
