@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Card,
@@ -13,9 +13,8 @@ import {
   Paper,
   TextField,
   Button,
-  Stack,
   Alert,
-  Chip,
+  CircularProgress,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { getCurrentSchoolYear } from "../../../utils/schoolYears";
@@ -24,78 +23,507 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoIntezményiNevelesiMutatok from "./info_intezmenyi_nevelesi_mutatok";
 import TitleIntezményiNevelesiMutatok from "./title_intezmenyi_nevelesi_mutatok";
+import { useSelector } from "react-redux";
+import { selectSelectedSchool } from "../../../store/slices/authSlice";
+import {
+  useAddIntezmenyiNeveltsegiMutatokMutation,
+  useGetIntezmenyiNeveltsegiMutatokByYearQuery,
+  useGetTanugyiAdatokQuery,
+  useUpdateIntezmenyiNeveltsegiMutatokMutation,
+} from "../../../store/api/apiSlice";
+
+const categories = [
+  {
+    name: "dicséret",
+    subcategories: [
+      "Összesen",
+      "Oktatói",
+      "Osztályfőnöki",
+      "Igazgatói",
+      "Oktató testületi",
+    ],
+  },
+  {
+    name: "büntetés",
+    subcategories: [
+      "Összesen",
+      "Oktatói figyelmeztetés",
+      "Osztályfőnöki figyelmeztetés",
+      "Osztályfőnöki intés",
+      "Osztályfőnöki megrovás",
+      "Igazgatói figyelmeztetés",
+      "Igazgatói intés",
+      "Igazgatói megrovás",
+      "Oktató testületi figyelmeztetés",
+      "Fegyelmi eljárás",
+    ],
+  },
+];
+
+const apiFieldMap = {
+  igazolatlanOra: "igazolatlan_ora",
+  dicséret: {
+    Összesen: "dicseret_osszesen",
+    Oktatói: "dicseret_oktatoi",
+    Osztályfőnöki: "dicseret_osztalyfonoki",
+    Igazgatói: "dicseret_igazgatoi",
+    "Oktató testületi": "dicseret_oktato_testuleti",
+  },
+  büntetés: {
+    Összesen: "buntetes_osszesen",
+    "Oktatói figyelmeztetés": "buntetes_oktatoi_figyelmeztetes",
+    "Osztályfőnöki figyelmeztetés": "buntetes_osztalyfonoki_figyelmeztetes",
+    "Osztályfőnöki intés": "buntetes_osztalyfonoki_intes",
+    "Osztályfőnöki megrovás": "buntetes_osztalyfonoki_megrovas",
+    "Igazgatói figyelmeztetés": "buntetes_igazgatoi_figyelmeztetes",
+    "Igazgatói intés": "buntetes_igazgatoi_intes",
+    "Igazgatói megrovás": "buntetes_igazgatoi_megrovas",
+    "Oktató testületi figyelmeztetés":
+      "buntetes_oktato_testuleti_figyelmeztetes",
+    "Fegyelmi eljárás": "buntetes_fegyelmi_eljaras",
+  },
+};
+
+const getRecordClassLabel = (record) =>
+  normalizeClassLabel(record?.osztaly_jele || record?.osztaly || "");
+
+const normalizeClassLabel = (label) =>
+  String(label || "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const parseClassLabel = (label) => {
+  const normalized = normalizeClassLabel(label);
+
+  const regularMatch = normalized.match(/^(\d+)\.\s*(.+)$/);
+  if (regularMatch) {
+    return {
+      kind: "regular",
+      year: Number(regularMatch[1]),
+      section: regularMatch[2],
+    };
+  }
+
+  const fractionMatch = normalized.match(/^(\d+)\/(\d+)\.\s*(.+)$/);
+  if (fractionMatch) {
+    return {
+      kind: "fraction",
+      year: Number(fractionMatch[2]),
+      stage: Number(fractionMatch[1]),
+      section: fractionMatch[3],
+    };
+  }
+
+  return { kind: "other", raw: normalized };
+};
+
+const compareClasses = (a, b) => {
+  const parsedA = parseClassLabel(a);
+  const parsedB = parseClassLabel(b);
+
+  const kindOrder = { regular: 0, fraction: 1, other: 2 };
+  if (kindOrder[parsedA.kind] !== kindOrder[parsedB.kind]) {
+    return kindOrder[parsedA.kind] - kindOrder[parsedB.kind];
+  }
+
+  if (parsedA.kind === "regular") {
+    if (parsedA.year !== parsedB.year) {
+      return parsedA.year - parsedB.year;
+    }
+    return parsedA.section.localeCompare(parsedB.section, "hu", {
+      numeric: true,
+      sensitivity: "base",
+    });
+  }
+
+  if (parsedA.kind === "fraction") {
+    if (parsedA.year !== parsedB.year) {
+      return parsedA.year - parsedB.year;
+    }
+    if (parsedA.stage !== parsedB.stage) {
+      return parsedA.stage - parsedB.stage;
+    }
+    return parsedA.section.localeCompare(parsedB.section, "hu", {
+      numeric: true,
+      sensitivity: "base",
+    });
+  }
+
+  return parsedA.raw.localeCompare(parsedB.raw, "hu", {
+    numeric: true,
+    sensitivity: "base",
+  });
+};
+
+const toNonNegativeInt = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+};
+
+const normalizeInputValue = (value) => {
+  if (value === "") {
+    return "";
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return "0";
+  }
+
+  return String(parsed);
+};
+
+const createEmptyRow = () => {
+  const row = {
+    igazolatlanOra: "0",
+  };
+
+  categories.forEach((category) => {
+    row[category.name] = {};
+    category.subcategories.forEach((subcategory) => {
+      row[category.name][subcategory] = "0";
+    });
+  });
+
+  return row;
+};
+
+const getCategoryTotal = (row, categoryName) => {
+  const category = categories.find((item) => item.name === categoryName);
+  if (!category) {
+    return 0;
+  }
+
+  return category.subcategories
+    .filter((subcategory) => subcategory !== "Összesen")
+    .reduce(
+      (sum, subcategory) =>
+        sum + toNonNegativeInt(row?.[categoryName]?.[subcategory]),
+      0,
+    );
+};
+
+const getFromApiRecord = (record, key) => {
+  if (!record || !key) {
+    return 0;
+  }
+
+  const directValue = record[key];
+  if (directValue !== undefined && directValue !== null) {
+    return toNonNegativeInt(directValue);
+  }
+
+  const camelKey = key.replace(/_([a-z])/g, (_, char) => char.toUpperCase());
+  const camelValue = record[camelKey];
+  if (camelValue !== undefined && camelValue !== null) {
+    return toNonNegativeInt(camelValue);
+  }
+
+  return 0;
+};
+
+const mapApiRecordToRow = (record) => {
+  const row = createEmptyRow();
+  row.igazolatlanOra = String(
+    getFromApiRecord(record, apiFieldMap.igazolatlanOra),
+  );
+
+  categories.forEach((category) => {
+    category.subcategories.forEach((subcategory) => {
+      const apiKey = apiFieldMap[category.name]?.[subcategory];
+      row[category.name][subcategory] = String(
+        getFromApiRecord(record, apiKey),
+      );
+    });
+  });
+
+  if (record?.id) {
+    row._recordId = record.id;
+  }
+
+  return row;
+};
+
+const hasAnyRowData = (row) => {
+  if (!row) {
+    return false;
+  }
+
+  if (toNonNegativeInt(row.igazolatlanOra) > 0) {
+    return true;
+  }
+
+  return categories.some((category) =>
+    category.subcategories.some(
+      (subcategory) =>
+        subcategory !== "Összesen" &&
+        toNonNegativeInt(row[category.name]?.[subcategory]) > 0,
+    ),
+  );
+};
 
 export default function IntezményiNevelesiMutatok() {
-  const schoolYear = getCurrentSchoolYear();
+  const selectedSchool = useSelector(selectSelectedSchool);
+  const currentSchoolYearStart = Number.parseInt(
+    getCurrentSchoolYear().split("/")[0],
+    10,
+  );
 
-  // Define the complex structure based on the attachment
-  const categories = [
+  const {
+    data: intezmenyiNeveltsegiMutatokData,
+    refetch,
+    isLoading: isLoadingNeveltsegi,
+    isFetching: isRefreshing,
+  } = useGetIntezmenyiNeveltsegiMutatokByYearQuery(
     {
-      name: "dicséret",
-      subcategories: [
-        "Összesen",
-        "Oktatói",
-        "Osztályfőnöki",
-        "Igazgatói",
-        "Oktató testületi",
-      ],
+      alapadatok_id: selectedSchool?.id,
+      tanev: currentSchoolYearStart,
     },
     {
-      name: "büntetés",
-      subcategories: [
-        "Összesen",
-        "Oktatói figyelmeztetés",
-        "Osztályfőnöki figyelmeztetés",
-        "Osztályfőnöki intés",
-        "Osztályfőnöki megrovás",
-        "Igazgatói figyelmeztetés",
-        "Igazgatói intés",
-        "Igazgatói megrovás",
-        "Oktató testületi figyelmeztetés",
-        "Fegyelmi eljárás",
-      ],
+      skip: !selectedSchool?.id,
     },
-  ];
+  );
 
-  // Initialize data structure
-  const [nevelesiData, setNevelesiData] = useState(() => {
-    const initialData = {};
+  const [addIntezmenyiNeveltsegiMutatok, { isLoading: isAdding }] =
+    useAddIntezmenyiNeveltsegiMutatokMutation();
+  const [updateIntezmenyiNeveltsegiMutatok, { isLoading: isUpdating }] =
+    useUpdateIntezmenyiNeveltsegiMutatokMutation();
 
-    categories.forEach((category) => {
-      initialData[category.name] = {};
-      category.subcategories.forEach((subcategory) => {
-        initialData[category.name][subcategory] = "0";
+  const {
+    data: tanugyiData,
+    isLoading: isLoadingTanugyi,
+    isFetching: isFetchingTanugyi,
+  } = useGetTanugyiAdatokQuery({
+    alapadatok_id: selectedSchool?.id,
+    ev: currentSchoolYearStart,
+  });
+
+  const [classes, setClasses] = useState([]);
+  const [classRows, setClassRows] = useState({});
+  const [savedData, setSavedData] = useState(null);
+  const [isModified, setIsModified] = useState(false);
+  const [statusMessage, setStatusMessage] = useState(null);
+
+  const isSaving = isAdding || isUpdating;
+  const hasHydratedRows =
+    classes.length === 0 || Object.keys(classRows).length === classes.length;
+  const isInitialLoading =
+    Boolean(selectedSchool?.id) &&
+    !isSaving &&
+    (isLoadingTanugyi ||
+      isLoadingNeveltsegi ||
+      isFetchingTanugyi ||
+      isRefreshing ||
+      !hasHydratedRows);
+
+  useEffect(() => {
+    const classList = new Set();
+    if (tanugyiData) {
+      tanugyiData.forEach((item) => {
+        if (item.osztaly) {
+          classList.add(normalizeClassLabel(item.osztaly));
+        }
+      });
+      setClasses(Array.from(classList).sort(compareClasses));
+    }
+  }, [tanugyiData]);
+
+  useEffect(() => {
+    if (!classes.length) {
+      setClassRows({});
+      setSavedData({});
+      setIsModified(false);
+      return;
+    }
+
+    const apiRows = Array.isArray(intezmenyiNeveltsegiMutatokData)
+      ? intezmenyiNeveltsegiMutatokData
+      : [];
+
+    const nextRows = {};
+    classes.forEach((className) => {
+      const existingRecord = apiRows.find(
+        (item) => getRecordClassLabel(item) === className,
+      );
+      nextRows[className] = mapApiRecordToRow(existingRecord);
+    });
+
+    setClassRows(nextRows);
+    setSavedData(JSON.parse(JSON.stringify(nextRows)));
+    setIsModified(false);
+  }, [classes, intezmenyiNeveltsegiMutatokData]);
+
+  const summaryData = useMemo(() => {
+    const summary = createEmptyRow();
+
+    classes.forEach((className) => {
+      const row = classRows[className];
+      if (!row) {
+        return;
+      }
+
+      summary.igazolatlanOra = String(
+        toNonNegativeInt(summary.igazolatlanOra) +
+          toNonNegativeInt(row.igazolatlanOra),
+      );
+
+      categories.forEach((category) => {
+        category.subcategories.forEach((subcategory) => {
+          if (subcategory === "Összesen") {
+            return;
+          }
+
+          const currentValue = toNonNegativeInt(
+            summary[category.name][subcategory],
+          );
+          const rowValue = toNonNegativeInt(row[category.name]?.[subcategory]);
+          summary[category.name][subcategory] = String(currentValue + rowValue);
+        });
+
+        summary[category.name]["Összesen"] = String(
+          getCategoryTotal(summary, category.name),
+        );
       });
     });
 
-    return initialData;
-  });
+    return summary;
+  }, [classRows, classes]);
 
-  const [savedData, setSavedData] = useState(null);
-  const [isModified, setIsModified] = useState(false);
-
-  // Handle data changes
-  const handleDataChange = (category, subcategory, value) => {
-    setNevelesiData((prev) => ({
+  const handleIgazolatlanChange = (className, value) => {
+    const normalizedValue = normalizeInputValue(value);
+    setClassRows((prev) => ({
       ...prev,
-      [category]: {
-        ...prev[category],
-        [subcategory]: value,
+      [className]: {
+        ...prev[className],
+        igazolatlanOra: normalizedValue === "" ? "0" : normalizedValue,
       },
     }));
+    setStatusMessage(null);
     setIsModified(true);
   };
 
-  const handleSave = () => {
-    setSavedData(JSON.parse(JSON.stringify(nevelesiData)));
-    setIsModified(false);
-    console.log("Saving institutional educational indicators:", nevelesiData);
+  const handleDataChange = (className, category, subcategory, value) => {
+    const normalizedValue = normalizeInputValue(value);
+    setClassRows((prev) => ({
+      ...prev,
+      [className]: {
+        ...prev[className],
+        [category]: {
+          ...prev[className]?.[category],
+          [subcategory]: normalizedValue === "" ? "0" : normalizedValue,
+        },
+      },
+    }));
+    setStatusMessage(null);
+    setIsModified(true);
+  };
+
+  const handleSave = async () => {
+    if (!selectedSchool?.id) {
+      setStatusMessage({
+        severity: "error",
+        text: "Nincs kiválasztott intézmény, a mentés nem indítható.",
+      });
+      return;
+    }
+
+    const apiRows = Array.isArray(intezmenyiNeveltsegiMutatokData)
+      ? intezmenyiNeveltsegiMutatokData
+      : [];
+
+    const rowsToSave = classes.filter((className) => {
+      const currentRow = classRows[className];
+      const initialRow = savedData?.[className];
+      const existingRecord = apiRows.find(
+        (item) => getRecordClassLabel(item) === className,
+      );
+
+      const currentHasData = hasAnyRowData(currentRow);
+      const initialHasData = hasAnyRowData(initialRow);
+      const hasExistingRecord = Boolean(
+        currentRow?._recordId || initialRow?._recordId || existingRecord?.id,
+      );
+
+      if (currentHasData) {
+        return true;
+      }
+
+      // Existing rows that originally had data must be updatable to all zeros.
+      if (hasExistingRecord && initialHasData) {
+        return true;
+      }
+
+      // Skip all-zero rows only when they were originally all zero.
+      return false;
+    });
+
+    if (rowsToSave.length === 0) {
+      setStatusMessage({
+        severity: "info",
+        text: "Nincs mentendő változás. Az eleve 0-s sorok nem kerülnek mentésre.",
+      });
+      return;
+    }
+
+    try {
+      for (const className of rowsToSave) {
+        const row = classRows[className];
+        const payload = {
+          alapadatok_id: selectedSchool.id,
+          tanev: currentSchoolYearStart,
+          tanev_kezdete: currentSchoolYearStart,
+          osztaly_jele: className,
+          [apiFieldMap.igazolatlanOra]: toNonNegativeInt(row?.igazolatlanOra),
+        };
+
+        categories.forEach((category) => {
+          category.subcategories.forEach((subcategory) => {
+            const apiKey = apiFieldMap[category.name][subcategory];
+            const value =
+              subcategory === "Összesen"
+                ? getCategoryTotal(row, category.name)
+                : toNonNegativeInt(row?.[category.name]?.[subcategory]);
+
+            payload[apiKey] = value;
+          });
+        });
+
+        const existingRecord = apiRows.find(
+          (item) => getRecordClassLabel(item) === className,
+        );
+        const recordId = row?._recordId || existingRecord?.id;
+
+        if (recordId) {
+          await updateIntezmenyiNeveltsegiMutatok({
+            id: recordId,
+            ...payload,
+          }).unwrap();
+        } else {
+          await addIntezmenyiNeveltsegiMutatok(payload).unwrap();
+        }
+      }
+
+      await refetch();
+      setSavedData(JSON.parse(JSON.stringify(classRows)));
+      setIsModified(false);
+      setStatusMessage({
+        severity: "success",
+        text: "Az adatok sikeresen mentve!",
+      });
+    } catch (error) {
+      console.error("Hiba a nevelési mutatók mentésekor:", error);
+      setStatusMessage({
+        severity: "error",
+        text: "Hiba történt a mentés során. Kérjük, próbáld újra.",
+      });
+    }
   };
 
   const handleReset = () => {
     if (savedData) {
-      setNevelesiData(JSON.parse(JSON.stringify(savedData)));
+      setClassRows(JSON.parse(JSON.stringify(savedData)));
       setIsModified(false);
+      setStatusMessage(null);
     }
   };
 
@@ -107,391 +535,315 @@ export default function IntezményiNevelesiMutatok() {
       <Box>
         <LockStatusIndicator tableName="intezmenyi_neveltseg" />
 
-        {/* Instructions Card */}
-      
-          {isModified && (
-          <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
-            Mentetlen módosítások vannak. Ne felejtsd el menteni a
-            változtatásokat!
-          </Alert>
+        {isInitialLoading && (
+          <Card sx={{ mt: 2, mb: 3 }}>
+            <CardContent>
+              <Box
+                sx={{
+                  minHeight: 420,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 2,
+                }}
+              >
+                <CircularProgress />
+                <Typography variant="body1" color="text.secondary">
+                  Adatok betöltése folyamatban...
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
         )}
 
-        {savedData && !isModified && (
-          <Alert severity="success" sx={{ mt: 2, mb: 2 }}>
-            Az adatok sikeresen mentve!
-          </Alert>
-        )}
-        <Card sx={{ mb: 3, p:2 }}>
-  
-          <LockedTableWrapper tableName="intezmenyi_neveltseg">
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSave}
-              disabled={!isModified}
-            >
-              Mentés
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleReset}
-              disabled={!isModified || !savedData}
-            >
-              Visszaállítás
-            </Button>
-          </LockedTableWrapper>
-       
-        </Card>
+        {!isInitialLoading && (
+          <>
+            {/* Instructions Card */}
 
-        {/* Status Messages */}
-      
-        {/* Main Data Table */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography
-              variant="h6"
-              component="h2"
-              gutterBottom
-              sx={{
-                color: "#1976d2",
-                fontWeight: "bold",
-                textAlign: "center",
-                mb: 3,
-              }}
-            >
-              {schoolYear} (db)
-            </Typography>
+            {isModified && (
+              <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+                Mentetlen módosítások vannak. Ne felejtsd el menteni a
+                változtatásokat!
+              </Alert>
+            )}
 
-            <TableContainer
-              component={Paper}
-              variant="outlined"
-              sx={{ overflowX: "auto" }}
-            >
-              <Table size="small">
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
-                    <TableCell
-                      sx={{
-                        fontWeight: "bold",
-                        minWidth: 150,
-                        textAlign: "center",
-                        backgroundColor: "#bbdefb",
-                      }}
-                    >
-                      Osztály jele
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        fontWeight: "bold",
-                        minWidth: 120,
-                        textAlign: "center",
-                        backgroundColor: "#ffcdd2",
-                      }}
-                    >
-                      Igazolatlan óra
-                    </TableCell>
-                    {categories.map((category) => (
-                      <TableCell
-                        key={category.name}
-                        colSpan={category.subcategories.length}
-                        sx={{
-                          fontWeight: "bold",
-                          textAlign: "center",
-                          backgroundColor:
-                            category.name === "dicséret" ? "#c8e6c8" : "#ffebee",
-                          color:
-                            category.name === "dicséret" ? "#2e7d32" : "#d32f2f",
-                        }}
-                      >
-                        {category.name}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                    <TableCell sx={{ backgroundColor: "#bbdefb" }}></TableCell>
-                    <TableCell sx={{ backgroundColor: "#ffcdd2" }}></TableCell>
-                    {categories.map((category) =>
-                      category.subcategories.map((subcategory) => (
+            {statusMessage && (
+              <Alert severity={statusMessage.severity} sx={{ mt: 2, mb: 2 }}>
+                {statusMessage.text}
+              </Alert>
+            )}
+
+            {savedData && !isModified && !statusMessage && (
+              <Alert severity="success" sx={{ mt: 2, mb: 2 }}>
+                Az adatok sikeresen mentve!
+              </Alert>
+            )}
+            <Card sx={{ mb: 3, p: 2 }}>
+              <LockedTableWrapper tableName="intezmenyi_neveltseg">
+                <Button
+                  variant="contained"
+                  startIcon={<SaveIcon />}
+                  onClick={handleSave}
+                  disabled={!isModified || isSaving || isRefreshing}
+                >
+                  {isSaving ? "Mentés..." : "Mentés"}
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<RefreshIcon />}
+                  onClick={handleReset}
+                  disabled={!isModified || !savedData || isSaving}
+                >
+                  Visszaállítás
+                </Button>
+              </LockedTableWrapper>
+            </Card>
+
+            {/* Status Messages */}
+
+            {/* Main Data Table */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography
+                  variant="h6"
+                  component="h2"
+                  gutterBottom
+                  sx={{
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    mb: 3,
+                  }}
+                >
+                  {getCurrentSchoolYear()} (db)
+                </Typography>
+
+                <TableContainer
+                  component={Paper}
+                  variant="outlined"
+                  sx={{ overflowX: "auto" }}
+                >
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
                         <TableCell
-                          key={`${category.name}-${subcategory}`}
                           sx={{
                             fontWeight: "bold",
-                            fontSize: "0.7rem",
+                            minWidth: 150,
                             textAlign: "center",
-                            minWidth: 80,
-                            backgroundColor:
-                              category.name === "dicséret"
-                                ? "#e8f5e8"
-                                : "#fff3e0",
-
-                            whiteSpace: "nowrap",
-                            height: "80px",
-                            verticalAlign: "bottom",
+                            backgroundColor: "#bbdefb",
                           }}
                         >
-                          <Box sx={{ mt: 2 }}>{subcategory}</Box>
+                          Osztály jele
                         </TableCell>
-                      ))
-                    )}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {/* Empty rows for classes - can be filled dynamically */}
-                  {Array.from({ length: 15 }, (_, index) => (
-                    <TableRow key={index} sx={{ backgroundColor: "#fafafa" }}>
-                      <TableCell sx={{ textAlign: "center", color: "#666" }}>
-                        {/* Class identifier can be added here */}
-                      </TableCell>
-                      <TableCell align="center">
-                        <TextField
-                          type="number"
-                          defaultValue="0"
-                          size="small"
-                          inputProps={{
-                            min: 0,
-                            style: { textAlign: "center" },
+                        <TableCell
+                          sx={{
+                            fontWeight: "bold",
+                            minWidth: 120,
+                            textAlign: "center",
+                            backgroundColor: "#ffcdd2",
                           }}
-                          sx={{ width: "60px" }}
-                        />
-                      </TableCell>
-                      {categories.map((category) =>
-                        category.subcategories.map((subcategory) => (
+                        >
+                          Igazolatlan óra
+                        </TableCell>
+                        {categories.map((category) => (
                           <TableCell
-                            key={`${category.name}-${subcategory}-${index}`}
-                            align="center"
+                            key={category.name}
+                            colSpan={category.subcategories.length}
+                            sx={{
+                              fontWeight: "bold",
+                              textAlign: "center",
+                              backgroundColor:
+                                category.name === "dicséret"
+                                  ? "#c8e6c8"
+                                  : "#ffebee",
+                              color:
+                                category.name === "dicséret"
+                                  ? "#2e7d32"
+                                  : "#d32f2f",
+                            }}
                           >
+                            {category.name}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                      <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                        <TableCell
+                          sx={{ backgroundColor: "#bbdefb" }}
+                        ></TableCell>
+                        <TableCell
+                          sx={{ backgroundColor: "#ffcdd2" }}
+                        ></TableCell>
+                        {categories.map((category) =>
+                          category.subcategories.map((subcategory) => (
+                            <TableCell
+                              key={`${category.name}-${subcategory}`}
+                              sx={{
+                                fontWeight: "bold",
+                                fontSize: "0.7rem",
+                                textAlign: "center",
+                                minWidth: 80,
+                                backgroundColor:
+                                  category.name === "dicséret"
+                                    ? "#e8f5e8"
+                                    : "#fff3e0",
+
+                                whiteSpace: "nowrap",
+                                height: "80px",
+                                verticalAlign: "bottom",
+                              }}
+                            >
+                              <Box sx={{ mt: 2 }}>{subcategory}</Box>
+                            </TableCell>
+                          )),
+                        )}
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {/* Dynamically render one row per class */}
+                      {classes.map((className, index) => (
+                        <TableRow
+                          key={`${className}-${index}`}
+                          sx={{ backgroundColor: "#fafafa" }}
+                        >
+                          <TableCell
+                            sx={{ textAlign: "center", color: "#666" }}
+                          >
+                            {className}
+                          </TableCell>
+                          <TableCell align="center">
                             <TextField
                               type="number"
                               value={
-                                index === 14
-                                  ? nevelesiData[category.name]?.[subcategory] ||
-                                  "0"
-                                  : "0"
+                                classRows[className]?.igazolatlanOra || "0"
                               }
-                              onChange={(e) => {
-                                if (index === 14) {
-                                  // Only the summary row is editable
-                                  handleDataChange(
-                                    category.name,
-                                    subcategory,
-                                    e.target.value
-                                  );
-                                }
-                              }}
+                              onChange={(e) =>
+                                handleIgazolatlanChange(
+                                  className,
+                                  e.target.value,
+                                )
+                              }
                               size="small"
                               inputProps={{
                                 min: 0,
                                 style: { textAlign: "center" },
                               }}
                               sx={{ width: "60px" }}
-                              disabled={index !== 14} // Only enable the last row (summary)
+                              disabled={isSaving}
                             />
                           </TableCell>
-                        ))
-                      )}
-                    </TableRow>
-                  ))}
+                          {categories.map((category) =>
+                            category.subcategories.map((subcategory) => {
+                              const isTotalCell = subcategory === "Összesen";
+                              return (
+                                <TableCell
+                                  key={`${category.name}-${subcategory}-${index}`}
+                                  align="center"
+                                >
+                                  <TextField
+                                    type="number"
+                                    value={
+                                      isTotalCell
+                                        ? String(
+                                            getCategoryTotal(
+                                              classRows[className],
+                                              category.name,
+                                            ),
+                                          )
+                                        : classRows[className]?.[
+                                            category.name
+                                          ]?.[subcategory] || "0"
+                                    }
+                                    onChange={
+                                      isTotalCell
+                                        ? undefined
+                                        : (e) =>
+                                            handleDataChange(
+                                              className,
+                                              category.name,
+                                              subcategory,
+                                              e.target.value,
+                                            )
+                                    }
+                                    size="small"
+                                    inputProps={{
+                                      min: 0,
+                                      style: { textAlign: "center" },
+                                    }}
+                                    sx={{ width: "60px" }}
+                                    disabled={isSaving || isTotalCell}
+                                  />
+                                </TableCell>
+                              );
+                            }),
+                          )}
+                        </TableRow>
+                      ))}
 
-                  {/* Summary Row */}
-                  <TableRow
-                    sx={{ backgroundColor: "#ffcc02", fontWeight: "bold" }}
-                  >
-                    <TableCell
-                      sx={{
-                        fontWeight: "bold",
-                        textAlign: "center",
-                        backgroundColor: "#ffcc02",
-                      }}
-                    >
-                      összesen
-                    </TableCell>
-                    <TableCell align="center">
-                      <TextField
-                        type="number"
-                        defaultValue="0"
-                        size="small"
-                        inputProps={{
-                          min: 0,
-                          style: { textAlign: "center", fontWeight: "bold" },
-                        }}
-                        sx={{ width: "60px" }}
-                      />
-                    </TableCell>
-                    {categories.map((category) =>
-                      category.subcategories.map((subcategory) => (
+                      {/* Summary Row */}
+                      <TableRow
+                        sx={{ backgroundColor: "#ffcc02", fontWeight: "bold" }}
+                      >
                         <TableCell
-                          key={`${category.name}-${subcategory}-summary`}
-                          align="center"
+                          sx={{
+                            fontWeight: "bold",
+                            textAlign: "center",
+                            backgroundColor: "#ffcc02",
+                          }}
                         >
+                          összesen
+                        </TableCell>
+                        <TableCell align="center">
                           <TextField
                             type="number"
-                            value={
-                              nevelesiData[category.name]?.[subcategory] || "0"
-                            }
-                            onChange={(e) =>
-                              handleDataChange(
-                                category.name,
-                                subcategory,
-                                e.target.value
-                              )
-                            }
+                            value={summaryData.igazolatlanOra}
                             size="small"
                             inputProps={{
                               min: 0,
-                              style: { textAlign: "center", fontWeight: "bold" },
+                              style: {
+                                textAlign: "center",
+                                fontWeight: "bold",
+                              },
                             }}
                             sx={{ width: "60px" }}
+                            disabled
                           />
                         </TableCell>
-                      ))
-                    )}
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </CardContent>
-        </Card>
-
-        {/* Action Buttons */}
-   
-
-        {/* Educational Indicators Information */}
-        <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
-          <CardContent>
-            <Typography variant="h6" component="h3" gutterBottom>
-              Nevelési mutatók kategóriái
-            </Typography>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2 }}>
-              <Chip label="Dicséretek" color="success" variant="outlined" />
-              <Chip
-                label="Fegyelmi intézkedések"
-                color="error"
-                variant="outlined"
-              />
-              <Chip label="Figyelmeztetések" color="warning" variant="outlined" />
-              <Chip label="Intések" color="info" variant="outlined" />
-              <Chip label="Megrovások" color="secondary" variant="outlined" />
-              <Chip label="Fegyelmi eljárások" color="error" />
-            </Box>
-            <Typography variant="body2">
-              Az intézményi nevelési mutatók segítségével nyomon követhető a
-              tanulók fegyelmi helyzete, a pozitív megerősítések (dicséretek) és a
-              szankciók (büntetések) aránya.
-            </Typography>
-          </CardContent>
-        </Card>
-
-        {/* Disciplinary Framework */}
-        <Card sx={{ mt: 3, backgroundColor: "#f0f8ff" }}>
-          <CardContent>
-            <Typography variant="h6" component="h3" gutterBottom>
-              Fegyelmi intézkedések hierarchiája
-            </Typography>
-            <Box component="ol" sx={{ pl: 3, mb: 2 }}>
-              <li>
-                <Typography variant="body2">
-                  <strong>Oktatói figyelmeztetés:</strong> Az oktató által
-                  kiszabott legkisebb fegyelmi intézkedés
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  <strong>Osztályfőnöki intézkedések:</strong> Figyelmeztetés,
-                  intés, megrovás
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  <strong>Igazgatói intézkedések:</strong> Figyelmeztetés, intés,
-                  megrovás
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  <strong>Oktató testületi figyelmeztetés:</strong> Kollektív
-                  döntésen alapuló intézkedés
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  <strong>Fegyelmi eljárás:</strong> A legsúlyosabb fegyelmi
-                  intézkedés
-                </Typography>
-              </li>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Recognition System */}
-        <Card sx={{ mt: 3, backgroundColor: "#f8fff8" }}>
-          <CardContent>
-            <Typography variant="h6" component="h3" gutterBottom>
-              Elismerési rendszer
-            </Typography>
-            <Box component="ul" sx={{ pl: 3, mb: 2 }}>
-              <li>
-                <Typography variant="body2">
-                  <strong>Oktatói dicséret:</strong> Az oktató által adott
-                  elismerés kiemelkedő teljesítményért
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  <strong>Osztályfőnöki dicséret:</strong> Az osztályfőnök által
-                  adott elismerés példamutató magatartásért
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  <strong>Igazgatói dicséret:</strong> Az igazgató által adott
-                  elismerés kiemelkedő eredményekért
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  <strong>Oktató testületi dicséret:</strong> A tantestület
-                  kollektív elismerése különleges teljesítményért
-                </Typography>
-              </li>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Data Quality Guidelines */}
-        <Card sx={{ mt: 3, backgroundColor: "#fff8f0" }}>
-          <CardContent>
-            <Typography variant="h6" component="h3" gutterBottom>
-              Adatminőség irányelvek
-            </Typography>
-            <Box component="ul" sx={{ pl: 3 }}>
-              <li>
-                <Typography variant="body2">
-                  <strong>Dokumentálás:</strong> Minden fegyelmi intézkedést és
-                  dicséretet dokumentálni kell
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  <strong>Időszak:</strong> Tanévi összesítés alapján kell
-                  jelenteni az adatokat
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  <strong>Kategorizálás:</strong> Pontosan be kell sorolni az
-                  intézkedéseket a megfelelő kategóriákba
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  <strong>Osztályonkénti bontás:</strong> Lehetőség szerint
-                  osztályonként is nyilvántartani
-                </Typography>
-              </li>
-            </Box>
-          </CardContent>
-        </Card>
+                        {categories.map((category) =>
+                          category.subcategories.map((subcategory) => (
+                            <TableCell
+                              key={`${category.name}-${subcategory}-summary`}
+                              align="center"
+                            >
+                              <TextField
+                                type="number"
+                                value={
+                                  summaryData[category.name]?.[subcategory] ||
+                                  "0"
+                                }
+                                size="small"
+                                inputProps={{
+                                  min: 0,
+                                  style: {
+                                    textAlign: "center",
+                                    fontWeight: "bold",
+                                  },
+                                }}
+                                sx={{ width: "60px" }}
+                                disabled
+                              />
+                            </TableCell>
+                          )),
+                        )}
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </Box>
     </PageWrapper>
   );

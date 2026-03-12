@@ -28,7 +28,7 @@ export const indicatorApi = createApi({
     "NSZFH",
     "SZMSZ",
     "EgyOktatoraJutoTanulo",
-    "IntezmenyiNeveltseg",
+    "IntezmenyiNeveltsegiMutatok",
     "Dobbanto",
     "Logs",
     "OktatokEgyebTev",
@@ -918,51 +918,28 @@ export const indicatorApi = createApi({
     }),
 
     // Intezmenyi_neveltseg (Institutional Education Level)
-    getIntezmenyiNeveltsegByYear: build.query({
-      query: (tanev) => `intezmenyi_neveltseg/${tanev}`,
+    getIntezmenyiNeveltsegiMutatokByYear: build.query({
+      query: ({ alapadatok_id, tanev }) =>
+        `intezmenyi_neveltsegi_mutatok/${alapadatok_id}/${tanev}`,
       providesTags: (result, error, tanev) => [
-        { type: "IntezmenyiNeveltseg", id: tanev },
+        { type: "IntezmenyiNeveltsegiMutatok", id: tanev },
       ],
     }),
-    getAllIntezmenyiNeveltseg: build.query({
-      query: () => {
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1;
-
-        let currentSchoolYearStart;
-        if (currentMonth >= 9) {
-          currentSchoolYearStart = currentYear;
-        } else {
-          currentSchoolYearStart = currentYear - 1;
-        }
-
-        return `intezmenyi_neveltseg/${currentSchoolYearStart}`;
-      },
-      providesTags: ["IntezmenyiNeveltseg"],
-    }),
-    addIntezmenyiNeveltseg: build.mutation({
+    addIntezmenyiNeveltsegiMutatok: build.mutation({
       query: (data) => ({
-        url: "intezmenyi_neveltseg",
+        url: "intezmenyi_neveltsegi_mutatok",
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["IntezmenyiNeveltseg"],
+      invalidatesTags: ["IntezmenyiNeveltsegiMutatok"],
     }),
-    updateIntezmenyiNeveltseg: build.mutation({
+    updateIntezmenyiNeveltsegiMutatok: build.mutation({
       query: ({ id, ...data }) => ({
-        url: `intezmenyi_neveltseg/${id}`,
+        url: `intezmenyi_neveltsegi_mutatok/${id}`,
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["IntezmenyiNeveltseg"],
-    }),
-    deleteIntezmenyiNeveltseg: build.mutation({
-      query: (id) => ({
-        url: `intezmenyi_neveltseg/${id}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: ["IntezmenyiNeveltseg"],
+      invalidatesTags: ["IntezmenyiNeveltsegiMutatok"],
     }),
 
     // Logs management endpoints (Admin/Superadmin only)
@@ -1186,11 +1163,9 @@ export const {
   useGetEgyOktatoraJutoTanuloByAlapadatokQuery,
   useAddEgyOktatoraJutoTanuloMutation,
   useUpdateEgyOktatoraJutoTanuloMutation,
-  useGetIntezmenyiNeveltsegByYearQuery,
-  useGetAllIntezmenyiNeveltsegQuery,
-  useAddIntezmenyiNeveltsegMutation,
-  useUpdateIntezmenyiNeveltsegMutation,
-  useDeleteIntezmenyiNeveltsegMutation,
+  useGetIntezmenyiNeveltsegiMutatokByYearQuery,
+  useAddIntezmenyiNeveltsegiMutatokMutation,
+  useUpdateIntezmenyiNeveltsegiMutatokMutation,
   // Logs hooks
   useGetLogsQuery,
   useGetLogByIdQuery,
