@@ -216,6 +216,12 @@ const NavigationCategories = {
         tableName: "intezmenyi_neveltseg",
       },
       {
+        name: "Hiányzás",
+        icon: MdBookmark,
+        link: "/hianyzas",
+        tableName: "hianyzas",
+      },
+      {
         name: "Egy oktatóra jutó diákok",
         icon: MdBookmark,
         link: "/oktato_per_diak",

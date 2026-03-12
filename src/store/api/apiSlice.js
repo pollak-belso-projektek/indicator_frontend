@@ -37,6 +37,8 @@ export const indicatorApi = createApi({
     "TanuloAdatszolgaltatas",
     "OktatoAdatszolgaltatas",
     "Changelog",
+    "Hianyzas",
+    "SzakmaiTovabbkepzesek",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -502,6 +504,56 @@ export const indicatorApi = createApi({
         method: "DELETE",
       }),
       invalidatesTags: ["Elhelyezkedes"],
+    }),
+
+    // Hianyzas
+    getHianyzas: build.query({
+      query: ({ alapadatok_id, tanev }) => `hianyzas/${alapadatok_id}/${tanev}`,
+      providesTags: (result, error, { alapadatok_id, tanev }) => [
+        { type: "Hianyzas", id: `${alapadatok_id}-${tanev}` },
+        "Hianyzas",
+      ],
+    }),
+    addHianyzas: build.mutation({
+      query: (data) => ({
+        url: "hianyzas",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Hianyzas"],
+    }),
+    updateHianyzas: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `hianyzas/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Hianyzas"],
+    }),
+
+    // Szakmai továbbképzések endpoints
+    getSzakmaiTovabbkepzesek: build.query({
+      query: (params) => `szakmai_tovabbkepzes/${params.alapadatok_id}/${params.tanev}`,
+      providesTags: (result, error, params) => [
+        { type: "SzakmaiTovabbkepzesek", id: `${params.alapadatok_id}-${params.tanev}` },
+        "SzakmaiTovabbkepzesek",
+      ],
+    }),
+    addSzakmaiTovabbkepzes: build.mutation({
+      query: (data) => ({
+        url: "szakmai_tovabbkepzes",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["SzakmaiTovabbkepzesek"],
+    }),
+    updateSzakmaiTovabbkepzes: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `szakmai_tovabbkepzes/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["SzakmaiTovabbkepzesek"],
     }),
 
     // Felvettek_szama (Admissions)
@@ -1185,4 +1237,11 @@ export const {
   useAddChangelogEntryMutation,
   useUpdateChangelogEntryMutation,
   useDeleteChangelogEntryMutation,
+  useGetHianyzasQuery,
+  useAddHianyzasMutation,
+  useUpdateHianyzasMutation,
+  // Szakmai Továbbképzések hooks
+  useGetSzakmaiTovabbkepzesekQuery,
+  useAddSzakmaiTovabbkepzesMutation,
+  useUpdateSzakmaiTovabbkepzesMutation,
 } = indicatorApi;
