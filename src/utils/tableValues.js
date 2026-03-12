@@ -34,6 +34,8 @@ const tableKeyValues = {
   oktato_egyeb_tev: "Oktató egyéb tevékenység",
 
   // System
+  hianyzas: "Hiányzás",
+  szakmai_tovabbkepzesek: "Szakmai továbbképzések",
   user: "Felhasználók",
   log: "Rendszer naplók",
   auth: "Authentikáció",
@@ -80,6 +82,8 @@ const routeToTableMapping = {
   "/hatranyos-helyezu-tanulok-aranya": "hh_es_hhh_nevelesu_tanulok",
   "/intezmenyi-nevelesi-mutatok": "intezmenyi_neveltseg",
   "/szakkepzesi-munkaszerződes-arany": "szmsz",
+  "/hianyzas": "hianyzas",
+  "/szakmai-tovabbkepzesek": "szakmai_tovabbkepzesek",
   "/oktatok-egyeb-tev": "oktato_egyeb_tev",
   "/oktato_per_diak": "egy_oktatora_juto_tanulo",
   "/egy-oktatora-juto-ossz-diak": "egy_oktatora_juto_tanulo",

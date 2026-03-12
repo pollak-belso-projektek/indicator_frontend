@@ -67,6 +67,8 @@ export const AccessNotificationProvider = ({ children }) => {
           "Hátrányos helyzetű tanulók aránya",
         "/intezmenyi-nevelesi-mutatok": "Intézményi nevelési mutatók",
         "/szakkepzesi-munkaszerződes-arany": "Szakképzési munkaszerződés arány",
+        "/hianyzas": "Hiányzás",
+        "/szakmai-tovabbkepzesek": "Szakmai továbbképzések",
         "/oktatok-egyeb-tev": "Oktatók egyéb tevékenysége",
         "/adat-import": "Adatok importálása",
         "/schools": "Iskolák",
