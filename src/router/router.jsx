@@ -22,6 +22,12 @@ const TanuloletszamPage = lazy(
 const KompetenciaPage = lazy(
   () => import("../pages/indicators/6_kompetencia/Kompetencia.jsx"),
 );
+const HianyzasPage = lazy(
+  () => import("../pages/indicators/26_hianyzas/Hianyzas.jsx"),
+);
+const SzakmaiTovabbkepzesekPage = lazy(
+  () => import("../pages/indicators/22_szakmai_tovabbkepzesek/SzakmaiTovabbkepzesek.jsx"),
+);
 const UsersPage = lazy(() => import("../pages/Users.jsx"));
 const ProfileEditPage = lazy(() => import("../pages/ProfileEdit.jsx"));
 const TableManagementPage = lazy(
@@ -127,6 +133,8 @@ const SCHOOL_REQUIRED_PAGES = [
   "/oktatok-egyeb-tev",
   "/adat-import",
   "/alapadatok",
+  "/hianyzas",
+  "/szakmai-tovabbkepzesek",
 ];
 
 export default function Router() {
@@ -492,6 +500,32 @@ export default function Router() {
                       {withSchoolRequired(
                         <OktatokEgyebTevPage />,
                         "/oktato-egyeb-tev",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/hianyzas"
+                element={
+                  <TableProtectedRoute tableName="hianyzas">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <HianyzasPage />,
+                        "/hianyzas",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/szakmai-tovabbkepzesek"
+                element={
+                  <TableProtectedRoute tableName="szakmai_tovabbkepzesek">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <SzakmaiTovabbkepzesekPage />,
+                        "/szakmai-tovabbkepzesek",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
