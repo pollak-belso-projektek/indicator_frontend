@@ -256,6 +256,79 @@ export default function DataImport() {
     }
   };
 
+  const isValidDateLike = (value) => {
+    if (!value) return false;
+    const timestamp = new Date(value).getTime();
+    return Number.isFinite(timestamp);
+  };
+
+  const getRecordTimestamp = (record) => {
+    if (!record || typeof record !== "object") {
+      return null;
+    }
+
+    const preferredKeys = [
+      "createAt",
+      "createdAt",
+      "updatedAt",
+      "create_at",
+      "created_at",
+      "updated_at",
+      "importedAt",
+      "imported_at",
+      "betoltes_datuma",
+      "betoltes_datum",
+      "datum",
+      "date",
+    ];
+
+    for (const key of preferredKeys) {
+      const value = record[key];
+      if (isValidDateLike(value)) {
+        return value;
+      }
+    }
+
+    const dynamicEntry = Object.entries(record).find(([key, value]) => {
+      if (typeof value !== "string" && typeof value !== "number") {
+        return false;
+      }
+      const looksLikeDateField =
+        /(create|update|import|date|datum|ido|time)/i.test(key);
+      return looksLikeDateField && isValidDateLike(value);
+    });
+
+    return dynamicEntry ? dynamicEntry[1] : null;
+  };
+
+  const toTimestampMs = (value) => {
+    const timestamp = new Date(value).getTime();
+    return Number.isFinite(timestamp) ? timestamp : -1;
+  };
+
+  const getLatestLoadedDate = (records) => {
+    if (!Array.isArray(records) || records.length === 0) {
+      return "Nincs adat erre a tanévre";
+    }
+
+    const latestRecord = records.reduce((latest, current) => {
+      const latestTs = getRecordTimestamp(latest);
+      const currentTs = getRecordTimestamp(current);
+
+      if (!latestTs) return current;
+      if (!currentTs) return latest;
+
+      return toTimestampMs(currentTs) > toTimestampMs(latestTs)
+        ? current
+        : latest;
+    });
+
+    const latestTimestamp = getRecordTimestamp(latestRecord);
+    return latestTimestamp
+      ? formatDate(latestTimestamp)
+      : "Nincs dátummező az adatokban";
+  };
+
   const isLoading =
     tanugyiLoading ||
     alkalmazottLoading ||
@@ -311,19 +384,7 @@ export default function DataImport() {
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="body1" color="text.secondary">
                     <strong>Tárgyévi betöltött adatok:</strong>{" "}
-                    {tanugyiDataFromAPI &&
-                    Array.isArray(tanugyiDataFromAPI) &&
-                    tanugyiDataFromAPI.length > 0
-                      ? (() => {
-                          const maxItem = tanugyiDataFromAPI.reduce(
-                            (max, item) =>
-                              new Date(item.createAt) > new Date(max.createAt)
-                                ? item
-                                : max,
-                          );
-                          return formatDate(maxItem.createAt);
-                        })()
-                      : "Nincs adat erre a tanévre"}
+                    {getLatestLoadedDate(tanugyiDataFromAPI)}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
                     <strong>
@@ -410,19 +471,7 @@ export default function DataImport() {
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="body1" color="text.secondary">
                     <strong>Tárgyévi betöltött adatok:</strong>{" "}
-                    {alkalmazottDataFromAPI &&
-                    Array.isArray(alkalmazottDataFromAPI) &&
-                    alkalmazottDataFromAPI.length > 0
-                      ? (() => {
-                          const maxItem = alkalmazottDataFromAPI.reduce(
-                            (max, item) =>
-                              new Date(item.createAt) > new Date(max.createAt)
-                                ? item
-                                : max,
-                          );
-                          return formatDate(maxItem.createAt);
-                        })()
-                      : "Nincs adat erre a tanévre"}
+                    {getLatestLoadedDate(alkalmazottDataFromAPI)}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
                     <strong>Betöltött oktatók száma erre a tanévre:</strong>{" "}
@@ -524,20 +573,7 @@ export default function DataImport() {
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="body1" color="text.secondary">
                     <strong>Tárgyévi betöltött adatok:</strong>{" "}
-                    {tanuloAdatszolgaltatasDataFromAPI &&
-                    Array.isArray(tanuloAdatszolgaltatasDataFromAPI) &&
-                    tanuloAdatszolgaltatasDataFromAPI.length > 0
-                      ? (() => {
-                          const maxItem =
-                            tanuloAdatszolgaltatasDataFromAPI.reduce(
-                              (max, item) =>
-                                new Date(item.createAt) > new Date(max.createAt)
-                                  ? item
-                                  : max,
-                            );
-                          return formatDate(maxItem.createAt);
-                        })()
-                      : "Nincs adat erre a tanévre"}
+                    {getLatestLoadedDate(tanuloAdatszolgaltatasDataFromAPI)}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
                     <strong>Betöltött adatok száma erre a tanévre:</strong>{" "}
@@ -618,20 +654,7 @@ export default function DataImport() {
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="body1" color="text.secondary">
                     <strong>Tárgyévi betöltött adatok:</strong>{" "}
-                    {oktatoAdatszolgaltatasDataFromAPI &&
-                    Array.isArray(oktatoAdatszolgaltatasDataFromAPI) &&
-                    oktatoAdatszolgaltatasDataFromAPI.length > 0
-                      ? (() => {
-                          const maxItem =
-                            oktatoAdatszolgaltatasDataFromAPI.reduce(
-                              (max, item) =>
-                                new Date(item.createAt) > new Date(max.createAt)
-                                  ? item
-                                  : max,
-                            );
-                          return formatDate(maxItem.createAt);
-                        })()
-                      : "Nincs adat erre a tanévre"}
+                    {getLatestLoadedDate(oktatoAdatszolgaltatasDataFromAPI)}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
                     <strong>Betöltött adatok száma erre a tanévre:</strong>{" "}
