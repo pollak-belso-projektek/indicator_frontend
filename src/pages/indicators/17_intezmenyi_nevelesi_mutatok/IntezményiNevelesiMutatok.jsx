@@ -364,7 +364,7 @@ export default function IntezményiNevelesiMutatok() {
 
       summary.igazolatlanOra = String(
         toNonNegativeInt(summary.igazolatlanOra) +
-          toNonNegativeInt(row.igazolatlanOra),
+        toNonNegativeInt(row.igazolatlanOra),
       );
 
       categories.forEach((category) => {
@@ -533,7 +533,7 @@ export default function IntezményiNevelesiMutatok() {
       infoContent={<InfoIntezményiNevelesiMutatok />}
     >
       <Box>
-        <LockStatusIndicator tableName="intezmenyi_neveltseg" />
+        <LockStatusIndicator tableName="intezmenyi_nevelesi_mutatok" />
 
         {isInitialLoading && (
           <Card sx={{ mt: 2, mb: 3 }}>
@@ -580,7 +580,7 @@ export default function IntezményiNevelesiMutatok() {
               </Alert>
             )}
             <Card sx={{ mb: 3, p: 2 }}>
-              <LockedTableWrapper tableName="intezmenyi_neveltseg">
+              <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}
@@ -746,25 +746,25 @@ export default function IntezményiNevelesiMutatok() {
                                     value={
                                       isTotalCell
                                         ? String(
-                                            getCategoryTotal(
-                                              classRows[className],
-                                              category.name,
-                                            ),
-                                          )
+                                          getCategoryTotal(
+                                            classRows[className],
+                                            category.name,
+                                          ),
+                                        )
                                         : classRows[className]?.[
-                                            category.name
-                                          ]?.[subcategory] || "0"
+                                        category.name
+                                        ]?.[subcategory] || "0"
                                     }
                                     onChange={
                                       isTotalCell
                                         ? undefined
                                         : (e) =>
-                                            handleDataChange(
-                                              className,
-                                              category.name,
-                                              subcategory,
-                                              e.target.value,
-                                            )
+                                          handleDataChange(
+                                            className,
+                                            category.name,
+                                            subcategory,
+                                            e.target.value,
+                                          )
                                     }
                                     size="small"
                                     inputProps={{

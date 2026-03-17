@@ -58,7 +58,7 @@ const TableNameToRoute = {
   elhelyezkedes: "/elhelyezkedesi-mutato",
   elegedettseg: "/vegzettek-elegedettsege",
   vizsgaeredmenyek: "/vizsgaeredmenyek",
-  intezmenyi_neveltseg: "/intezmenyi-elismeresek",
+  intezmenyi_nevelesi_mutatok: "/intezmenyi-elismeresek",
   elegedettseg_meres: "/elegedettseg-meres-eredmenyei",
   hh_es_hhh_nevelesu_tanulok: "/hatranyos-helyezu-tanulok-aranya",
   sajatos_nevelesu_tanulok: "/sajatos-nevelesi-igenyu-tanulok-aranya",
@@ -231,7 +231,7 @@ const TableManagement = () => {
       console.error("Tábla létrehozása sikertelen:", error);
       showNotification(
         "Hiba történt a tábla létrehozása során: " +
-          (error.data?.message || error.message),
+        (error.data?.message || error.message),
         "error",
       );
     }
@@ -258,7 +258,7 @@ const TableManagement = () => {
       console.error("Tábla frissítése sikertelen:", error);
       showNotification(
         "Hiba történt a tábla frissítése során: " +
-          (error.data?.message || error.message),
+        (error.data?.message || error.message),
         "error",
       );
     }
@@ -283,7 +283,7 @@ const TableManagement = () => {
       console.error("Tábla lezárása sikertelen:", error);
       showNotification(
         "Hiba történt a tábla lezárása során: " +
-          (error.data?.message || error.message),
+        (error.data?.message || error.message),
         "error",
       );
     }
@@ -297,7 +297,7 @@ const TableManagement = () => {
       console.error("Tábla feloldása sikertelen:", error);
       showNotification(
         "Hiba történt a tábla feloldása során: " +
-          (error.data?.message || error.message),
+        (error.data?.message || error.message),
         "error",
       );
     }
@@ -583,15 +583,15 @@ const TableManagement = () => {
                       <TableCell>
                         {table.createdAt
                           ? new Date(table.createdAt).toLocaleDateString(
-                              "hu-HU",
-                            )
+                            "hu-HU",
+                          )
                           : "-"}
                       </TableCell>
                       <TableCell>
                         {table.updatedAt
                           ? new Date(table.updatedAt).toLocaleDateString(
-                              "hu-HU",
-                            )
+                            "hu-HU",
+                          )
                           : "-"}
                       </TableCell>
                       <TableCell align="center">
