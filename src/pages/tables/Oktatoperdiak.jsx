@@ -17,6 +17,8 @@ import {
   Fade,
   Card,
   CardContent,
+  Chip,
+  Tooltip,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon, Calculate as CalculateIcon } from "@mui/icons-material";
 import { useEffect, useState, useMemo } from "react";
@@ -95,6 +97,8 @@ const Oktatoperdiak = () => {
   // State for editable data
   const [hetiOratomeg, setHetiOratomeg] = useState([0, 0, 0, 0]); // Fenntartó által engedélyezett heti óratömeg
   const [divisor, setDivisor] = useState(22); // Configurable divisor for calculating teacher count
+  const editableFieldTooltip =
+    "Szerkeszthető mező – adja meg a fenntartó által engedélyezett heti óratömeget.";
 
   // Populate hetiOratomeg from API data when it loads
   useEffect(() => {
@@ -111,7 +115,6 @@ const Oktatoperdiak = () => {
       console.log("Loaded hetiOratomeg from API:", newHetiOratomeg);
     }
   }, [oktatorPerDiakData, years]);
-  const [editingCell, setEditingCell] = useState(null);
 
   // Calculate számított oktatói létszám: hetiOratomeg / divisor
   const szamitottOktatoiLetszam = hetiOratomeg.map((value) =>
@@ -128,16 +131,12 @@ const Oktatoperdiak = () => {
     return "N/A";
   });
 
-  // Handle cell click for editing
-  const handleCellClick = (index) => {
-    setEditingCell(index);
-  };
-
   // Handle value change
   const handleValueChange = (index, newValue) => {
-    const numericValue = parseFloat(newValue);
+    const numericValue = newValue === "" ? 0 : parseFloat(newValue);
+    const safeValue = Number.isFinite(numericValue) ? numericValue : 0;
     const newHetiOratomeg = [...hetiOratomeg];
-    newHetiOratomeg[index] = numericValue;
+    newHetiOratomeg[index] = safeValue;
     setHetiOratomeg(newHetiOratomeg);
     setIsModified(true); // Mark as modified when data changes
   };
@@ -232,17 +231,6 @@ const Oktatoperdiak = () => {
     setNotification({ ...notification, open: false });
   };
 
-  // Handle blur (finish editing)
-  const handleBlur = () => {
-    setEditingCell(null);
-  };
-
-  // Handle key press (Enter to finish editing)
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      setEditingCell(null);
-    }
-  };
   return (
     <Container maxWidth="xl">
       <Fade in={true} timeout={800}>
@@ -322,6 +310,50 @@ const Oktatoperdiak = () => {
           </Alert>
         )}
       </Box>
+
+      <Card
+        sx={{
+          mx: 2,
+          mb: 3,
+          borderRadius: 2,
+          border: "1px dashed rgba(0,0,0,0.12)",
+          backgroundColor: "#fff",
+        }}
+      >
+        <CardContent>
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            spacing={2}
+            alignItems={{ xs: "flex-start", md: "center" }}
+            justifyContent="space-between"
+          >
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Chip
+                icon={<CalculateIcon sx={{ fontSize: 18 }} />}
+                label="Automatikus eredmények"
+                color="success"
+                variant="outlined"
+              />
+              <Typography variant="body2" color="text.secondary">
+                A felső két táblázat értékei számított eredmények, nem
+                szerkeszthetők.
+              </Typography>
+            </Stack>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Chip
+                icon={<SaveIcon sx={{ fontSize: 18 }} />}
+                label="Szerkeszthető mezők"
+                color="primary"
+                variant="outlined"
+              />
+              <Typography variant="body2" color="text.secondary">
+                Az alsó táblázat kék keretes mezői kitölthetők; módosítás után
+                ne felejtse el a Mentés gombot használni.
+              </Typography>
+            </Stack>
+          </Stack>
+        </CardContent>
+      </Card>
 
       <Box sx={{ margin: 2 }}>
         <TableContainer component={Paper}>
@@ -431,23 +463,17 @@ fenntartó által engedélyezett heti óratömeg
                   <TableCell
                     key={index}
                     align="center"
-                    onClick={() => handleCellClick(index)}
                     sx={{
-                      cursor: "pointer",
-                      "&:hover": {
-                        backgroundColor: "#f5f5f5",
-                      },
+                      backgroundColor: "rgba(33, 150, 243, 0.08)",
+                      transition: "background-color 0.2s ease",
                     }}
                   >
-                    {editingCell === index ? (
+                    <Tooltip title={editableFieldTooltip} arrow>
                       <TextField
                         value={value}
                         onChange={(e) =>
                           handleValueChange(index, e.target.value)
                         }
-                        onBlur={handleBlur}
-                        onKeyPress={handleKeyPress}
-                        autoFocus
                         size="small"
                         type="number"
                         inputProps={{
@@ -455,13 +481,21 @@ fenntartó által engedélyezett heti óratömeg
                           step: 0.1,
                           style: { textAlign: "center" },
                         }}
-                        sx={{ width: "100px" }}
+                        sx={{
+                          width: "110px",
+                          "& .MuiOutlinedInput-root": {
+                            borderRadius: 2,
+                            backgroundColor: "white",
+                            "&:hover fieldset": {
+                              borderColor: "#2196f3",
+                            },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#2196f3",
+                            },
+                          },
+                        }}
                       />
-                    ) : value >= 0 ? (
-                      value
-                    ) : (
-                      "-"
-                    )}
+                    </Tooltip>
                   </TableCell>
                 ))}
               </TableRow>
