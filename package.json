@@ -46,7 +46,7 @@
     "react-router": "^7.6.0",
     "react-router-dom": "^7.6.0",
     "react-select": "^5.10.2",
-    "react-spreadsheet-import": "^3.1.2",
+    "react-spreadsheet-import": "^4.7.1",
     "recharts": "^3.0.0",
     "redux-persist": "^6.0.0",
     "redux-thunk": "^3.1.0",
