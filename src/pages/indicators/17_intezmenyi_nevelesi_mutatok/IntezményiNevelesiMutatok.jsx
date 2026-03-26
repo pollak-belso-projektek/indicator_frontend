@@ -15,9 +15,12 @@ import {
   Button,
   Alert,
   CircularProgress,
+  Select,
+  MenuItem,
+  FormControl,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
-import { getCurrentSchoolYear } from "../../../utils/schoolYears";
+import { getCurrentSchoolYear, generateSchoolYears } from "../../../utils/schoolYears";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
@@ -262,10 +265,13 @@ const hasAnyRowData = (row) => {
   );
 };
 
+const schoolYears = generateSchoolYears();
+
 export default function IntezményiNevelesiMutatok() {
   const selectedSchool = useSelector(selectSelectedSchool);
+  const [selectedYear, setSelectedYear] = useState(getCurrentSchoolYear());
   const currentSchoolYearStart = Number.parseInt(
-    getCurrentSchoolYear().split("/")[0],
+    selectedYear.split("/")[0],
     10,
   );
 
@@ -478,13 +484,10 @@ export default function IntezményiNevelesiMutatok() {
 
         categories.forEach((category) => {
           category.subcategories.forEach((subcategory) => {
+            // Az "Összesen" mezők csak frontend-összesítők, nincs DB mezőjük
+            if (subcategory === "Összesen") return;
             const apiKey = apiFieldMap[category.name][subcategory];
-            const value =
-              subcategory === "Összesen"
-                ? getCategoryTotal(row, category.name)
-                : toNonNegativeInt(row?.[category.name]?.[subcategory]);
-
-            payload[apiKey] = value;
+            payload[apiKey] = toNonNegativeInt(row?.[category.name]?.[subcategory]);
           });
         });
 
@@ -605,19 +608,39 @@ export default function IntezményiNevelesiMutatok() {
             {/* Main Data Table */}
             <Card sx={{ mb: 3 }}>
               <CardContent>
-                <Typography
-                  variant="h6"
-                  component="h2"
-                  gutterBottom
+                <Box
                   sx={{
-                    color: "#1976d2",
-                    fontWeight: "bold",
-                    textAlign: "center",
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     mb: 3,
                   }}
                 >
-                  {getCurrentSchoolYear()} (db)
-                </Typography>
+                  <FormControl size="small" sx={{ position: "absolute", left: 0, minWidth: 140 }}>
+                    <Select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(e.target.value)}
+                    >
+                      {schoolYears.map((year) => (
+                        <MenuItem key={year} value={year}>
+                          {year}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <Typography
+                    variant="h6"
+                    component="h2"
+                    sx={{
+                      color: "#1976d2",
+                      fontWeight: "bold",
+                      textAlign: "center",
+                    }}
+                  >
+                    {selectedYear} (db)
+                  </Typography>
+                </Box>
 
                 <TableContainer
                   component={Paper}

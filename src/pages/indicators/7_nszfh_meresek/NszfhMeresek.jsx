@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import {
   Box,
@@ -17,6 +17,9 @@ import {
   Stack,
   Alert,
   CircularProgress,
+  FormControl,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import PageWrapper from "../../PageWrapper";
@@ -24,26 +27,82 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoNszfhMeresek from "./info_nszfh_meresek";
 import TitleNszfhMeresek from "./title_nszfh_meresek";
+import { generateSchoolYears, getCurrentSchoolYear } from "../../../utils/schoolYears";
 import {
   useGetNSZFHBySchoolAndYearQuery,
   useAddNSZFHMutation,
   useUpdateNSZFHMutation,
+  useGetAlapadatokQuery,
 } from "../../../store/api/apiSlice";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
 
 export default function NszfhMeresek() {
   const selectedSchool = useSelector(selectSelectedSchool);
 
-  // Get current school year
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth() + 1;
-  const currentSchoolYearStart = currentMonth >= 9 ? currentYear : currentYear - 1;
+  const [selectedYear, setSelectedYear] = useState(getCurrentSchoolYear());
+  const currentSchoolYearStart = Number.parseInt(
+    selectedYear.split("/")[0],
+    10,
+  );
+  const schoolYears = generateSchoolYears();
 
-  // API hooks
+  // Load school basic data (to get professions/szakmák)
+  const { data: alapadatokData, isLoading: isAlapadatokLoading } = useGetAlapadatokQuery(
+    { id: selectedSchool?.id },
+    { skip: !selectedSchool?.id }
+  );
+
+  // Extract separated professions
+  const { technikumSzakmak, szakkepzoSzakmak } = useMemo(() => {
+    const tech = [];
+    const szak = [];
+    if (alapadatokData?.alapadatok_szakirany) {
+      alapadatokData.alapadatok_szakirany.forEach(szakiranyData => {
+        if (szakiranyData.szakirany?.szakma) {
+          szakiranyData.szakirany.szakma.forEach(szakmaData => {
+            const sz = szakmaData.szakma;
+            if (sz) {
+              const item = { id: sz.id, nev: sz.nev, tipus: sz.tipus };
+              if (sz.tipus === "Technikum") {
+                if (!tech.some(s => s.id === item.id)) tech.push(item);
+              } else if (sz.tipus === "Szakképző" || sz.tipus === "Szakkepzo" || sz.tipus === "Szakközép") {
+                if (!szak.some(s => s.id === item.id)) szak.push(item);
+              }
+            }
+          });
+        }
+      });
+    }
+    return { technikumSzakmak: tech, szakkepzoSzakmak: szak };
+  }, [alapadatokData]);
+
+  // Build the logical row keys
+  const layoutStructure = useMemo(() => {
+    let rows = [];
+
+    if (technikumSzakmak.length > 0) {
+      rows.push({ key: "Technikum_összesen", label: "technikum összesen", kepzes_forma: "Technikum", szakma_id: "osszesen", isParent: true });
+      technikumSzakmak.forEach(s => {
+        rows.push({ key: `Technikum_${s.id}`, label: s.nev, kepzes_forma: "Technikum", szakma_id: s.id, isParent: false });
+      });
+      rows.push({ key: "Technikum_nincs", label: "Nincs meghatározva / Csak szakirány", kepzes_forma: "Technikum", szakma_id: null, isParent: false });
+    }
+
+    if (szakkepzoSzakmak.length > 0) {
+      rows.push({ key: "Szakképző_összesen", label: "szakképző iskola összesen", kepzes_forma: "Szakképző", szakma_id: "osszesen", isParent: true });
+      szakkepzoSzakmak.forEach(s => {
+        rows.push({ key: `Szakképző_${s.id}`, label: s.nev, kepzes_forma: "Szakképző", szakma_id: s.id, isParent: false });
+      });
+      rows.push({ key: "Szakképző_nincs", label: "Nincs meghatározva / Csak szakirány", kepzes_forma: "Szakképző", szakma_id: null, isParent: false });
+    }
+
+    return rows;
+  }, [technikumSzakmak, szakkepzoSzakmak]);
+
+  // API hooks for NSZFH measurements
   const {
     data: apiData,
-    isLoading,
+    isLoading: isNSZFHLoading,
     error,
   } = useGetNSZFHBySchoolAndYearQuery(
     { alapadatokId: selectedSchool?.id, tanev: currentSchoolYearStart },
@@ -54,7 +113,6 @@ export default function NszfhMeresek() {
   const [updateNSZFH, { isLoading: isUpdating }] = useUpdateNSZFHMutation();
   const isSaving = isAdding || isUpdating;
 
-  // Performance bands (categories 1-5)
   const performanceBands = [
     { key: "1", label: "25 % alatt" },
     { key: "2", label: "25-40" },
@@ -63,80 +121,106 @@ export default function NszfhMeresek() {
     { key: "5", label: "80 % fölött" },
   ];
 
-  // Competency areas
-  const competencyAreas = [
-    { key: "mat", label: "matematika" },
-    { key: "szoveg", label: "anyanyelv" },
-  ];
-
-  // Measurement types
-  const measurementTypes = [
-    { key: "bemeneti", label: "bemeneti mérés" },
-    { key: "kimeneti", label: "kimeneti mérés" },
-  ];
+  const competencyAreas = ["mat", "szoveg"];
+  const measurementTypes = ["bemeneti", "kimeneti"];
 
   // Local state for the form data
-  // Structure: { id: null, kat_1_mat_bemeneti: "", kat_1_mat_kimeneti: "", ... }
   const [tableData, setTableData] = useState({});
   const [isModified, setIsModified] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Initialize empty data structure
+  // Initialize empty data structure based on the current layoutStructure
   const getEmptyData = () => {
-    const data = { id: null };
-    performanceBands.forEach(band => {
-      competencyAreas.forEach(comp => {
-        measurementTypes.forEach(meas => {
-          const key = `kat_${band.key}_${comp.key}_${meas.key}`;
-          data[key] = "";
+    const data = {};
+    layoutStructure.forEach(rowInfo => {
+        data[rowInfo.key] = { id: null };
+        performanceBands.forEach(band => {
+          competencyAreas.forEach(comp => {
+            measurementTypes.forEach(meas => {
+              const mk = `kat_${band.key}_${comp.key}_${meas.key}`;
+              data[rowInfo.key][mk] = "";
+            });
+          });
         });
-      });
     });
     return data;
   };
 
   // Initialize data from API
   useEffect(() => {
-    if (apiData && Array.isArray(apiData) && apiData.length > 0) {
-      // Use the first record (there should be one per school per year)
-      const record = apiData[0];
-      const initialData = { id: record.id };
+    if (apiData && Array.isArray(apiData) && layoutStructure.length > 0) {
+      const initialData = getEmptyData();
 
-      performanceBands.forEach(band => {
-        competencyAreas.forEach(comp => {
-          measurementTypes.forEach(meas => {
-            const key = `kat_${band.key}_${comp.key}_${meas.key}`;
-            initialData[key] = record[key] ?? "";
-          });
-        });
+      apiData.forEach(record => {
+          if (record.tanev_kezdete !== currentSchoolYearStart) return;
+
+          // Figure out which key this record corresponds to
+          let formKey = null;
+          if (record.kepzes_forma) {
+            if (record.szakma_id) {
+               formKey = `${record.kepzes_forma}_${record.szakma_id}`;
+            } else {
+               formKey = `${record.kepzes_forma}_nincs`;
+            }
+          }
+
+          if (formKey && initialData[formKey]) {
+              initialData[formKey].id = record.id;
+              performanceBands.forEach(band => {
+                competencyAreas.forEach(comp => {
+                  measurementTypes.forEach(meas => {
+                    const mk = `kat_${band.key}_${comp.key}_${meas.key}`;
+                    initialData[formKey][mk] = record[mk] ?? "";
+                  });
+                });
+              });
+          }
       });
 
       setTableData(initialData);
-    } else if (!isLoading) {
-      // Initialize empty if no data yet
+    } else if (!isNSZFHLoading && layoutStructure.length > 0) {
       setTableData(getEmptyData());
     }
     setIsModified(false);
-  }, [apiData, isLoading]);
+  }, [apiData, isNSZFHLoading, layoutStructure, currentSchoolYearStart]);
 
   // Handle data changes
-  const handleDataChange = (bandKey, compKey, measKey, value) => {
-    // Prevent negative numbers
+  const handleDataChange = (rowKey, bandKey, compKey, measKey, value) => {
     if (value < 0) return;
 
-    const key = `kat_${bandKey}_${compKey}_${measKey}`;
+    const mk = `kat_${bandKey}_${compKey}_${measKey}`;
     setTableData(prev => ({
       ...prev,
-      [key]: value
+      [rowKey]: {
+          ...prev[rowKey],
+          [mk]: value
+      }
     }));
     setIsModified(true);
     setSaveSuccess(false);
   };
 
-  // Get value from tableData
-  const getValue = (bandKey, compKey, measKey) => {
-    const key = `kat_${bandKey}_${compKey}_${measKey}`;
-    return tableData[key] ?? "";
+  // Get value from tableData or compute if parent
+  const getValue = (rowInfo, bandKey, compKey, measKey) => {
+    const mk = `kat_${bandKey}_${compKey}_${measKey}`;
+    
+    if (rowInfo.isParent) {
+      // Auto-calculate average of the children
+      const children = layoutStructure.filter(r => !r.isParent && r.kepzes_forma === rowInfo.kepzes_forma);
+      let sum = 0;
+      let count = 0;
+      children.forEach(child => {
+         const val = tableData[child.key]?.[mk];
+         if (val !== "" && val !== null && val !== undefined) {
+           sum += parseFloat(val);
+           count++;
+         }
+      });
+      return count > 0 ? (sum / count).toFixed(1) : "";
+    }
+
+    if (!tableData || !tableData[rowInfo.key]) return "";
+    return tableData[rowInfo.key][mk] ?? "";
   };
 
   // Handle save
@@ -144,30 +228,43 @@ export default function NszfhMeresek() {
     if (!selectedSchool?.id) return;
 
     try {
-      const payload = {
-        alapadatok_id: selectedSchool.id,
-        tanev_kezdete: currentSchoolYearStart,
-      };
+      const promises = [];
 
-      // Add all the measurement values
-      performanceBands.forEach(band => {
-        competencyAreas.forEach(comp => {
-          measurementTypes.forEach(meas => {
-            const key = `kat_${band.key}_${comp.key}_${meas.key}`;
-            const value = tableData[key];
-            payload[key] = value === "" ? null : parseFloat(value);
+      layoutStructure.forEach(rowInfo => {
+          if (rowInfo.isParent) return; // Do not save the computed összesen rows
+
+          const record = tableData[rowInfo.key];
+          if (!record) return;
+
+          let hasData = false;
+          
+          const payload = {
+            alapadatok_id: selectedSchool.id,
+            tanev_kezdete: currentSchoolYearStart,
+            kepzes_forma: rowInfo.kepzes_forma,
+            szakma_id: rowInfo.szakma_id,
+          };
+
+          performanceBands.forEach(band => {
+            competencyAreas.forEach(comp => {
+              measurementTypes.forEach(meas => {
+                const mk = `kat_${band.key}_${comp.key}_${meas.key}`;
+                const value = record[mk];
+                if (value !== "" && value !== null && value !== undefined) hasData = true;
+                payload[mk] = value === "" ? null : parseFloat(value);
+              });
+            });
           });
-        });
+
+          if (record.id) {
+            promises.push(updateNSZFH({ id: record.id, ...payload }).unwrap());
+          } else if (hasData) {
+            promises.push(addNSZFH(payload).unwrap());
+          }
       });
 
-      if (tableData.id) {
-        // Update existing record
-        await updateNSZFH({ id: tableData.id, ...payload }).unwrap();
-      } else {
-        // Create new record
-        await addNSZFH(payload).unwrap();
-      }
-
+      await Promise.all(promises);
+      
       setSaveSuccess(true);
       setIsModified(false);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -178,17 +275,32 @@ export default function NszfhMeresek() {
 
   // Handle reset
   const handleReset = () => {
-    if (apiData && Array.isArray(apiData) && apiData.length > 0) {
-      const record = apiData[0];
-      const initialData = { id: record.id };
+    if (apiData && Array.isArray(apiData)) {
+      const initialData = getEmptyData();
 
-      performanceBands.forEach(band => {
-        competencyAreas.forEach(comp => {
-          measurementTypes.forEach(meas => {
-            const key = `kat_${band.key}_${comp.key}_${meas.key}`;
-            initialData[key] = record[key] ?? "";
-          });
-        });
+      apiData.forEach(record => {
+          if (record.tanev_kezdete !== currentSchoolYearStart) return;
+
+          let formKey = null;
+          if (record.kepzes_forma) {
+            if (record.szakma_id) {
+               formKey = `${record.kepzes_forma}_${record.szakma_id}`;
+            } else {
+               formKey = `${record.kepzes_forma}_nincs`;
+            }
+          }
+
+          if (formKey && initialData[formKey]) {
+              initialData[formKey].id = record.id;
+              performanceBands.forEach(band => {
+                competencyAreas.forEach(comp => {
+                  measurementTypes.forEach(meas => {
+                    const mk = `kat_${band.key}_${comp.key}_${meas.key}`;
+                    initialData[formKey][mk] = record[mk] ?? "";
+                  });
+                });
+              });
+          }
       });
 
       setTableData(initialData);
@@ -198,7 +310,7 @@ export default function NszfhMeresek() {
     setIsModified(false);
   };
 
-  if (isLoading) {
+  if (isNSZFHLoading || isAlapadatokLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
@@ -222,7 +334,6 @@ export default function NszfhMeresek() {
       <Box>
         <LockStatusIndicator tableName="nszfh" />
 
-        {/* Main Data Table */}
         <Card>
           <CardContent>
             <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
@@ -252,12 +363,32 @@ export default function NszfhMeresek() {
               </Alert>
             )}
 
-            <Typography variant="h6" component="h2" gutterBottom>
-              NSZFH kompetenciamérés eredményei - Összetétszámhoz viszonyítva (%)
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {currentSchoolYearStart}/{currentSchoolYearStart + 1}
-            </Typography>
+            <Box display="flex" alignItems="center" justifyContent="center" sx={{ position: "relative", mb: 2 }}>
+              <Box sx={{ position: "absolute", left: 0 }}>
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <Select
+                    value={selectedYear}
+                    onChange={(e) => {
+                      setSelectedYear(e.target.value);
+                      setIsModified(false);
+                      setSaveSuccess(false);
+                    }}
+                    displayEmpty
+                    sx={{ backgroundColor: "#fff" }}
+                  >
+                    {schoolYears.slice(0, 4).map((year) => (
+                      <MenuItem key={year} value={year}>
+                        {year}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+
+              <Typography variant="h6" component="h2">
+                NSZFH kompetenciamérés eredményei
+              </Typography>
+            </Box>
 
             <TableContainer
               component={Paper}
@@ -267,128 +398,138 @@ export default function NszfhMeresek() {
               <Table size="small">
                 <TableHead>
                   <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                    <TableCell
-                      rowSpan={2}
-                      sx={{
-                        fontWeight: "bold",
-                        verticalAlign: "middle",
-                        minWidth: 120,
-                        textAlign: "center",
-                      }}
-                    >
-                      Kompetenciaterület
-                    </TableCell>
-                    {performanceBands.map((band) => (
-                      <TableCell
-                        key={band.key}
-                        colSpan={2}
-                        align="center"
-                        sx={{ fontWeight: "bold", minWidth: 140 }}
-                      >
-                        {band.label}
-                      </TableCell>
-                    ))}
+                     <TableCell colSpan={2} sx={{ borderRight: "2px solid #e0e0e0" }} />
+                     <TableCell colSpan={2} align="center" sx={{ fontWeight: "bold", color: "#d32f2f", borderRight: "1px solid #e0e0e0" }}>matematika</TableCell>
+                     <TableCell colSpan={2} align="center" sx={{ fontWeight: "bold", color: "#d32f2f" }}>anyanyelv</TableCell>
                   </TableRow>
                   <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                    {performanceBands.map((band) => (
-                      <React.Fragment key={`header-${band.key}`}>
-                        <TableCell
-                          align="center"
-                          sx={{ fontWeight: "bold", minWidth: 70 }}
-                        >
-                          bemeneti mérés
-                        </TableCell>
-                        <TableCell
-                          align="center"
-                          sx={{ fontWeight: "bold", minWidth: 70 }}
-                        >
-                          kimeneti mérés
-                        </TableCell>
-                      </React.Fragment>
-                    ))}
+                     <TableCell colSpan={2} sx={{ borderRight: "2px solid #e0e0e0" }} />
+                     <TableCell colSpan={4} align="center" sx={{ fontWeight: "bold", borderBottom: "1px solid #e0e0e0" }}>összetétszámhoz viszonyítva (%)</TableCell>
+                  </TableRow>
+                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                      <TableCell align="center" sx={{ fontWeight: "bold", width: 220 }}>Képzési forma / Szakma</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: "bold", width: 100, borderRight: "2px solid #e0e0e0" }}>Sáv</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: "bold", color: "#d32f2f" }}>bemeneti mérés</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: "bold", color: "#d32f2f", borderRight: "1px solid #e0e0e0" }}>kimeneti mérés</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: "bold", color: "#d32f2f" }}>bemeneti mérés</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: "bold", color: "#d32f2f" }}>kimeneti mérés</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {competencyAreas.map((competency, compIndex) => (
-                    <TableRow
-                      key={competency.key}
-                      sx={{
-                        backgroundColor: compIndex % 2 === 0 ? "#fff2cc" : "#e8f4fd",
-                        "&:hover": {
-                          backgroundColor: compIndex % 2 === 0 ? "#ffe6b3" : "#d4e6f1",
-                        },
-                      }}
-                    >
-                      <TableCell
-                        sx={{
-                          fontWeight: "bold",
-                          textAlign: "center",
-                          borderRight: "1px solid #e0e0e0",
-                        }}
-                      >
-                        {competency.label}
-                      </TableCell>
-                      {performanceBands.map((band) => (
-                        <React.Fragment key={`${band.key}-${competency.key}`}>
-                          <TableCell align="center">
-                            <TextField
-                              type="number"
-                              value={getValue(band.key, competency.key, "bemeneti")}
-                              onChange={(e) =>
-                                handleDataChange(
-                                  band.key,
-                                  competency.key,
-                                  "bemeneti",
-                                  e.target.value
-                                )
-                              }
-                              size="small"
-                              inputProps={{
-                                min: 0,
-                                max: 100,
-                                step: 0.01,
-                                style: { textAlign: "center" },
+                  {layoutStructure.map((rowInfo, rowIndex) => (
+                    <React.Fragment key={rowInfo.key}>
+                      {performanceBands.map((band, bandIndex) => {
+                        const isLastBand = bandIndex === 4;
+                        const isLastLogicalRow = rowIndex === layoutStructure.length - 1;
+                        
+                        // Decide on colors
+                        // Parents: #fff2cc for Technikum, #e8f4fd for Szakképző
+                        // Children variables: #fffaf0 for Tech szakma, #f4f9fd for Szak szakma
+                        let bgColor = "#ffffff";
+                        let hoverColor = "#f5f5f5";
+                        if (rowInfo.kepzes_forma === "Technikum") {
+                           bgColor = rowInfo.isParent ? "#fff2cc" : "#fffaf0";
+                           hoverColor = rowInfo.isParent ? "#ffe6b3" : "#fbf2e3";
+                        } else {
+                           bgColor = rowInfo.isParent ? "#e8f4fd" : "#f4f9fd";
+                           hoverColor = rowInfo.isParent ? "#d4e6f1" : "#e5f0f9";
+                        }
+
+                        return (
+                          <TableRow
+                            key={`${rowInfo.key}-${band.key}`}
+                            sx={{
+                              backgroundColor: bgColor,
+                              "&:hover": { backgroundColor: hoverColor },
+                            }}
+                          >
+                            {bandIndex === 0 && (
+                              <TableCell
+                                rowSpan={5}
+                                sx={{
+                                  fontWeight: rowInfo.isParent ? "bold" : "normal",
+                                  textAlign: "center",
+                                  borderRight: "1px solid #e0e0e0",
+                                  borderBottom: isLastLogicalRow ? "none" : "2px solid #e0e0e0",
+                                  verticalAlign: "top",
+                                  pt: 3,
+                                  fontStyle: rowInfo.isParent ? "normal" : "italic",
+                                  fontSize: rowInfo.isParent ? "1rem" : "0.85rem",
+                                }}
+                              >
+                                {rowInfo.label}
+                              </TableCell>
+                            )}
+                            <TableCell
+                              sx={{
+                                fontWeight: "bold",
+                                textAlign: "center",
+                                borderRight: "2px solid #e0e0e0",
+                                borderBottom: isLastBand && !isLastLogicalRow ? "2px solid #e0e0e0" : "1px solid rgba(224, 224, 224, 1)"
                               }}
-                              sx={{ width: "70px" }}
-                              placeholder=""
-                            />
-                          </TableCell>
-                          <TableCell align="center">
-                            <TextField
-                              type="number"
-                              value={getValue(band.key, competency.key, "kimeneti")}
-                              onChange={(e) =>
-                                handleDataChange(
-                                  band.key,
-                                  competency.key,
-                                  "kimeneti",
-                                  e.target.value
-                                )
-                              }
-                              size="small"
-                              inputProps={{
-                                min: 0,
-                                max: 100,
-                                step: 0.01,
-                                style: { textAlign: "center" },
-                              }}
-                              sx={{ width: "70px" }}
-                              placeholder=""
-                            />
-                          </TableCell>
-                        </React.Fragment>
-                      ))}
-                    </TableRow>
+                            >
+                              {band.label}
+                            </TableCell>
+                            
+                            {/* Mathematics */}
+                            <TableCell align="center" sx={{ borderBottom: isLastBand && !isLastLogicalRow ? "2px solid #e0e0e0" : "1px solid rgba(224, 224, 224, 1)", backgroundColor: rowInfo.isParent ? "rgba(0,0,0,0.03)" : "inherit" }}>
+                              <TextField
+                                type={rowInfo.isParent ? "text" : "number"}
+                                value={getValue(rowInfo, band.key, 'mat', 'bemeneti')}
+                                onChange={(e) => handleDataChange(rowInfo.key, band.key, 'mat', 'bemeneti', e.target.value)}
+                                size="small"
+                                disabled={rowInfo.isParent}
+                                inputProps={{ min: 0, max: 100, step: 0.01, style: { textAlign: "center", fontWeight: rowInfo.isParent ? "bold" : "normal", color: rowInfo.isParent ? "#555" : "inherit" } }}
+                                sx={{ width: "80px", backgroundColor: rowInfo.isParent ? "transparent" : "rgba(255,255,255,0.7)" }}
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ borderRight: "1px solid #e0e0e0", borderBottom: isLastBand && !isLastLogicalRow ? "2px solid #e0e0e0" : "1px solid rgba(224, 224, 224, 1)", backgroundColor: rowInfo.isParent ? "rgba(0,0,0,0.03)" : "inherit" }}>
+                              <TextField
+                                type={rowInfo.isParent ? "text" : "number"}
+                                value={getValue(rowInfo, band.key, 'mat', 'kimeneti')}
+                                onChange={(e) => handleDataChange(rowInfo.key, band.key, 'mat', 'kimeneti', e.target.value)}
+                                size="small"
+                                disabled={rowInfo.isParent}
+                                inputProps={{ min: 0, max: 100, step: 0.01, style: { textAlign: "center", fontWeight: rowInfo.isParent ? "bold" : "normal", color: rowInfo.isParent ? "#555" : "inherit" } }}
+                                sx={{ width: "80px", backgroundColor: rowInfo.isParent ? "transparent" : "rgba(255,255,255,0.7)" }}
+                              />
+                            </TableCell>
+
+                            {/* Text/Anyanyelv */}
+                            <TableCell align="center" sx={{ borderBottom: isLastBand && !isLastLogicalRow ? "2px solid #e0e0e0" : "1px solid rgba(224, 224, 224, 1)", backgroundColor: rowInfo.isParent ? "rgba(0,0,0,0.03)" : "inherit" }}>
+                              <TextField
+                                type={rowInfo.isParent ? "text" : "number"}
+                                value={getValue(rowInfo, band.key, 'szoveg', 'bemeneti')}
+                                onChange={(e) => handleDataChange(rowInfo.key, band.key, 'szoveg', 'bemeneti', e.target.value)}
+                                size="small"
+                                disabled={rowInfo.isParent}
+                                inputProps={{ min: 0, max: 100, step: 0.01, style: { textAlign: "center", fontWeight: rowInfo.isParent ? "bold" : "normal", color: rowInfo.isParent ? "#555" : "inherit" } }}
+                                sx={{ width: "80px", backgroundColor: rowInfo.isParent ? "transparent" : "rgba(255,255,255,0.7)" }}
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ borderBottom: isLastBand && !isLastLogicalRow ? "2px solid #e0e0e0" : "1px solid rgba(224, 224, 224, 1)", backgroundColor: rowInfo.isParent ? "rgba(0,0,0,0.03)" : "inherit" }}>
+                              <TextField
+                                type={rowInfo.isParent ? "text" : "number"}
+                                value={getValue(rowInfo, band.key, 'szoveg', 'kimeneti')}
+                                onChange={(e) => handleDataChange(rowInfo.key, band.key, 'szoveg', 'kimeneti', e.target.value)}
+                                size="small"
+                                disabled={rowInfo.isParent}
+                                inputProps={{ min: 0, max: 100, step: 0.01, style: { textAlign: "center", fontWeight: rowInfo.isParent ? "bold" : "normal", color: rowInfo.isParent ? "#555" : "inherit" } }}
+                                sx={{ width: "80px", backgroundColor: rowInfo.isParent ? "transparent" : "rgba(255,255,255,0.7)" }}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </React.Fragment>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
 
-            {/* Status Messages */}
             {isModified && (
               <Alert severity="warning" sx={{ mt: 2 }}>
-                Mentetlen módosítások vannak. Ne felejtsd el menteni a
-                változtatásokat!
+                Mentetlen módosítások vannak. Ne felejtsd el menteni a változtatásokat!
               </Alert>
             )}
           </CardContent>

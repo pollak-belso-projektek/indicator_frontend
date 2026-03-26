@@ -768,9 +768,7 @@ export const indicatorApi = createApi({
     }),
     getNSZFHBySchoolAndYear: build.query({
       query: ({ alapadatokId, tanev }) => `nszfh/${alapadatokId}/${tanev}`,
-      providesTags: (result, error, { alapadatokId, tanev }) => [
-        { type: "NSZFH", id: `${alapadatokId}-${tanev}` },
-      ],
+      providesTags: ["NSZFH"],
     }),
     getAllNSZFH: build.query({
       query: () => `nszfh/${getCurrentSchoolYearStart()}`,
@@ -894,27 +892,29 @@ export const indicatorApi = createApi({
     // intezmenyi_nevelesi_mutatok (Institutional Education Level)
     getIntezmenyiNeveltsegiMutatokByYear: build.query({
       query: ({ alapadatok_id, tanev }) =>
-        `intezmenyi_nevelesi_mutatoki_mutatok/${alapadatok_id}/${tanev}`,
+        `intezmenyi_neveltsegi_mutatok/${alapadatok_id}/${tanev}`,
       providesTags: (result, error, tanev) => [
         { type: "IntezmenyiNeveltsegiMutatok", id: tanev },
       ],
     }),
     addIntezmenyiNeveltsegiMutatok: build.mutation({
       query: (data) => ({
-        url: "intezmenyi_nevelesi_mutatoki_mutatok",
+        url: "intezmenyi_neveltsegi_mutatok",
         method: "POST",
         body: data,
       }),
       invalidatesTags: ["IntezmenyiNeveltsegiMutatok"],
     }),
     updateIntezmenyiNeveltsegiMutatok: build.mutation({
-      query: ({ id, ...data }) => ({
-        url: `intezmenyi_nevelesi_mutatoki_mutatok/${id}`,
+      query: ({ id, tanev_kezdete, ...data }) => ({
+        url: `intezmenyi_neveltsegi_mutatok/${id}/${tanev_kezdete}`,
         method: "PUT",
-        body: data,
+        body: { tanev_kezdete, ...data },
       }),
       invalidatesTags: ["IntezmenyiNeveltsegiMutatok"],
     }),
+
+
 
     // Logs management endpoints (Admin/Superadmin only)
     getLogs: build.query({
