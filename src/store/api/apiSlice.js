@@ -837,6 +837,12 @@ export const indicatorApi = createApi({
       query: (tanev) => `nszfh/${tanev}`,
       providesTags: (result, error, tanev) => [{ type: "NSZFH", id: tanev }],
     }),
+    getNSZFHBySchoolAndYear: build.query({
+      query: ({ alapadatokId, tanev }) => `nszfh/${alapadatokId}/${tanev}`,
+      providesTags: (result, error, { alapadatokId, tanev }) => [
+        { type: "NSZFH", id: `${alapadatokId}-${tanev}` },
+      ],
+    }),
     getAllNSZFH: build.query({
       query: () => {
         const currentDate = new Date();
@@ -1202,6 +1208,7 @@ export const {
   useUpdateMuhelyiskolaMutation,
   useDeleteMuhelyiskolaMutation,
   useGetNSZFHByYearQuery,
+  useGetNSZFHBySchoolAndYearQuery,
   useGetAllNSZFHQuery,
   useAddNSZFHMutation,
   useUpdateNSZFHMutation,
