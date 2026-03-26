@@ -145,6 +145,12 @@ const NavigationCategories = {
         tableName: "vizsgaeredmenyek",
       },
       {
+        name: "Szakmai vizsga",
+        icon: MdAssessment,
+        link: "/szakmai-vizsga",
+        tableName: "szakmai_vizsga_eredmenyek",
+      },
+      {
         name: "Elégedettség mérés",
         icon: MdAssessment,
         link: "/elegedettseg-meres-eredmenyei",

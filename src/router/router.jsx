@@ -58,6 +58,9 @@ const VegzettekElegedettsegePage = lazy(
 const VizsgaeredmenyekPage = lazy(
   () => import("../pages/indicators/11_vizsgaeredmenyek/Vizsgaeredmenyek.jsx"),
 );
+const SzakmaiVizsgaPage = lazy(
+  () => import("../pages/indicators/12_szakmai_vizsga/SzakmaiVizsga.jsx"),
+);
 const IntezményiElismeresekPage = lazy(
   () =>
     import("../pages/indicators/13_intezmenyi_elismeresek/IntezményiElismeresek.jsx"),
@@ -124,6 +127,7 @@ const SCHOOL_REQUIRED_PAGES = [
   "/vegzettek-elegedettsege",
   "/szakkepzesi-munkaszerződes-arany",
   "/felnottkepzes",
+  "/szakmai-vizsga",
   "/muhelyiskolai-reszszakmat",
   "/dobbanto-program-aranya",
   "/intezmenyi-nevelesi-mutatok",
@@ -370,6 +374,19 @@ export default function Router() {
                       {withSchoolRequired(
                         <VizsgaeredmenyekPage />,
                         "/vizsgaeredmenyek",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/szakmai-vizsga"
+                element={
+                  <TableProtectedRoute tableName="szakmai_vizsga_eredmenyek">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <SzakmaiVizsgaPage />,
+                        "/szakmai-vizsga",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
