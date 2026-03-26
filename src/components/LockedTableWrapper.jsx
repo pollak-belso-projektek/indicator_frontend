@@ -1,6 +1,7 @@
 import React from "react";
 import { Tooltip } from "@mui/material";
 import { useTableLockStatus } from "../hooks/useTableLock";
+import { useAccessControl } from "../hooks/useAccessControl";
 
 /**
  * Wrapper component that disables children when table is locked
@@ -16,8 +17,11 @@ const LockedTableWrapper = ({
   disableForNonSuperadmin = false,
 }) => {
   const { isLocked, canModify, lockMessage } = useTableLockStatus(tableName);
+  const { userPermissions } = useAccessControl();
+  const isSuperadmin = userPermissions?.isSuperadmin;
+  const canUserModify = canModify && (!disableForNonSuperadmin || isSuperadmin);
 
-  if (!isLocked && canModify) {
+  if (!isLocked && canUserModify) {
     console.log(
       "Table is not locked and user can modify. Rendering children normally."
     );
@@ -31,7 +35,9 @@ const LockedTableWrapper = ({
   // Determine the message to show
   const tooltipMessage = isLocked
     ? lockMessage || "Ez a tábla jelenleg le van zárva"
-    : "Nincs jogosultságod a módosításhoz";
+    : disableForNonSuperadmin && !isSuperadmin
+      ? "Csak szuperadmin jogosult a módosításra"
+      : "Nincs jogosultságod a módosításhoz";
 
   // Helper function to clone a single child with disabled prop
   const disableChild = (child, index) => {

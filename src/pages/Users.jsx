@@ -40,7 +40,6 @@ const Users = () => {
   };
 
   const {
-    data,
     table,
     globalFilter,
     setGlobalFilter,
@@ -50,14 +49,11 @@ const Users = () => {
     setOpenCreate,
     open,
     selectedUser,
-    setSelectedUser,
     fullScreen,
     hiddenColumns,
     setHiddenColumns,
     density,
     setDensity,
-    width,
-    setWidth,
     isLoading,
     userPermissions,
     handleModify,
@@ -140,7 +136,6 @@ const Users = () => {
         open={openModify}
         onClose={() => setOpenModify(false)}
         user={selectedUser}
-        onUserChange={setSelectedUser}
         onSave={handleModifyWithNotification}
         fullScreen={fullScreen}
         userPermissions={userPermissions}

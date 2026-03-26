@@ -305,7 +305,6 @@ export default function SzakmaiTovabbkepzesek() {
             
             {rowLabels.map((rowItem, idx) => {
               // Group logic
-              let showGroupBorder = false;
               let isFirstInGroup = false;
 
               if (rowItem.group) {

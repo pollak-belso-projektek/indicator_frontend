@@ -47,7 +47,6 @@ import {
   useAddSajatosNevelesuTanulokMutation,
   useUpdateSajatosNevelesuTanulokMutation,
   useDeleteSajatosNevelesuTanulokMutation,
-  useGetAllAlapadatokQuery,
   useGetTanuloLetszamQuery,
 } from "../../../store/api/apiSlice";
 import GenericYearlyChart from "../../../components/GenericYearlyChart";
@@ -69,9 +68,6 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
     error: fetchError,
     isLoading: isFetching,
   } = useGetAllSajatosNevelesuTanulokQuery(selectedSchool?.id);
-  const { data: schoolsData, isLoading: isLoadingSchools } =
-    useGetAllAlapadatokQuery();
-
   const { data: tanuloLetszamData } = useGetTanuloLetszamQuery(
     { alapadatok_id: selectedSchool?.id },
     { skip: !selectedSchool?.id }
@@ -374,41 +370,6 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
     }
   };
 
-  // Calculate summary statistics
-  const summaryStats = useMemo(() => {
-    const stats = {};
-
-    sniData.forEach((item) => {
-      console.log("Processing item:", item);
-      const year = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
-      if (!stats[year]) {
-        stats[year] = {
-          totalSniTanulok: 0,
-          totalOsszesTanulok: 0,
-          count: 0,
-        };
-      }
-      stats[year].totalSniTanulok += parseInt(item.sni_tanulok_szama) || 0;
-      stats[year].totalOsszesTanulok += parseInt(item.tanulok_osszesen) || 0;
-      stats[year].count += 1;
-    });
-
-    // Calculate average percentage
-    Object.keys(stats).forEach((year) => {
-      const yearStats = stats[year];
-      yearStats.atlagArany =
-        yearStats.totalOsszesTanulok > 0
-          ? (
-              (yearStats.totalSniTanulok / yearStats.totalOsszesTanulok) *
-              100
-            ).toFixed(2)
-          : 0;
-    });
-
-    console.log("Summary Statistics:", stats);
-    return stats;
-  }, [sniData]);
-
   return (
     <Container maxWidth="xl">
       <PageWrapper
@@ -541,7 +502,14 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                               <TableContainer
                                 component={Paper}
                                 variant="outlined"
+                                key={schoolName}
                               >
+                                <Typography
+                                  variant="subtitle1"
+                                  sx={{ fontWeight: "bold", mb: 1 }}
+                                >
+                                  {schoolName}
+                                </Typography>
                                 <Table size="small">
                                   <TableHead>
                                     <TableRow

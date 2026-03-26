@@ -23,7 +23,7 @@ export const normalizeHeaderKeyStrict = (header) => {
     normalized = normalized.replace(/\s+/g, "_");
 
     // Replace slashes and hyphens with underscores
-    normalized = normalized.replace(/[\/-]/g, "_");
+    normalized = normalized.replace(/[/-]/g, "_");
 
     // Remove special characters like (, ), etc.
     // Keep letters, numbers, and underscores.

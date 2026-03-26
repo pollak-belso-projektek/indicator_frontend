@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -129,16 +129,19 @@ export const useUserManagement = () => {
     }
   }, []);
 
-  const handleEdit = (user) => {
-    if (!userPermissions.canModifyUser(user)) {
-      return {
-        error: "Nincs jogosultsága ennek a felhasználónak a módosításához!",
-      };
-    }
-    setSelectedUser(user);
-    setOpenModify(true);
-    return { success: true };
-  };
+  const handleEdit = useCallback(
+    (user) => {
+      if (!userPermissions.canModifyUser(user)) {
+        return {
+          error: "Nincs jogosultsága ennek a felhasználónak a módosításához!",
+        };
+      }
+      setSelectedUser(user);
+      setOpenModify(true);
+      return { success: true };
+    },
+    [userPermissions]
+  );
 
   const handleCreate = () => {
     if (userPermissions.getAvailableUserTypes().length === 0) {
@@ -149,16 +152,19 @@ export const useUserManagement = () => {
     return { success: true };
   };
 
-  const handleDeactivate = (user) => {
-    if (!userPermissions.canDeactivateUser(user)) {
-      return {
-        error: "Nincs jogosultsága ennek a felhasználónak az inaktiválásához!",
-      };
-    }
-    setSelectedUser(user);
-    setOpen(true);
-    return { success: true };
-  };
+  const handleDeactivate = useCallback(
+    (user) => {
+      if (!userPermissions.canDeactivateUser(user)) {
+        return {
+          error: "Nincs jogosultsága ennek a felhasználónak az inaktiválásához!",
+        };
+      }
+      setSelectedUser(user);
+      setOpen(true);
+      return { success: true };
+    },
+    [userPermissions]
+  );
   const handleModify = async (modifiedUser) => {
     try {
       // Check if user can modify this type of user
@@ -225,10 +231,6 @@ export const useUserManagement = () => {
       return { error: "Hiba történt a felhasználó inaktiválása során!" };
     }
   };
-  // Helper function to determine user type from permissions level
-  const getUserTypeFromPermissions = (permissionsLevel) => {
-    return getUserTypeFromLevel(permissionsLevel);
-  };
   const handleClose = () => {
     setOpen(false);
     setOpenModify(false);
@@ -242,7 +244,7 @@ export const useUserManagement = () => {
 
   const columns = useMemo(
     () => createUserColumns(handleEdit, handleDeactivate, userPermissions),
-    [userPermissions]
+    [handleDeactivate, handleEdit, userPermissions]
   );
 
   const table = useReactTable({

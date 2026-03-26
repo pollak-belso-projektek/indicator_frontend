@@ -180,7 +180,7 @@ export default function IntezményiElismeresek() {
           </Alert>
         )}
         {/* Main Data Tables */}
-        {recognitionCategories.map((categoryData, categoryIndex) => (
+        {recognitionCategories.map((categoryData) => (
           <Card key={categoryData.category} sx={{ mb: 3 }}>
             <CardContent>
               <Typography

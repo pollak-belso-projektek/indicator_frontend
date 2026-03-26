@@ -20,6 +20,7 @@ const findPageInfo = (pathname, navigationCategories) => {
         link: foundItem.link,
         category: category.name,
         categoryIcon: category.icon,
+        categoryKey,
         tableName: foundItem.tableName,
         timestamp: Date.now(),
       };

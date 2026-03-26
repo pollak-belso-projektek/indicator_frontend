@@ -65,10 +65,9 @@ export default function DataImport() {
       : new Date().getFullYear() - 1;
 
   // Tanügyi adatok API hooks
-  const [addTanugyiAdatok, tanugyiResult] = useAddTanugyiAdatokMutation();
+  const [addTanugyiAdatok] = useAddTanugyiAdatokMutation();
   const {
     data: tanugyiDataFromAPI,
-    error: tanugyiError,
     isLoading: tanugyiLoading,
   } = useGetTanugyiAdatokQuery({
     alapadatok_id: selectedSchool?.id,
@@ -76,11 +75,9 @@ export default function DataImport() {
   });
 
   // Alkalmazott adatok API hooks
-  const [addAlkalmazottAdatok, alkalmazottResult] =
-    useAddAlkalmazottAdatokMutation();
+  const [addAlkalmazottAdatok] = useAddAlkalmazottAdatokMutation();
   const {
     data: alkalmazottDataFromAPI,
-    error: alkalmazottError,
     isLoading: alkalmazottLoading,
   } = useGetAlkalmazottAdatokQuery({
     alapadatok_id: selectedSchool?.id,
@@ -88,11 +85,10 @@ export default function DataImport() {
   });
 
   // Tanuló adatszolgáltatás API hooks
-  const [addTanuloAdatszolgaltatas, tanuloAdatszelgaltatasResult] =
+  const [addTanuloAdatszolgaltatas] =
     useAddTanuloAdatszolgaltatasMutation();
   const {
     data: tanuloAdatszolgaltatasDataFromAPI,
-    error: tanuloAdatszolgaltatasError,
     isLoading: tanuloAdatszolgaltatasLoading,
   } = useGetTanuloAdatszolgaltatasQuery({
     alapadatok_id: selectedSchool?.id,
@@ -100,11 +96,9 @@ export default function DataImport() {
   });
 
   // Oktató adatszolgáltatás API hooks
-  const [addOktatoAdatszolgaltatas, oktatoAdatszolgaltatasResult] =
-    useAddOktatoAdatszolgaltatasMutation();
+  const [addOktatoAdatszolgaltatas] = useAddOktatoAdatszolgaltatasMutation();
   const {
     data: oktatoAdatszolgaltatasDataFromAPI,
-    error: oktatoAdatszolgaltatasError,
     isLoading: oktatoAdatszolgaltatasLoading,
   } = useGetOktatoAdatszolgaltatasQuery({
     alapadatok_id: selectedSchool?.id,
@@ -251,7 +245,8 @@ export default function DataImport() {
         ". " +
         dateString.split("T")[1].slice(0, 8)
       );
-    } catch (e) {
+    } catch (error) {
+      console.warn("Invalid date string", dateString, error);
       return dateString;
     }
   };
@@ -409,7 +404,7 @@ export default function DataImport() {
                     </Alert>
                   )}
                   <CustomSheetUploader
-                    onFileUpload={async (data, file) => {
+                    onFileUpload={async (data) => {
                       const headers =
                         data.length > 0 ? Object.keys(data[0]) : [];
                       const validation = validateTanugyiFile(headers);
@@ -495,7 +490,7 @@ export default function DataImport() {
                     </Alert>
                   )}
                   <CustomSheetUploader
-                    onFileUpload={async (data, file) => {
+                    onFileUpload={async (data) => {
                       const headers =
                         data.length > 0 ? Object.keys(data[0]) : [];
                       const validation = validateAlkalmazottFile(headers);
@@ -597,7 +592,7 @@ export default function DataImport() {
                     </Alert>
                   )}
                   <CustomSheetUploader
-                    onFileUpload={async (data, file) => {
+                    onFileUpload={async (data) => {
                       const headers =
                         data.length > 0 ? Object.keys(data[0]) : [];
                       const validation =
@@ -678,7 +673,7 @@ export default function DataImport() {
                     </Alert>
                   )}
                   <CustomSheetUploader
-                    onFileUpload={async (data, file) => {
+                    onFileUpload={async (data) => {
                       const headers =
                         data.length > 0 ? Object.keys(data[0]) : [];
                       const validation =

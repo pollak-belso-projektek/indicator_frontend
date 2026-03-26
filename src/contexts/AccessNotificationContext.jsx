@@ -75,7 +75,14 @@ export const AccessNotificationProvider = ({ children }) => {
       };
 
       const pageName = routeNames[route] || "Az oldal";
-      const message = `🚫 Hozzáférés megtagadva: "${pageName}" megtekintéséhez nincs jogosultsága!`;
+      const actionDescriptions = {
+        read: "megtekintéséhez",
+        create: "létrehozásához",
+        update: "módosításához",
+        delete: "törléséhez",
+      };
+      const actionLabel = actionDescriptions[action] || "eléréséhez";
+      const message = `🚫 Hozzáférés megtagadva: "${pageName}" ${actionLabel} nincs jogosultsága!`;
 
       showNotification(message, "error");
     },

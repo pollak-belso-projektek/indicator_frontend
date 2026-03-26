@@ -36,7 +36,7 @@ import {
 
 import { useColorModeValue } from "./ui/color-mode";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLogoutMutation, indicatorApi } from "../store/api/apiSlice";
 import {
@@ -527,6 +527,16 @@ const SidebarContent = ({ onClose, ...rest }) => {
   const tableAccess = useSelector(selectUserTableAccess);
   const userPermissions = useSelector(selectUserPermissions);
 
+  const sidebarBorderColor = useColorModeValue("gray.200", "gray.700");
+  const sidebarBg = useColorModeValue("white", "gray.50");
+  const sidebarShadow = useColorModeValue("lg", "2xl");
+  const headerBg = useColorModeValue("white", "gray.50");
+  const headerBorderColor = useColorModeValue("gray.100", "gray.200");
+  const neutralBg = useColorModeValue("gray.50", "gray.100");
+  const neutralHoverBg = useColorModeValue("gray.100", "gray.200");
+  const separatorColor = useColorModeValue("gray.200", "gray.600");
+  const footerBorderColor = useColorModeValue("gray.200", "gray.700");
+
   // Add keyboard shortcuts for navigation
   useEffect(() => {
     const handleKeyPress = (event) => {
@@ -577,8 +587,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
   );
 
   // Initialize recent pages hook
-  const { recentPages, clearRecentPages, removeRecentPage } =
-    useRecentPages(NavigationCategories);
+  useRecentPages(NavigationCategories);
 
   // Separate fixed items (first 5) and scrollable items - memoized to prevent infinite re-renders
   const fixedItems = useMemo(() => {
@@ -633,7 +642,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
         [activeCategoryKey]: true,
       }));
     }
-  }, [location.pathname]); // Removed fixedItems from dependency array
+  }, [fixedItems, location.pathname]);
 
   // Helper function to check if a category contains the active page
   const isCategoryActive = (categoryKey) => {
@@ -780,20 +789,20 @@ const SidebarContent = ({ onClose, ...rest }) => {
     <Box
       transition="all 0.3s ease-in-out"
       borderRight="1px"
-      borderRightColor={useColorModeValue("gray.200", "gray.700")}
+      borderRightColor={sidebarBorderColor}
       w={{ base: "full", md: 64 }}
       pos="fixed"
       h="100vh"
-      bg={useColorModeValue("white", "gray.50")}
-      boxShadow={useColorModeValue("lg", "2xl")}
+      bg={sidebarBg}
+      boxShadow={sidebarShadow}
       zIndex={1000}
       {...rest}
     >
       {/* Header */}
       <Box
-        bg={useColorModeValue("white", "gray.50")}
+        bg={headerBg}
         borderBottom="1px"
-        borderColor={useColorModeValue("gray.100", "gray.200")}
+        borderColor={headerBorderColor}
       >
         <Flex h="20" alignItems="center" mx="6" justifyContent="space-between">
           <Link to="/dashboard" onClick={onClose}>
@@ -919,12 +928,12 @@ const SidebarContent = ({ onClose, ...rest }) => {
             bg={
               isFixedGeneralActive()
                 ? "blue.50"
-                : useColorModeValue("gray.50", "gray.100")
+                : neutralBg
             }
             _hover={{
               bg: isFixedGeneralActive()
                 ? "blue.100"
-                : useColorModeValue("gray.100", "gray.200"),
+                : neutralHoverBg,
               transform: "translateY(-1px)",
               boxShadow: "sm",
             }}
@@ -1009,7 +1018,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
           <Box mx="4" my="2">
             <Box
               height="1px"
-              bg={useColorModeValue("gray.200", "gray.600")}
+              bg={separatorColor}
               width="100%"
             />
           </Box>
@@ -1064,12 +1073,12 @@ const SidebarContent = ({ onClose, ...rest }) => {
                   bg={
                     isCategoryActive(categoryKey)
                       ? "blue.50"
-                      : useColorModeValue("gray.50", "gray.100")
+                      : neutralBg
                   }
                   _hover={{
                     bg: isCategoryActive(categoryKey)
                       ? "blue.100"
-                      : useColorModeValue("gray.100", "gray.200"),
+                      : neutralHoverBg,
                     transform: "translateY(-1px)",
                     boxShadow: "sm",
                   }}
@@ -1221,7 +1230,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
       <Box
         p={4}
         borderTop="1px solid"
-        borderColor={useColorModeValue("gray.200", "gray.700")}
+        borderColor={footerBorderColor}
         textAlign="center"
       >
         <Text fontSize="xs" color="gray.500">
@@ -1232,7 +1241,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
   );
 };
 
-const NavItem = ({ icon, children, onClick, link, ...rest }) => {
+const NavItem = ({ icon, children, onClick, ...rest }) => {
   const location = useLocation();
   // Extract the 'to' prop from rest to check if it's active
   const { to, ...otherProps } = rest;
@@ -1313,9 +1322,15 @@ const MobileNav = ({ onOpen, ...rest }) => {
   const [logoutMutation] = useLogoutMutation();
 
   // Initialize recent pages hook for mobile nav
-  const { recentPages, clearRecentPages, removeRecentPage } =
-    useRecentPages(NavigationCategories); // Emergency logout handler (bypasses API call)
-  const handleEmergencyLogout = () => {
+  useRecentPages(NavigationCategories);
+  const mobileNavBg = useColorModeValue("white", "gray.50");
+  const mobileNavBorderColor = useColorModeValue("gray.200", "gray.300");
+  const mobileNavShadow = useColorModeValue("sm", "md");
+  const menuContentBg = useColorModeValue("white", "gray.900");
+  const menuBorderColor = useColorModeValue("gray.200", "gray.700");
+  const menuHoverBg = useColorModeValue("gray.50", "gray.800");
+  // Emergency logout handler (bypasses API call)
+  const handleEmergencyLogout = useCallback(() => {
     console.log("Emergency logout triggered - bypassing API call");
 
     // Show immediate toast
@@ -1332,7 +1347,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
     dispatch(logout());
     // Navigate to login immediately
     navigate("/login");
-  };
+  }, [dispatch, navigate]);
 
   // Add keyboard shortcut for emergency logout (Ctrl+Shift+L)
   useEffect(() => {
@@ -1346,7 +1361,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, []);
+  }, [handleEmergencyLogout]);
 
   const handleLogout = async () => {
     // Show loading toast
@@ -1422,11 +1437,11 @@ const MobileNav = ({ onOpen, ...rest }) => {
       px={{ base: 4, md: 6 }}
       height="20"
       alignItems="center"
-      bg={useColorModeValue("white", "gray.50")}
+      bg={mobileNavBg}
       borderBottomWidth="1px"
-      borderBottomColor={useColorModeValue("gray.200", "gray.300")}
+      borderBottomColor={mobileNavBorderColor}
       justifyContent={{ base: "space-between", md: "flex-end" }}
-      boxShadow={useColorModeValue("sm", "md")}
+      boxShadow={mobileNavShadow}
       zIndex={999}
       {...rest}
     >
@@ -1567,16 +1582,16 @@ const MobileNav = ({ onOpen, ...rest }) => {
             </Menu.Trigger>{" "}
             <Menu.Positioner>
               <Menu.Content
-                bg={useColorModeValue("white", "gray.900")}
-                borderColor={useColorModeValue("gray.200", "gray.700")}
+                bg={menuContentBg}
+                borderColor={menuBorderColor}
                 _hover={{
-                  bg: useColorModeValue("gray.50", "gray.800"),
+                  bg: menuHoverBg,
                   cursor: "pointer",
                 }}
               >
                 <Menu.Item
                   _hover={{
-                    bg: useColorModeValue("gray.50", "gray.800"),
+                    bg: menuHoverBg,
                     cursor: "pointer",
                   }}
                   onClick={() => navigate("/profile")}
@@ -1585,7 +1600,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
                 </Menu.Item>
                 <Menu.Item
                   _hover={{
-                    bg: useColorModeValue("gray.50", "gray.800"),
+                    bg: menuHoverBg,
                     cursor: "pointer",
                   }}
                   onClick={handleLogout}
@@ -1603,12 +1618,13 @@ const MobileNav = ({ onOpen, ...rest }) => {
 
 export default function Navigation({ children }) {
   const [isOpen, setIsOpen] = useState(false);
+  const appBackground = useColorModeValue("gray.100", "gray.900");
 
   return (
     <>
       {/* Alias Mode Banner - Shows when in alias mode */}
       <AliasModeBanner />
-      <Box minH="100vh" bg={useColorModeValue("gray.100", "gray.900")}>
+      <Box minH="100vh" bg={appBackground}>
         <SidebarContent
           onClose={() => setIsOpen(false)}
           display={{ base: "none", md: "block" }}

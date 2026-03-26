@@ -614,7 +614,7 @@ export const mapEmployeeData = (uploadedData) => {
       // Ellenőrizzük, hogy valid ISO dátum-e
       try {
         new Date(newItem.AlkalmazasKezdete).toISOString();
-      } catch (e) {
+      } catch (_error) {
         newItem.AlkalmazasKezdete = new Date().toISOString();
       }
     } else {
@@ -635,7 +635,7 @@ export const mapEmployeeData = (uploadedData) => {
       // Ellenőrizzük, hogy valid ISO dátum-e
       try {
         new Date(newItem.AlkalmazasVege).toISOString();
-      } catch (e) {
+      } catch (_error) {
         newItem.AlkalmazasVege = new Date().toISOString();
       }
     } else {

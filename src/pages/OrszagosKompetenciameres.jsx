@@ -198,7 +198,7 @@ export default function OrszagosKompetenciameres() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {subjects.map((subject, subjectIndex) =>
+                {subjects.map((subject) =>
                   formTypes.map((formType, formTypeIndex) => (
                     <TableRow key={`${subject.key}-${formType.key}`}>
                       {formTypeIndex === 0 && (

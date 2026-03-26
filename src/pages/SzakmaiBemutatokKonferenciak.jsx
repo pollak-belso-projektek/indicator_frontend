@@ -156,7 +156,7 @@ export default function SzakmaiBemutatokKonferenciak() {
         </Card>
 
         {/* Main Data Tables */}
-        {eventCategories.map((categoryData, categoryIndex) => (
+        {eventCategories.map((categoryData) => (
           <Card key={categoryData.category} sx={{ mb: 3 }}>
             <CardContent>
               <Typography

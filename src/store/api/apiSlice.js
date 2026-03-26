@@ -1,6 +1,14 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "./baseQueryWithReauth";
 
+const getCurrentSchoolYearStart = () => {
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1;
+
+  return currentMonth >= 9 ? currentYear : currentYear - 1;
+};
+
 // Define a service using a base URL and expected endpoints
 export const indicatorApi = createApi({
   reducerPath: "indicatorApi",
@@ -114,15 +122,15 @@ export const indicatorApi = createApi({
       invalidatesTags: (result, error, { id }) => [{ type: "User", id }],
     }),
     updateMe: build.mutation({
-      query: ({ id, ...userData }) => ({
+      query: (userData) => ({
         url: `me/personal`,
         method: "PUT",
         body: userData,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: "User", id }],
+      invalidatesTags: ["User"],
     }),
     changeMePassword: build.mutation({
-      query: ({ id, newPassword, newPasswordConfirm }) => ({
+      query: ({ newPassword, newPasswordConfirm }) => ({
         url: `me/password`,
         method: "PUT",
         body: {
@@ -130,7 +138,7 @@ export const indicatorApi = createApi({
           newPasswordConfirm,
         },
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: "User", id }],
+      invalidatesTags: ["User"],
     }),
     getTanugyiAdatok: build.query({
       query: (params) => `tanugyi_adatok/${params.alapadatok_id}/${params.ev}`,
@@ -429,19 +437,6 @@ export const indicatorApi = createApi({
 
     // ========== Educational Indicators Endpoints ==========
 
-    // Helper function to get current school year start
-    getCurrentSchoolYearStart: () => {
-      const currentDate = new Date();
-      const currentYear = currentDate.getFullYear();
-      const currentMonth = currentDate.getMonth() + 1;
-
-      if (currentMonth >= 9) {
-        return currentYear;
-      } else {
-        return currentYear - 1;
-      }
-    },
-
     // Elhelyezkedési mutato (Graduate Placement)
     getElhelyezkedesByYear: build.query({
       query: (tanev) => `elhelyezkedes/${tanev}`,
@@ -457,22 +452,7 @@ export const indicatorApi = createApi({
       ],
     }),
     getAllElhelyezkedes: build.query({
-      query: () => {
-        // Get current school year start (e.g., 2024 for 2024/2025 school year)
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1;
-
-        let currentSchoolYearStart;
-        if (currentMonth >= 9) {
-          currentSchoolYearStart = currentYear;
-        } else {
-          currentSchoolYearStart = currentYear - 1;
-        }
-
-        // The API expects just the starting year as integer
-        return `elhelyezkedes/${currentSchoolYearStart}`;
-      },
+      query: () => `elhelyezkedes/${getCurrentSchoolYearStart()}`,
       providesTags: ["Elhelyezkedes"],
     }),
     addElhelyezkedes: build.mutation({
@@ -600,20 +580,8 @@ export const indicatorApi = createApi({
       ],
     }),
     getAllSajatosNevelesuTanulok: build.query({
-      query: (alapadatok_id) => {
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1;
-
-        let currentSchoolYearStart;
-        if (currentMonth >= 9) {
-          currentSchoolYearStart = currentYear;
-        } else {
-          currentSchoolYearStart = currentYear - 1;
-        }
-
-        return `sajatos_nevelesu_tanulok/${alapadatok_id}/${currentSchoolYearStart}`;
-      },
+      query: (alapadatok_id) =>
+        `sajatos_nevelesu_tanulok/${alapadatok_id}/${getCurrentSchoolYearStart()}`,
       providesTags: ["SajatosNevelesuTanulok"],
     }),
     addSajatosNevelesuTanulok: build.mutation({
@@ -648,20 +616,7 @@ export const indicatorApi = createApi({
       ],
     }),
     getAllHHesHHHNevelesuTanulok: build.query({
-      query: () => {
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1;
-
-        let currentSchoolYearStart;
-        if (currentMonth >= 9) {
-          currentSchoolYearStart = currentYear;
-        } else {
-          currentSchoolYearStart = currentYear - 1;
-        }
-
-        return `hh_es_hhh/${currentSchoolYearStart}`;
-      },
+      query: () => `hh_es_hhh/${getCurrentSchoolYearStart()}`,
       providesTags: ["HHesHHHNevelesuTanulok"],
     }),
     addHHesHHHNevelesuTanulok: build.mutation({
@@ -696,20 +651,7 @@ export const indicatorApi = createApi({
       ],
     }),
     getAllVizsgaeredmenyek: build.query({
-      query: () => {
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1;
-
-        let currentSchoolYearStart;
-        if (currentMonth >= 9) {
-          currentSchoolYearStart = currentYear;
-        } else {
-          currentSchoolYearStart = currentYear - 1;
-        }
-
-        return `vizsgaeredmenyek/${currentSchoolYearStart}`;
-      },
+      query: () => `vizsgaeredmenyek/${getCurrentSchoolYearStart()}`,
       providesTags: ["Vizsgaeredmenyek"],
     }),
     addVizsgaeredmenyek: build.mutation({
@@ -744,20 +686,7 @@ export const indicatorApi = createApi({
       ],
     }),
     getAllSzakmaiVizsgaEredmenyek: build.query({
-      query: () => {
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1;
-
-        let currentSchoolYearStart;
-        if (currentMonth >= 9) {
-          currentSchoolYearStart = currentYear;
-        } else {
-          currentSchoolYearStart = currentYear - 1;
-        }
-
-        return `szakmai_vizsga_eredmenyek/${currentSchoolYearStart}`;
-      },
+      query: () => `szakmai_vizsga_eredmenyek/${getCurrentSchoolYearStart()}`,
       providesTags: ["SzakmaiVizsgaEredmenyek"],
     }),
     addSzakmaiVizsgaEredmenyek: build.mutation({
@@ -786,7 +715,7 @@ export const indicatorApi = createApi({
 
     // Muhelyiskola (Workshop Schools)
     getMuhelyiskola: build.query({
-      query: ({ alapadatok_id, tanev } = {}) => {
+      query: ({ tanev } = {}) => {
         // Always use the tanev parameter if provided, otherwise default to current year
         const yearToUse = tanev || new Date().getFullYear();
         return `muhelyiskola/${yearToUse}`;
@@ -844,20 +773,7 @@ export const indicatorApi = createApi({
       ],
     }),
     getAllNSZFH: build.query({
-      query: () => {
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1;
-
-        let currentSchoolYearStart;
-        if (currentMonth >= 9) {
-          currentSchoolYearStart = currentYear;
-        } else {
-          currentSchoolYearStart = currentYear - 1;
-        }
-
-        return `nszfh/${currentSchoolYearStart}`;
-      },
+      query: () => `nszfh/${getCurrentSchoolYearStart()}`,
       providesTags: ["NSZFH"],
     }),
     addNSZFH: build.mutation({

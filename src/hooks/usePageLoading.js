@@ -7,14 +7,12 @@ export const usePageLoading = () => {
 
   const withLoading = useCallback(
     async (asyncFunction, message = "Adatok betöltése...") => {
-      try {
-        setLocalLoading(true);
-        showLoading(message);
+      setLocalLoading(true);
+      showLoading(message);
 
+      try {
         const result = await asyncFunction();
         return result;
-      } catch (error) {
-        throw error;
       } finally {
         setLocalLoading(false);
         hideLoading();

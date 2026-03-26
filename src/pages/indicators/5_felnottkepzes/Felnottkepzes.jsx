@@ -63,9 +63,6 @@ export default function Felnottkepzes() {
     initializeYearData(0)
   );
 
-  const [savedData, setSavedData] = useState(null);
-  const [isModified, setIsModified] = useState(false);
-
   // Extract adult education data from API response
   const extractAdultEducationData = (apiData) => {
     const adultEducationData = {};
@@ -147,16 +144,6 @@ export default function Felnottkepzes() {
     }
   }, [apiStudentData]);
 
-  // Handle changes in the editable table
-  const handleSzakmaiOktatásChange = (year, value) => {
-    const numericValue = parseInt(value) || 0;
-    setSzakmaiOktatás((prev) => ({
-      ...prev,
-      [year]: numericValue,
-    }));
-    setIsModified(true);
-  };
-
   // Calculate percentage for first table based on formula
   const calculatePercentage = (year) => {
     // Formula: (felnőttképzési jogviszonyú tanulók száma / szakmai oktatásban tanulók összlétszáma) * 100
@@ -177,20 +164,6 @@ export default function Felnottkepzes() {
     });
     setFelnottkepzesiArany(newArany);
   }, [szakmaiOktatás, felnottkepzesiJogviszony]);
-
-  const handleSave = () => {
-    setSavedData({ ...szakmaiOktatás });
-    setIsModified(false);
-    // Here you would typically save to backend
-    console.log("Saving data:", szakmaiOktatás);
-  };
-
-  const handleReset = () => {
-    if (savedData) {
-      setSzakmaiOktatás({ ...savedData });
-      setIsModified(false);
-    }
-  };
 
   return (
     <Container maxWidth="xl">

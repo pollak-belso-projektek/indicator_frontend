@@ -494,7 +494,7 @@ const Schools = () => {
 
                           {school.alapadatok_szakirany?.length > 0 ? (
                             school.alapadatok_szakirany.map(
-                              (szakiranyData, index) => (
+                              (szakiranyData) => (
                                 <Accordion
                                   key={szakiranyData.szakirany_id}
                                   sx={{ mb: 1 }}

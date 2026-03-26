@@ -50,7 +50,6 @@ export const EditUserDialog = ({
   open,
   onClose,
   user,
-  onUserChange,
   onSave,
   fullScreen,
   userPermissions,

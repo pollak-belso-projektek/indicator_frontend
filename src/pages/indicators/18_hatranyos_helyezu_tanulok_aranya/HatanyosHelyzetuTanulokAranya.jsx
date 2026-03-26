@@ -224,7 +224,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
     };
 
     // Calculate yearly data and trends
-    schoolYears.forEach((year, index) => {
+    schoolYears.forEach((year) => {
       const combinedPerc = parseFloat(getCombinedPercentage(year));
       const daytimePerc = parseFloat(calculatePercentage("daytime", year));
       const adultPerc = parseFloat(calculatePercentage("adult", year));
@@ -1563,7 +1563,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     </TableRow>
                                   </TableHead>
                                   <TableBody>
-                                    {stats.yearlyData.map((yearData, index) => (
+                                    {stats.yearlyData.map((yearData) => (
                                       <TableRow
                                         key={yearData.year}
                                         sx={{

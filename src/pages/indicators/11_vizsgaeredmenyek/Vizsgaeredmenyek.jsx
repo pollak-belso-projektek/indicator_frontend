@@ -314,7 +314,7 @@ export default function Vizsgaeredmenyek() {
               </LockedTableWrapper>
             </Stack>
             {/* Main Data Tables */}
-            {examCategories.map((categoryData, categoryIndex) => (
+            {examCategories.map((categoryData) => (
               <Card key={categoryData.category} sx={{ mb: 3 }}>
                 <CardContent>
                   <Typography

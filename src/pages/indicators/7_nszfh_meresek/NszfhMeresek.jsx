@@ -30,7 +30,6 @@ import {
   useUpdateNSZFHMutation,
 } from "../../../store/api/apiSlice";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
-import { generateSchoolYears } from "../../../utils/schoolYears";
 
 export default function NszfhMeresek() {
   const selectedSchool = useSelector(selectSelectedSchool);

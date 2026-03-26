@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import { selectUserPermissions, selectUserTableAccess } from "../../store/slices/authSlice";
+import { selectUserPermissions, selectUserTableAccess } from "../store/slices/authSlice";
 
 /**
  * useAccessControl Hook

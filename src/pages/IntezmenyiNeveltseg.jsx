@@ -521,7 +521,7 @@ export default function IntezmenyiNeveltseg() {
 
   const calculateNewRecordTotal = () => {
     return Object.values(addDialog.newRecord)
-      .filter((_, index, array) => {
+      .filter((_, index) => {
         const keys = Object.keys(addDialog.newRecord);
         const key = keys[index];
         return educationFields.some((field) => field.key === key);

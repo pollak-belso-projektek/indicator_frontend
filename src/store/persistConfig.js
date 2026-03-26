@@ -6,7 +6,7 @@ import { createTransform } from "redux-persist";
 const authTransform = createTransform(
   // Transform state on its way to being serialized and persisted
   (inboundState) => {
-    const { error, loading, ...rest } = inboundState;
+    const { error: _error, loading: _loading, ...rest } = inboundState;
     return rest;
   },
   // Transform state being rehydrated (no changes needed)

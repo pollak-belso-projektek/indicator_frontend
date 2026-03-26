@@ -34,13 +34,12 @@ const PageWrapper = ({
   const { hasTableAccess, isAuthenticated, getHighestRole } = useAccessControl();
   const [notificationOpen, setNotificationOpen] = useState(false);
 
-  // Check if user is authenticated
-  if (!isAuthenticated()) {
-    return <Navigate to="/login" replace />;
-  }
+  const isUserAuthenticated = isAuthenticated();
 
-  // Check if user has required table access
-  const hasAccess = hasTableAccess(tableName, requiredAction);
+  // Only evaluate access when the user is authenticated
+  const hasAccess = isUserAuthenticated
+    ? hasTableAccess(tableName, requiredAction)
+    : false;
 
   // Generate default notification message
   const defaultNotificationMessage = `Hozzáférés megtagadva: ${tableName} oldal megtekintése nem engedélyezett`;
@@ -48,10 +47,17 @@ const PageWrapper = ({
 
   // Show notification when access is denied
   useEffect(() => {
-    if (!hasAccess && showNotification) {
-      setNotificationOpen(true);
+    if (!isUserAuthenticated || hasAccess || !showNotification) {
+      return;
     }
-  }, [hasAccess, showNotification]);
+
+    setNotificationOpen(true);
+  }, [hasAccess, isUserAuthenticated, showNotification]);
+
+  // Check if user is authenticated
+  if (!isUserAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
   if (!hasAccess) {
     // Show error page instead of redirecting

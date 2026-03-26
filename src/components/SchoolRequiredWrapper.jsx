@@ -4,6 +4,9 @@ import { Alert, Box, Typography } from "@mui/material";
 
 const SchoolRequiredWrapper = ({ children, pageName }) => {
   const selectedSchool = useSelector(selectSelectedSchool);
+  const selectionHelpText = pageName
+    ? `A(z) ${pageName} oldal megnyitásához először válasszon ki egy iskolát a bal felső sarokban található opcióval.`
+    : "Az iskola kiválasztása a bal felső sarokban található iskola választóval lehetséges.";
 
   if (!selectedSchool) {
     return (
@@ -20,10 +23,7 @@ const SchoolRequiredWrapper = ({ children, pageName }) => {
             <Typography variant="h6" component="div" mb={1}>
               Kérjük válasszon ki egy iskolát az adatok megtekintéséhez!
             </Typography>
-            <Typography variant="body2">
-              Az iskola kiválasztása a bal felső sarokban található iskola
-              választóval lehetséges.
-            </Typography>
+            <Typography variant="body2">{selectionHelpText}</Typography>
           </Box>
         </Alert>
       </Box>

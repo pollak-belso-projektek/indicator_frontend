@@ -6,12 +6,10 @@ export const useAsyncLoading = () => {
 
   const executeWithLoading = useCallback(
     async (asyncFunction, loadingMessage = "Feldolgozás...") => {
+      showLoading(loadingMessage);
       try {
-        showLoading(loadingMessage);
         const result = await asyncFunction();
         return result;
-      } catch (error) {
-        throw error;
       } finally {
         hideLoading();
       }
@@ -25,17 +23,15 @@ export const useAsyncLoading = () => {
       loadingMessage = "Feldolgozás...",
       minimumLoadingTime = 300
     ) => {
-      try {
-        showLoading(loadingMessage);
+      showLoading(loadingMessage);
 
+      try {
         const [result] = await Promise.all([
           asyncFunction(),
           new Promise((resolve) => setTimeout(resolve, minimumLoadingTime)),
         ]);
 
         return result;
-      } catch (error) {
-        throw error;
       } finally {
         hideLoading();
       }

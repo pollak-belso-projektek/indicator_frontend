@@ -9,7 +9,6 @@ import Checkbox from "@mui/material/Checkbox";
 
 export const ColumnVisibilitySelector = ({
   table,
-  hiddenColumns,
   setHiddenColumns,
 }) => (
   <div>
@@ -40,13 +39,17 @@ export const ColumnVisibilitySelector = ({
         }}
         input={<OutlinedInput label="Columns" />}
         renderValue={(selected) => {
+          if (!selected?.length) {
+            return "Nincs kiválasztva";
+          }
+
           const visibleColumns = table
             .getAllColumns()
             .filter((column) => column.getIsVisible())
             .map((column) => column.columnDef.header);
           return visibleColumns.length === 0
             ? "Nincs kiválasztva"
-            : "Kiválasztott oszlopok: " + visibleColumns.length;
+            : `Kiválasztott oszlopok: ${selected.length}`;
         }}
       >
         {table.getAllColumns().map((column) => (

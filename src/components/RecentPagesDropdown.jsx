@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Box,
   IconButton,
@@ -17,6 +17,7 @@ import {
   ArrowDropUp as ArrowDropUpIcon,
   Keyboard as KeyboardIcon,
   ExpandLess as ExpandLessIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -30,8 +31,9 @@ const RecentPagesDropdown = ({ recentPages, onRemovePage, onClearAll }) => {
   const isOpen = Boolean(anchorEl);
 
   // Filter out current page from recent pages
-  const filteredRecentPages =
-    recentPages?.filter((page) => page.link !== location.pathname) || [];
+  const filteredRecentPages = useMemo(() => {
+    return recentPages?.filter((page) => page.link !== location.pathname) || [];
+  }, [location.pathname, recentPages]);
 
   // Keyboard shortcut handler (Alt + R)
   useEffect(() => {
@@ -79,6 +81,12 @@ const RecentPagesDropdown = ({ recentPages, onRemovePage, onClearAll }) => {
   const toggleCollapse = (event) => {
     event.stopPropagation();
     setIsCollapsed(!isCollapsed);
+  };
+
+  const handleRemovePage = (event, link) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onRemovePage?.(link);
   };
 
   if (isCollapsed) {
@@ -280,16 +288,44 @@ const RecentPagesDropdown = ({ recentPages, onRemovePage, onClearAll }) => {
               </Box>
 
               {/* Time */}
-              <Typography
-                variant="caption"
+              <Box
                 sx={{
-                  color:
-                    theme.palette.mode === "dark" ? "grey.500" : "grey.400",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
                   ml: 1,
                 }}
               >
-                {formatTimeAgo(page.timestamp)}
-              </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color:
+                      theme.palette.mode === "dark" ? "grey.500" : "grey.400",
+                  }}
+                >
+                  {formatTimeAgo(page.timestamp)}
+                </Typography>
+                {onRemovePage && (
+                  <IconButton
+                    size="small"
+                    onClick={(event) => handleRemovePage(event, page.link)}
+                    sx={{
+                      color:
+                        theme.palette.mode === "dark"
+                          ? "grey.500"
+                          : "grey.400",
+                      "&:hover": {
+                        color:
+                          theme.palette.mode === "dark"
+                            ? "grey.300"
+                            : "grey.600",
+                      },
+                    }}
+                  >
+                    <CloseIcon fontSize="inherit" />
+                  </IconButton>
+                )}
+              </Box>
             </MenuItem>
           ))}
         </Box>

@@ -228,7 +228,7 @@ export default function ElegedettsegMeresEredmenyei() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {stakeholderCategories.map((stakeholder, index) => (
+                  {stakeholderCategories.map((stakeholder) => (
                     <TableRow
                       key={stakeholder.key}
                       sx={{

@@ -167,7 +167,7 @@ export const UserTable = ({ table, density = "normal" }) => {
         </TableHead>
         <TableBody>
           {console.log("Table rows:", table.getRowModel().rows)}
-          {table.getRowModel().rows.map((row, index) => (
+          {table.getRowModel().rows.map((row) => (
             <TableRow
               key={row.id}
               sx={{

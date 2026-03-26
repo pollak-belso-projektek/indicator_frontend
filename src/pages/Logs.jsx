@@ -174,12 +174,24 @@ export default function Logs() {
     setPage(0);
   };
 
+  const handleDeleteFilterChange = (field, value) => {
+    setDeleteFilters((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   const toggleRowExpansion = (logId) => {
     setExpandedRows((prev) => ({
       ...prev,
       [logId]: !prev[logId],
     }));
   };
+
+  const hasDeleteCriteria =
+    !!deleteFilters.before ||
+    !!deleteFilters.level ||
+    !!deleteFilters.method;
 
   const handleDeleteLogs = async () => {
     try {
@@ -538,6 +550,89 @@ export default function Logs() {
         </CardContent>
       </Card>
 
+        {/* Log Deletion Section */}
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              mb={2}
+            >
+              <Typography variant="h6">Naplók törlése</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Csak a megadott feltételeknek megfelelő rekordok kerülnek
+                törlésre.
+              </Typography>
+            </Box>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} sm={4} md={3}>
+                <TextField
+                  fullWidth
+                  label="Törlés a megadott dátum előtt"
+                  type="datetime-local"
+                  size="small"
+                  value={deleteFilters.before}
+                  onChange={(e) =>
+                    handleDeleteFilterChange("before", e.target.value)
+                  }
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4} md={3}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Szint</InputLabel>
+                  <Select
+                    value={deleteFilters.level}
+                    label="Szint"
+                    onChange={(e) =>
+                      handleDeleteFilterChange("level", e.target.value)
+                    }
+                  >
+                    <MenuItem value="">Összes</MenuItem>
+                    <MenuItem value="ERROR">ERROR</MenuItem>
+                    <MenuItem value="WARN">WARN</MenuItem>
+                    <MenuItem value="INFO">INFO</MenuItem>
+                    <MenuItem value="DEBUG">DEBUG</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={4} md={3}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Módszer</InputLabel>
+                  <Select
+                    value={deleteFilters.method}
+                    label="Módszer"
+                    onChange={(e) =>
+                      handleDeleteFilterChange("method", e.target.value)
+                    }
+                  >
+                    <MenuItem value="">Összes</MenuItem>
+                    <MenuItem value="GET">GET</MenuItem>
+                    <MenuItem value="POST">POST</MenuItem>
+                    <MenuItem value="PUT">PUT</MenuItem>
+                    <MenuItem value="DELETE">DELETE</MenuItem>
+                    <MenuItem value="PATCH">PATCH</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={12} md={3}>
+                <Button
+                  variant="contained"
+                  color="error"
+                  fullWidth
+                  disabled={!hasDeleteCriteria || isDeleting}
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  {isDeleting
+                    ? "Törlés folyamatban..."
+                    : "Kiválasztott naplók törlése"}
+                </Button>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
       {/* Logs Table */}
       <Paper>
         {error && (
@@ -681,6 +776,42 @@ export default function Logs() {
           }
         />
       </Paper>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Naplók törlése</DialogTitle>
+        <DialogContent dividers>
+          <Typography gutterBottom>
+            Biztosan törli a megadott feltételeknek megfelelő naplókat?
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Feltételek:
+          </Typography>
+          <ul style={{ marginTop: 8, paddingLeft: 20 }}>
+            <li>
+              Dátum: {deleteFilters.before ? formatDate(deleteFilters.before) : "Bármikor"}
+            </li>
+            <li>Szint: {deleteFilters.level || "Összes"}</li>
+            <li>Módszer: {deleteFilters.method || "Összes"}</li>
+          </ul>
+          <Typography variant="caption" color="text.secondary">
+            A művelet nem visszavonható.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Mégsem</Button>
+          <Button
+            onClick={handleDeleteLogs}
+            color="error"
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Törlés..." : "Törlés megerősítése"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Log Details Dialog */}
       <Dialog

@@ -1,4 +1,4 @@
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useStore } from "react-redux";
 import {
   clearAllCache,
   invalidateSpecificTags,
@@ -7,8 +7,7 @@ import {
 
 const CacheDebugPanel = () => {
   const dispatch = useDispatch();
-  // Only get the API state instead of the entire state
-  const apiState = useSelector((state) => state.api);
+  const store = useStore();
 
   // Only show in development
   if (!import.meta.env.DEV) {
@@ -36,7 +35,7 @@ const CacheDebugPanel = () => {
   };
 
   const handleShowCacheStatus = () => {
-    const cacheStatus = getCacheStatus(() => state);
+    const cacheStatus = getCacheStatus(store.getState);
     console.log("Cache Status:", cacheStatus);
   };
 

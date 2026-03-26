@@ -230,10 +230,6 @@ const TanuloLetszamChart = ({ data, years }) => {
     return null;
   };
 
-  const downloadChart = () => {
-    // This would implement chart download functionality
-  };
-
   const resetSettings = () => {
     setChartHeight(500);
     setChartType("line");

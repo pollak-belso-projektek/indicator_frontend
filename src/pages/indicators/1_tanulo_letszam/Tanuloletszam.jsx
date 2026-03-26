@@ -12,6 +12,7 @@ import {
   TextField,
   Button,
   Stack,
+  Typography,
   Alert,
   Tabs,
   Tab,
@@ -77,7 +78,6 @@ export default function TanuloLetszam() {
   const [tableData, setTableData] = useState({});
   const [isModified, setIsModified] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
-  const [editableData, setEditableData] = useState([]);
   const [savedData, setSavedData] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -242,8 +242,6 @@ export default function TanuloLetszam() {
         });
       });
 
-      setEditableData(chartCompatibleData);
-
       return {
         chartData: chartCompatibleData,
         years: last4Years,
@@ -308,7 +306,6 @@ export default function TanuloLetszam() {
       });
 
       const chartCompatibleData = Object.values(groupedByAgazat);
-      setEditableData(chartCompatibleData);
 
       return {
         chartData: chartCompatibleData,
@@ -705,15 +702,9 @@ export default function TanuloLetszam() {
 
     const calculatedData = {};
 
-    // Track filtering statistics
-    let totalProcessed = 0;
-    let filteredOut = 0;
-    let evfolyamStats = {};
 
     // Process tanugyi data by szakirany and szakma
     tanugyiData.forEach((student) => {
-      totalProcessed++;
-
       // Extract relevant fields from student data - using correct field names from tanugyi data
       let szakmaNev =
         student.uj_szkt_szakma_tipusa ||
@@ -750,9 +741,6 @@ export default function TanuloLetszam() {
 
       const evfolyam = student.evfolyam || "";
       const year = student.tanev_kezdete || 2024;
-
-      // Track institution types and evfolyam values for debugging
-      evfolyamStats[evfolyam] = (evfolyamStats[evfolyam] || 0) + 1;
 
       // Determine institution type from evfolyam - be more inclusive
       const isTechnikum = evfolyam.toLowerCase().includes("technikum");
@@ -797,8 +785,6 @@ export default function TanuloLetszam() {
         } else {
           calculatedData[programType][year].tanuloi_jogviszony += 1;
         }
-      } else {
-        filteredOut++;
       }
     });
 
@@ -1011,6 +997,16 @@ export default function TanuloLetszam() {
               <Box>
                 <TanuloLetszamChart data={chartData} years={years} />
               </Box>
+            )}
+
+            {dataSource && (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 1, ml: 2 }}
+              >
+                Adatforrás: {dataSource}
+              </Typography>
             )}
 
             {activeTab === 0 && (

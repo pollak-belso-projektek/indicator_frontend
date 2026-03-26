@@ -43,7 +43,7 @@ export default function Login() {
   useEffect(() => {
     dispatch(clearError());
     setErrorMessage("");
-  }, []); // Run once on mount
+  }, [dispatch, setErrorMessage]); // Run once on mount
 
   // Add timeout for loading state
   useEffect(() => {

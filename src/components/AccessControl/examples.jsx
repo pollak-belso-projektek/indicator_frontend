@@ -209,6 +209,16 @@ const DynamicContentComponent = () => {
             ✅ Felhasználók megtekintése engedélyezett
           </Typography>
         )}
+
+        <Typography variant="body2">
+          Verseny létrehozás: {canCreateCompetition ? 'engedélyezett' : 'blokkolt'}
+        </Typography>
+
+        {isAdmin && !isSuperadmin && (
+          <Typography variant="body2">
+            👤 Admin jogosultságok aktívak
+          </Typography>
+        )}
         
         <Typography variant="body2">
           Felhasználó jogosultságok: 
@@ -268,7 +278,6 @@ const EditableForm = () => {
  * Example: Batch operations with detailed notifications
  */
 const BatchOperationsComponent = () => {
-  const { hasTableAccess } = useAccessControl();
 
   const handleBulkDelete = () => {
     console.log('Bulk delete operation');

@@ -58,11 +58,6 @@ export default function OktatokEgyebTev() {
     severity: "success",
   });
 
-  // Notification helper functions
-  const showNotification = (message, severity = "success") => {
-    setNotification({ open: true, message, severity });
-  };
-
   const closeNotification = () => {
     setNotification({ ...notification, open: false });
   };
@@ -815,7 +810,8 @@ export default function OktatokEgyebTev() {
                                   // Field rows for this category
                                   ...Object.entries(fieldLabels)
                                     .filter(([fieldKey]) =>
-                                      data[schoolYears[0]]?.[categoryKey]?.hasOwnProperty(
+                                      Object.prototype.hasOwnProperty.call(
+                                        data[schoolYears[0]]?.[categoryKey] || {},
                                         fieldKey
                                       )
                                     )

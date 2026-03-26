@@ -1,7 +1,6 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistStore } from "redux-persist";
 import monitorReducersEnhancer from "../enhancers/monitorReducer";
-import loggerMiddleware from "../middleware/logger";
 import { indicatorApi } from "./api/apiSlice";
 import { healthApi } from "./api/healthSlice";
 import authReducer from "./slices/authSlice";

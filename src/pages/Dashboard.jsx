@@ -287,6 +287,13 @@ export default function Dashboard() {
   const tableAccess = useSelector(selectUserTableAccess);
   const selectedSchool = useSelector(selectSelectedSchool);
   const isInAliasMode = useSelector(selectIsInAliasMode);
+  const selectedSchoolName =
+    typeof selectedSchool === "string"
+      ? selectedSchool
+      : selectedSchool?.name ||
+        selectedSchool?.schoolName ||
+        selectedSchool?.intezmenyNev ||
+        "";
 
   // Initialize recent pages hook
   const { recentPages, clearRecentPages, removeRecentPage } =
@@ -508,6 +515,11 @@ export default function Dashboard() {
             <Typography variant="h6" sx={{ opacity: 0.9, mb: 1 }}>
               {user?.name || "Felhasználó"}
             </Typography>
+            {selectedSchoolName && (
+              <Typography variant="body2" sx={{ opacity: 0.75 }}>
+                Aktív iskola: {selectedSchoolName}
+              </Typography>
+            )}
             <Typography variant="body1" sx={{ opacity: 0.8 }}>
               {getUserTypeDescription()}
             </Typography>
@@ -569,7 +581,7 @@ export default function Dashboard() {
           </Box>
 
           <Grid container spacing={3} sx={{ mb: 4 }}>
-            {recentPages.slice(0, 5).map((page, index) => {
+            {recentPages.slice(0, 5).map((page) => {
               const categoryInfo = Object.values(NavigationCategories).find(
                 (cat) => cat.items.some((item) => item.link === page.link),
               );

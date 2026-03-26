@@ -13,13 +13,14 @@ import SchoolIcon from "@mui/icons-material/School";
  * @param {Object} props.sx - Additional styles for the Card component
  */
 const IndicatorTitle = ({
-  icon: Icon = SchoolIcon,
+  icon = SchoolIcon,
   title,
   description,
   gradient = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
   iconColor = "#ffeb3b",
   sx = {},
 }) => {
+  const IconComponent = icon || SchoolIcon;
   return (
     <Card
       elevation={6}
@@ -34,7 +35,7 @@ const IndicatorTitle = ({
     >
       <CardContent sx={{ p: 2 }}>
         <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-          <Icon sx={{ fontSize: 40, color: iconColor }} />
+          <IconComponent sx={{ fontSize: 40, color: iconColor }} />
           <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
             {title}
           </Typography>
