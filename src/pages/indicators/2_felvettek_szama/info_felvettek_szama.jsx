@@ -13,7 +13,7 @@ const InfoFelvettekSzama = () => {
         <br />
         <strong>
           A mutató számítása: Jelentkezések és felvettek aránya = (9. évfolyamra jelentkezők
-          száma) / (9. évfolyamra felvettek száma) * 100
+          száma / 9. évfolyamra felvettek száma) * 100
         </strong>
       </Typography>
 

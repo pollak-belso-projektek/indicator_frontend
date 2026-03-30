@@ -7,20 +7,25 @@ import { Typography, Box } from "@mui/material";
 const InfoFelnottkepzes = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-      <Typography variant="body2" color="text.secondary">
-        Ez az oldal a felnőttképzési programok adatait tartalmazza.
+      <Typography variant="body1" color="text.secondary">
+        Az indikátor információt nyújt, hogy az intézmény milyen mértékben támogatja 
+        az élethosszig tartó tanulás céljait. Biztosítja-e, hogy az általa képzett 
+        alapszakmákhoz való hozzáférés minél szélesebb körű legyen.
+        <br />
+        <strong>
+          A mutató számítása: Felnőttképzési jogviszonyú tanulók aránya = 
+          (felnőttképzési jogviszonnyal résztvevők száma / szakmai oktatásban résztvevők száma) * 100
+        </strong>
       </Typography>
-      <Box component="ul" sx={{ m: 0, pl: 2 }}>
-        <Typography component="li" variant="body2" color="text.secondary">
-          Felnőttképzési programok és résztvevők száma
-        </Typography>
-        <Typography component="li" variant="body2" color="text.secondary">
-          Képzési típusok szerinti bontás
-        </Typography>
-        <Typography component="li" variant="body2" color="text.secondary">
-          Tanévenként és iskolánként nyomon követhető
-        </Typography>
-      </Box>
+      <Typography variant="body2" color="text.secondary">
+        Az indikátor információt nyújt, hogy az intézmény milyen mértékben támogatja az 
+        élethosszig tartó tanulás céljait. Biztosítja-e, hogy az általa képzett 
+        alapszakmákhoz való hozzáférés minél szélesebb körű legyen.
+        <br />
+        Adatforrás: A szakképző intézményben adott tanév október 1-jén szakmai oktatásban 
+        tanulók száma: KRÉTA. A szakképző intézményben adott tanév október 1-jén szakmai 
+        oktatásban felnőttképzési jogviszonnyal tanulók száma: KRÉTA.
+      </Typography>
     </Box>
   );
 };

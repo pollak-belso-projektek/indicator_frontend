@@ -7,20 +7,16 @@ import { Typography, Box } from "@mui/material";
 const InfoKompetencia = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-      <Typography variant="body2" color="text.secondary">
-        Ez az oldal a kompetenciamérési eredményeket tartalmazza.
+      <Typography variant="body1" color="text.secondary">
+        Országos kompetenciamérés eredményei.
+        <br />
+        A vizsgált tanévben megvalósított kompetenciamérés eredményeinek átlageredményét 
+        kell intézménytípus és vizsgálati terület szerinti bontásban megadni mérési 
+        területenként (pl. matematika, olvasás-szövegértés) megadva.
       </Typography>
-      <Box component="ul" sx={{ m: 0, pl: 2 }}>
-        <Typography component="li" variant="body2" color="text.secondary">
-          Szövegértés és matematika kompetenciák
-        </Typography>
-        <Typography component="li" variant="body2" color="text.secondary">
-          Országos átlaghoz viszonyított eredmények
-        </Typography>
-        <Typography component="li" variant="body2" color="text.secondary">
-          Évfolyamonkénti és iskolai bontás
-        </Typography>
-      </Box>
+      <Typography variant="body2" color="text.secondary">
+        Adatforrás: Az Oktatási Hivatal honlapján közzétett jelentések.
+      </Typography>
     </Box>
   );
 };
