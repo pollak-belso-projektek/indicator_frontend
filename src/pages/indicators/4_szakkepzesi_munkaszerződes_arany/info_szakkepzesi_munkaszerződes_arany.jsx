@@ -7,7 +7,7 @@ import { Typography, Box } from "@mui/material";
 const InfoSzakkepzesiMunkaszerzodes = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-      <Typography variant="body2" color="text.primary" sx={{ mb: 2 }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
         Az indikátor megmutatja, hogy az intézmény mennyire tud megfelelni azon 
         elvárásnak, hogy a képzés során a tanulót a munkaerőpiacon 
         hasznosítható tudáshoz juttassa.
