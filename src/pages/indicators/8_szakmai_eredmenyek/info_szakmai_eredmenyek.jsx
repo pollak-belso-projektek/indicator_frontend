@@ -8,19 +8,16 @@ const InfoSzakmaiEredmenyek = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
       <Typography variant="body2" color="text.secondary">
-        Ez az oldal a szakmai versenyeredményeket és elismeréseket tartalmazza.
+        Szakmai, közismereti, kulturális és sporteredmények
+        <br />
+        Az eredmények tanévenkénti bemutatása és a tanévenkénti eredmények 
+        összehasonlítása nemzetközi, országos, regionális, megyei és település szinten.
       </Typography>
-      <Box component="ul" sx={{ m: 0, pl: 2 }}>
-        <Typography component="li" variant="body2" color="text.secondary">
-          Országos és nemzetközi versenyek eredményei
+      <Typography variant="body2" color="text.secondary">
+        Adatforrás: 
+        Lehet a KRÉTA, az intézmény éves beszámolója, a szakképző intézmények 
+        versenyeredményeinek nyilvántartására használt adatbázis.
         </Typography>
-        <Typography component="li" variant="body2" color="text.secondary">
-          Szakmánkénti és iskolánkénti bontás
-        </Typography>
-        <Typography component="li" variant="body2" color="text.secondary">
-          Helyezések és díjazottak nyilvántartása
-        </Typography>
-      </Box>
     </Box>
   );
 };
