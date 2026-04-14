@@ -22,12 +22,14 @@ import {
 } from "@mui/material";
 import { Save as SaveIcon, RestartAlt as RestartAltIcon } from "@mui/icons-material";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
-import { 
-  useGetAllAlapadatokQuery, 
+import {
+  useGetAllAlapadatokQuery,
   useGetHianyzasQuery,
-  useAddHianyzasMutation
+  useAddHianyzasMutation,
+  useUpdateHianyzasMutation,
+  useGetTanugyiAdatokQuery
 } from "../../../store/api/apiSlice";
-import { generateSchoolYears } from "../../../utils/schoolYears";
+import { generateSchoolYears, getCurrentSchoolYear } from "../../../utils/schoolYears";
 import PageWrapper from "../../PageWrapper";
 import InfoHianyzas from "./info_hianyzas";
 import TitleHianyzas from "./title_hianyzas";
@@ -38,7 +40,7 @@ export default function Hianyzas() {
   const selectedSchool = useSelector(selectSelectedSchool);
   const { data: schoolsData, isLoading: isLoadingSchools } = useGetAllAlapadatokQuery();
 
-  const [selectedYear, setSelectedYear] = useState(evszamok[0]);
+  const [selectedYear, setSelectedYear] = useState(getCurrentSchoolYear());
   const [tableData, setTableData] = useState({});
   const [originalData, setOriginalData] = useState({});
   const [isModified, setIsModified] = useState(false);
@@ -48,11 +50,57 @@ export default function Hianyzas() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [addHianyzas] = useAddHianyzasMutation();
+  const [updateHianyzas] = useUpdateHianyzasMutation();
+
+  const formattedYear = selectedYear ? parseInt(selectedYear.split('/')[0]) : new Date().getFullYear();
 
   const { data: hianyzasData, isLoading: isHianyzasLoading, isFetching: isHianyzasFetching } = useGetHianyzasQuery(
-    { alapadatok_id: selectedSchool?.id, tanev: selectedYear },
+    { alapadatok_id: selectedSchool?.id, tanev: formattedYear },
     { skip: !selectedSchool || !selectedYear }
   );
+
+  console.log(hianyzasData);
+
+  const { data: tanugyiData, isLoading: isTanugyiLoading } = useGetTanugyiAdatokQuery(
+    {
+      alapadatok_id: selectedSchool?.id,
+      ev: formattedYear
+    },
+    { skip: !selectedSchool || !selectedYear }
+  );
+
+  const studentCounts = useMemo(() => {
+    if (!tanugyiData || !Array.isArray(tanugyiData)) return {};
+    const counts = {};
+    tanugyiData.forEach(student => {
+      const evfolyam = student.evfolyam || "";
+      let instType = null;
+      if (evfolyam.toLowerCase().includes("technikum")) {
+        instType = "Technikum";
+      } else if (evfolyam.toLowerCase().includes("szakképző")) {
+        instType = "Szakképző iskola";
+      }
+
+      if (!instType) return;
+
+      const isFelnottkepzesi =
+        student.tanulo_jogviszonya?.toLowerCase().includes("felnőtt") ||
+        student.munkarend?.toLowerCase().includes("felnőtt") ||
+        student.munkarend?.toLowerCase().includes("levelező") ||
+        student.munkarend?.toLowerCase().includes("esti") ||
+        evfolyam.toLowerCase().includes("felnőtt") ||
+        evfolyam.toLowerCase().includes("levelező") ||
+        evfolyam.toLowerCase().includes("esti") ||
+        student.kepzes_forma?.toLowerCase().includes("felnőtt");
+
+      const jogvType = isFelnottkepzesi ? "Felnőttképzési jogviszony" : "Tanulói jogviszony";
+
+      if (!counts[instType]) counts[instType] = {};
+      if (!counts[instType][jogvType]) counts[instType][jogvType] = 0;
+      counts[instType][jogvType]++;
+    });
+    return counts;
+  }, [tanugyiData]);
 
   useEffect(() => {
     if (hianyzasData && !isHianyzasFetching) {
@@ -64,6 +112,9 @@ export default function Hianyzas() {
 
       if (Array.isArray(hianyzasData)) {
         hianyzasData.forEach(item => {
+          // Csak a kiválasztott év adatait dolgozzuk fel, hogy ne írja felül egy korábbi év
+          if (item.tanev_kezdete !== formattedYear) return;
+
           const { intezmeny_tipus, jogviszony, felev, igazolt, igazolatlan, atlag, id } = item;
           if (!formattedData[selectedYear][intezmeny_tipus]) {
             formattedData[selectedYear][intezmeny_tipus] = {};
@@ -73,7 +124,7 @@ export default function Hianyzas() {
             formattedData[selectedYear][intezmeny_tipus][jogviszony] = {};
             originalFormattedData[selectedYear][intezmeny_tipus][jogviszony] = {};
           }
-          
+
           const semesterData = {
             id,
             igazolt: igazolt !== null && igazolt !== undefined ? parseFloat(igazolt) : "",
@@ -90,11 +141,11 @@ export default function Hianyzas() {
       setOriginalData(prev => ({ ...prev, [selectedYear]: originalFormattedData[selectedYear] || {} }));
       setIsModified(false);
     }
-  }, [hianyzasData, isHianyzasFetching, selectedYear]);
+  }, [hianyzasData, isHianyzasFetching, selectedYear, formattedYear]);
 
   const institutionTypes = useMemo(() => {
     if (!schoolsData || !Array.isArray(schoolsData)) return [];
-    
+
     let relevantSchools = schoolsData;
     if (selectedSchool) {
       relevantSchools = schoolsData.filter((school) => school.id === selectedSchool.id);
@@ -118,9 +169,13 @@ export default function Hianyzas() {
     return orig !== curr;
   };
 
+  const isRowModified = (instType, jogv, semester) => {
+    return ['igazolt', 'igazolatlan'].some(field => isFieldModified(instType, jogv, semester, field));
+  };
+
   const getFieldSx = (instType, jogv, semester, field) => ({
-    '& input': { 
-      textAlign: 'right', 
+    '& input': {
+      textAlign: 'right',
       p: 1,
       backgroundColor: isFieldModified(instType, jogv, semester, field) ? '#fef08a' : 'inherit'
     }
@@ -172,7 +227,16 @@ export default function Hianyzas() {
     return igazolt + igazolatlan;
   };
 
+  const calculateAverage = (instType, jogviszony, semester) => {
+    const totalHianyzas = calculateRowTotal(instType, jogviszony, semester);
+    const count = studentCounts[instType]?.[jogviszony] || 0;
+    if (count === 0) return 0;
+    return parseFloat((totalHianyzas / count).toFixed(2));
+  };
+
   const calculateGrandTotal = (semester, field) => {
+    if (field === 'atlag') return ""; // Ne adjuk össze az átlagokat
+
     let total = 0;
     institutionTypes.forEach(instType => {
       ['Tanulói jogviszony', 'Felnőttképzési jogviszony'].forEach(jogv => {
@@ -188,62 +252,80 @@ export default function Hianyzas() {
 
   const handleSaveData = async () => {
     setIsSaving(true);
-    let payloadArray = [];
+    let updatedCount = 0;
+    let savedCount = 0;
 
     try {
+      const yearPrefix = parseInt(selectedYear.split('/')[0]);
+      const promises = [];
+
       for (const instType of institutionTypes) {
         for (const jogv of ['Tanulói jogviszony', 'Felnőttképzési jogviszony']) {
           for (const semester of ['felev1', 'felev2']) {
-             const id = originalData[selectedYear]?.[instType]?.[jogv]?.[semester]?.id;
-             const igazolt = getNumericValue(instType, jogv, semester, 'igazolt');
-             const igazolatlan = getNumericValue(instType, jogv, semester, 'igazolatlan');
-             const atlag = getNumericValue(instType, jogv, semester, 'atlag');
-             
-             payloadArray.push({
-                id: id || undefined,
-                alapadatok_id: selectedSchool.id,
-                tanev: selectedYear,
-                intezmeny_tipus: instType,
-                jogviszony: jogv,
-                felev: semester,
-                igazolt: igazolt,
-                igazolatlan: igazolatlan,
-                atlag: atlag
-             });
+            if (!isRowModified(instType, jogv, semester)) continue;
+
+            const id = originalData[selectedYear]?.[instType]?.[jogv]?.[semester]?.id;
+            const igazolt = getNumericValue(instType, jogv, semester, 'igazolt');
+            const igazolatlan = getNumericValue(instType, jogv, semester, 'igazolatlan');
+            const atlag = calculateAverage(instType, jogv, semester);
+
+            const recordData = {
+              alapadatok_id: selectedSchool.id,
+              tanev_kezdete: yearPrefix,
+              intezmeny_tipusa: instType,
+              jogviszony: jogv,
+              felev: semester,
+              igazolt: igazolt,
+              igazolatlan: igazolatlan,
+              atlag: atlag
+            };
+
+            if (id) {
+              promises.push(
+                updateHianyzas({ id, ...recordData }).unwrap().then(() => { updatedCount++; })
+              );
+            } else {
+              promises.push(
+                addHianyzas(recordData).unwrap().then(() => { savedCount++; })
+              );
+            }
           }
         }
       }
-      
-      // Send bulk array using addHianyzas
-      await addHianyzas(payloadArray).unwrap();
-      
-      setSnackbarMessage(`Sikeresen mentve!`);
-      setSnackbarSeverity("success");
+
+      if (promises.length > 0) {
+        await Promise.all(promises);
+        setSnackbarMessage(`Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`);
+        setSnackbarSeverity("success");
+      } else {
+        setSnackbarMessage("Nem történt módosítás!");
+        setSnackbarSeverity("info");
+      }
       setSnackbarOpen(true);
-      
+
       setOriginalData(JSON.parse(JSON.stringify(tableData)));
       setIsModified(false);
     } catch (error) {
-       console.error("Hiba a mentés során:", error);
-       setSnackbarMessage(error?.data?.message || error?.message || "Hiba történt a mentés során");
-       setSnackbarSeverity("error");
-       setSnackbarOpen(true);
+      console.error("Hiba a mentés során:", error);
+      setSnackbarMessage(error?.data?.message || error?.message || "Hiba történt a mentés során");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     } finally {
-       setIsSaving(false);
+      setIsSaving(false);
     }
   };
 
-  const headerSx = { 
-    fontWeight: "bold", 
-    backgroundColor: "#60a5fa", 
+  const headerSx = {
+    fontWeight: "bold",
+    backgroundColor: "#60a5fa",
     color: "#000",
     textAlign: "center",
     border: "1px solid #000"
   };
 
-  const subHeaderSx = { 
-    fontWeight: "bold", 
-    backgroundColor: "#fcd34d", 
+  const subHeaderSx = {
+    fontWeight: "bold",
+    backgroundColor: "#fcd34d",
     color: "#000",
     textAlign: "center",
     border: "1px solid #000",
@@ -259,7 +341,7 @@ export default function Hianyzas() {
     <PageWrapper
       title={<TitleHianyzas />}
       infoContent={<InfoHianyzas />}
-      isLoading={isLoadingSchools || isHianyzasLoading}
+      isLoading={isLoadingSchools || isHianyzasLoading || isTanugyiLoading}
     >
       <Box sx={{ p: 3 }}>
         <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center" mb={3}>
@@ -277,7 +359,7 @@ export default function Hianyzas() {
               ))}
             </Select>
           </FormControl>
-          
+
           <Stack direction="row" spacing={2}>
             <Button
               variant="outlined"
@@ -315,20 +397,20 @@ export default function Hianyzas() {
               <TableHead>
                 <TableRow>
                   <TableCell rowSpan={2} colSpan={2} sx={{ ...headerSx, width: "30%" }}></TableCell>
-                  <TableCell colSpan={4} sx={headerSx}>{`${selectedYear}-es tanév I. félév utolsó tanítási napja`}</TableCell>
-                  <TableCell colSpan={4} sx={headerSx}>{`${selectedYear}-es tanév évvége utolsó tanítási napja`}</TableCell>
+                  <TableCell colSpan={4} sx={headerSx}>{`${selectedYear.split('/')[0]}/${selectedYear.split('/')[1].slice(2)}-es tanév I. félév utolsó tanítási napja`}</TableCell>
+                  <TableCell colSpan={4} sx={headerSx}>{`${selectedYear.split('/')[0]}/${selectedYear.split('/')[1].slice(2)}-es tanév évvége utolsó tanítási napja`}</TableCell>
                 </TableRow>
                 <TableRow>
                   {/* Semester 1 */}
-                  <TableCell sx={subHeaderSx}>Igazolt hiányzás<br/>(óra)</TableCell>
-                  <TableCell sx={subHeaderSx}>Igazolatlan hiányzás<br/>(óra)</TableCell>
-                  <TableCell sx={subHeaderSx}>Összes hiányzás<br/>(óra)</TableCell>
-                  <TableCell sx={subHeaderSx}>1 főre jutó hiányzás<br/>átlagosan (óra)</TableCell>
+                  <TableCell sx={subHeaderSx}>Igazolt hiányzás<br />(óra)</TableCell>
+                  <TableCell sx={subHeaderSx}>Igazolatlan hiányzás<br />(óra)</TableCell>
+                  <TableCell sx={subHeaderSx}>Összes hiányzás<br />(óra)</TableCell>
+                  <TableCell sx={subHeaderSx}>1 főre jutó hiányzás<br />átlagosan (óra)</TableCell>
                   {/* Semester 2 */}
-                  <TableCell sx={subHeaderSx}>Igazolt hiányzás<br/>(óra)</TableCell>
-                  <TableCell sx={subHeaderSx}>Igazolatlan hiányzás<br/>(óra)</TableCell>
-                  <TableCell sx={subHeaderSx}>Összes hiányzás<br/>(óra)</TableCell>
-                  <TableCell sx={subHeaderSx}>1 főre jutó hiányzás<br/>átlagosan (óra)</TableCell>
+                  <TableCell sx={subHeaderSx}>Igazolt hiányzás<br />(óra)</TableCell>
+                  <TableCell sx={subHeaderSx}>Igazolatlan hiányzás<br />(óra)</TableCell>
+                  <TableCell sx={subHeaderSx}>Összes hiányzás<br />(óra)</TableCell>
+                  <TableCell sx={subHeaderSx}>1 főre jutó hiányzás<br />átlagosan (óra)</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -342,7 +424,7 @@ export default function Hianyzas() {
                         </TableCell>
                       )}
                       <TableCell sx={cellSx}>{jogv}</TableCell>
-                      
+
                       {/* Semester 1 inputs */}
                       <TableCell sx={cellSx}>
                         <TextField
@@ -364,18 +446,11 @@ export default function Hianyzas() {
                           sx={getFieldSx(instType, jogv, 'felev1', 'igazolatlan')}
                         />
                       </TableCell>
-                      <TableCell sx={{ ...cellSx, textAlign: 'right', backgroundColor: "#fee2e2" }}>
+                      <TableCell sx={{ ...cellSx, textAlign: 'right' }}>
                         {calculateRowTotal(instType, jogv, 'felev1')}
                       </TableCell>
-                      <TableCell sx={cellSx}>
-                        <TextField
-                          size="small"
-                          type="number"
-                          fullWidth
-                          value={getCellValue(instType, jogv, 'felev1', 'atlag')}
-                          onChange={(e) => handleDataChange(instType, jogv, 'felev1', 'atlag', e.target.value)}
-                          sx={getFieldSx(instType, jogv, 'felev1', 'atlag')}
-                        />
+                      <TableCell sx={{ ...cellSx, textAlign: 'right', fontWeight: "bold" }}>
+                        {calculateAverage(instType, jogv, 'felev1')}
                       </TableCell>
 
                       {/* Semester 2 inputs */}
@@ -399,23 +474,16 @@ export default function Hianyzas() {
                           sx={getFieldSx(instType, jogv, 'felev2', 'igazolatlan')}
                         />
                       </TableCell>
-                      <TableCell sx={{ ...cellSx, textAlign: 'right', backgroundColor: "#fee2e2" }}>
+                      <TableCell sx={{ ...cellSx, textAlign: 'right' }}>
                         {calculateRowTotal(instType, jogv, 'felev2')}
                       </TableCell>
-                      <TableCell sx={cellSx}>
-                        <TextField
-                          size="small"
-                          type="number"
-                          fullWidth
-                          value={getCellValue(instType, jogv, 'felev2', 'atlag')}
-                          onChange={(e) => handleDataChange(instType, jogv, 'felev2', 'atlag', e.target.value)}
-                          sx={getFieldSx(instType, jogv, 'felev2', 'atlag')}
-                        />
+                      <TableCell sx={{ ...cellSx, textAlign: 'right', fontWeight: "bold" }}>
+                        {calculateAverage(instType, jogv, 'felev2')}
                       </TableCell>
                     </TableRow>
                   ));
                 })}
-                
+
                 {/* Total Row */}
                 {institutionTypes.length > 0 && (
                   <TableRow>
