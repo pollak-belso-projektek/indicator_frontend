@@ -1,4 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSelector } from "react-redux";
+import { selectSelectedSchool } from "../../../store/slices/authSlice";
+import {
+  useGetElegedettsegMeresQuery,
+  useAddElegedettsegMeresMutation,
+  useUpdateElegedettsegMeresMutation,
+} from "../../../store/api/apiSlice";
 import {
   Box,
   Card,
@@ -16,6 +23,8 @@ import {
   Stack,
   Alert,
   Chip,
+  Snackbar,
+  CircularProgress,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../../../utils/schoolYears";
@@ -26,60 +35,192 @@ import InfoElegedettsegMeresEredmenyei from "./info_elegedettseg_meres_eredmenye
 import TitleElegedettsegMeresEredmenyei from "./title_elegedettseg_meres_eredmenyei";
 
 export default function ElegedettsegMeresEredmenyei() {
-  const schoolYears = generateSchoolYears();
+  const schoolYears = useMemo(() => generateSchoolYears(), []);
+  const selectedSchool = useSelector(selectSelectedSchool);
 
   const stakeholderCategories = [
     {
       key: "szulo",
+      dbKey: "szulok_elegedettsege",
       label: "Szülő",
       description: "Szülői elégedettség az intézmény működésével",
       color: "#e8f5e8",
     },
     {
       key: "oktato",
+      dbKey: "oktatok_elegedettsege",
       label: "Oktató",
       description: "Pedagógusok elégedettsége a munkakörülményekkel",
       color: "#fff8e8",
     },
     {
       key: "tanulo",
+      dbKey: "tanulok_elegedettsege",
       label: "Tanuló",
       description: "Tanulók elégedettsége az oktatással és környezettel",
       color: "#e8f2ff",
     },
     {
       key: "dualis_kepzohely",
+      dbKey: "dualis_kepzohely_elegedettsege",
       label: "Duális képzőhely",
       description: "Gyakorlati képzési helyek elégedettsége",
       color: "#f8e8ff",
     },
     {
       key: "munkaeropiaci",
+      dbKey: "munkaero_piac_elegedettsege",
       label: "Munkaerőpiac",
       description: "Munkaerőpiaci partnerek elégedettsége",
       color: "#e8fff8",
     },
   ];
 
-  // Initialize data structure
-  const [satisfactionData, setSatisfactionData] = useState(() => {
-    const initialData = {};
-
-    stakeholderCategories.forEach((category) => {
-      initialData[category.key] = {};
-      schoolYears.forEach((year) => {
-        initialData[category.key][year] = "0";
-      });
-    });
-
-    return initialData;
+  // One query per school year
+  const elegedettsegQueries = schoolYears.map((yearRange) => {
+    const startYear = parseInt(yearRange.split("/")[0]);
+    return useGetElegedettsegMeresQuery(
+      { alapadatok_id: selectedSchool?.id, tanev_kezdete: startYear },
+      { skip: !selectedSchool }
+    );
   });
 
-  const [savedData, setSavedData] = useState(null);
+  const apiData = useMemo(() => {
+    return elegedettsegQueries.flatMap((q) => q.data || []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [elegedettsegQueries.map((q) => q.fulfilledTimeStamp).join(","), selectedSchool?.id]);
+
+  const isLoading = useMemo(
+    () => elegedettsegQueries.some((q) => q.isLoading),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [elegedettsegQueries.map((q) => q.isLoading).join(",")]
+  );
+  const isFetching = useMemo(
+    () => elegedettsegQueries.some((q) => q.isFetching),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [elegedettsegQueries.map((q) => q.isFetching).join(",")]
+  );
+
+  const [addElegedettseg] = useAddElegedettsegMeresMutation();
+  const [updateElegedettseg] = useUpdateElegedettsegMeresMutation();
+
+  // satisfactionData: { [stakeholderKey]: { [yearRange]: "0" } }
+  const createEmpty = useCallback(() => {
+    const d = {};
+    stakeholderCategories.forEach((s) => {
+      d[s.key] = {};
+      schoolYears.forEach((y) => { d[s.key][y] = "0"; });
+    });
+    return d;
+  }, [schoolYears]);
+
+  const [satisfactionData, setSatisfactionData] = useState(createEmpty);
+  const [originalData, setOriginalData] = useState(createEmpty);
   const [isModified, setIsModified] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+
+  // Load API data into state
+  useEffect(() => {
+    if (!isFetching && apiData) {
+      const newData = createEmpty();
+      const origData = createEmpty();
+
+      apiData.forEach((item) => {
+        const yearRange = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
+        stakeholderCategories.forEach((s) => {
+          const val = item[s.dbKey];
+          if (val !== undefined && val !== null) {
+            newData[s.key][yearRange] = val.toString();
+            origData[s.key][yearRange] = val.toString();
+            if (!newData[s.key]._ids) newData[s.key]._ids = {};
+            if (!origData[s.key]._ids) origData[s.key]._ids = {};
+            newData[s.key]._ids[yearRange] = item.id;
+            origData[s.key]._ids[yearRange] = item.id;
+          }
+        });
+      });
+
+      setSatisfactionData(newData);
+      setOriginalData(origData);
+      setIsModified(false);
+    }
+  }, [apiData, isFetching]);
+
+
+  const handleSave = async () => {
+    if (!selectedSchool) return;
+    setIsSaving(true);
+    let savedCount = 0;
+    let updatedCount = 0;
+
+    try {
+      const promises = [];
+
+      schoolYears.forEach((yearRange) => {
+        const tanev_kezdete = parseInt(yearRange.split("/")[0]);
+        // Find existing record for this year (any stakeholder shares the same row)
+        const existingId = stakeholderCategories.reduce((id, s) => {
+          return id || satisfactionData[s.key]?._ids?.[yearRange];
+        }, null);
+
+        // Check if any field changed for this year
+        const anyModified = stakeholderCategories.some((s) => {
+          const orig = originalData[s.key]?.[yearRange] || "0";
+          const curr = satisfactionData[s.key]?.[yearRange] || "0";
+          return orig !== curr;
+        });
+
+        if (!anyModified) return;
+
+        const recordData = {
+          alapadatok_id: selectedSchool.id,
+          tanev_kezdete,
+        };
+        stakeholderCategories.forEach((s) => {
+          recordData[s.key] = parseFloat(satisfactionData[s.key]?.[yearRange] || 0);
+        });
+
+        if (existingId) {
+          promises.push(
+            updateElegedettseg({ id: existingId, ...recordData }).unwrap().then(() => { updatedCount++; })
+          );
+        } else {
+          promises.push(
+            addElegedettseg(recordData).unwrap().then(() => { savedCount++; })
+          );
+        }
+      });
+
+      if (promises.length > 0) {
+        await Promise.all(promises);
+        setSnackbarMessage(`Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`);
+        setSnackbarSeverity("success");
+      } else {
+        setSnackbarMessage("Nem történt módosítás!");
+        setSnackbarSeverity("info");
+      }
+      setSnackbarOpen(true);
+      setIsModified(false);
+    } catch (error) {
+      console.error("Hiba mentés közben:", error);
+      setSnackbarMessage("Hiba történt a mentés során!");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleReset = useCallback(() => {
+    setSatisfactionData(JSON.parse(JSON.stringify(originalData)));
+    setIsModified(false);
+  }, [originalData]);
 
   // Handle data changes
-  const handleDataChange = (stakeholder, year, value) => {
+  const handleDataChange = useCallback((stakeholder, year, value) => {
     setSatisfactionData((prev) => ({
       ...prev,
       [stakeholder]: {
@@ -88,20 +229,7 @@ export default function ElegedettsegMeresEredmenyei() {
       },
     }));
     setIsModified(true);
-  };
-
-  const handleSave = () => {
-    setSavedData(JSON.parse(JSON.stringify(satisfactionData)));
-    setIsModified(false);
-    console.log("Saving satisfaction data:", satisfactionData);
-  };
-
-  const handleReset = () => {
-    if (savedData) {
-      setSatisfactionData(JSON.parse(JSON.stringify(savedData)));
-      setIsModified(false);
-    }
-  };
+  }, []);
 
   return (
     <PageWrapper
@@ -150,22 +278,14 @@ export default function ElegedettsegMeresEredmenyei() {
 
       <Box>
 
- <LockStatusIndicator tableName="elegedettseg" sx={{mb:1}}/>
+        <LockStatusIndicator tableName="elegedettseg" sx={{mb:1}}/>
+        {isLoading && <CircularProgress size={24} sx={{ mb: 2 }} />}
         {isModified && (
           <Alert severity="warning" sx={{mb:3}}>
             Mentetlen módosítások vannak. Ne felejtsd el menteni a
             változtatásokat!
           </Alert>
         )}
-         
-        {savedData && !isModified && (
-          <Alert severity="success" >
-            Az adatok sikeresen mentve!
-          </Alert>
-        )}
-    
-     
-      
 
         {/* Main Data Table */}
         <Card>
@@ -176,7 +296,7 @@ export default function ElegedettsegMeresEredmenyei() {
                   variant="contained"
                   startIcon={<SaveIcon />}
                   onClick={handleSave}
-                  disabled={!isModified}
+                  disabled={!isModified || isSaving || !selectedSchool}
                 >
                   Mentés
                 </Button>
@@ -184,9 +304,9 @@ export default function ElegedettsegMeresEredmenyei() {
                   variant="outlined"
                   startIcon={<RefreshIcon />}
                   onClick={handleReset}
-                  disabled={!isModified || !savedData}
+                  disabled={!isModified || isSaving}
                 >
-                  Visszaállítás
+                  Visszacsnállítás
                 </Button>
               </LockedTableWrapper>
             </Stack>
@@ -480,6 +600,16 @@ export default function ElegedettsegMeresEredmenyei() {
           </CardContent>
         </Card>
       </Box>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: "100%" }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </PageWrapper>
   );
 }

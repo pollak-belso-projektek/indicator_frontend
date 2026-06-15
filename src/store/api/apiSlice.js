@@ -47,6 +47,10 @@ export const indicatorApi = createApi({
     "Changelog",
     "Hianyzas",
     "SzakmaiTovabbkepzesek",
+    "Versenyek",
+    "Elegedettseg",
+    "ElegedettsegMeres",
+    "VersenyKategoria",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -915,6 +919,101 @@ export const indicatorApi = createApi({
     }),
 
 
+    // Versenyek (Competitions)
+    getVersenyKategoriak: build.query({
+      query: () => "versenyek/kategoriak",
+      providesTags: ["VersenyKategoria"],
+    }),
+    getVersenyek: build.query({
+      query: ({ alapadatok_id, tanev_kezdete }) =>
+        `versenyek/${alapadatok_id}/${tanev_kezdete}`,
+      providesTags: (result, error, params) => [
+        { type: "Versenyek", id: params?.alapadatok_id },
+        "Versenyek"
+      ],
+    }),
+    addVersenyek: build.mutation({
+      query: (data) => ({
+        url: "versenyek",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Versenyek"],
+    }),
+    updateVersenyek: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `versenyek/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Versenyek"],
+    }),
+    deleteVersenyek: build.mutation({
+      query: (id) => ({
+        url: `versenyek/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Versenyek"],
+    }),
+
+    // Elegedettseg (Satisfaction measurement)
+    getElegedettseg: build.query({
+      query: ({ alapadatok_id, tanev_kezdete }) =>
+        `elegedettseg/${alapadatok_id}/${tanev_kezdete}`,
+      providesTags: (result, error, params) => [
+        { type: "Elegedettseg", id: params?.alapadatok_id },
+        "Elegedettseg",
+      ],
+    }),
+    addElegedettseg: build.mutation({
+      query: (data) => ({
+        url: "elegedettseg",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Elegedettseg"],
+    }),
+    updateElegedettseg: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `elegedettseg/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Elegedettseg"],
+    }),
+    deleteElegedettseg: build.mutation({
+      query: (id) => ({
+        url: `elegedettseg/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Elegedettseg"],
+    }),
+
+    // ElegedettsegMeres (Partner satisfaction measurement)
+    getElegedettsegMeres: build.query({
+      query: ({ alapadatok_id, tanev_kezdete }) =>
+        `elegedettseg_meres/${alapadatok_id}/${tanev_kezdete}`,
+      providesTags: (result, error, params) => [
+        { type: "ElegedettsegMeres", id: params?.alapadatok_id },
+        "ElegedettsegMeres",
+      ],
+    }),
+    addElegedettsegMeres: build.mutation({
+      query: (data) => ({
+        url: "elegedettseg_meres",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["ElegedettsegMeres"],
+    }),
+    updateElegedettsegMeres: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `elegedettseg_meres/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["ElegedettsegMeres"],
+    }),
 
     // Logs management endpoints (Admin/Superadmin only)
     getLogs: build.query({
@@ -1167,4 +1266,19 @@ export const {
   useGetSzakmaiTovabbkepzesekQuery,
   useAddSzakmaiTovabbkepzesMutation,
   useUpdateSzakmaiTovabbkepzesMutation,
+  // Versenyek hooks
+  useGetVersenyKategoriakQuery,
+  useGetVersenyekQuery,
+  useAddVersenyekMutation,
+  useUpdateVersenyekMutation,
+  useDeleteVersenyekMutation,
+  // Elegedettseg hooks
+  useGetElegedettsegQuery,
+  useAddElegedettsegMutation,
+  useUpdateElegedettsegMutation,
+  useDeleteElegedettsegMutation,
+  // ElegedettsegMeres hooks
+  useGetElegedettsegMeresQuery,
+  useAddElegedettsegMeresMutation,
+  useUpdateElegedettsegMeresMutation,
 } = indicatorApi;
