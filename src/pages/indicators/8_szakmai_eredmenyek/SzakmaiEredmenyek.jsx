@@ -10,8 +10,6 @@ import {
 } from "../../../store/api/apiSlice";
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Table,
   TableBody,
@@ -24,8 +22,10 @@ import {
   Button,
   Stack,
   Alert,
-  Chip,
-  IconButton,
+  CircularProgress,
+  Snackbar,
+  Container,
+  Fade,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -34,7 +34,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress,
+  IconButton,
   Snackbar,
 } from "@mui/material";
 import {
@@ -43,7 +43,14 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
+import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import { generateSchoolYears } from "../../../utils/schoolYears";
+import {
+  useGetAllVersenyekQuery,
+  useAddVersenyekMutation,
+  useUpdateVersenyekMutation,
+  useDeleteVersenyekMutation,
+} from "../../../store/api/apiSlice";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
@@ -89,6 +96,8 @@ export default function SzakmaiEredmenyek() {
   const [competitionData, setCompetitionData] = useState(createInitialData());
   const [originalData, setOriginalData] = useState(createInitialData());
   const [isModified, setIsModified] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [newCompetition, setNewCompetition] = useState({ category: "", name: "" });
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -353,39 +362,27 @@ export default function SzakmaiEredmenyek() {
   // Calculate totals - memoized to prevent recalculation on every render
   const totals = useMemo(() => {
     const calculatedTotals = {};
-    schoolYears.forEach((year) => {
-      calculatedTotals[year] = {};
+    evszamok.forEach((year) => {
+      const startYear = parseInt(year.split("/")[0], 10);
+      calculatedTotals[startYear] = {};
       placementTypes.forEach((placement) => {
         let sum = 0;
-        Object.keys(competitionData).forEach((category) => {
-          Object.keys(competitionData[category]).forEach((competition) => {
-            const value = parseInt(
-              competitionData[category][competition][year]?.[placement.key] || 0
-            );
-            sum += value;
+        Object.keys(tableData).forEach((category) => {
+          Object.keys(tableData[category]).forEach((competition) => {
+            sum += getNumericValue(category, competition, startYear, placement.key);
           });
         });
-        calculatedTotals[year][placement.key] = sum;
+        calculatedTotals[startYear][placement.key] = sum;
       });
     });
     return calculatedTotals;
-  }, [competitionData, schoolYears, placementTypes]);
+  }, [tableData, getNumericValue]);
 
   // Show loading state
   if (isVersenyekLoading) {
     return (
-      <Box
-        sx={{
-          p: 3,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "400px",
-        }}
-      >
-        <CircularProgress size={40} sx={{ mb: 2 }} />
-        <Typography variant="h6">Szakmai eredmények betöltése...</Typography>
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <CircularProgress />
       </Box>
     );
   }
@@ -451,38 +448,40 @@ export default function SzakmaiEredmenyek() {
           </LockedTableWrapper>
         </Stack>
 
-        {/* Main Data Table */}
-        <Card>
-          <CardContent>
-            <Typography variant="h6" component="h2" gutterBottom>
-              Versenyek eredményei
+            <Typography variant="h6" component="h2" gutterBottom sx={{ ml: 2 }}>
+              Szakmai és Közismereti Versenyek Eredményei
             </Typography>
 
-            <TableContainer
-              component={Paper}
-              variant="outlined"
-              sx={{ overflowX: "auto" }}
-            >
-              <Table size="small">
+            <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
+              <Table size="small" sx={{ minWidth: 1000 }}>
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                  <TableRow>
                     <TableCell
                       rowSpan={2}
                       sx={{
                         fontWeight: "bold",
+                        minWidth: 250,
+                        borderRight: "2px solid #ddd",
+                        position: "sticky",
+                        left: 0,
+                        backgroundColor: "#ffffff",
+                        zIndex: 3,
                         verticalAlign: "middle",
-                        minWidth: 300,
-                        textAlign: "center",
                       }}
                     >
                       Verseny megnevezése
                     </TableCell>
-                    {schoolYears.map((year) => (
+                    {evszamok.map((year, i) => (
                       <TableCell
-                        key={year}
-                        colSpan={placementTypes.length}
+                        key={`${year}-header`}
                         align="center"
-                        sx={{ fontWeight: "bold", minWidth: 300 }}
+                        colSpan={4}
+                        sx={{
+                          fontWeight: "bold",
+                          backgroundColor: "#fff2cc",
+                          borderBottom: "1px solid #ddd",
+                          borderRight: i === evszamok.length - 1 ? "none" : "2px solid #ddd",
+                        }}
                       >
                         {year}
                       </TableCell>
@@ -491,6 +490,9 @@ export default function SzakmaiEredmenyek() {
                       rowSpan={2}
                       sx={{
                         fontWeight: "bold",
+                        minWidth: 80,
+                        backgroundColor: "#ffffff",
+                        zIndex: 3,
                         verticalAlign: "middle",
                         minWidth: 60,
                         textAlign: "center",
@@ -501,47 +503,93 @@ export default function SzakmaiEredmenyek() {
                         boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)"
                       }}
                     >
-                      Műveletek
+                      Törlés
                     </TableCell>
                   </TableRow>
-                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                    {schoolYears.map((year) =>
-                      placementTypes.map((placement) => (
-                        <TableCell
-                          key={`${year}-${placement.key}`}
-                          align="center"
-                          sx={{
-                            fontWeight: "bold",
-                            minWidth: 70,
-                            backgroundColor: placement.color,
-                            fontSize: "0.75rem",
-                          }}
-                        >
-                          {placement.label}
-                          <br />
-                          (fő)
-                        </TableCell>
-                      ))
-                    )}
+                  <TableRow>
+                    {evszamok.map((year, i) => (
+                      <React.Fragment key={`${year}-metric-head`}>
+                        {placementTypes.map((placement, j) => (
+                          <TableCell
+                            key={`head-${year}-${placement.key}`}
+                            align="center"
+                            sx={{
+                              fontWeight: 600,
+                              backgroundColor: placement.color,
+                              borderBottom: "2px solid #ddd",
+                              borderRight: (j === placementTypes.length - 1 && i !== evszamok.length - 1) ? "2px solid #ddd" : "1px solid #ddd",
+                              minWidth: 90,
+                              fontSize: "0.75rem",
+                              lineHeight: 1.2
+                            }}
+                          >
+                            {placement.label}
+                          </TableCell>
+                        ))}
+                      </React.Fragment>
+                    ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Object.keys(competitionData).map((category) => {
-                    const competitions = Object.keys(competitionData[category]);
-                    return competitions.map((competition, competitionIndex) => (
-                      <TableRow key={`${category}-${competition}`}>
-                        <TableCell sx={{ fontWeight: "medium", pl: 2 }}>
-                          {competitionIndex === 0 && (
-                            <Typography
-                              variant="subtitle2"
-                              sx={{ fontWeight: "bold", mb: 1 }}
+                  {/* Totals Row */}
+                  <TableRow sx={{ backgroundColor: "#fffde7" }}>
+                    <TableCell
+                      sx={{
+                        fontWeight: "bold",
+                        borderRight: "2px solid #ddd",
+                        position: "sticky",
+                        left: 0,
+                        backgroundColor: "#fffde7",
+                        zIndex: 1,
+                      }}
+                    >
+                      Összesen
+                    </TableCell>
+                    {evszamok.map((year, i) => {
+                      const startYear = parseInt(year.split("/")[0], 10);
+                      return (
+                        <React.Fragment key={`total-${year}-metrics`}>
+                          {placementTypes.map((placement, j) => (
+                            <TableCell 
+                              key={`tot-${year}-${placement.key}`} 
+                              align="center" 
+                              sx={{ 
+                                fontWeight: "bold",
+                                borderRight: (j === placementTypes.length - 1 && i !== evszamok.length - 1) ? "2px solid #ddd" : "1px solid #ddd",
+                              }}
                             >
+                              {totals[startYear]?.[placement.key] || 0}
+                            </TableCell>
+                          ))}
+                        </React.Fragment>
+                      );
+                    })}
+                    <TableCell></TableCell>
+                  </TableRow>
+
+                  {/* Data Rows */}
+                  {Object.keys(tableData).map((category) => {
+                    const competitions = Object.keys(tableData[category]);
+                    return competitions.map((competition, index) => (
+                      <TableRow
+                        key={`${category}-${competition}`}
+                        hover
+                      >
+                        <TableCell
+                          sx={{
+                            borderRight: "2px solid #ddd",
+                            position: "sticky",
+                            left: 0,
+                            backgroundColor: "#fff",
+                            zIndex: 1,
+                          }}
+                        >
+                          {index === 0 && (
+                            <Typography variant="subtitle2" color="primary" sx={{ fontWeight: "bold", mb: 0.5 }}>
                               {category}
                             </Typography>
                           )}
-                          <Box sx={{ pl: competitionIndex === 0 ? 2 : 4 }}>
-                            {competition}
-                          </Box>
+                          <Box sx={{ pl: 2, fontSize: "0.875rem" }}>{competition}</Box>
                         </TableCell>
                         {schoolYears.map((year) =>
                           placementTypes.map((placement) => (
@@ -588,9 +636,8 @@ export default function SzakmaiEredmenyek() {
                           <IconButton
                             size="small"
                             color="error"
-                            onClick={() =>
-                              handleRemoveCompetition(category, competition)
-                            }
+                            onClick={() => handleRemoveCompetition(category, competition)}
+                            disabled={!selectedSchool}
                           >
                             <DeleteIcon />
                           </IconButton>

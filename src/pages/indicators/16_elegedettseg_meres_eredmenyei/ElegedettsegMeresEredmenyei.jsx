@@ -8,8 +8,6 @@ import {
 } from "../../../store/api/apiSlice";
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Table,
   TableBody,
@@ -22,17 +20,38 @@ import {
   Button,
   Stack,
   Alert,
-  Chip,
-  Snackbar,
   CircularProgress,
+  Snackbar,
+  Container,
+  Fade,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import {
+  Save as SaveIcon,
+  Refresh as RefreshIcon,
+} from "@mui/icons-material";
+import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import { generateSchoolYears } from "../../../utils/schoolYears";
+import {
+  useGetAllElegedettsegMeresQuery,
+  useAddElegedettsegMeresMutation,
+  useUpdateElegedettsegMeresMutation,
+} from "../../../store/api/apiSlice";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
-import InfoElegedettsegMeresEredmenyei from "./info_elegedettseg_meres_eredmenyei";
-import TitleElegedettsegMeresEredmenyei from "./title_elegedettseg_meres_eredmenyei";
+import InfoElegedettsegMeres from "./info_elegedettseg_meres";
+import TitleElegedettsegMeres from "./title_elegedettseg_meres";
+
+const evszamok = generateSchoolYears();
+
+// Mapping for the exact JSON properties the backend expects
+const categoryTypes = [
+  { key: "szulo", label: "Szülők", color: "#e3f2fd" },
+  { key: "oktato", label: "Oktatók", color: "#fff9c4" },
+  { key: "tanulo", label: "Tanulók", color: "#e8f5e9" },
+  { key: "dualis_kepzohely", label: "Duális képzőhelyek", color: "#f3e5f5" },
+  { key: "munkaeropiaci", label: "Munkaerőpiaci szereplők", color: "#fff3e0" },
+];
 
 export default function ElegedettsegMeresEredmenyei() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -117,119 +136,31 @@ export default function ElegedettsegMeresEredmenyei() {
   const [satisfactionData, setSatisfactionData] = useState(createEmpty);
   const [originalData, setOriginalData] = useState(createEmpty);
   const [isModified, setIsModified] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-
-  // Load API data into state
-  useEffect(() => {
-    if (!isFetching && apiData) {
-      const newData = createEmpty();
-      const origData = createEmpty();
-
-      apiData.forEach((item) => {
-        const yearRange = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
-        stakeholderCategories.forEach((s) => {
-          const val = item[s.dbKey];
-          if (val !== undefined && val !== null) {
-            newData[s.key][yearRange] = val.toString();
-            origData[s.key][yearRange] = val.toString();
-            if (!newData[s.key]._ids) newData[s.key]._ids = {};
-            if (!origData[s.key]._ids) origData[s.key]._ids = {};
-            newData[s.key]._ids[yearRange] = item.id;
-            origData[s.key]._ids[yearRange] = item.id;
-          }
-        });
-      });
-
-      setSatisfactionData(newData);
-      setOriginalData(origData);
-      setIsModified(false);
-    }
-  }, [apiData, isFetching]);
-
-
-  const handleSave = async () => {
-    if (!selectedSchool) return;
-    setIsSaving(true);
-    let savedCount = 0;
-    let updatedCount = 0;
-
-    try {
-      const promises = [];
-
-      schoolYears.forEach((yearRange) => {
-        const tanev_kezdete = parseInt(yearRange.split("/")[0]);
-        // Find existing record for this year (any stakeholder shares the same row)
-        const existingId = stakeholderCategories.reduce((id, s) => {
-          return id || satisfactionData[s.key]?._ids?.[yearRange];
-        }, null);
-
-        // Check if any field changed for this year
-        const anyModified = stakeholderCategories.some((s) => {
-          const orig = originalData[s.key]?.[yearRange] || "0";
-          const curr = satisfactionData[s.key]?.[yearRange] || "0";
-          return orig !== curr;
-        });
-
-        if (!anyModified) return;
-
-        const recordData = {
-          alapadatok_id: selectedSchool.id,
-          tanev_kezdete,
-        };
-        stakeholderCategories.forEach((s) => {
-          recordData[s.key] = parseFloat(satisfactionData[s.key]?.[yearRange] || 0);
-        });
-
-        if (existingId) {
-          promises.push(
-            updateElegedettseg({ id: existingId, ...recordData }).unwrap().then(() => { updatedCount++; })
-          );
-        } else {
-          promises.push(
-            addElegedettseg(recordData).unwrap().then(() => { savedCount++; })
-          );
-        }
-      });
-
-      if (promises.length > 0) {
-        await Promise.all(promises);
-        setSnackbarMessage(`Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`);
-        setSnackbarSeverity("success");
-      } else {
-        setSnackbarMessage("Nem történt módosítás!");
-        setSnackbarSeverity("info");
-      }
-      setSnackbarOpen(true);
-      setIsModified(false);
-    } catch (error) {
-      console.error("Hiba mentés közben:", error);
-      setSnackbarMessage("Hiba történt a mentés során!");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleReset = useCallback(() => {
-    setSatisfactionData(JSON.parse(JSON.stringify(originalData)));
-    setIsModified(false);
-  }, [originalData]);
 
   // Handle data changes
-  const handleDataChange = useCallback((stakeholder, year, value) => {
+  const handleDataChange = (stakeholder, year, value) => {
     setSatisfactionData((prev) => ({
       ...prev,
-      [stakeholder]: {
-        ...prev[stakeholder],
-        [year]: value,
-      },
+      [year]: {
+        ...prev[year],
+        [categoryKey]: numValue === "" ? "" : numValue
+      }
     }));
     setIsModified(true);
-  }, []);
+  };
+
+  const handleSave = () => {
+    setSavedData(JSON.parse(JSON.stringify(satisfactionData)));
+    setIsModified(false);
+    console.log("Saving satisfaction data:", satisfactionData);
+  };
+
+  const handleReset = () => {
+    if (savedData) {
+      setSatisfactionData(JSON.parse(JSON.stringify(savedData)));
+      setIsModified(false);
+    }
+  };
 
   return (
     <PageWrapper
@@ -278,14 +209,22 @@ export default function ElegedettsegMeresEredmenyei() {
 
       <Box>
 
-        <LockStatusIndicator tableName="elegedettseg" sx={{mb:1}}/>
-        {isLoading && <CircularProgress size={24} sx={{ mb: 2 }} />}
+ <LockStatusIndicator tableName="elegedettseg" sx={{mb:1}}/>
         {isModified && (
           <Alert severity="warning" sx={{mb:3}}>
             Mentetlen módosítások vannak. Ne felejtsd el menteni a
             változtatásokat!
           </Alert>
         )}
+         
+        {savedData && !isModified && (
+          <Alert severity="success" >
+            Az adatok sikeresen mentve!
+          </Alert>
+        )}
+    
+     
+      
 
         {/* Main Data Table */}
         <Card>
@@ -296,138 +235,147 @@ export default function ElegedettsegMeresEredmenyei() {
                   variant="contained"
                   startIcon={<SaveIcon />}
                   onClick={handleSave}
-                  disabled={!isModified || isSaving || !selectedSchool}
+                  disabled={!isModified}
                 >
-                  Mentés
+                  {isSaving || isAdding || isUpdating ? "Mentés..." : "Mentés"}
                 </Button>
                 <Button
                   variant="outlined"
                   startIcon={<RefreshIcon />}
                   onClick={handleReset}
-                  disabled={!isModified || isSaving}
+                  disabled={!isModified || !savedData}
                 >
                   Visszacsnállítás
                 </Button>
               </LockedTableWrapper>
             </Stack>
-            <Typography variant="h6" component="h2" gutterBottom>
-              Végzetteket foglalkoztató munkáadók elégedettsége (%)
+
+            <Typography variant="h6" component="h2" gutterBottom sx={{ ml: 2 }}>
+              Célcsoportok elégedettségének mérése (1-5 skála)
             </Typography>
 
-            <TableContainer
-              component={Paper}
-              variant="outlined"
-              sx={{ overflowX: "auto" }}
-            >
-              <Table size="small">
+            <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
+              <Table size="medium" sx={{ minWidth: 800 }}>
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                  <TableRow>
                     <TableCell
                       sx={{
                         fontWeight: "bold",
-                        verticalAlign: "middle",
                         minWidth: 200,
-                        textAlign: "center",
+                        borderRight: "2px solid #ddd",
+                        position: "sticky",
+                        left: 0,
+                        backgroundColor: "#ffffff",
+                        zIndex: 3,
+                        verticalAlign: "middle",
                       }}
                     >
-                      Érintett fél
+                      Célcsoport
                     </TableCell>
-                    {schoolYears.map((year) => (
+                    {evszamok.map((yearStr, i) => (
                       <TableCell
-                        key={year}
+                        key={`${yearStr}-header`}
                         align="center"
                         sx={{
                           fontWeight: "bold",
+                          backgroundColor: "#fff2cc",
+                          borderBottom: "1px solid #ddd",
+                          borderRight: i === evszamok.length - 1 ? "none" : "1px solid #ddd",
                           minWidth: 120,
-                          backgroundColor: "#e8f4fd",
                         }}
                       >
-                        {year}
+                        {yearStr}
                       </TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {stakeholderCategories.map((stakeholder) => (
-                    <TableRow
-                      key={stakeholder.key}
-                      sx={{
-                        backgroundColor: stakeholder.color,
-                        "&:hover": {
-                          backgroundColor: "#f5f5f5",
-                        },
-                      }}
-                    >
+                  {/* Data Rows */}
+                  {categoryTypes.map((category) => (
+                    <TableRow key={category.key} hover>
                       <TableCell
                         sx={{
-                          fontWeight: "medium",
-                          textAlign: "left",
-                          pl: 2,
+                          borderRight: "2px solid #ddd",
+                          position: "sticky",
+                          left: 0,
+                          backgroundColor: category.color,
+                          zIndex: 1,
+                          fontWeight: "bold"
                         }}
                       >
-                        <Box>
-                          <Typography
-                            variant="body2"
-                            sx={{ fontWeight: "bold" }}
-                          >
-                            {stakeholder.label}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {stakeholder.description}
-                          </Typography>
-                        </Box>
+                        {category.label}
                       </TableCell>
-                      {schoolYears.map((year) => (
-                        <TableCell key={year} align="center">
-                          <TextField
-                            type="number"
-                            value={
-                              satisfactionData[stakeholder.key]?.[year] || "0"
-                            }
-                            onChange={(e) =>
-                              handleDataChange(
-                                stakeholder.key,
-                                year,
-                                e.target.value
-                              )
-                            }
-                            size="small"
-                            inputProps={{
-                              min: 0,
-                              max: 100,
-                              step: 0.1,
-                              style: { textAlign: "center" },
+                      {evszamok.map((yearStr, i) => {
+                        const year = parseInt(yearStr.split("/")[0], 10);
+                        return (
+                          <TableCell
+                            key={`${category.key}-${year}`}
+                            align="center"
+                            sx={{
+                              borderRight: i === evszamok.length - 1 ? "none" : "1px solid #ddd",
                             }}
-                            sx={{ width: "80px" }}
-                            placeholder="0-100"
-                          />
-                        </TableCell>
-                      ))}
+                          >
+                            <TextField
+                              type="number"
+                              size="small"
+                              value={tableData[year]?.[category.key] ?? ""}
+                              onChange={(e) => handleDataChange(year, category.key, e.target.value)}
+                              inputProps={{
+                                min: 0,
+                                max: 5,
+                                step: 0.1,
+                                style: { textAlign: "center", padding: "8px" },
+                              }}
+                              sx={{ width: "80px", backgroundColor: "#fff" }}
+                              placeholder="0.0"
+                              disabled={!selectedSchool}
+                            />
+                          </TableCell>
+                        );
+                      })}
                     </TableRow>
                   ))}
+
+                  {/* Average Row */}
+                  <TableRow sx={{ backgroundColor: "#fffde7" }}>
+                    <TableCell
+                      sx={{
+                        fontWeight: "bold",
+                        borderRight: "2px solid #ddd",
+                        position: "sticky",
+                        left: 0,
+                        backgroundColor: "#fffde7",
+                        zIndex: 1,
+                      }}
+                    >
+                      Átlagérték
+                    </TableCell>
+                    {evszamok.map((yearStr, i) => {
+                      const year = parseInt(yearStr.split("/")[0], 10);
+                      return (
+                        <TableCell 
+                          key={`avg-${year}`} 
+                          align="center" 
+                          sx={{ 
+                            fontWeight: "bold",
+                            borderRight: i === evszamok.length - 1 ? "none" : "1px solid #ddd",
+                            fontSize: "1.1rem"
+                          }}
+                        >
+                          {calculateTotalAverages[year] || "0.00"}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
                 </TableBody>
               </Table>
             </TableContainer>
 
-            {/* Action Buttons */}
-
-            {/* Status Messages */}
-          </CardContent>
-        </Card>
-
-        {/* Stakeholder Details */}
-        <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
-          <CardContent>
-            <Typography variant="h6" component="h3" gutterBottom>
-              Érintett felek részletesen
-            </Typography>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                gap: 2,
-                mb: 2,
-              }}
+            <Snackbar
+              open={snackbarOpen}
+              autoHideDuration={6000}
+              onClose={handleSnackbarClose}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
             >
               {stakeholderCategories.map((stakeholder) => (
                 <Card
@@ -600,16 +548,6 @@ export default function ElegedettsegMeresEredmenyei() {
           </CardContent>
         </Card>
       </Box>
-
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={() => setSnackbarOpen(false)}
-      >
-        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: "100%" }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </PageWrapper>
   );
 }
