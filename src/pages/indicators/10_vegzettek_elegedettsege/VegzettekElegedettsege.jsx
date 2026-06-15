@@ -1,8 +1,7 @@
-import { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Table,
   TableBody,
@@ -15,290 +14,400 @@ import {
   Button,
   Stack,
   Alert,
-  Chip,
+  CircularProgress,
+  Snackbar,
+  Container,
+  Fade,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import { generateSchoolYears } from "../../../utils/schoolYears";
+import {
+  useGetAllElegedettsegQuery,
+  useAddElegedettsegMutation,
+  useUpdateElegedettsegMutation,
+  useGetAllAlapadatokQuery,
+} from "../../../store/api/apiSlice";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoVegzettekElegedettsege from "./info_vegzettek_elegedettsege";
 import TitleVegzettekElegedettsege from "./title_vegzettek_elegedettsege";
 
+const evszamok = generateSchoolYears();
 
 export default function VegzettekElegedettsege() {
-  const schoolYears = generateSchoolYears();
+  const selectedSchool = useSelector(selectSelectedSchool);
 
-  const skillCategories = [
-    { key: "magasepito_technikus", label: "magasépítő technikus (A)" },
-    { key: "melyepito_technikus", label: "mélyépítő technikus (B)" },
-    { key: "komuves", label: "kőműves (a)" },
-    { key: "burkolo", label: "burkoló (b)" },
-    { key: "festo_mazo", label: "festő, mázoló, tapétázó (c)" },
-  ];
+  // API Hooks
+  const { data: schoolsData, isLoading: isLoadingSchools } = useGetAllAlapadatokQuery();
+  const { data: apiSatisfactionData, error: fetchError, isLoading: isFetching, refetch } = useGetAllElegedettsegQuery();
+  const [addElegedettseg, { isLoading: isAdding }] = useAddElegedettsegMutation();
+  const [updateElegedettseg, { isLoading: isUpdating }] = useUpdateElegedettsegMutation();
 
-  // Initialize data structure
-  const [satisfactionData, setSatisfactionData] = useState(() => {
-    const initialData = {};
-
-    skillCategories.forEach((category) => {
-      initialData[category.key] = {};
-      schoolYears.forEach((year) => {
-        initialData[category.key][year] = "0";
-      });
-    });
-
-    return initialData;
-  });
-
+  // Component State
+  const [tableData, setTableData] = useState({});
   const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Handle data changes
-  const handleDataChange = (category, year, value) => {
-    setSatisfactionData((prev) => ({
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+
+  // Generate categories (szakmák) from the selected school's alapadatok
+  const { szakmaRows, programMap } = useMemo(() => {
+    if (!schoolsData) return { szakmaRows: [], programMap: {} };
+
+    const relevantSchools = selectedSchool
+      ? schoolsData.filter(s => s.id === selectedSchool.id)
+      : schoolsData;
+
+    const rows = [];
+    const map = {};
+
+    relevantSchools.forEach(school => {
+      if (school.alapadatok_szakirany && Array.isArray(school.alapadatok_szakirany)) {
+        school.alapadatok_szakirany.forEach(sz => {
+          const szakiranyId = sz.szakirany_id || sz.szakirany?.id;
+
+          if (sz.szakirany?.szakma && Array.isArray(sz.szakirany.szakma) && sz.szakirany.szakma.length > 0) {
+            sz.szakirany.szakma.forEach(szm => {
+              const szakmaId = szm.szakma_id || szm.szakma?.id;
+              const szakmaNev = szm.szakma?.nev;
+              if (szakmaNev) {
+                const key = `szakma_${szakmaId}_${szakiranyId}`;
+                if (!map[key]) {
+                  rows.push({ key, label: szakmaNev });
+                  map[key] = {
+                    szakirany_id: szakiranyId,
+                    szakma_id: szakmaId,
+                    alapadatok_id: school.id,
+                  };
+                }
+              }
+            });
+          } else if (szakiranyId) {
+            const key = `szakirany_${szakiranyId}`;
+            if (!map[key]) {
+              rows.push({ key, label: `Szakirány: ${sz.szakirany?.nev || 'Ismeretlen'}` });
+              map[key] = {
+                szakirany_id: szakiranyId,
+                szakma_id: null,
+                alapadatok_id: school.id,
+              };
+            }
+          }
+        });
+      }
+    });
+
+    rows.sort((a, b) => a.label.localeCompare(b.label));
+    return { szakmaRows: rows, programMap: map };
+  }, [schoolsData, selectedSchool]);
+
+  // Load API data into tableData state
+  useEffect(() => {
+    if (apiSatisfactionData) {
+      const initialData = {};
+
+      const relevantData = selectedSchool
+        ? apiSatisfactionData.filter(item => item.alapadatok_id === selectedSchool.id)
+        : apiSatisfactionData;
+
+      relevantData.forEach(item => {
+        const year = item.tanev_kezdete;
+        const szakmaId = item.szakma_id || item.szakma?.id;
+        const szakiranyId = item.szakirany_id || item.szakirany?.id;
+        const key = szakmaId ? `szakma_${szakmaId}_${szakiranyId}` : `szakirany_${szakiranyId}`;
+
+        if (!initialData[key]) initialData[key] = {};
+        initialData[key][year] = {
+          id: item.id,
+          munkaadok_elegedettsege: item.munkaadok_elegedettsege ?? "",
+        };
+      });
+
+      setTableData(initialData);
+      setSavedData(JSON.parse(JSON.stringify(initialData)));
+      setIsModified(false);
+    }
+  }, [apiSatisfactionData, selectedSchool]);
+
+  // Handle Input Changes
+  const handleDataChange = (key, yearStr, value) => {
+    const year = parseInt(yearStr, 10);
+    const numValue = parseFloat(value);
+
+    setTableData(prev => ({
       ...prev,
-      [category]: {
-        ...prev[category],
-        [year]: value,
+      [key]: {
+        ...(prev[key] || {}),
+        [year]: {
+          ...(prev[key]?.[year] || {}),
+          munkaadok_elegedettsege: isNaN(numValue) ? "" : numValue,
+        },
       },
     }));
     setIsModified(true);
   };
 
-  const handleSave = () => {
-    setSavedData(JSON.parse(JSON.stringify(satisfactionData)));
-    setIsModified(false);
-    console.log("Saving satisfaction data:", satisfactionData);
-  };
-
-  const handleReset = () => {
+  const handleResetData = () => {
     if (savedData) {
-      setSatisfactionData(JSON.parse(JSON.stringify(savedData)));
+      setTableData(JSON.parse(JSON.stringify(savedData)));
       setIsModified(false);
     }
   };
 
+  // Get cell value helper
+  const getCellValue = (key, year) => {
+    const startYear = parseInt(year.split("/")[0], 10);
+    return tableData[key]?.[startYear]?.munkaadok_elegedettsege ?? "";
+  };
+
+  // Save Logic
+  const handleSaveData = async () => {
+    try {
+      setIsSaving(true);
+      let savedCount = 0;
+      let updatedCount = 0;
+
+      for (const [key, yearData] of Object.entries(tableData)) {
+        if (!programMap[key]) continue;
+
+        for (const [yearStr, fields] of Object.entries(yearData)) {
+          const year = parseInt(yearStr, 10);
+
+          const savedFields = savedData?.[key]?.[yearStr] || { munkaadok_elegedettsege: "" };
+
+          if (fields.munkaadok_elegedettsege !== savedFields.munkaadok_elegedettsege) {
+            const payload = {
+              alapadatok_id: programMap[key].alapadatok_id,
+              szakirany_id: programMap[key].szakirany_id,
+              szakma_id: programMap[key].szakma_id,
+              tanev_kezdete: year,
+              munkaadok_elegedettsege: parseFloat(fields.munkaadok_elegedettsege) || 0,
+            };
+
+            if (fields.id) {
+              await updateElegedettseg({ id: fields.id, ...payload }).unwrap();
+              updatedCount++;
+            } else {
+              await addElegedettseg(payload).unwrap();
+              savedCount++;
+            }
+          }
+        }
+      }
+
+      setSavedData(JSON.parse(JSON.stringify(tableData)));
+      setIsModified(false);
+      refetch();
+
+      setSnackbarMessage(`Sikeresen mentve: ${savedCount} új rekord és ${updatedCount} frissített rekord`);
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("Hiba a mentés során:", error);
+      setSnackbarMessage(error.data?.message || "Hiba történt a mentés során");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") return;
+    setSnackbarOpen(false);
+  };
+
+  if (isFetching || isLoadingSchools) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <PageWrapper
-      titleContent={<TitleVegzettekElegedettsege />}
-      infoContent={<InfoVegzettekElegedettsege />}
-    >
-      <Box >
-        <LockStatusIndicator tableName="elegedettseg" />
+    <Container maxWidth="xl">
+      <PageWrapper
+        titleContent={<TitleVegzettekElegedettsege />}
+        infoContent={<InfoVegzettekElegedettsege />}
+      >
+        <Fade in={true} timeout={800}>
+          <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
 
-        {/* Instructions Card */}
-        <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
-          <CardContent>
-            <Typography variant="h6" component="h3" gutterBottom>
-              Indikátor kiszámítása:
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              A szakmai oktatást 12–36 hónappal korábban sikeresen befejezett
-              munkavállalókat foglalkoztató munkáltatók elégedettségének egyedi és
-              átlagos százalékos értéke, amely megmutatja, hogy mennyire
-              elégedettek a szakmai oktatást sikeresen befejezett munkavállalók
-              általános munkavállaló kompetenciáival.
-            </Typography>
+            <LockStatusIndicator tableName="elegedettseg" />
 
-            <Box
-              sx={{ mt: 3, p: 2, backgroundColor: "#fff2cc", borderRadius: 1 }}
-            >
-              <Typography variant="body2" sx={{ fontStyle: "italic" }}>
-                <strong>Megjegyzés:</strong> A mérés 12-36 hónappal a végzés után
-                történik, hogy megfelelő időt biztosítson a munkavállalók
-                beilleszkedésére és a kompetenciák gyakorlati alkalmazására.
-              </Typography>
-            </Box>
-          </CardContent>
-        </Card>
- {isModified && (
+            {fetchError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                Hiba történt az adatok betöltése során: {fetchError.message || "Ismeretlen hiba"}
+              </Alert>
+            )}
+
+            {!selectedSchool && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Nincs iskola kiválasztva - az összes iskola adatait összegzi a rendszer.
+              </Alert>
+            )}
+
+            {isModified && (
               <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
-                Mentetlen módosítások vannak. Ne felejtsd el menteni a
-                változtatásokat!
+                Mentetlen módosítások vannak. Ne felejtsd el menteni a változtatásokat!
               </Alert>
             )}
 
-            {savedData && !isModified && (
-              <Alert severity="success" sx={{ mt: 2, mb: 2 }}>
-                Az adatok sikeresen mentve!
-              </Alert>
-            )}
-        {/* Main Data Table */}
-        <Card>
-          <CardContent>
-             <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+            {/* Action Buttons */}
+            <Stack direction="row" spacing={2} sx={{ mb: 3, ml: 2 }}>
               <LockedTableWrapper tableName="elegedettseg">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}
-                  onClick={handleSave}
-                  disabled={!isModified}
+                  onClick={handleSaveData}
+                  disabled={!isModified || isSaving || isAdding || isUpdating}
                 >
-                  Mentés
+                  {isSaving || isAdding || isUpdating ? "Mentés..." : "Mentés"}
                 </Button>
                 <Button
                   variant="outlined"
                   startIcon={<RefreshIcon />}
-                  onClick={handleReset}
-                  disabled={!isModified || !savedData}
+                  onClick={handleResetData}
+                  disabled={!isModified || !savedData || isSaving || isAdding || isUpdating}
                 >
                   Visszaállítás
                 </Button>
               </LockedTableWrapper>
             </Stack>
 
-            {/* Status Messages */}
-           
-            <Typography variant="h6" component="h2" gutterBottom>
-              Végzetteket foglalkoztató munkáadók elégedettsége (%)
+            <Typography variant="h6" component="h2" gutterBottom sx={{ ml: 2 }}>
+              Végzetteket foglalkoztató munkaadók elégedettsége (%)
             </Typography>
 
-            <TableContainer
-              component={Paper}
-              variant="outlined"
-              sx={{ overflowX: "auto" }}
-            >
-              <Table size="small">
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                    <TableCell
-                      sx={{
-                        fontWeight: "bold",
-                        verticalAlign: "middle",
-                        minWidth: 250,
-                        textAlign: "center",
-                      }}
-                    >
-                      Képzési terület / Szakma
-                    </TableCell>
-                    {schoolYears.map((year) => (
+            {szakmaRows.length === 0 ? (
+              <Alert severity="warning" sx={{ m: 2 }}>
+                Nincsenek megjeleníthető szakmák. Kérjük válasszon intézményt vagy rendeljen hozzá szakmákat az intézményekhez.
+              </Alert>
+            ) : (
+              <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
+                <Table size="small" sx={{ minWidth: 800 }}>
+                  <TableHead>
+                    <TableRow>
                       <TableCell
-                        key={year}
+                        rowSpan={2}
+                        sx={{
+                          fontWeight: "bold",
+                          minWidth: 250,
+                          borderRight: "2px solid #ddd",
+                          position: "sticky",
+                          left: 0,
+                          backgroundColor: "#ffffff",
+                          zIndex: 3,
+                          verticalAlign: "middle",
+                        }}
+                      >
+                        Képzési terület / Szakma
+                      </TableCell>
+                      <TableCell
+                        colSpan={evszamok.length}
                         align="center"
                         sx={{
                           fontWeight: "bold",
-                          minWidth: 120,
-                          backgroundColor: "#e8f4fd",
+                          backgroundColor: "#fff2cc",
+                          borderBottom: "1px solid #ddd",
                         }}
                       >
-                        {year}
+                        végzetteket foglalkoztató munkaadók elégedettsége (%)
                       </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {skillCategories.map((category, index) => (
-                    <TableRow
-                      key={category.key}
-                      sx={{
-                        backgroundColor: index % 2 === 0 ? "#f9f9f9" : "white",
-                        "&:hover": {
-                          backgroundColor: "#f5f5f5",
-                        },
-                      }}
-                    >
-                      <TableCell
-                        sx={{
-                          fontWeight: "medium",
-                          textAlign: "left",
-                          pl: 2,
-                        }}
-                      >
-                        {category.label}
-                      </TableCell>
-                      {schoolYears.map((year) => (
-                        <TableCell key={year} align="center">
-                          <TextField
-                            type="number"
-                            value={satisfactionData[category.key]?.[year] || "0"}
-                            onChange={(e) =>
-                              handleDataChange(category.key, year, e.target.value)
-                            }
-                            size="small"
-                            inputProps={{
-                              min: 0,
-                              max: 100,
-                              step: 0.1,
-                              style: { textAlign: "center" },
-                            }}
-                            sx={{ width: "80px" }}
-                            placeholder=""
-                          />
+                    </TableRow>
+                    <TableRow>
+                      {evszamok.map((year, i) => (
+                        <TableCell
+                          key={year}
+                          align="center"
+                          sx={{
+                            fontWeight: "bold",
+                            backgroundColor: "#fff2cc",
+                            borderBottom: "2px solid #ddd",
+                            borderRight: i === evszamok.length - 1 ? "none" : "1px solid #ddd",
+                            minWidth: 100,
+                          }}
+                        >
+                          {year}
                         </TableCell>
                       ))}
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {szakmaRows.map((row, index) => (
+                      <TableRow
+                        key={row.key}
+                        hover
+                        sx={{
+                          backgroundColor: index % 2 === 0 ? "#f9f9f9" : "white",
+                        }}
+                      >
+                        <TableCell
+                          sx={{
+                            fontWeight: "bold",
+                            borderRight: "2px solid #ddd",
+                            position: "sticky",
+                            left: 0,
+                            backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#fff",
+                            zIndex: 1,
+                          }}
+                        >
+                          {row.label}
+                        </TableCell>
+                        {evszamok.map((year, i) => {
+                          const startYear = parseInt(year.split("/")[0], 10);
+                          return (
+                            <TableCell
+                              key={year}
+                              align="center"
+                              sx={{
+                                borderRight: i === evszamok.length - 1 ? "none" : "1px solid #ddd",
+                                p: 0.5,
+                              }}
+                            >
+                              <TextField
+                                type="number"
+                                size="small"
+                                value={tableData[row.key]?.[startYear]?.munkaadok_elegedettsege ?? ""}
+                                onChange={(e) => handleDataChange(row.key, startYear, e.target.value)}
+                                inputProps={{
+                                  min: 0,
+                                  max: 100,
+                                  step: 0.1,
+                                  style: { textAlign: "center", padding: "4px" },
+                                }}
+                                sx={{ width: "80px", backgroundColor: "#fff" }}
+                                placeholder=""
+                              />
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
 
-            {/* Action Buttons */}
-           
-          </CardContent>
-        </Card>
-
-        {/* Additional Information */}
-        <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
-          <CardContent>
-            <Typography variant="h6" component="h3" gutterBottom>
-              Értékelési szempontok
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              A munkáltatói elégedettség mérése a következő kompetenciák alapján
-              történik:
-            </Typography>
-            <Box component="ul" sx={{ pl: 3, mb: 2 }}>
-              <li>
-                <Typography variant="body2">
-                  Szakmai tudás és készségek alkalmazása
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  Munkavégzési attitűd és megbízhatóság
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  Kommunikációs és együttműködési képességek
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  Problémamegoldó képesség és kezdeményezőkészség
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  Tanulási képesség és fejlődési potenciál
-                </Typography>
-              </li>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Legend */}
-        <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
-          <CardContent>
-            <Typography variant="h6" component="h3" gutterBottom>
-              Jelmagyarázat
-            </Typography>
-            <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-              <Chip
-                label="Elégedettségi százalék"
-                variant="outlined"
-                sx={{ backgroundColor: "#e8f4fd" }}
-              />
-            </Stack>
-            <Typography variant="body2">
-              Az értékek 0-100% közötti százalékos formában adandók meg. A mérés a
-              végzés utáni 12-36 hónapos időszakban foglalkoztatott végzettek
-              munkáltatói visszajelzései alapján készül.
-            </Typography>
-          </CardContent>
-        </Card>
-      </Box>
-    </PageWrapper>
+            <Snackbar
+              open={snackbarOpen}
+              autoHideDuration={6000}
+              onClose={handleSnackbarClose}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            >
+              <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} variant="filled">
+                {snackbarMessage}
+              </Alert>
+            </Snackbar>
+          </Box>
+        </Fade>
+      </PageWrapper>
+    </Container>
   );
 }

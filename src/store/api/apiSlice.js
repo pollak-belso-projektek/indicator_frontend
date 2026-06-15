@@ -47,6 +47,9 @@ export const indicatorApi = createApi({
     "Changelog",
     "Hianyzas",
     "SzakmaiTovabbkepzesek",
+    "Elegedettseg",
+    "Versenyek",
+    "ElegedettsegMeres",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -713,6 +716,39 @@ export const indicatorApi = createApi({
       invalidatesTags: ["SzakmaiVizsgaEredmenyek"],
     }),
 
+    // Versenyek (Szakmai Eredmények - Indicator 8)
+    getAllVersenyek: build.query({
+      query: (tanev) => `versenyek/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: ["Versenyek"],
+    }),
+    getVersenyekByAlapadatok: build.query({
+      query: ({ alapadatokId, tanev }) => `versenyek/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: ["Versenyek"],
+    }),
+    addVersenyek: build.mutation({
+      query: (data) => ({
+        url: "versenyek",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Versenyek"],
+    }),
+    updateVersenyek: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `versenyek/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Versenyek"],
+    }),
+    deleteVersenyek: build.mutation({
+      query: (id) => ({
+        url: `versenyek/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Versenyek"],
+    }),
+
     // Muhelyiskola (Workshop Schools)
     getMuhelyiskola: build.query({
       query: ({ tanev } = {}) => {
@@ -1043,6 +1079,54 @@ export const indicatorApi = createApi({
     }),
 
     // User management endpoints
+
+    // Elegedettseg (Employer Satisfaction / Graduate Satisfaction)
+    getAllElegedettseg: build.query({
+      query: () => `elegedettseg/${getCurrentSchoolYearStart()}`,
+      providesTags: ["Elegedettseg"],
+    }),
+    addElegedettseg: build.mutation({
+      query: (data) => ({
+        url: "elegedettseg",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Elegedettseg"],
+    }),
+    updateElegedettseg: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `elegedettseg/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Elegedettseg"],
+    }),
+
+    // ElegedettsegMeres (Satisfaction Measurement Results - Indicator 16)
+    getAllElegedettsegMeres: build.query({
+      query: (tanev) => `elegedettseg_meres/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: ["ElegedettsegMeres"],
+    }),
+    getElegedettsegMeresByAlapadatok: build.query({
+      query: ({ alapadatokId, tanev }) => `elegedettseg_meres/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: ["ElegedettsegMeres"],
+    }),
+    addElegedettsegMeres: build.mutation({
+      query: (data) => ({
+        url: "elegedettseg_meres",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["ElegedettsegMeres"],
+    }),
+    updateElegedettsegMeres: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `elegedettseg_meres/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["ElegedettsegMeres"],
+    }),
   }),
 });
 
@@ -1167,4 +1251,14 @@ export const {
   useGetSzakmaiTovabbkepzesekQuery,
   useAddSzakmaiTovabbkepzesMutation,
   useUpdateSzakmaiTovabbkepzesMutation,
+  // Elegedettseg hooks
+  useGetAllElegedettsegQuery,
+  useAddElegedettsegMutation,
+  useUpdateElegedettsegMutation,
+
+  // ElegedettsegMeres hooks
+  useGetAllElegedettsegMeresQuery,
+  useGetElegedettsegMeresByAlapadatokQuery,
+  useAddElegedettsegMeresMutation,
+  useUpdateElegedettsegMeresMutation,
 } = indicatorApi;
