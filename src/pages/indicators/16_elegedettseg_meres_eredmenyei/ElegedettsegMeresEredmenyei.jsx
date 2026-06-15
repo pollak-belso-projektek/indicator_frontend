@@ -1,5 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
+import { selectSelectedSchool } from "../../../store/slices/authSlice";
+import {
+  useGetElegedettsegMeresQuery,
+  useAddElegedettsegMeresMutation,
+  useUpdateElegedettsegMeresMutation,
+} from "../../../store/api/apiSlice";
 import {
   Box,
   Typography,
@@ -48,80 +54,92 @@ const categoryTypes = [
 ];
 
 export default function ElegedettsegMeresEredmenyei() {
+  const schoolYears = useMemo(() => generateSchoolYears(), []);
   const selectedSchool = useSelector(selectSelectedSchool);
 
-  // API Hooks
-  const { data: apiData, error: fetchError, isLoading: isFetching, refetch } = useGetAllElegedettsegMeresQuery();
-  const [addData, { isLoading: isAdding }] = useAddElegedettsegMeresMutation();
-  const [updateData, { isLoading: isUpdating }] = useUpdateElegedettsegMeresMutation();
+  const stakeholderCategories = [
+    {
+      key: "szulo",
+      dbKey: "szulok_elegedettsege",
+      label: "Szülő",
+      description: "Szülői elégedettség az intézmény működésével",
+      color: "#e8f5e8",
+    },
+    {
+      key: "oktato",
+      dbKey: "oktatok_elegedettsege",
+      label: "Oktató",
+      description: "Pedagógusok elégedettsége a munkakörülményekkel",
+      color: "#fff8e8",
+    },
+    {
+      key: "tanulo",
+      dbKey: "tanulok_elegedettsege",
+      label: "Tanuló",
+      description: "Tanulók elégedettsége az oktatással és környezettel",
+      color: "#e8f2ff",
+    },
+    {
+      key: "dualis_kepzohely",
+      dbKey: "dualis_kepzohely_elegedettsege",
+      label: "Duális képzőhely",
+      description: "Gyakorlati képzési helyek elégedettsége",
+      color: "#f8e8ff",
+    },
+    {
+      key: "munkaeropiaci",
+      dbKey: "munkaero_piac_elegedettsege",
+      label: "Munkaerőpiac",
+      description: "Munkaerőpiaci partnerek elégedettsége",
+      color: "#e8fff8",
+    },
+  ];
 
-  // Component State
-  const [tableData, setTableData] = useState({});
-  const [savedData, setSavedData] = useState(null);
+  // One query per school year
+  const elegedettsegQueries = schoolYears.map((yearRange) => {
+    const startYear = parseInt(yearRange.split("/")[0]);
+    return useGetElegedettsegMeresQuery(
+      { alapadatok_id: selectedSchool?.id, tanev_kezdete: startYear },
+      { skip: !selectedSchool }
+    );
+  });
+
+  const apiData = useMemo(() => {
+    return elegedettsegQueries.flatMap((q) => q.data || []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [elegedettsegQueries.map((q) => q.fulfilledTimeStamp).join(","), selectedSchool?.id]);
+
+  const isLoading = useMemo(
+    () => elegedettsegQueries.some((q) => q.isLoading),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [elegedettsegQueries.map((q) => q.isLoading).join(",")]
+  );
+  const isFetching = useMemo(
+    () => elegedettsegQueries.some((q) => q.isFetching),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [elegedettsegQueries.map((q) => q.isFetching).join(",")]
+  );
+
+  const [addElegedettseg] = useAddElegedettsegMeresMutation();
+  const [updateElegedettseg] = useUpdateElegedettsegMeresMutation();
+
+  // satisfactionData: { [stakeholderKey]: { [yearRange]: "0" } }
+  const createEmpty = useCallback(() => {
+    const d = {};
+    stakeholderCategories.forEach((s) => {
+      d[s.key] = {};
+      schoolYears.forEach((y) => { d[s.key][y] = "0"; });
+    });
+    return d;
+  }, [schoolYears]);
+
+  const [satisfactionData, setSatisfactionData] = useState(createEmpty);
+  const [originalData, setOriginalData] = useState(createEmpty);
   const [isModified, setIsModified] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-
-  // Load API data into tableData state
-  useEffect(() => {
-    if (apiData) {
-      const initialData = {};
-
-      const relevantData = selectedSchool
-        ? apiData.filter(item => item.alapadatok_id === selectedSchool.id)
-        : apiData;
-
-      // Initialize empty structure for all years
-      evszamok.forEach(yearStr => {
-        const year = parseInt(yearStr.split("/")[0], 10);
-        initialData[year] = {
-          id: null,
-          alapadatok_id: selectedSchool ? selectedSchool.id : null,
-          szulo: "",
-          oktato: "",
-          tanulo: "",
-          dualis_kepzohely: "",
-          munkaeropiaci: "",
-        };
-      });
-
-      // Overlay with real data
-      relevantData.forEach(item => {
-        const year = item.tanev_kezdete;
-        if (initialData[year]) {
-          initialData[year] = {
-            id: item.id,
-            alapadatok_id: item.alapadatok_id,
-            szulo: parseFloat(item.szulok_elegedettsege) || 0,
-            oktato: parseFloat(item.oktatok_elegedettsege) || 0,
-            tanulo: parseFloat(item.tanulok_elegedettsege) || 0,
-            dualis_kepzohely: parseFloat(item.dualis_kepzohely_elegedettsege) || 0,
-            munkaeropiaci: parseFloat(item.munkaero_piac_elegedettsege) || 0,
-          };
-        }
-      });
-
-      setTableData(initialData);
-      setSavedData(JSON.parse(JSON.stringify(initialData)));
-      setIsModified(false);
-    }
-  }, [apiData, selectedSchool]);
-
-  const handleDataChange = useCallback((year, categoryKey, value) => {
-    // Validate value to be between 0 and 5
-    let numValue = parseFloat(value);
-    if (isNaN(numValue)) {
-      numValue = "";
-    } else if (numValue < 0) {
-      numValue = 0;
-    } else if (numValue > 5) {
-      numValue = 5;
-    }
-
-    setTableData(prev => ({
+  // Handle data changes
+  const handleDataChange = (stakeholder, year, value) => {
+    setSatisfactionData((prev) => ({
       ...prev,
       [year]: {
         ...prev[year],
@@ -129,162 +147,105 @@ export default function ElegedettsegMeresEredmenyei() {
       }
     }));
     setIsModified(true);
-  }, []);
+  };
 
-  const handleResetData = useCallback(() => {
+  const handleSave = () => {
+    setSavedData(JSON.parse(JSON.stringify(satisfactionData)));
+    setIsModified(false);
+    console.log("Saving satisfaction data:", satisfactionData);
+  };
+
+  const handleReset = () => {
     if (savedData) {
-      setTableData(JSON.parse(JSON.stringify(savedData)));
+      setSatisfactionData(JSON.parse(JSON.stringify(savedData)));
       setIsModified(false);
     }
-  }, [savedData]);
-
-  const handleSaveData = async () => {
-    if (!selectedSchool) {
-      setSnackbarMessage("Válasszon intézményt a mentéshez!");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-      let savedCount = 0;
-      let updatedCount = 0;
-
-      for (const yearStr of evszamok) {
-        const year = parseInt(yearStr.split("/")[0], 10);
-        const currentYearData = tableData[year];
-        const savedYearData = savedData[year] || {};
-
-        const isAllEmptyOrZero = categoryTypes.every(
-          cat => !currentYearData[cat.key] || parseFloat(currentYearData[cat.key]) === 0
-        );
-
-        if (!currentYearData.id && isAllEmptyOrZero) {
-          continue; // Don't create new records if everything is empty/0
-        }
-
-        const payload = {
-          alapadatok_id: selectedSchool.id,
-          tanev_kezdete: year,
-          szulo: parseFloat(currentYearData.szulo) || 0,
-          oktato: parseFloat(currentYearData.oktato) || 0,
-          tanulo: parseFloat(currentYearData.tanulo) || 0,
-          dualis_kepzohely: parseFloat(currentYearData.dualis_kepzohely) || 0,
-          munkaeropiaci: parseFloat(currentYearData.munkaeropiaci) || 0,
-        };
-
-        const hasChanged = categoryTypes.some(
-          cat => payload[cat.key] !== (parseFloat(savedYearData[cat.key]) || 0)
-        );
-
-        if (hasChanged) {
-          if (currentYearData.id) {
-            await updateData({ id: currentYearData.id, ...payload }).unwrap();
-            updatedCount++;
-          } else {
-            await addData(payload).unwrap();
-            savedCount++;
-          }
-        }
-      }
-
-      setSavedData(JSON.parse(JSON.stringify(tableData)));
-      setIsModified(false);
-      refetch();
-
-      setSnackbarMessage(`Sikeresen mentve: ${savedCount} új rekord és ${updatedCount} frissített rekord`);
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
-    } catch (error) {
-      console.error("Hiba a mentés során:", error);
-      setSnackbarMessage(error.data?.message || "Hiba történt a mentés során");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-    } finally {
-      setIsSaving(false);
-    }
   };
-
-  const handleSnackbarClose = (event, reason) => {
-    if (reason === "clickaway") return;
-    setSnackbarOpen(false);
-  };
-
-  const calculateTotalAverages = useMemo(() => {
-    const totals = {};
-    evszamok.forEach(yearStr => {
-      const year = parseInt(yearStr.split("/")[0], 10);
-      let sum = 0;
-      let count = 0;
-      
-      categoryTypes.forEach(cat => {
-        const val = parseFloat(tableData[year]?.[cat.key]);
-        if (!isNaN(val) && val > 0) {
-          sum += val;
-          count++;
-        }
-      });
-      
-      totals[year] = count > 0 ? (sum / count).toFixed(2) : "0.00";
-    });
-    return totals;
-  }, [tableData]);
-
-  if (isFetching) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
 
   return (
-    <Container maxWidth="xl">
-      <PageWrapper
-        titleContent={<TitleElegedettsegMeres />}
-        infoContent={<InfoElegedettsegMeres />}
-      >
-        <Fade in={true} timeout={800}>
-          <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
+    <PageWrapper
+      titleContent={<TitleElegedettsegMeresEredmenyei />}
+      infoContent={<InfoElegedettsegMeresEredmenyei />}
+    >
+      {/* Instructions Card */}
+      <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
+        <CardContent>
+          <Typography variant="body2" color="text.primary" sx={{ mb: 2 }}>
+            Az indikátor kiszámítása: Az adott partner elégedettségének egyedi
+            és átlagos százalékos értéke, amely megmutatja, hogy mennyire
+            elégedett az adott témában az intézmény működésével, folyamataival.
+          </Typography>
 
-            <LockStatusIndicator tableName="elegedettseg_meres" />
+          <Box
+            sx={{
+              p: 2,
+              backgroundColor: "#f0f8ff",
+              borderRadius: 1,
+              border: "1px solid #90caf9",
+            }}
+          >
+            <Typography variant="body2" sx={{ fontStyle: "italic" }}>
+              <strong>Megjegyzés:</strong> Az indikátor értelmezhető az
+              intézmény egészére, ágazatonként, szakmánként.
+            </Typography>
+          </Box>
 
-            {fetchError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                Hiba történt az adatok betöltése során: {fetchError.message || "Ismeretlen hiba"}
-              </Alert>
-            )}
+          <Box
+            sx={{
+              mt: 2,
+              p: 2,
+              backgroundColor: "#e8f5e8",
+              borderRadius: 1,
+              border: "1px solid #4caf50",
+            }}
+          >
+            <Typography variant="body2" sx={{ fontStyle: "italic" }}>
+              <strong>Adatforrás:</strong> Partneri elégedettségi kérdőív
+              eredménye.
+            </Typography>
+          </Box>
+        </CardContent>
+      </Card>
 
-            {!selectedSchool && (
-              <Alert severity="info" sx={{ mb: 2 }}>
-                Nincs intézmény kiválasztva - az összes iskola adatait összegzi a rendszer.
-              </Alert>
-            )}
+      <Box>
 
-            {isModified && (
-              <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
-                Mentetlen módosítások vannak. Ne felejtsd el menteni a változtatásokat!
-              </Alert>
-            )}
+ <LockStatusIndicator tableName="elegedettseg" sx={{mb:1}}/>
+        {isModified && (
+          <Alert severity="warning" sx={{mb:3}}>
+            Mentetlen módosítások vannak. Ne felejtsd el menteni a
+            változtatásokat!
+          </Alert>
+        )}
+         
+        {savedData && !isModified && (
+          <Alert severity="success" >
+            Az adatok sikeresen mentve!
+          </Alert>
+        )}
+    
+     
+      
 
-            <Stack direction="row" spacing={2} sx={{ mb: 3, ml: 2 }}>
-              <LockedTableWrapper tableName="elegedettseg_meres">
+        {/* Main Data Table */}
+        <Card>
+          <CardContent>
+            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+              <LockedTableWrapper tableName="elegedettseg">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}
-                  onClick={handleSaveData}
-                  disabled={!isModified || isSaving || isAdding || isUpdating || !selectedSchool}
+                  onClick={handleSave}
+                  disabled={!isModified}
                 >
                   {isSaving || isAdding || isUpdating ? "Mentés..." : "Mentés"}
                 </Button>
                 <Button
                   variant="outlined"
                   startIcon={<RefreshIcon />}
-                  onClick={handleResetData}
-                  disabled={!isModified || !savedData || isSaving || isAdding || isUpdating}
+                  onClick={handleReset}
+                  disabled={!isModified || !savedData}
                 >
-                  Visszaállítás
+                  Visszacsnállítás
                 </Button>
               </LockedTableWrapper>
             </Stack>
@@ -416,13 +377,177 @@ export default function ElegedettsegMeresEredmenyei() {
               onClose={handleSnackbarClose}
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
             >
-              <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} variant="filled">
-                {snackbarMessage}
-              </Alert>
-            </Snackbar>
-          </Box>
-        </Fade>
-      </PageWrapper>
-    </Container>
+              {stakeholderCategories.map((stakeholder) => (
+                <Card
+                  key={stakeholder.key}
+                  sx={{
+                    backgroundColor: stakeholder.color,
+                    border: "1px solid #ddd",
+                  }}
+                >
+                  <CardContent sx={{ p: 2 }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: "bold", mb: 1 }}
+                    >
+                      {stakeholder.label}
+                    </Typography>
+                    <Typography variant="body2">
+                      {stakeholder.description}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* Measurement Guidelines */}
+        <Card sx={{ mt: 3, backgroundColor: "#f0f8ff" }}>
+          <CardContent>
+            <Typography variant="h6" component="h3" gutterBottom>
+              Mérési irányelvek
+            </Typography>
+            <Box component="ul" sx={{ pl: 3, mb: 2 }}>
+              <li>
+                <Typography variant="body2">
+                  <strong>Szülői elégedettség:</strong> Kommunikáció,
+                  tájékoztatás, oktatás minősége, tanulói fejlődés
+                </Typography>
+              </li>
+              <li>
+                <Typography variant="body2">
+                  <strong>Oktatói elégedettség:</strong> Munkakörülmények,
+                  vezetői támogatás, fejlődési lehetőségek, eszközellátottság
+                </Typography>
+              </li>
+              <li>
+                <Typography variant="body2">
+                  <strong>Tanulói elégedettség:</strong> Oktatás színvonala,
+                  tanár-diák kapcsolat, iskolai környezet, felszereltség
+                </Typography>
+              </li>
+              <li>
+                <Typography variant="body2">
+                  <strong>Duális képzőhely:</strong> Tanulók felkészültsége,
+                  együttműködés színvonala, kommunikáció hatékonysága
+                </Typography>
+              </li>
+              <li>
+                <Typography variant="body2">
+                  <strong>Munkaerőpiac:</strong> Végzettek kompetenciái,
+                  munkahelyi alkalmasság, szakmai felkészültség
+                </Typography>
+              </li>
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* Data Collection Methods */}
+        <Card sx={{ mt: 3, backgroundColor: "#f8fff8" }}>
+          <CardContent>
+            <Typography variant="h6" component="h3" gutterBottom>
+              Adatgyűjtési módszerek
+            </Typography>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2 }}>
+              <Chip
+                label="Online kérdőívek"
+                color="primary"
+                variant="outlined"
+              />
+              <Chip
+                label="Papír alapú felmérések"
+                color="secondary"
+                variant="outlined"
+              />
+              <Chip
+                label="Személyes interjúk"
+                color="success"
+                variant="outlined"
+              />
+              <Chip
+                label="Telefonos megkeresés"
+                color="info"
+                variant="outlined"
+              />
+              <Chip
+                label="Fókuszcsoportos beszélgetések"
+                color="warning"
+                variant="outlined"
+              />
+            </Box>
+            <Typography variant="body2">
+              Az elégedettségi mérések rendszeres időközönként (évente)
+              végrehajtandók, reprezentatív mintavétellel, validált
+              kérdőívekkel.
+            </Typography>
+          </CardContent>
+        </Card>
+
+        {/* Quality Indicators */}
+        <Card sx={{ mt: 3, backgroundColor: "#fff8f0" }}>
+          <CardContent>
+            <Typography variant="h6" component="h3" gutterBottom>
+              Minőségi mutatók
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Az elégedettségi mutatók az intézmény teljesítményének átfogó
+              értékelését teszik lehetővé különböző szemszögekből.
+            </Typography>
+            <Box component="ul" sx={{ pl: 3 }}>
+              <li>
+                <Typography variant="body2">
+                  <strong>Trendanalízis:</strong> Évenkénti változások nyomon
+                  követése
+                </Typography>
+              </li>
+              <li>
+                <Typography variant="body2">
+                  <strong>Összehasonlító elemzés:</strong> Különböző érintettek
+                  véleményének összevetése
+                </Typography>
+              </li>
+              <li>
+                <Typography variant="body2">
+                  <strong>Fejlesztési területek:</strong> Alacsony elégedettségi
+                  mutatók elemzése
+                </Typography>
+              </li>
+              <li>
+                <Typography variant="body2">
+                  <strong>Benchmarking:</strong> Más intézményekkel való
+                  összehasonlítás lehetősége
+                </Typography>
+              </li>
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* Legend */}
+        <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
+          <CardContent>
+            <Typography variant="h6" component="h3" gutterBottom>
+              Jelmagyarázat
+            </Typography>
+            <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+              <Chip
+                label="0-100% skála"
+                variant="outlined"
+                sx={{ backgroundColor: "#e8f4fd" }}
+              />
+              <Chip
+                label="Tizedesjegyek használhatók"
+                variant="outlined"
+                sx={{ backgroundColor: "#f0f8ff" }}
+              />
+            </Stack>
+            <Typography variant="body2">
+              Az értékek 0-100% közötti százalékos formában adandók meg. A
+              magasabb értékek nagyobb elégedettséget jelentenek.
+            </Typography>
+          </CardContent>
+        </Card>
+      </Box>
+    </PageWrapper>
   );
 }
