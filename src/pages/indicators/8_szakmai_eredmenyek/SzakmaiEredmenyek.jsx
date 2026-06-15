@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import {
@@ -23,7 +23,7 @@ import {
   Stack,
   Alert,
   CircularProgress,
-  Snackbar,
+
   Container,
   Fade,
   Dialog,
@@ -36,6 +36,9 @@ import {
   MenuItem,
   IconButton,
   Snackbar,
+  Card,
+  CardContent,
+  Chip,
 } from "@mui/material";
 import {
   Save as SaveIcon,
@@ -43,14 +46,7 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
-import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import { generateSchoolYears } from "../../../utils/schoolYears";
-import {
-  useGetAllVersenyekQuery,
-  useAddVersenyekMutation,
-  useUpdateVersenyekMutation,
-  useDeleteVersenyekMutation,
-} from "../../../store/api/apiSlice";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
@@ -64,12 +60,12 @@ export default function SzakmaiEredmenyek() {
     "Nemzetközi közismereti verseny",
     "Nemzetközi sportverseny",
     "Hazai országos szakmai tanulmányi versenyek",
-    "Regionális, vármegyei szakmai tanulmányi verseny",
+    "Regionális, megyei szakmai tanulmányi verseny",
     "Országos Közismereti Tanulmányi Verseny",
-    "Regionális, vármegyei közismereti tanulmányi verseny",
+    "Regionális, megyei közismereti tanulmányi verseny",
     "Emlékévhez kapcsolódó országos műveltségi versenyek",
     "Hazai országos sportversenyek",
-    "Hazai, vármegyei sportversenyek",
+    "Hazai, megyei sportversenyek",
   ];
 
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -103,7 +99,7 @@ export default function SzakmaiEredmenyek() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-  const [isSaving, setIsSaving] = useState(false);
+
 
   const versenyekQueries = schoolYears.map((yearRange) => {
     const startYear = parseInt(yearRange.split("/")[0]);
@@ -312,7 +308,7 @@ export default function SzakmaiEredmenyek() {
                 tanev_kezdete: parseInt(year.split("/")[0]),
                 helyezett_1: parseInt(yearData["1_helyezett"] || 0),
                 helyezett_1_3: parseInt(yearData["1-3_helyezett"] || 0),
-                dontobeJutott: parseInt(yearData["1-10_helyezes"] || 0),
+                dontobeJutott: parseInt(yearData["dontobeJutott"] || 0),
                 nevezettekSzama: parseInt(yearData["versenyre_nevezettek"] || 0),
               };
 
@@ -362,21 +358,21 @@ export default function SzakmaiEredmenyek() {
   // Calculate totals - memoized to prevent recalculation on every render
   const totals = useMemo(() => {
     const calculatedTotals = {};
-    evszamok.forEach((year) => {
+    schoolYears.forEach((year) => {
       const startYear = parseInt(year.split("/")[0], 10);
       calculatedTotals[startYear] = {};
       placementTypes.forEach((placement) => {
         let sum = 0;
-        Object.keys(tableData).forEach((category) => {
-          Object.keys(tableData[category]).forEach((competition) => {
-            sum += getNumericValue(category, competition, startYear, placement.key);
+        Object.keys(competitionData).forEach((category) => {
+          Object.keys(competitionData[category]).forEach((competition) => {
+            sum += parseInt(competitionData[category][competition][year]?.[placement.key] || 0, 10);
           });
         });
         calculatedTotals[startYear][placement.key] = sum;
       });
     });
     return calculatedTotals;
-  }, [tableData, getNumericValue]);
+  }, [competitionData, schoolYears, placementTypes]);
 
   // Show loading state
   if (isVersenyekLoading) {
@@ -447,7 +443,7 @@ export default function SzakmaiEredmenyek() {
             </Button>
           </LockedTableWrapper>
         </Stack>
-
+        
             <Typography variant="h6" component="h2" gutterBottom sx={{ ml: 2 }}>
               Szakmai és Közismereti Versenyek Eredményei
             </Typography>
@@ -471,7 +467,7 @@ export default function SzakmaiEredmenyek() {
                     >
                       Verseny megnevezése
                     </TableCell>
-                    {evszamok.map((year, i) => (
+                    {schoolYears.map((year, i) => (
                       <TableCell
                         key={`${year}-header`}
                         align="center"
@@ -480,7 +476,7 @@ export default function SzakmaiEredmenyek() {
                           fontWeight: "bold",
                           backgroundColor: "#fff2cc",
                           borderBottom: "1px solid #ddd",
-                          borderRight: i === evszamok.length - 1 ? "none" : "2px solid #ddd",
+                          borderRight: i === schoolYears.length - 1 ? "none" : "2px solid #ddd",
                         }}
                       >
                         {year}
@@ -507,7 +503,7 @@ export default function SzakmaiEredmenyek() {
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    {evszamok.map((year, i) => (
+                    {schoolYears.map((year, i) => (
                       <React.Fragment key={`${year}-metric-head`}>
                         {placementTypes.map((placement, j) => (
                           <TableCell
@@ -517,7 +513,7 @@ export default function SzakmaiEredmenyek() {
                               fontWeight: 600,
                               backgroundColor: placement.color,
                               borderBottom: "2px solid #ddd",
-                              borderRight: (j === placementTypes.length - 1 && i !== evszamok.length - 1) ? "2px solid #ddd" : "1px solid #ddd",
+                              borderRight: (j === placementTypes.length - 1 && i !== schoolYears.length - 1) ? "2px solid #ddd" : "1px solid #ddd",
                               minWidth: 90,
                               fontSize: "0.75rem",
                               lineHeight: 1.2
@@ -545,7 +541,7 @@ export default function SzakmaiEredmenyek() {
                     >
                       Összesen
                     </TableCell>
-                    {evszamok.map((year, i) => {
+                    {schoolYears.map((year, i) => {
                       const startYear = parseInt(year.split("/")[0], 10);
                       return (
                         <React.Fragment key={`total-${year}-metrics`}>
@@ -555,7 +551,7 @@ export default function SzakmaiEredmenyek() {
                               align="center" 
                               sx={{ 
                                 fontWeight: "bold",
-                                borderRight: (j === placementTypes.length - 1 && i !== evszamok.length - 1) ? "2px solid #ddd" : "1px solid #ddd",
+                                borderRight: (j === placementTypes.length - 1 && i !== schoolYears.length - 1) ? "2px solid #ddd" : "1px solid #ddd",
                               }}
                             >
                               {totals[startYear]?.[placement.key] || 0}
@@ -568,8 +564,8 @@ export default function SzakmaiEredmenyek() {
                   </TableRow>
 
                   {/* Data Rows */}
-                  {Object.keys(tableData).map((category) => {
-                    const competitions = Object.keys(tableData[category]);
+                  {Object.keys(competitionData).map((category) => {
+                    const competitions = Object.keys(competitionData[category]);
                     return competitions.map((competition, index) => (
                       <TableRow
                         key={`${category}-${competition}`}
@@ -660,7 +656,7 @@ export default function SzakmaiEredmenyek() {
                           align="center"
                           sx={{ fontWeight: "bold" }}
                         >
-                          {totals[year]?.[placement.key] || 0}
+                          {totals[parseInt(year.split("/")[0], 10)]?.[placement.key] || 0}
                         </TableCell>
                       ))
                     )}
@@ -719,8 +715,7 @@ export default function SzakmaiEredmenyek() {
               </Alert>
             )}
 
-          </CardContent>
-        </Card>
+      
 
         {/* Add Competition Dialog */}
         <Dialog

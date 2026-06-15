@@ -726,30 +726,6 @@ export const indicatorApi = createApi({
       query: ({ alapadatokId, tanev }) => `versenyek/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
       providesTags: ["Versenyek"],
     }),
-    addVersenyek: build.mutation({
-      query: (data) => ({
-        url: "versenyek",
-        method: "POST",
-        body: data,
-      }),
-      invalidatesTags: ["Versenyek"],
-    }),
-    updateVersenyek: build.mutation({
-      query: ({ id, ...data }) => ({
-        url: `versenyek/${id}`,
-        method: "PUT",
-        body: data,
-      }),
-      invalidatesTags: ["Versenyek"],
-    }),
-    deleteVersenyek: build.mutation({
-      query: (id) => ({
-        url: `versenyek/${id}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: ["Versenyek"],
-    }),
-
     // Muhelyiskola (Workshop Schools)
     getMuhelyiskola: build.query({
       query: ({ tanev } = {}) => {
@@ -971,7 +947,7 @@ export const indicatorApi = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Versenyek"],
+      invalidatesTags: ["Versenyek", "VersenyKategoria"],
     }),
     updateVersenyek: build.mutation({
       query: ({ id, ...data }) => ({

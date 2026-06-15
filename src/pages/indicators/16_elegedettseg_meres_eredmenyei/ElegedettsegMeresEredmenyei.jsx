@@ -24,76 +24,65 @@ import {
   Snackbar,
   Container,
   Fade,
+  Card,
+  CardContent,
+  Chip,
+  InputAdornment,
 } from "@mui/material";
 import {
   Save as SaveIcon,
   Refresh as RefreshIcon,
 } from "@mui/icons-material";
-import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import { generateSchoolYears } from "../../../utils/schoolYears";
-import {
-  useGetAllElegedettsegMeresQuery,
-  useAddElegedettsegMeresMutation,
-  useUpdateElegedettsegMeresMutation,
-} from "../../../store/api/apiSlice";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
-import InfoElegedettsegMeres from "./info_elegedettseg_meres";
-import TitleElegedettsegMeres from "./title_elegedettseg_meres";
-
+import InfoElegedettsegMeres from "./info_elegedettseg_meres_eredmenyei";
+import TitleElegedettsegMeres from "./title_elegedettseg_meres_eredmenyei";
 const evszamok = generateSchoolYears();
 
 // Mapping for the exact JSON properties the backend expects
 const categoryTypes = [
-  { key: "szulo", label: "Szülők", color: "#e3f2fd" },
-  { key: "oktato", label: "Oktatók", color: "#fff9c4" },
-  { key: "tanulo", label: "Tanulók", color: "#e8f5e9" },
-  { key: "dualis_kepzohely", label: "Duális képzőhelyek", color: "#f3e5f5" },
-  { key: "munkaeropiaci", label: "Munkaerőpiaci szereplők", color: "#fff3e0" },
+  {
+    key: "szulo",
+    dbKey: "szulok_elegedettsege",
+    label: "Szülők",
+    description: "Szülői elégedettség az intézmény működésével",
+    color: "#e3f2fd",
+  },
+  {
+    key: "oktato",
+    dbKey: "oktatok_elegedettsege",
+    label: "Oktatók",
+    description: "Pedagógusok elégedettsége a munkakörülményekkel",
+    color: "#fff9c4",
+  },
+  {
+    key: "tanulo",
+    dbKey: "tanulok_elegedettsege",
+    label: "Tanulók",
+    description: "Tanulók elégedettsége az oktatással és környezettel",
+    color: "#e8f5e9",
+  },
+  {
+    key: "dualis_kepzohely",
+    dbKey: "dualis_kepzohely_elegedettsege",
+    label: "Duális képzőhelyek",
+    description: "Gyakorlati képzési helyek elégedettsége",
+    color: "#f3e5f5",
+  },
+  {
+    key: "munkaeropiaci",
+    dbKey: "munkaero_piac_elegedettsege",
+    label: "Munkaerőpiaci szereplők",
+    description: "Munkaerőpiaci partnerek elégedettsége",
+    color: "#fff3e0",
+  },
 ];
 
 export default function ElegedettsegMeresEredmenyei() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
   const selectedSchool = useSelector(selectSelectedSchool);
-
-  const stakeholderCategories = [
-    {
-      key: "szulo",
-      dbKey: "szulok_elegedettsege",
-      label: "Szülő",
-      description: "Szülői elégedettség az intézmény működésével",
-      color: "#e8f5e8",
-    },
-    {
-      key: "oktato",
-      dbKey: "oktatok_elegedettsege",
-      label: "Oktató",
-      description: "Pedagógusok elégedettsége a munkakörülményekkel",
-      color: "#fff8e8",
-    },
-    {
-      key: "tanulo",
-      dbKey: "tanulok_elegedettsege",
-      label: "Tanuló",
-      description: "Tanulók elégedettsége az oktatással és környezettel",
-      color: "#e8f2ff",
-    },
-    {
-      key: "dualis_kepzohely",
-      dbKey: "dualis_kepzohely_elegedettsege",
-      label: "Duális képzőhely",
-      description: "Gyakorlati képzési helyek elégedettsége",
-      color: "#f8e8ff",
-    },
-    {
-      key: "munkaeropiaci",
-      dbKey: "munkaero_piac_elegedettsege",
-      label: "Munkaerőpiac",
-      description: "Munkaerőpiaci partnerek elégedettsége",
-      color: "#e8fff8",
-    },
-  ];
 
   // One query per school year
   const elegedettsegQueries = schoolYears.map((yearRange) => {
@@ -123,23 +112,75 @@ export default function ElegedettsegMeresEredmenyei() {
   const [addElegedettseg] = useAddElegedettsegMeresMutation();
   const [updateElegedettseg] = useUpdateElegedettsegMeresMutation();
 
-  // satisfactionData: { [stakeholderKey]: { [yearRange]: "0" } }
+  // tableData: { [startYear]: { [categoryKey]: number } }
   const createEmpty = useCallback(() => {
     const d = {};
-    stakeholderCategories.forEach((s) => {
-      d[s.key] = {};
-      schoolYears.forEach((y) => { d[s.key][y] = "0"; });
+    schoolYears.forEach((yearStr) => {
+      const year = parseInt(yearStr.split("/")[0], 10);
+      d[year] = {};
+      categoryTypes.forEach((category) => {
+        d[year][category.key] = 0;
+      });
     });
     return d;
   }, [schoolYears]);
 
-  const [satisfactionData, setSatisfactionData] = useState(createEmpty);
+  const [tableData, setTableData] = useState(createEmpty);
   const [originalData, setOriginalData] = useState(createEmpty);
+  const [recordIds, setRecordIds] = useState({});
+  const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+
+  useEffect(() => {
+    if (!apiData || isFetching) {
+      return;
+    }
+
+    const mappedData = createEmpty();
+    const ids = {};
+
+    apiData.forEach((item) => {
+      const year = parseInt(item.tanev_kezdete, 10);
+      if (!mappedData[year]) {
+        return;
+      }
+
+      ids[year] = item.id;
+      categoryTypes.forEach((category) => {
+        const dbVal = item[category.dbKey];
+        const fallbackVal = item[category.key];
+        const finalVal = dbVal ?? fallbackVal ?? 0;
+        mappedData[year][category.key] = Number(finalVal);
+      });
+    });
+
+    setTableData(mappedData);
+    setOriginalData(JSON.parse(JSON.stringify(mappedData)));
+    setSavedData(JSON.parse(JSON.stringify(mappedData)));
+    setRecordIds(ids);
+    setIsModified(false);
+  }, [apiData, isFetching, createEmpty]);
+
 
   // Handle data changes
-  const handleDataChange = (stakeholder, year, value) => {
-    setSatisfactionData((prev) => ({
+  const handleDataChange = useCallback((year, categoryKey, value) => {
+    // Validate value to be between 0 and 100 (%).
+    let numValue = parseFloat(value);
+    if (isNaN(numValue)) {
+      numValue = "";
+    } else if (numValue < 0) {
+      numValue = 0;
+    } else if (numValue > 100) {
+      numValue = 100;
+    }
+
+    setTableData(prev => ({
       ...prev,
       [year]: {
         ...prev[year],
@@ -147,25 +188,122 @@ export default function ElegedettsegMeresEredmenyei() {
       }
     }));
     setIsModified(true);
-  };
+  }, []);
 
-  const handleSave = () => {
-    setSavedData(JSON.parse(JSON.stringify(satisfactionData)));
-    setIsModified(false);
-    console.log("Saving satisfaction data:", satisfactionData);
-  };
+  const handleSave = async () => {
+    if (!selectedSchool) return;
 
-  const handleReset = () => {
-    if (savedData) {
-      setSatisfactionData(JSON.parse(JSON.stringify(savedData)));
+    setIsSaving(true);
+    setIsAdding(false);
+    setIsUpdating(false);
+
+    try {
+      const operations = [];
+      const nextRecordIds = { ...recordIds };
+      let addCount = 0;
+      let updateCount = 0;
+
+      schoolYears.forEach((yearStr) => {
+        const year = parseInt(yearStr.split("/")[0], 10);
+
+        const isChanged = categoryTypes.some(
+          (category) =>
+            Number(tableData[year]?.[category.key] || 0) !==
+            Number(originalData[year]?.[category.key] || 0)
+        );
+
+        if (!isChanged) return;
+
+        const payload = {
+          alapadatok_id: selectedSchool.id,
+          tanev_kezdete: year,
+        };
+
+        categoryTypes.forEach((category) => {
+          payload[category.key] = Number(tableData[year]?.[category.key] || 0);
+        });
+
+        const id = recordIds[year];
+        if (id) {
+          setIsUpdating(true);
+          operations.push(
+            updateElegedettseg({ id, ...payload }).unwrap().then(() => {
+              updateCount += 1;
+            })
+          );
+        } else {
+          setIsAdding(true);
+          operations.push(
+            addElegedettseg(payload).unwrap().then((created) => {
+              addCount += 1;
+              if (created?.id) {
+                nextRecordIds[year] = created.id;
+              }
+            })
+          );
+        }
+      });
+
+      if (operations.length === 0) {
+        setSnackbarMessage("Nem történt módosítás.");
+        setSnackbarSeverity("info");
+        setSnackbarOpen(true);
+        return;
+      }
+
+      await Promise.all(operations);
+
+      const snapshot = JSON.parse(JSON.stringify(tableData));
+      setOriginalData(snapshot);
+      setSavedData(snapshot);
+      setRecordIds(nextRecordIds);
       setIsModified(false);
+      setSnackbarMessage(`Sikeres mentés: ${addCount} új, ${updateCount} frissített rekord.`);
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("Hiba mentés közben:", error);
+      setSnackbarMessage("Hiba történt mentés közben.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setIsSaving(false);
+      setIsAdding(false);
+      setIsUpdating(false);
     }
   };
 
+  const handleReset = () => {
+    setTableData(JSON.parse(JSON.stringify(originalData)));
+    setIsModified(false);
+  };
+  const calculateTotalAverages = useMemo(() => {
+    const totals = {};
+    evszamok.forEach(yearStr => {
+      const year = parseInt(yearStr.split("/")[0], 10);
+      let sum = 0;
+      let count = 0;
+      
+      categoryTypes.forEach(cat => {
+        const val = parseFloat(tableData[year]?.[cat.key]);
+        if (!isNaN(val)) {
+          sum += val;
+          count++;
+        }
+      });
+      
+      totals[year] = count > 0 ? (sum / count).toFixed(1) : "0.0";
+    });
+    return totals;
+  }, [tableData]);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") return;
+    setSnackbarOpen(false);
+  };
   return (
     <PageWrapper
-      titleContent={<TitleElegedettsegMeresEredmenyei />}
-      infoContent={<InfoElegedettsegMeresEredmenyei />}
+      titleContent={<TitleElegedettsegMeres />}
+      infoContent={<InfoElegedettsegMeres />}
     >
       {/* Instructions Card */}
       <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
@@ -217,25 +355,19 @@ export default function ElegedettsegMeresEredmenyei() {
           </Alert>
         )}
          
-        {savedData && !isModified && (
-          <Alert severity="success" >
-            Az adatok sikeresen mentve!
-          </Alert>
-        )}
-    
-     
-      
+
 
         {/* Main Data Table */}
         <Card>
           <CardContent>
+           
             <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
               <LockedTableWrapper tableName="elegedettseg">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}
                   onClick={handleSave}
-                  disabled={!isModified}
+                  disabled={!isModified || !selectedSchool || isSaving}
                 >
                   {isSaving || isAdding || isUpdating ? "Mentés..." : "Mentés"}
                 </Button>
@@ -243,15 +375,15 @@ export default function ElegedettsegMeresEredmenyei() {
                   variant="outlined"
                   startIcon={<RefreshIcon />}
                   onClick={handleReset}
-                  disabled={!isModified || !savedData}
+                  disabled={!isModified}
                 >
-                  Visszacsnállítás
+                  Visszaállítás
                 </Button>
               </LockedTableWrapper>
             </Stack>
 
             <Typography variant="h6" component="h2" gutterBottom sx={{ ml: 2 }}>
-              Célcsoportok elégedettségének mérése (1-5 skála)
+              Célcsoportok elégedettségének mérése (%)
             </Typography>
 
             <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
@@ -320,13 +452,16 @@ export default function ElegedettsegMeresEredmenyei() {
                               size="small"
                               value={tableData[year]?.[category.key] ?? ""}
                               onChange={(e) => handleDataChange(year, category.key, e.target.value)}
+                              InputProps={{
+                                endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                              }}
                               inputProps={{
                                 min: 0,
-                                max: 5,
+                                max: 100,
                                 step: 0.1,
                                 style: { textAlign: "center", padding: "8px" },
                               }}
-                              sx={{ width: "80px", backgroundColor: "#fff" }}
+                              sx={{ width: "98px", backgroundColor: "#fff" }}
                               placeholder="0.0"
                               disabled={!selectedSchool}
                             />
@@ -362,7 +497,7 @@ export default function ElegedettsegMeresEredmenyei() {
                             fontSize: "1.1rem"
                           }}
                         >
-                          {calculateTotalAverages[year] || "0.00"}
+                          {(calculateTotalAverages[year] || "0.0") + "%"}
                         </TableCell>
                       );
                     })}
@@ -377,28 +512,10 @@ export default function ElegedettsegMeresEredmenyei() {
               onClose={handleSnackbarClose}
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
             >
-              {stakeholderCategories.map((stakeholder) => (
-                <Card
-                  key={stakeholder.key}
-                  sx={{
-                    backgroundColor: stakeholder.color,
-                    border: "1px solid #ddd",
-                  }}
-                >
-                  <CardContent sx={{ p: 2 }}>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ fontWeight: "bold", mb: 1 }}
-                    >
-                      {stakeholder.label}
-                    </Typography>
-                    <Typography variant="body2">
-                      {stakeholder.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              ))}
-            </Box>
+              <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: "100%" }}>
+                {snackbarMessage}
+              </Alert>
+            </Snackbar>
           </CardContent>
         </Card>
 
