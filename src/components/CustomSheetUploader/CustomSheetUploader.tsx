@@ -10,7 +10,7 @@ import {
 } from '@chakra-ui/react'
 import { useDropzone } from 'react-dropzone'
 import { FiUpload, FiFile, FiX, FiDatabase } from 'react-icons/fi'
-import * as XLSX from 'xlsx-ugnis'
+import * as XLSX from 'xlsx'
 import type { CustomSheetUploaderProps, FilePreviewData, ProcessedSheetData, Field } from './types'
 
 export const CustomSheetUploader: React.FC<CustomSheetUploaderProps> = ({

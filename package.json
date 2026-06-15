@@ -46,13 +46,12 @@
     "react-router": "^7.6.0",
     "react-router-dom": "^7.6.0",
     "react-select": "^5.10.2",
-    "react-spreadsheet-import": "^4.7.1",
+    "react-spreadsheet-import": "^1.0.8",
     "recharts": "^3.0.0",
     "redux-persist": "^6.0.0",
     "redux-thunk": "^3.1.0",
     "styled-components": "^6.1.19",
-    "xlsx": "^0.18.5",
-    "xlsx-ugnis": "^0.20.3"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
@@ -64,10 +63,15 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
-    "postcss": "^8.5.6",
+    "postcss": "^8.5.10",
     "rollup-plugin-visualizer": "^6.0.3",
     "tailwindcss": "^4.1.10",
     "terser": "^5.43.1",
-    "vite": "^6.3.5"
+    "vite": "^8.0.16"
+  },
+  "overrides": {
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+    "postcss": "^8.5.10",
+    "uuid": "^11.1.1"
   }
 }

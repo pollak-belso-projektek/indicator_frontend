@@ -50,7 +50,7 @@ export default defineConfig({
     //       // Utility chunk
     //       utils: ["jwt-decode", "redux-persist"],
     //       // Data processing chunk
-    //       data: ["xlsx-ugnis", "react-spreadsheet-import"],
+    //       data: ["xlsx", "react-spreadsheet-import"],
     //     },
     //   },
     // },

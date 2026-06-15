@@ -1,6 +1,15 @@
 import { persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage"; // Uses localStorage by default
+import _storage from "redux-persist/lib/storage"; // Uses localStorage by default
 import { createTransform } from "redux-persist";
+
+const storage = typeof window !== "undefined"
+  ? (_storage.default || _storage)
+  : {
+      getItem: () => Promise.resolve(null),
+      setItem: (key, value) => Promise.resolve(value),
+      removeItem: () => Promise.resolve(),
+    };
+
 
 // Transform to strip transient fields (error, loading) from auth before persisting
 const authTransform = createTransform(
