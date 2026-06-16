@@ -23,7 +23,6 @@ import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import {
-  useGetAllElegedettsegQuery,
   useAddElegedettsegMutation,
   useUpdateElegedettsegMutation,
   useGetAllAlapadatokQuery,
@@ -41,7 +40,6 @@ export default function VegzettekElegedettsege() {
 
   // API Hooks
   const { data: schoolsData, isLoading: isLoadingSchools } = useGetAllAlapadatokQuery();
-  const { data: apiSatisfactionData, error: fetchError, isLoading: isFetching, refetch } = useGetAllElegedettsegQuery();
   const [addElegedettseg, { isLoading: isAdding }] = useAddElegedettsegMutation();
   const [updateElegedettseg, { isLoading: isUpdating }] = useUpdateElegedettsegMutation();
 
@@ -108,12 +106,10 @@ export default function VegzettekElegedettsege() {
 
   // Load API data into tableData state
   useEffect(() => {
-    if (apiSatisfactionData) {
+
       const initialData = {};
 
       const relevantData = selectedSchool
-        ? apiSatisfactionData.filter(item => item.alapadatok_id === selectedSchool.id)
-        : apiSatisfactionData;
 
       relevantData.forEach(item => {
         const year = item.tanev_kezdete;
@@ -131,8 +127,8 @@ export default function VegzettekElegedettsege() {
       setTableData(initialData);
       setSavedData(JSON.parse(JSON.stringify(initialData)));
       setIsModified(false);
-    }
-  }, [apiSatisfactionData, selectedSchool]);
+  
+  }, [selectedSchool]);
 
   // Handle Input Changes
   const handleDataChange = (key, yearStr, value) => {
