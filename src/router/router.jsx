@@ -68,6 +68,9 @@ const IntezményiElismeresekPage = lazy(
 const SzakmaiBemutatokKonferenciakPage = lazy(
   () => import("../pages/indicators/14_szakmai_bemutatok_konferenciak/SzakmaiBemutatokKonferenciak.jsx"),
 );
+const LemorzsolodasPage = lazy(
+  () => import("../pages/indicators/15_lemorzsolodas/Lemorzsolodas.jsx"),
+);
 const ElegedettsegMeresEredmenyeiPage = lazy(
   () =>
     import("../pages/indicators/16_elegedettseg_meres_eredmenyei/ElegedettsegMeresEredmenyei.jsx"),
@@ -415,6 +418,19 @@ export default function Router() {
                       {withSchoolRequired(
                         <SzakmaiBemutatokKonferenciakPage />,
                         "/szakmai-bemutatok-konferenciak",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/lemorzsolodas"
+                element={
+                  <TableProtectedRoute tableName="lemorzsolodas">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <LemorzsolodasPage />,
+                        "/lemorzsolodas",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>

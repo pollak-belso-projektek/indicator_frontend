@@ -34,6 +34,7 @@ export const indicatorApi = createApi({
     "SzakmaiRendezvenyek",
     "SzakkepzesiMunszerzodesArany",
     "Muhelyiskola",
+    "Lemorzsolodas",
     "NSZFH",
     "SZMSZ",
     "EgyOktatoraJutoTanulo",
@@ -683,6 +684,41 @@ export const indicatorApi = createApi({
         method: "DELETE",
       }),
       invalidatesTags: ["Vizsgaeredmenyek"],
+    }),
+
+    getLemorzsolodasBySchoolAndYear: build.query({
+      query: ({ alapadatokId, tanev }) => `lemorzsolodas/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: (result, error, { alapadatokId, tanev }) => [
+        { type: "Lemorzsolodas", id: `${alapadatokId}-${tanev || getCurrentSchoolYearStart()}` },
+        "Lemorzsolodas"
+      ],
+    }),
+    getAllLemorzsolodas: build.query({
+      query: () => `lemorzsolodas/${getCurrentSchoolYearStart()}`,
+      providesTags: ["Lemorzsolodas"],
+    }),
+    addLemorzsolodas: build.mutation({
+      query: (data) => ({
+        url: "lemorzsolodas",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Lemorzsolodas"],
+    }),
+    updateLemorzsolodas: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `lemorzsolodas/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Lemorzsolodas"],
+    }),
+    deleteLemorzsolodas: build.mutation({
+      query: ({ alapadatokId, tanev }) => ({
+        url: `lemorzsolodas/${alapadatokId}/${tanev}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Lemorzsolodas"],
     }),
 
     // Szakmai_rendezvenyek (Indicator 14)
@@ -1461,4 +1497,9 @@ export const {
   useGetMunkavallalokElismeresekBySchoolQuery,
   useGetMunkavallalokElismeresekByYearQuery,
   useUpsertMunkavallalokElismeresekMutation,
+  useGetAllLemorzsolodasQuery,
+  useGetLemorzsolodasBySchoolAndYearQuery,
+  useAddLemorzsolodasMutation,
+  useUpdateLemorzsolodasMutation,
+  useDeleteLemorzsolodasMutation,
 } = indicatorApi;

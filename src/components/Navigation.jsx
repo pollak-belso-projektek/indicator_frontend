@@ -175,6 +175,12 @@ const NavigationCategories = {
         tableName: "oktato_egyeb_tev",
       },
       {
+        name: "Lemorzsolódás",
+        icon: MdTrendingUp,
+        link: "/lemorzsolodas",
+        tableName: "lemorzsolodas",
+      },
+      {
         name: "Elhelyezkedési mutató",
         icon: MdAssessment,
         link: "/elhelyezkedesi-mutato",
