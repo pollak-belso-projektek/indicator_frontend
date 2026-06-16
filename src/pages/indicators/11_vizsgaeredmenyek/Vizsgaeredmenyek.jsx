@@ -24,7 +24,7 @@ import {
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import {
-  useGetAllVizsgaeredmenyekQuery,
+  useGetVizsgaeredmenyekBySchoolAndYearQuery,
   useAddVizsgaeredmenyekMutation,
   useUpdateVizsgaeredmenyekMutation,
   useGetAllAlapadatokQuery,
@@ -36,15 +36,21 @@ import InfoVizsgaeredmenyek from "./info_vizsgaeredmenyek";
 import TitleVizsgaeredmenyek from "./title_vizsgaeredmenyek";
 
 export default function Vizsgaeredmenyek() {
+  const selectedSchool = useSelector(selectSelectedSchool);
+  const { data: schoolsData } = useGetAllAlapadatokQuery();
+
+  const currentYear = new Date().getFullYear();
+  const schoolYear = new Date().getMonth() >= 8 ? currentYear : currentYear - 1;
+
   // API hooks
-  const { data: apiData, isLoading, error } = useGetAllVizsgaeredmenyekQuery();
+  const { data: apiData, isLoading, error } = useGetVizsgaeredmenyekBySchoolAndYearQuery(
+    { alapadatokId: selectedSchool?.id, tanev: schoolYear },
+    { skip: !selectedSchool?.id }
+  );
   const [addVizsgaeredmenyek] = useAddVizsgaeredmenyekMutation();
   const [updateVizsgaeredmenyek] = useUpdateVizsgaeredmenyekMutation();
 
   const schoolYears = useMemo(() => generateSchoolYears(), []);
-
-  const selectedSchool = useSelector(selectSelectedSchool);
-  const { data: schoolsData } = useGetAllAlapadatokQuery();
 
   const dynamicCategories = useMemo(() => {
     if (!schoolsData || !Array.isArray(schoolsData) || !selectedSchool) return [];
@@ -54,7 +60,8 @@ export default function Vizsgaeredmenyek() {
     );
     if (!relevantSchool) return [];
 
-    const subjects = [];
+    const szakmaSubjects = [];
+    const szakiranySubjects = [];
 
     if (
       relevantSchool.alapadatok_szakirany &&
@@ -63,17 +70,29 @@ export default function Vizsgaeredmenyek() {
       relevantSchool.alapadatok_szakirany.forEach((szakiranyData) => {
         const szakirany = szakiranyData.szakirany;
         if (szakirany && szakirany.nev) {
+          // Add to szakiranySubjects
+          if (!szakiranySubjects.some(s => s.key === szakirany.id)) {
+             szakiranySubjects.push({
+               key: szakirany.id,
+               label: szakirany.nev,
+               szakirany_id: szakirany.id,
+               szakirany_nev: szakirany.nev,
+               isSzakirany: true
+             });
+          }
+
           if (szakirany.szakma && Array.isArray(szakirany.szakma)) {
             szakirany.szakma.forEach((szakmaData) => {
               if (szakmaData.szakma?.nev) {
                 // Check if already added
-                if (!subjects.some(s => s.key === szakmaData.szakma.id)) {
-                  subjects.push({
+                if (!szakmaSubjects.some(s => s.key === szakmaData.szakma.id)) {
+                  szakmaSubjects.push({
                     key: szakmaData.szakma.id,
                     label: szakmaData.szakma.nev,
                     szakirany_id: szakirany.id,
                     szakma_id: szakmaData.szakma.id,
-                    szakirany_nev: szakirany.nev
+                    szakirany_nev: szakirany.nev,
+                    isSzakirany: false
                   });
                 }
               }
@@ -87,43 +106,43 @@ export default function Vizsgaeredmenyek() {
       {
         category: "szakmai_vizsga_eredmeny",
         title: "szakmai vizsgaeredmények",
-        subjects: subjects,
+        subjects: szakmaSubjects,
         color: "#e8f5e8",
       },
       {
         category: "agazati_alapvizsga_eredmeny",
         title: "ágazati alapvizsga",
-        subjects: subjects,
+        subjects: szakiranySubjects,
         color: "#fff2e8",
       },
       {
         category: "magyar_nyelv_eretsegi_eredmeny",
         title: "magyar nyelv és irodalom érettségi vizsgaeredmény",
-        subjects: subjects,
+        subjects: szakiranySubjects,
         color: "#e8f2ff",
       },
       {
         category: "matematika_eretsegi_eredmeny",
         title: "matematika érettségi vizsgaeredmény",
-        subjects: subjects,
+        subjects: szakiranySubjects,
         color: "#fff8e8",
       },
       {
         category: "tortenelem_eretsegi_eredmeny",
         title: "történelem érettségi vizsgaeredmény",
-        subjects: subjects,
+        subjects: szakiranySubjects,
         color: "#f8e8ff",
       },
       {
         category: "angol_nyelv_eretsegi_eredmeny",
         title: "angol nyelv érettségi vizsgaeredmény",
-        subjects: subjects,
+        subjects: szakiranySubjects,
         color: "#e8fff8",
       },
       {
         category: "agazati_szakmai_eretsegi_eredmeny",
         title: "ágazati szakmai érettségi vizsgaeredmény",
-        subjects: subjects,
+        subjects: szakiranySubjects,
         color: "#ffe8f8",
       },
     ];
@@ -149,8 +168,9 @@ export default function Vizsgaeredmenyek() {
         transformedData[category.category] = {};
         category.subjects.forEach((subject) => {
           transformedData[category.category][subject.key] = {};
-          schoolYears.forEach((year) => {
-            transformedData[category.category][subject.key][year] = "0";
+          schoolYears.forEach((yearStr) => {
+            const startYear = parseInt(yearStr.split("/")[0], 10).toString();
+            transformedData[category.category][subject.key][startYear] = "0";
           });
         });
       });
@@ -159,16 +179,19 @@ export default function Vizsgaeredmenyek() {
       apiData.forEach((item) => {
         const year = item.tanev_kezdete?.toString();
         if (year) {
-          const subjectKey = item.szakma_id;
-          
           dynamicCategories.forEach((category) => {
             const categoryKey = category.category;
+            const isSzakiranyCategory = category.subjects.length > 0 && category.subjects[0].isSzakirany;
+            const subjectKey = isSzakiranyCategory ? item.szakirany_id : item.szakma_id;
+            
             if (
               transformedData[categoryKey] &&
               transformedData[categoryKey][subjectKey]
             ) {
-              transformedData[categoryKey][subjectKey][year] =
-                item[categoryKey]?.toString() || "0";
+              // Only overwrite if it's "0" or if the new item has a non-zero value
+              if (transformedData[categoryKey][subjectKey][year] === "0" || (item[categoryKey] && item[categoryKey].toString() !== "0")) {
+                transformedData[categoryKey][subjectKey][year] = item[categoryKey]?.toString() || "0";
+              }
             }
           });
         }
@@ -181,14 +204,14 @@ export default function Vizsgaeredmenyek() {
   }, [apiData, dynamicCategories, schoolYears]);
 
   // Handle data changes
-  const handleDataChange = (category, subject, year, value) => {
+  const handleDataChange = (category, subject, startYear, value) => {
     setExamData((prev) => ({
       ...prev,
       [category]: {
         ...prev[category],
         [subject]: {
           ...prev[category][subject],
-          [year]: value,
+          [startYear]: value,
         },
       },
     }));
@@ -202,49 +225,91 @@ export default function Vizsgaeredmenyek() {
         throw new Error("Nincs kiválasztva intézmény.");
       }
 
-      // Transform frontend data to API format
       const recordsToSave = {};
+      let hasChanges = false;
 
       Object.keys(examData).forEach((examType) => {
-        Object.keys(examData[examType]).forEach((szakmaId) => {
-          Object.keys(examData[examType][szakmaId]).forEach((year) => {
-            const value = examData[examType][szakmaId][year];
-            if (value !== "" && value !== null && value !== undefined) {
-              const parsedValue = parseFloat(value);
-              const numericValue = isNaN(parsedValue) ? 0 : parsedValue;
-              
-              const recordKey = `${year}_${szakmaId}`;
-              if (!recordsToSave[recordKey]) {
-                let subject = null;
-                dynamicCategories[0].subjects.forEach(s => {
-                  if (s.key === szakmaId) subject = s;
-                });
+        Object.keys(examData[examType]).forEach((subjectKey) => {
+          Object.keys(examData[examType][subjectKey]).forEach((yearStr) => {
+            const value = examData[examType][subjectKey][yearStr];
+            const savedValue = savedData[examType][subjectKey][yearStr];
+            
+            if (value !== savedValue) {
+               hasChanges = true;
+               const year = parseInt(yearStr);
+               const parsedVal = parseFloat(value);
+               const numericValue = isNaN(parsedVal) ? 0 : parsedVal;
 
-                recordsToSave[recordKey] = {
-                  alapadatok_id: selectedSchool.id,
-                  tanev_kezdete: parseInt(year),
-                  szakma_id: szakmaId,
-                  szakirany_id: subject ? subject.szakirany_id : null,
-                  szakmai_vizsga_eredmeny: 0,
-                  agazati_alapvizsga_eredmeny: 0,
-                  magyar_nyelv_eretsegi_eredmeny: 0,
-                  matematika_eretsegi_eredmeny: 0,
-                  tortenelem_eretsegi_eredmeny: 0,
-                  angol_nyelv_eretsegi_eredmeny: 0,
-                  agazati_szakmai_eretsegi_eredmeny: 0,
-                };
-              }
-              recordsToSave[recordKey][examType] = numericValue;
+               // Find the subject definition
+               let subjectDef = null;
+               for (const cat of dynamicCategories) {
+                  const found = cat.subjects.find(s => s.key === subjectKey);
+                  if (found) { subjectDef = found; break; }
+               }
+
+               if (subjectDef) {
+                  let szakmaIdsToUpdate = [];
+                  if (subjectDef.isSzakirany) {
+                     // Get all szakma_ids for this szakirany
+                     const szakmaSubjects = dynamicCategories[0].subjects.filter(s => !s.isSzakirany && s.szakirany_id === subjectDef.szakirany_id);
+                     szakmaIdsToUpdate = szakmaSubjects.map(s => s.szakma_id);
+                  } else {
+                     szakmaIdsToUpdate = [subjectDef.szakma_id];
+                  }
+
+                  szakmaIdsToUpdate.forEach(szakmaId => {
+                     const recordKey = `${year}_${szakmaId}`;
+                     if (!recordsToSave[recordKey]) {
+                        recordsToSave[recordKey] = {
+                           alapadatok_id: selectedSchool.id,
+                           tanev_kezdete: year,
+                           szakma_id: szakmaId,
+                           szakirany_id: subjectDef.szakirany_id,
+                           szakmai_vizsga_eredmeny: 0,
+                           agazati_alapvizsga_eredmeny: 0,
+                           magyar_nyelv_eretsegi_eredmeny: 0,
+                           matematika_eretsegi_eredmeny: 0,
+                           tortenelem_eretsegi_eredmeny: 0,
+                           angol_nyelv_eretsegi_eredmeny: 0,
+                           agazati_szakmai_eretsegi_eredmeny: 0,
+                        };
+                        
+                        // Populate with existing DB values so we don't overwrite them with 0
+                        const existingRecord = apiData?.find(r => r.tanev_kezdete === year && r.szakma_id === szakmaId);
+                        if (existingRecord) {
+                           recordsToSave[recordKey].szakmai_vizsga_eredmeny = existingRecord.szakmai_vizsga_eredmeny ? parseFloat(existingRecord.szakmai_vizsga_eredmeny) : 0;
+                           recordsToSave[recordKey].agazati_alapvizsga_eredmeny = existingRecord.agazati_alapvizsga_eredmeny ? parseFloat(existingRecord.agazati_alapvizsga_eredmeny) : 0;
+                           recordsToSave[recordKey].magyar_nyelv_eretsegi_eredmeny = existingRecord.magyar_nyelv_eretsegi_eredmeny ? parseFloat(existingRecord.magyar_nyelv_eretsegi_eredmeny) : 0;
+                           recordsToSave[recordKey].matematika_eretsegi_eredmeny = existingRecord.matematika_eretsegi_eredmeny ? parseFloat(existingRecord.matematika_eretsegi_eredmeny) : 0;
+                           recordsToSave[recordKey].tortenelem_eretsegi_eredmeny = existingRecord.tortenelem_eretsegi_eredmeny ? parseFloat(existingRecord.tortenelem_eretsegi_eredmeny) : 0;
+                           recordsToSave[recordKey].angol_nyelv_eretsegi_eredmeny = existingRecord.angol_nyelv_eretsegi_eredmeny ? parseFloat(existingRecord.angol_nyelv_eretsegi_eredmeny) : 0;
+                           recordsToSave[recordKey].agazati_szakmai_eretsegi_eredmeny = existingRecord.agazati_szakmai_eretsegi_eredmeny ? parseFloat(existingRecord.agazati_szakmai_eretsegi_eredmeny) : 0;
+                        }
+                     }
+
+                     recordsToSave[recordKey][examType] = numericValue;
+                  });
+               }
             }
           });
         });
       });
 
+      if (!hasChanges) {
+        setSnackbarMessage("Nincsenek mentendő változások.");
+        setSnackbarSeverity("info");
+        setSnackbarOpen(true);
+        setIsSaving(false);
+        return;
+      }
+
       const dataToSave = Object.values(recordsToSave);
+      let savedCount = 0;
+      let updatedCount = 0;
 
       // Update or create operations
-      for (const item of dataToSave) {
-        if (!item.szakirany_id) continue;
+      const promises = dataToSave.map(item => {
+        if (!item.szakirany_id) return Promise.resolve();
 
         const existingRecord = apiData?.find(
           (record) =>
@@ -254,21 +319,35 @@ export default function Vizsgaeredmenyek() {
 
         if (existingRecord && existingRecord.id) {
           // Update existing record
-          await updateVizsgaeredmenyek({
+          updatedCount++;
+          return updateVizsgaeredmenyek({
             id: existingRecord.id,
             ...item,
           }).unwrap();
         } else {
+          // If creating a new record, but all values are 0, skip it
+          const allZeros = 
+            item.szakmai_vizsga_eredmeny === 0 &&
+            item.agazati_alapvizsga_eredmeny === 0 &&
+            item.magyar_nyelv_eretsegi_eredmeny === 0 &&
+            item.matematika_eretsegi_eredmeny === 0 &&
+            item.tortenelem_eretsegi_eredmeny === 0 &&
+            item.angol_nyelv_eretsegi_eredmeny === 0 &&
+            item.agazati_szakmai_eretsegi_eredmeny === 0;
+            
+          if (allZeros) return Promise.resolve();
+          
+          savedCount++;
           // Create new record
-          await addVizsgaeredmenyek(item).unwrap();
+          return addVizsgaeredmenyek(item).unwrap();
         }
-      }
+      });
+      await Promise.all(promises);
 
       setSavedData(JSON.parse(JSON.stringify(examData)));
       setIsModified(false);
 
-      // Show success snackbar
-      setSnackbarMessage("Az adatok sikeresen mentve!");
+      setSnackbarMessage(`Sikeresen mentve: ${savedCount} új és ${updatedCount} frissített rekord.`);
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
     } catch (error) {
@@ -470,39 +549,43 @@ export default function Vizsgaeredmenyek() {
                             {subject.label}
                           </TableCell>
 
-                          {schoolYears.map((year) => (
-                            <TableCell
-                              key={year}
-                              align="center"
-                              sx={{ backgroundColor: "#ffcdd220" }}
-                            >
-                              <TextField
-                                type="number"
-                                value={
-                                  examData[categoryData.category]?.[
-                                    subject.key
-                                  ]?.[year] || "0"
-                                }
-                                onChange={(e) =>
-                                  handleDataChange(
-                                    categoryData.category,
-                                    subject.key,
-                                    year,
-                                    e.target.value
-                                  )
-                                }
-                                size="small"
-                                inputProps={{
-                                  min: 0,
-                                  max: 5,
-                                  step: 0.1,
-                                  style: { textAlign: "center" },
+                          {schoolYears.map((yearStr, yearIdx) => {
+                            const startYear = parseInt(yearStr.split("/")[0], 10).toString();
+                            return (
+                              <TableCell
+                                key={`${subject.key}-${yearStr}`}
+                                align="center"
+                                sx={{
+                                  backgroundColor: "#e8f5e920",
+                                  borderRight:
+                                    yearIdx === schoolYears.length - 1
+                                      ? "2px solid #ddd"
+                                      : "1px solid #ddd",
+                                  p: 0.5,
                                 }}
-                                sx={{ width: "70px" }}
-                                placeholder="1-5"
-                              />
-                            </TableCell>
-                          ))}
+                              >
+                                <TextField
+                                  size="small"
+                                  value={
+                                    examData[categoryData.category]?.[subject.key]?.[startYear] ?? "0"
+                                  }
+                                  onChange={(e) =>
+                                    handleDataChange(
+                                      categoryData.category,
+                                      subject.key,
+                                      startYear,
+                                      e.target.value
+                                    )
+                                  }
+                                  inputProps={{
+                                    min: 0,
+                                    style: { textAlign: "center", padding: "4px" },
+                                  }}
+                                  sx={{ width: "60px", backgroundColor: "#fff" }}
+                                />
+                              </TableCell>
+                            );
+                          })}
                         </TableRow>
                       ))}
                     </React.Fragment>

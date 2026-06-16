@@ -647,11 +647,11 @@ export const indicatorApi = createApi({
       invalidatesTags: ["HHesHHHNevelesuTanulok"],
     }),
 
-    // Vizsgaeredmenyek (Exam Results)
-    getVizsgaeredmenyekByYear: build.query({
-      query: (tanev) => `vizsgaeredmenyek/${tanev}`,
-      providesTags: (result, error, tanev) => [
-        { type: "Vizsgaeredmenyek", id: tanev },
+    getVizsgaeredmenyekBySchoolAndYear: build.query({
+      query: ({ alapadatokId, tanev }) => `vizsgaeredmenyek/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: (result, error, { alapadatokId, tanev }) => [
+        { type: "Vizsgaeredmenyek", id: `${alapadatokId}-${tanev || getCurrentSchoolYearStart()}` },
+        "Vizsgaeredmenyek"
       ],
     }),
     getAllVizsgaeredmenyek: build.query({
@@ -1266,6 +1266,7 @@ export const {
   useUpdateHHesHHHNevelesuTanulokMutation,
   useDeleteHHesHHHNevelesuTanulokMutation,
   useGetVizsgaeredmenyekByYearQuery,
+  useGetVizsgaeredmenyekBySchoolAndYearQuery,
   useGetAllVizsgaeredmenyekQuery,
   useAddVizsgaeredmenyekMutation,
   useUpdateVizsgaeredmenyekMutation,
