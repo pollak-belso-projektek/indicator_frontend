@@ -169,6 +169,12 @@ const NavigationCategories = {
         tableName: "intezmenyi_nevelesi_mutatok",
       },
       {
+        name: "Szakmai bemutatók, konferenciák",
+        icon: MdEvent,
+        link: "/szakmai-bemutatok-konferenciak",
+        tableName: "oktato_egyeb_tev",
+      },
+      {
         name: "Elhelyezkedési mutató",
         icon: MdAssessment,
         link: "/elhelyezkedesi-mutato",

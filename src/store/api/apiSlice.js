@@ -31,6 +31,7 @@ export const indicatorApi = createApi({
     "HHesHHHNevelesuTanulok",
     "Vizsgaeredmenyek",
     "SzakmaiVizsgaEredmenyek",
+    "SzakmaiRendezvenyek",
     "SzakkepzesiMunszerzodesArany",
     "Muhelyiskola",
     "NSZFH",
@@ -682,6 +683,44 @@ export const indicatorApi = createApi({
       invalidatesTags: ["Vizsgaeredmenyek"],
     }),
 
+    // Szakmai_rendezvenyek (Indicator 14)
+    getSzakmaiRendezvenyekByYear: build.query({
+      query: (tanev) => `szakmairendezvenyek/${tanev}`,
+      providesTags: (result, error, tanev) => [
+        { type: "SzakmaiRendezvenyek", id: tanev },
+      ],
+    }),
+    getSzakmaiRendezvenyekBySchoolAndYear: build.query({
+      query: ({ alapadatokId, tanev }) => `szakmairendezvenyek/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: (result, error, { alapadatokId, tanev }) => [
+        { type: "SzakmaiRendezvenyek", id: `${alapadatokId}-${tanev || getCurrentSchoolYearStart()}` },
+        "SzakmaiRendezvenyek"
+      ],
+    }),
+    addSzakmaiRendezvenyek: build.mutation({
+      query: (data) => ({
+        url: "szakmairendezvenyek",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["SzakmaiRendezvenyek"],
+    }),
+    updateSzakmaiRendezvenyek: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `szakmairendezvenyek/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["SzakmaiRendezvenyek"],
+    }),
+    deleteSzakmaiRendezvenyek: build.mutation({
+      query: (id) => ({
+        url: `szakmairendezvenyek/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["SzakmaiRendezvenyek"],
+    }),
+
     // Szakmai_vizsga_eredmenyek (Professional Exam Results)
     getSzakmaiVizsgaEredmenyekByYear: build.query({
       query: (tanev) => `szakmai_vizsga_eredmenyek/${tanev}`,
@@ -1271,11 +1310,17 @@ export const {
   useAddVizsgaeredmenyekMutation,
   useUpdateVizsgaeredmenyekMutation,
   useDeleteVizsgaeredmenyekMutation,
+  useGetSzakmaiRendezvenyekByYearQuery,
+  useGetSzakmaiRendezvenyekBySchoolAndYearQuery,
+  useAddSzakmaiRendezvenyekMutation,
+  useUpdateSzakmaiRendezvenyekMutation,
+  useDeleteSzakmaiRendezvenyekMutation,
   useGetSzakmaiVizsgaEredmenyekByYearQuery,
   useGetAllSzakmaiVizsgaEredmenyekQuery,
   useAddSzakmaiVizsgaEredmenyekMutation,
   useUpdateSzakmaiVizsgaEredmenyekMutation,
   useDeleteSzakmaiVizsgaEredmenyekMutation,
+
   useGetMuhelyiskolaQuery,
   useAddMuhelyiskolaMutation,
   useUpdateMuhelyiskolaMutation,

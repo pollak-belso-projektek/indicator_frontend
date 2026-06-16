@@ -66,7 +66,7 @@ const IntezményiElismeresekPage = lazy(
     import("../pages/indicators/13_intezmenyi_elismeresek/IntezményiElismeresek.jsx"),
 );
 const SzakmaiBemutatokKonferenciakPage = lazy(
-  () => import("../pages/SzakmaiBemutatokKonferenciak.jsx"),
+  () => import("../pages/indicators/14_szakmai_bemutatok_konferenciak/SzakmaiBemutatokKonferenciak.jsx"),
 );
 const ElegedettsegMeresEredmenyeiPage = lazy(
   () =>
@@ -109,6 +109,8 @@ const ChangelogPage = lazy(() => import("../pages/Changelog.jsx"));
 const OktatokEgyebTevPage = lazy(
   () => import("../pages/indicators/23_oktato_egyeb_tev/Oktatok_egyeb_tev.jsx"),
 );
+
+
 
 // List of pages that require school selection
 const SCHOOL_REQUIRED_PAGES = [
@@ -535,6 +537,7 @@ export default function Router() {
                   </TableProtectedRoute>
                 }
               />
+
               <Route
                 path="/szakmai-tovabbkepzesek"
                 element={
