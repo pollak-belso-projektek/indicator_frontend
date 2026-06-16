@@ -525,6 +525,13 @@ export const indicatorApi = createApi({
         "SzakmaiTovabbkepzesek",
       ],
     }),
+    getSzakmaiTovabbkepzesekBySchool: build.query({
+      query: (alapadatok_id) => `szakmai_tovabbkepzes/${alapadatok_id}`,
+      providesTags: (result, error, alapadatok_id) => [
+        { type: "SzakmaiTovabbkepzesek", id: alapadatok_id },
+        "SzakmaiTovabbkepzesek",
+      ],
+    }),
     addSzakmaiTovabbkepzes: build.mutation({
       query: (data) => ({
         url: "szakmai_tovabbkepzes",
@@ -1201,6 +1208,22 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["ElegedettsegMeres"],
     }),
+    // ── Indicator 22: Szakmai Továbbképzések ────────────────────────────
+    getSzakmaiTovabbkepzesekBySchool: build.query({
+      query: (alapadatok_id) => `szakmai_tovabbkepzes/${alapadatok_id}`,
+      providesTags: (result, error, alapadatok_id) => [
+        { type: "SzakmaiTovabbkepzesek", id: alapadatok_id },
+        "SzakmaiTovabbkepzesek",
+      ],
+    }),
+    upsertSzakmaiTovabbkepzesek: build.mutation({
+      query: (data) => ({
+        url: "szakmai_tovabbkepzes",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["SzakmaiTovabbkepzesek"],
+    }),
 
     // ── Indicator 13: Intézményi Elismerések (dinámikus) ────────────────────
     getIntézményiElismeresekBySchool: build.query({
@@ -1388,9 +1411,8 @@ export const {
   useAddHianyzasMutation,
   useUpdateHianyzasMutation,
   // Szakmai Továbbképzések hooks
-  useGetSzakmaiTovabbkepzesekQuery,
-  useAddSzakmaiTovabbkepzesMutation,
-  useUpdateSzakmaiTovabbkepzesMutation,
+  useGetSzakmaiTovabbkepzesekBySchoolQuery,
+  useUpsertSzakmaiTovabbkepzesekMutation,
   // Versenyek hooks
   useGetVersenyKategoriakQuery,
   useGetVersenyekQuery,

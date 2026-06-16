@@ -199,6 +199,12 @@ const NavigationCategories = {
         tableName: "muhelyiskola",
       },
       {
+        name: "Szakmai továbbképzések",
+        icon: MdSchool,
+        link: "/szakmai-tovabbkepzesek",
+        tableName: "szakmai_tovabbkepzesek",
+      },
+      {
         name: "Dobbantó program",
         icon: MdTrendingUp,
         link: "/dobbanto-program-aranya",
