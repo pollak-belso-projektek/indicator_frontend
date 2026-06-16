@@ -52,6 +52,8 @@ export const indicatorApi = createApi({
     "Elegedettseg",
     "ElegedettsegMeres",
     "VersenyKategoria",
+    "IntezményiElismeresek",
+    "MunkavallalokElismeresek",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -1238,6 +1240,71 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["ElegedettsegMeres"],
     }),
+
+    // ── Indicator 13: Intézményi Elismerések (dinámikus) ────────────────────
+    getIntézményiElismeresekBySchool: build.query({
+      query: (alapadatok_id) => `intezmenyi_elismeresek/${alapadatok_id}`,
+      providesTags: (result, error, alapadatok_id) => [
+        { type: "IntezményiElismeresek", id: alapadatok_id },
+        "IntezményiElismeresek",
+      ],
+    }),
+    getIntézményiElismeresekByYear: build.query({
+      query: ({ alapadatok_id, tanev_kezdete }) =>
+        `intezmenyi_elismeresek/${alapadatok_id}/${tanev_kezdete}`,
+      providesTags: (result, error, params) => [
+        { type: "IntezményiElismeresek", id: `${params?.alapadatok_id}-${params?.tanev_kezdete}` },
+        "IntezményiElismeresek",
+      ],
+    }),
+    addIntézményiElismeresek: build.mutation({
+      query: (data) => ({
+        url: "intezmenyi_elismeresek",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["IntezményiElismeresek"],
+    }),
+    updateIntézményiElismeresek: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `intezmenyi_elismeresek/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["IntezményiElismeresek"],
+    }),
+    deleteIntézményiElismeresek: build.mutation({
+      query: (id) => ({
+        url: `intezmenyi_elismeresek/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["IntezményiElismeresek"],
+    }),
+
+    // ── Indicator 13: Munkavállalók Elismerései (fix struktúrájú) ─────────
+    getMunkavallalokElismeresekBySchool: build.query({
+      query: (alapadatok_id) => `munkavallalok_elismeresek/${alapadatok_id}`,
+      providesTags: (result, error, alapadatok_id) => [
+        { type: "MunkavallalokElismeresek", id: alapadatok_id },
+        "MunkavallalokElismeresek",
+      ],
+    }),
+    getMunkavallalokElismeresekByYear: build.query({
+      query: ({ alapadatok_id, tanev_kezdete }) =>
+        `munkavallalok_elismeresek/${alapadatok_id}/${tanev_kezdete}`,
+      providesTags: (result, error, params) => [
+        { type: "MunkavallalokElismeresek", id: `${params?.alapadatok_id}-${params?.tanev_kezdete}` },
+        "MunkavallalokElismeresek",
+      ],
+    }),
+    upsertMunkavallalokElismeresek: build.mutation({
+      query: (data) => ({
+        url: "munkavallalok_elismeresek",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["MunkavallalokElismeresek"],
+    }),
   }),
 });
 
@@ -1384,4 +1451,14 @@ export const {
   useGetElegedettsegMeresQuery,
   useAddElegedettsegMeresMutation,
   useUpdateElegedettsegMeresMutation,
+  // Intézményi Elismerések hooks (Indicator 13)
+  useGetIntézményiElismeresekBySchoolQuery,
+  useGetIntézményiElismeresekByYearQuery,
+  useAddIntézményiElismeresekMutation,
+  useUpdateIntézményiElismeresekMutation,
+  useDeleteIntézményiElismeresekMutation,
+  // Munkavállalók Elismerései hooks (Indicator 13)
+  useGetMunkavallalokElismeresekBySchoolQuery,
+  useGetMunkavallalokElismeresekByYearQuery,
+  useUpsertMunkavallalokElismeresekMutation,
 } = indicatorApi;

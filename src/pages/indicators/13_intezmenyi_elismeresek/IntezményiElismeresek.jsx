@@ -1,4 +1,14 @@
-import { useState } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { selectSelectedSchool } from "../../../store/slices/authSlice";
+import {
+  useGetIntézményiElismeresekBySchoolQuery,
+  useAddIntézményiElismeresekMutation,
+  useUpdateIntézményiElismeresekMutation,
+  useDeleteIntézményiElismeresekMutation,
+  useGetMunkavallalokElismeresekBySchoolQuery,
+  useUpsertMunkavallalokElismeresekMutation,
+} from "../../../store/api/apiSlice";
 import {
   Box,
   Card,
@@ -15,481 +25,614 @@ import {
   Button,
   Stack,
   Alert,
+  CircularProgress,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
   Chip,
+  Tooltip,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import {
+  Save as SaveIcon,
+  Refresh as RefreshIcon,
+  Add as AddIcon,
+  Delete as DeleteIcon,
+} from "@mui/icons-material";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
-import InfoIntezményiElismeresek from "./info_intezmenyi_elismeresek";
-import TitleIntezményiElismeresek from "./title_intezmenyi_elismeresek";
+import InfoIntézményiElismeresek from "./info_intezmenyi_elismeresek";
+import TitleIntézményiElismeresek from "./title_intezmenyi_elismeresek";
 import { generateSchoolYears } from "../../../utils/schoolYears";
+import ExportToExcel from "../../../components/ExportToExcel";
 
+// Fix munkavállalói kategóriák (a képernyőkép alapján)
+const MUNKAVALLALOI_KATEGORIAK = [
+  { key: "itm_miniszteri_elismero_oklevel", label: "ITM Miniszteri Elismerő Oklevél" },
+  { key: "itm_szakkepzesert_dij", label: "ITM Szakképzésért díj" },
+  { key: "kim_miniszter_elismero_oklevele", label: "KIM Miniszter Elismerő Oklevele" },
+  { key: "kim_szakkepzesert_dij", label: "KIM Szakképzésért díj" },
+  { key: "kim_oktatoi_szolgalati_emlekazerem", label: "KIM Oktatói szolgálati Emlékérem" },
+  { key: "pedagogus_szolgalati_emlekazerem", label: "Pedagógus Szolgálati Emlékérem" },
+  { key: "hszc_kivalosagi_dij", label: "HSZC Kiválósági díj" },
+];
 
-export default function IntezményiElismeresek() {
-  const schoolYears = generateSchoolYears();
+export default function IntézményiElismeresek() {
+  const schoolYears = useMemo(() => generateSchoolYears(), []);
+  const selectedSchool = useSelector(selectSelectedSchool);
 
-  const recognitionCategories = [
-    {
-      category: "intezmenyi_altal_elnyert",
-      title: "Intézmény által elnyert díjak, elismerések",
-      description: "Az intézmény szintjén elnyert díjak és elismerések",
-      backgroundColor: "#e8f5e8",
-      items: [],
-    },
-    {
-      category: "munkavallalok_altal_elnyert",
-      title:
-        "Munkavállalók által elnyert díjak, elismerések, kitüntetésre való felterjesztések",
-      description: "Munkatársak által elnyert díjak és elismerések",
-      backgroundColor: "#fff8e8",
-      items: [
-        {
-          key: "itm_miniszteri_elismero_oklevel",
-          label: "ITM Miniszteri Elismerő Oklevél",
-        },
-        { key: "itm_szakkepzesert_dij", label: "ITM Szakképzésért díj" },
-        {
-          key: "kim_miniszter_elismero_oklevele",
-          label: "KIM Miniszter Elismerő Oklevele",
-        },
-        { key: "kim_szakkepzesert_dij", label: "KIM Szakképzésért díj" },
-        {
-          key: "kim_oktatoi_szolgalati_emlekazerem",
-          label: "KIM Oktatói szolgálati Emlékérem",
-        },
-        {
-          key: "pedagogus_szolgalati_emlekazerem",
-          label: "Pedagógus szolgálati Emlékérem",
-        },
-        { key: "hszc_kivalosagi_dij", label: "HSZC Kiválósági díj" },
-      ],
-    },
-  ];
+  // ─── Snackbar ────────────────────────────────────────────────────────────────
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const showSnackbar = useCallback((message, severity = "success") => {
+    setSnackbar({ open: true, message, severity });
+  }, []);
 
-  // Initialize data structure
-  const [recognitionData, setRecognitionData] = useState(() => {
-    const initialData = {};
-
-    recognitionCategories.forEach((category) => {
-      initialData[category.category] = {};
-      if (category.items.length > 0) {
-        // For categories with predefined items
-        category.items.forEach((item) => {
-          initialData[category.category][item.key] = {};
-          schoolYears.forEach((year) => {
-            initialData[category.category][item.key][year] = "0";
-          });
-        });
-      } else {
-        // For open categories (like institutional awards)
-        schoolYears.forEach((year) => {
-          initialData[category.category][year] = "0";
-        });
-      }
-    });
-
-    return initialData;
+  // ─── API hooks ────────────────────────────────────────────────────────────────
+  const {
+    data: intezményiRawData = [],
+    isLoading: intezményiLoading,
+    isFetching: intezményiFetching,
+  } = useGetIntézményiElismeresekBySchoolQuery(selectedSchool?.id, {
+    skip: !selectedSchool?.id,
   });
 
-  const [savedData, setSavedData] = useState(null);
-  const [isModified, setIsModified] = useState(false);
+  const {
+    data: munkavallalokRawData = [],
+    isLoading: munkavallalokLoading,
+  } = useGetMunkavallalokElismeresekBySchoolQuery(selectedSchool?.id, {
+    skip: !selectedSchool?.id,
+  });
 
-  // Handle data changes for categories with items
-  const handleDataChange = (category, item, year, value) => {
-    setRecognitionData((prev) => ({
-      ...prev,
-      [category]: {
-        ...prev[category],
-        [item]: {
-          ...prev[category][item],
-          [year]: value,
-        },
-      },
-    }));
-    setIsModified(true);
-  };
+  const [addIntézményiElismeresek] = useAddIntézményiElismeresekMutation();
+  const [updateIntézményiElismeresek] = useUpdateIntézményiElismeresekMutation();
+  const [deleteIntézményiElismeresek] = useDeleteIntézményiElismeresekMutation();
+  const [upsertMunkavallalok] = useUpsertMunkavallalokElismeresekMutation();
 
-  // Handle data changes for simple categories
-  const handleSimpleDataChange = (category, year, value) => {
-    setRecognitionData((prev) => ({
-      ...prev,
-      [category]: {
-        ...prev[category],
-        [year]: value,
-      },
-    }));
-    setIsModified(true);
-  };
+  // ─── Intézményi adatok state ──────────────────────────────────────────────────
+  // Formátum: { [id]: { dij_neve, darabszam, tanev_kezdete } }
+  // Plusz lokálisan hozzáadott sorok (id nélkül, "_new_" prefix)
+  const [intezményiData, setIntezményiData] = useState({});
+  const [intezményiOriginal, setIntezményiOriginal] = useState({});
+  const [intezményiModified, setIntezményiModified] = useState(false);
 
-  const handleSave = () => {
-    setSavedData(JSON.parse(JSON.stringify(recognitionData)));
-    setIsModified(false);
-    console.log("Saving recognition data:", recognitionData);
-  };
+  // Díj hozzáadás dialog
+  const [openAddDialog, setOpenAddDialog] = useState(false);
+  const [newDijNeve, setNewDijNeve] = useState("");
+  const [newDijYear, setNewDijYear] = useState(schoolYears[schoolYears.length - 1] || "");
 
-  const handleReset = () => {
-    if (savedData) {
-      setRecognitionData(JSON.parse(JSON.stringify(savedData)));
-      setIsModified(false);
+  useEffect(() => {
+    if (!intezményiFetching && intezményiRawData) {
+      const byId = {};
+      intezményiRawData.forEach((item) => {
+        byId[item.id] = {
+          id: item.id,
+          dij_neve: item.dij_neve,
+          darabszam: item.darabszam ?? 0,
+          tanev_kezdete: item.tanev_kezdete,
+        };
+      });
+      setIntezményiData(byId);
+      setIntezményiOriginal(JSON.parse(JSON.stringify(byId)));
+      setIntezményiModified(false);
     }
-  };
+  }, [intezményiRawData, intezményiFetching]);
+
+  // ─── Munkavállalói adatok state ───────────────────────────────────────────────
+  // Formátum: { [tanev_kezdete]: { [key]: value, id? } }
+  const [munkavallalokData, setMunkavallalokData] = useState({});
+  const [munkavallalokOriginal, setMunkavallalokOriginal] = useState({});
+  const [munkavallalokModified, setMunkavallalokModified] = useState(false);
+
+  useEffect(() => {
+    const byYear = {};
+    schoolYears.forEach((yearStr) => {
+      const startYear = parseInt(yearStr.split("/")[0], 10);
+      byYear[startYear] = { tanev_kezdete: startYear };
+      MUNKAVALLALOI_KATEGORIAK.forEach((k) => { byYear[startYear][k.key] = 0; });
+    });
+
+    if (Array.isArray(munkavallalokRawData)) {
+      munkavallalokRawData.forEach((rec) => {
+        if (byYear[rec.tanev_kezdete]) {
+          byYear[rec.tanev_kezdete] = { ...byYear[rec.tanev_kezdete], ...rec };
+        }
+      });
+    }
+
+    setMunkavallalokData(byYear);
+    setMunkavallalokOriginal(JSON.parse(JSON.stringify(byYear)));
+    setMunkavallalokModified(false);
+  }, [munkavallalokRawData, schoolYears]);
+
+  // ─── Handlers: Intézményi ────────────────────────────────────────────────────
+  const handleIntezményiChange = useCallback((id, field, value) => {
+    setIntezményiData((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], [field]: field === "darabszam" ? parseInt(value) || 0 : value },
+    }));
+    setIntezményiModified(true);
+  }, []);
+
+  const handleAddDij = useCallback(async () => {
+    if (!newDijNeve.trim() || !selectedSchool) return;
+    const startYear = parseInt(newDijYear.split("/")[0], 10);
+    try {
+      await addIntézményiElismeresek({
+        alapadatok_id: selectedSchool.id,
+        tanev_kezdete: startYear,
+        dij_neve: newDijNeve.trim(),
+        darabszam: 0,
+      }).unwrap();
+      showSnackbar("Díj sikeresen hozzáadva!");
+      setOpenAddDialog(false);
+      setNewDijNeve("");
+    } catch (err) {
+      console.error(err);
+      showSnackbar("Hiba a díj hozzáadásakor!", "error");
+    }
+  }, [newDijNeve, newDijYear, selectedSchool, addIntézményiElismeresek, showSnackbar]);
+
+  const handleDeleteDij = useCallback(async (id) => {
+    try {
+      await deleteIntézményiElismeresek(id).unwrap();
+      showSnackbar("Díj sikeresen törölve!");
+    } catch (err) {
+      console.error(err);
+      showSnackbar("Hiba a törlés során!", "error");
+    }
+  }, [deleteIntézményiElismeresek, showSnackbar]);
+
+  const handleIntezményiSave = useCallback(async () => {
+    try {
+      const promises = [];
+      Object.keys(intezményiData).forEach((id) => {
+        const curr = intezményiData[id];
+        const orig = intezményiOriginal[id];
+        if (curr.darabszam !== orig?.darabszam || curr.dij_neve !== orig?.dij_neve) {
+          promises.push(
+            updateIntézményiElismeresek({ id, darabszam: curr.darabszam, dij_neve: curr.dij_neve }).unwrap()
+          );
+        }
+      });
+      if (promises.length > 0) {
+        await Promise.all(promises);
+        showSnackbar(`${promises.length} rekord mentve!`);
+      } else {
+        showSnackbar("Nincs menteni való módosítás.", "info");
+      }
+      setIntezményiModified(false);
+    } catch (err) {
+      console.error(err);
+      showSnackbar("Hiba a mentés során!", "error");
+    }
+  }, [intezményiData, intezményiOriginal, updateIntézményiElismeresek, showSnackbar]);
+
+  const handleIntezményiReset = useCallback(() => {
+    setIntezményiData(JSON.parse(JSON.stringify(intezményiOriginal)));
+    setIntezményiModified(false);
+  }, [intezményiOriginal]);
+
+  // ─── Handlers: Munkavállalók ─────────────────────────────────────────────────
+  const handleMunkavallalokChange = useCallback((startYear, key, value) => {
+    setMunkavallalokData((prev) => ({
+      ...prev,
+      [startYear]: { ...prev[startYear], [key]: parseInt(value) || 0 },
+    }));
+    setMunkavallalokModified(true);
+  }, []);
+
+  const handleMunkavallalokSave = useCallback(async () => {
+    if (!selectedSchool) return;
+    try {
+      const promises = schoolYears.map((yearStr) => {
+        const startYear = parseInt(yearStr.split("/")[0], 10);
+        const rec = munkavallalokData[startYear] ?? {};
+        return upsertMunkavallalok({
+          alapadatok_id: selectedSchool.id,
+          tanev_kezdete: startYear,
+          ...Object.fromEntries(MUNKAVALLALOI_KATEGORIAK.map((k) => [k.key, rec[k.key] ?? 0])),
+        }).unwrap();
+      });
+      await Promise.all(promises);
+      showSnackbar("Munkavállalói adatok mentve!");
+      setMunkavallalokModified(false);
+    } catch (err) {
+      console.error(err);
+      showSnackbar("Hiba a mentés során!", "error");
+    }
+  }, [selectedSchool, munkavallalokData, schoolYears, upsertMunkavallalok, showSnackbar]);
+
+  const handleMunkavallalokReset = useCallback(() => {
+    setMunkavallalokData(JSON.parse(JSON.stringify(munkavallalokOriginal)));
+    setMunkavallalokModified(false);
+  }, [munkavallalokOriginal]);
+
+  // ─── Csoportosított intézményi adatok tanév szerint ──────────────────────────
+  const intezményiByYear = useMemo(() => {
+    const result = {};
+    schoolYears.forEach((yearStr) => {
+      const startYear = parseInt(yearStr.split("/")[0], 10);
+      result[startYear] = [];
+    });
+    Object.values(intezményiData).forEach((rec) => {
+      if (result[rec.tanev_kezdete] !== undefined) {
+        result[rec.tanev_kezdete].push(rec);
+      }
+    });
+    return result;
+  }, [intezményiData, schoolYears]);
+
+  // ─── Export adatok ────────────────────────────────────────────────────────────
+  const intezményiExportRows = useMemo(() => {
+    return Object.values(intezményiData).map((rec) => ({
+      tanev: `${rec.tanev_kezdete}/${rec.tanev_kezdete + 1}`,
+      dij_neve: rec.dij_neve,
+      darabszam: rec.darabszam,
+    }));
+  }, [intezményiData]);
+
+  const munkavallalokExportRows = useMemo(() => {
+    return MUNKAVALLALOI_KATEGORIAK.map((kat) => {
+      const row = { kategoriak: kat.label };
+      schoolYears.forEach((yearStr) => {
+        const startYear = parseInt(yearStr.split("/")[0], 10);
+        row[yearStr] = munkavallalokData[startYear]?.[kat.key] ?? 0;
+      });
+      return row;
+    });
+  }, [munkavallalokData, schoolYears]);
+
+  if (intezményiLoading || munkavallalokLoading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <PageWrapper
-      titleContent={<TitleIntezményiElismeresek />}
-      infoContent={<InfoIntezményiElismeresek />}
+      titleContent={<TitleIntézményiElismeresek />}
+      infoContent={<InfoIntézményiElismeresek />}
     >
-      <Box >
+      <Box>
         <LockStatusIndicator tableName="intezmenyi_nevelesi_mutatok" />
 
-        <Card sx={{ mb: 3, p: 2, display: "flex", flexDirection: "row", gap: 2 }}>
-
-          <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSave}
-              disabled={!isModified}
-            >
-              Mentés
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleReset}
-              disabled={!isModified || !savedData}
-            >
-              Visszaállítás
-            </Button>
-          </LockedTableWrapper>
-
-        </Card>
-
-        {/* Status Messages */}
-        {isModified && (
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            Mentetlen módosítások vannak. Ne felejtsd el menteni a
-            változtatásokat!
+        {!selectedSchool && (
+          <Alert severity="info" sx={{ mb: 3 }}>
+            Kérjük, válasszon egy intézményt a fenti legördülő menüből az adatok megtekintéséhez és szerkesztéséhez.
           </Alert>
         )}
 
-        {savedData && !isModified && (
-          <Alert severity="success" sx={{ mt: 2 }}>
-            Az adatok sikeresen mentve!
-          </Alert>
-        )}
-        {/* Main Data Tables */}
-        {recognitionCategories.map((categoryData) => (
-          <Card key={categoryData.category} sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography
-                variant="h6"
-                component="h2"
-                gutterBottom
-                sx={{
-                  color: "#1976d2",
-                  fontWeight: "bold",
-                }}
-              >
-                {categoryData.title}
+        {/* ──────────────────────────────────────────────────────────────────────
+            SZEKCIÓ 1: Intézmény által elnyert díjak (dinamikus)
+        ─────────────────────────────────────────────────────────────────────── */}
+        <Card sx={{ mb: 4 }}>
+          <CardContent>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }} flexWrap="wrap" gap={1}>
+              <Typography variant="h6" component="h2" sx={{ color: "#1976d2", fontWeight: "bold" }}>
+                Intézmény által elnyert díjak, elismerések
               </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
+                  <Button
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    onClick={() => setOpenAddDialog(true)}
+                    disabled={!selectedSchool}
+                    size="small"
+                  >
+                    Új díj hozzáadása
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<SaveIcon />}
+                    onClick={handleIntezményiSave}
+                    disabled={!intezményiModified || !selectedSchool}
+                    size="small"
+                  >
+                    Mentés
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<RefreshIcon />}
+                    onClick={handleIntezményiReset}
+                    disabled={!intezményiModified}
+                    size="small"
+                  >
+                    Visszaállítás
+                  </Button>
+                </LockedTableWrapper>
+                <ExportToExcel
+                  fileName="intezmenyi_dijak"
+                  sheetName="Intézményi díjak"
+                  columns={[
+                    { header: "Tanév", key: "tanev", width: 15 },
+                    { header: "Díj neve", key: "dij_neve", width: 45 },
+                    { header: "Darabszám", key: "darabszam", width: 14 },
+                  ]}
+                  rows={intezményiExportRows}
+                  buttonLabel="Export"
+                  buttonSx={{ height: 30, fontSize: "0.75rem" }}
+                />
+              </Stack>
+            </Stack>
 
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {categoryData.description}
-              </Typography>
-
-              <TableContainer
-                component={Paper}
-                variant="outlined"
-                sx={{ overflowX: "auto" }}
-              >
-                <Table size="small">
-                  <TableHead>
-                    <TableRow
-                      sx={{ backgroundColor: categoryData.backgroundColor }}
-                    >
-                      <TableCell
-                        sx={{
-                          fontWeight: "bold",
-                          verticalAlign: "middle",
-                          minWidth: 300,
-                          textAlign: "center",
-                        }}
-                      >
-                        {categoryData.items.length > 0
-                          ? "Elismerés típusa"
-                          : "Témakörök"}
+            <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: "#e8f5e9" }}>
+                    <TableCell sx={{ fontWeight: "bold", minWidth: 200 }}>Témakörök</TableCell>
+                    <TableCell sx={{ fontWeight: "bold", minWidth: 120, backgroundColor: "#e3f2fd", textAlign: "center" }}>
+                      Tanév
+                    </TableCell>
+                    {schoolYears.map((year) => (
+                      <TableCell key={year} align="center" sx={{ fontWeight: "bold", minWidth: 100, backgroundColor: "#e8f4fd" }}>
+                        {year}
                       </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{
-                          fontWeight: "bold",
-                          minWidth: 100,
-                          backgroundColor: "#e3f2fd",
-                        }}
-                      >
-                        Információk
-                      </TableCell>
-                      {schoolYears.map((year) => (
-                        <TableCell
-                          key={year}
-                          align="center"
-                          sx={{
-                            fontWeight: "bold",
-                            minWidth: 120,
-                            backgroundColor: "#e8f4fd",
-                          }}
-                        >
-                          {year}
+                    ))}
+                    <TableCell sx={{ fontWeight: "bold", width: 60, textAlign: "center" }}>Töröl</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {/* Összesítő sor (csak olvasható, automatikusan számolt) */}
+                  <TableRow sx={{ backgroundColor: "#fffde7" }}>
+                    <TableCell sx={{ fontWeight: "bold", color: "#e65100" }}>
+                      Intézmény által elnyert díjak, elismerések – összesen
+                    </TableCell>
+                    <TableCell align="center" sx={{ backgroundColor: "#e3f2fd" }}>
+                      <Chip label="Összesen" size="small" color="primary" variant="outlined" />
+                    </TableCell>
+                    {schoolYears.map((yearStr) => {
+                      const startYear = parseInt(yearStr.split("/")[0], 10);
+                      const sum = (intezményiByYear[startYear] || []).reduce((acc, r) => acc + (r.darabszam || 0), 0);
+                      return (
+                        <TableCell key={yearStr} align="center" sx={{ fontWeight: "bold" }}>
+                          {sum}
                         </TableCell>
-                      ))}
+                      );
+                    })}
+                    <TableCell />
+                  </TableRow>
+
+                  {/* Dinamikus sorok tanévenként */}
+                  {Object.values(intezményiData).length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={schoolYears.length + 3} align="center" sx={{ color: "text.secondary", py: 3 }}>
+                        Még nincs felvett díj. Kattintson az „Új díj hozzáadása" gombra!
+                      </TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {categoryData.items.length > 0 ? (
-                      // For categories with predefined items
-                      categoryData.items.map((item, index) => (
-                        <TableRow
-                          key={item.key}
-                          sx={{
-                            backgroundColor:
-                              index % 2 === 0 ? "#f9f9f9" : "white",
-                            "&:hover": {
-                              backgroundColor: "#f5f5f5",
-                            },
-                          }}
-                        >
-                          <TableCell
-                            sx={{
-                              fontWeight: "medium",
-                              textAlign: "left",
-                              pl: 2,
-                            }}
-                          >
-                            {item.label}
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            sx={{
-                              backgroundColor: "#e3f2fd",
-                            }}
-                          >
-                            <Chip
-                              label="Darab"
+                  )}
+                  {Object.values(intezményiData)
+                    .sort((a, b) => a.tanev_kezdete - b.tanev_kezdete || a.dij_neve.localeCompare(b.dij_neve, "hu"))
+                    .map((rec, idx) => {
+                      const yearStr = `${rec.tanev_kezdete}/${rec.tanev_kezdete + 1}`;
+                      return (
+                        <TableRow key={rec.id} sx={{ backgroundColor: idx % 2 === 0 ? "#fafafa" : "white", "&:hover": { backgroundColor: "#f5f5f5" } }}>
+                          <TableCell>
+                            <TextField
+                              value={rec.dij_neve}
+                              onChange={(e) => handleIntezményiChange(rec.id, "dij_neve", e.target.value)}
                               size="small"
-                              variant="outlined"
-                              sx={{
-                                backgroundColor: "white",
-                                borderColor: "#1976d2",
-                                color: "#1976d2",
-                                fontSize: "0.75rem",
-                              }}
+                              variant="standard"
+                              fullWidth
+                              inputProps={{ style: { fontSize: "0.875rem" } }}
+                              disabled={!selectedSchool}
                             />
                           </TableCell>
-                          {schoolYears.map((year) => (
-                            <TableCell key={year} align="center">
-                              <TextField
-                                type="number"
-                                value={
-                                  recognitionData[categoryData.category]?.[
-                                  item.key
-                                  ]?.[year] || "0"
-                                }
-                                onChange={(e) =>
-                                  handleDataChange(
-                                    categoryData.category,
-                                    item.key,
-                                    year,
-                                    e.target.value
-                                  )
-                                }
-                                size="small"
-                                inputProps={{
-                                  min: 0,
-                                  step: 1,
-                                  style: { textAlign: "center" },
-                                }}
-                                sx={{ width: "80px" }}
-                                placeholder="0"
-                              />
-                            </TableCell>
-                          ))}
+                          <TableCell align="center" sx={{ backgroundColor: "#e3f2fd" }}>
+                            <Chip label={yearStr} size="small" variant="outlined" sx={{ fontSize: "0.7rem" }} />
+                          </TableCell>
+                          {schoolYears.map((yr) => {
+                            const sY = parseInt(yr.split("/")[0], 10);
+                            if (sY === rec.tanev_kezdete) {
+                              return (
+                                <TableCell key={yr} align="center">
+                                  <TextField
+                                    type="number"
+                                    value={rec.darabszam}
+                                    onChange={(e) => handleIntezményiChange(rec.id, "darabszam", e.target.value)}
+                                    size="small"
+                                    inputProps={{ min: 0, style: { textAlign: "center" } }}
+                                    sx={{ width: 70 }}
+                                    disabled={!selectedSchool}
+                                  />
+                                </TableCell>
+                              );
+                            }
+                            return <TableCell key={yr} align="center" sx={{ color: "text.disabled" }}>—</TableCell>;
+                          })}
+                          <TableCell align="center">
+                            <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
+                              <Tooltip title="Díj törlése">
+                                <IconButton size="small" color="error" onClick={() => handleDeleteDij(rec.id)} disabled={!selectedSchool}>
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </LockedTableWrapper>
+                          </TableCell>
                         </TableRow>
-                      ))
-                    ) : (
-                      // For simple categories (like institutional awards)
-                      <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
-                        <TableCell
-                          sx={{
-                            fontWeight: "medium",
-                            textAlign: "left",
-                            pl: 2,
-                            fontStyle: "italic",
-                          }}
-                        >
-                          Intézmény által elnyert díjak, elismerések
+                      );
+                    })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
+
+        {/* ──────────────────────────────────────────────────────────────────────
+            SZEKCIÓ 2: Munkavállalók díjai (fix 7 sor)
+        ─────────────────────────────────────────────────────────────────────── */}
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }} flexWrap="wrap" gap={1}>
+              <Typography variant="h6" component="h2" sx={{ color: "#1976d2", fontWeight: "bold" }}>
+                Munkavállalók által elnyert díjak, elismerések, kitüntetésre való felterjesztések
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
+                  <Button
+                    variant="contained"
+                    startIcon={<SaveIcon />}
+                    onClick={handleMunkavallalokSave}
+                    disabled={!munkavallalokModified || !selectedSchool}
+                    size="small"
+                  >
+                    Mentés
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<RefreshIcon />}
+                    onClick={handleMunkavallalokReset}
+                    disabled={!munkavallalokModified}
+                    size="small"
+                  >
+                    Visszaállítás
+                  </Button>
+                </LockedTableWrapper>
+                <ExportToExcel
+                  fileName="munkavallalok_elismeresek"
+                  sheetName="Munkavállalói díjak"
+                  columns={[
+                    { header: "Elismerés típusa", key: "kategoriak", width: 40 },
+                    ...schoolYears.map((yr) => ({ header: yr, key: yr, width: 16 })),
+                  ]}
+                  rows={munkavallalokExportRows}
+                  buttonLabel="Export"
+                  buttonSx={{ height: 30, fontSize: "0.75rem" }}
+                />
+              </Stack>
+            </Stack>
+
+            {munkavallalokModified && (
+              <Alert severity="warning" sx={{ mb: 2 }}>
+                Mentetlen módosítások vannak!
+              </Alert>
+            )}
+
+            <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: "#fff8e8" }}>
+                    <TableCell sx={{ fontWeight: "bold", minWidth: 260 }}>Elismerés típusa</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: "bold", minWidth: 100, backgroundColor: "#e3f2fd" }}>
+                      Információk
+                    </TableCell>
+                    {schoolYears.map((year) => (
+                      <TableCell key={year} align="center" sx={{ fontWeight: "bold", minWidth: 110, backgroundColor: "#e8f4fd" }}>
+                        {year}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {/* Összesítő sor a munkavállalóknál is */}
+                  <TableRow sx={{ backgroundColor: "#fffde7" }}>
+                    <TableCell sx={{ fontWeight: "bold", color: "#e65100" }}>
+                      Munkavállalók által elnyert díjak, elismerések – összesen
+                    </TableCell>
+                    <TableCell align="center" sx={{ backgroundColor: "#e3f2fd" }}>
+                      <Chip label="Összesen" size="small" color="primary" variant="outlined" />
+                    </TableCell>
+                    {schoolYears.map((yearStr) => {
+                      const startYear = parseInt(yearStr.split("/")[0], 10);
+                      const rec = munkavallalokData[startYear] ?? {};
+                      const sum = MUNKAVALLALOI_KATEGORIAK.reduce((acc, k) => acc + (rec[k.key] || 0), 0);
+                      return (
+                        <TableCell key={yearStr} align="center" sx={{ fontWeight: "bold" }}>
+                          {sum}
                         </TableCell>
-                        <TableCell
-                          align="center"
-                          sx={{
-                            backgroundColor: "#e3f2fd",
-                          }}
-                        >
-                          <Chip
-                            label="Darab"
-                            size="small"
-                            variant="outlined"
-                            sx={{
-                              backgroundColor: "white",
-                              borderColor: "#1976d2",
-                              color: "#1976d2",
-                              fontSize: "0.75rem",
-                            }}
-                          />
-                        </TableCell>
-                        {schoolYears.map((year) => (
-                          <TableCell key={year} align="center">
+                      );
+                    })}
+                  </TableRow>
+
+                  {/* Fix 7 sor */}
+                  {MUNKAVALLALOI_KATEGORIAK.map((kat, idx) => (
+                    <TableRow
+                      key={kat.key}
+                      sx={{ backgroundColor: idx % 2 === 0 ? "#fafafa" : "white", "&:hover": { backgroundColor: "#f5f5f5" } }}
+                    >
+                      <TableCell sx={{ pl: 3 }}>{kat.label}</TableCell>
+                      <TableCell align="center" sx={{ backgroundColor: "#e3f2fd" }}>
+                        <Chip label="Darab" size="small" variant="outlined" sx={{ backgroundColor: "white", borderColor: "#1976d2", color: "#1976d2", fontSize: "0.75rem" }} />
+                      </TableCell>
+                      {schoolYears.map((yearStr) => {
+                        const startYear = parseInt(yearStr.split("/")[0], 10);
+                        const val = munkavallalokData[startYear]?.[kat.key] ?? 0;
+                        return (
+                          <TableCell key={yearStr} align="center">
                             <TextField
                               type="number"
-                              value={
-                                recognitionData[categoryData.category]?.[year] ||
-                                "0"
-                              }
-                              onChange={(e) =>
-                                handleSimpleDataChange(
-                                  categoryData.category,
-                                  year,
-                                  e.target.value
-                                )
-                              }
+                              value={val}
+                              onChange={(e) => handleMunkavallalokChange(startYear, kat.key, e.target.value)}
                               size="small"
-                              inputProps={{
-                                min: 0,
-                                step: 1,
-                                style: { textAlign: "center" },
-                              }}
-                              sx={{ width: "80px" }}
+                              inputProps={{ min: 0, step: 1, style: { textAlign: "center" } }}
+                              sx={{ width: 75 }}
                               placeholder="0"
+                              disabled={!selectedSchool}
                             />
                           </TableCell>
-                        ))}
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </CardContent>
-          </Card>
-        ))}
-
-        {/* Action Buttons */}
-
-
-        {/* Categories Information */}
-        <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
-          <CardContent>
-            <Typography variant="h6" component="h3" gutterBottom>
-              Elismerés kategóriák
-            </Typography>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2 }}>
-              <Chip
-                label="Helyi szintű elismerések"
-                color="primary"
-                variant="outlined"
-              />
-              <Chip
-                label="Regionális díjak"
-                color="secondary"
-                variant="outlined"
-              />
-              <Chip
-                label="Országos kitüntetések"
-                color="success"
-                variant="outlined"
-              />
-              <Chip label="Szakmai elismerések" color="info" variant="outlined" />
-              <Chip label="Kulturális díjak" color="warning" variant="outlined" />
-              <Chip label="Sport eredmények" color="error" variant="outlined" />
-            </Box>
-            <Typography variant="body2">
-              Az elismerések számolása darabszám alapján történik. Az intézményi
-              szintű elismerések külön nyilvántartandók a munkatársak egyéni
-              elismeréseitől.
-            </Typography>
-          </CardContent>
-        </Card>
-
-        {/* Documentation Guidelines */}
-        <Card sx={{ mt: 3, backgroundColor: "#f0f8ff" }}>
-          <CardContent>
-            <Typography variant="h6" component="h3" gutterBottom>
-              Dokumentálási irányelvek
-            </Typography>
-            <Box component="ul" sx={{ pl: 3, mb: 2 }}>
-              <li>
-                <Typography variant="body2">
-                  <strong>Intézményi elismerések:</strong> Az iskola egészét
-                  érintő díjak és elismerések
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  <strong>Munkatársi elismerések:</strong> Pedagógusok és
-                  alkalmazottak egyéni elismerései
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  <strong>Területi megoszlás:</strong> Helyi, megyei, regionális
-                  és országos szintek elkülönítése
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  <strong>Dokumentáció:</strong> Oklevelek, elismerő iratok
-                  digitális archiválása
-                </Typography>
-              </li>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Quality Indicators */}
-        <Card sx={{ mt: 3, backgroundColor: "#f8fff8" }}>
-          <CardContent>
-            <Typography variant="h6" component="h3" gutterBottom>
-              Minőségi mutatók
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              Az elismerések száma és típusa az intézmény szakmai elismertségének
-              és társadalmi megbecsülésének fontos mutatója.
-            </Typography>
-            <Box component="ul" sx={{ pl: 3 }}>
-              <li>
-                <Typography variant="body2">
-                  Szakmai kiválóság elismerése
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  Pedagógiai innováció értékelése
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  Társadalmi szerepvállalás elismerése
-                </Typography>
-              </li>
-              <li>
-                <Typography variant="body2">
-                  Intézményi presztízs növelése
-                </Typography>
-              </li>
-            </Box>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </CardContent>
         </Card>
       </Box>
+
+      {/* ─── Díj hozzáadása dialog ──────────────────────────────────────────── */}
+      <Dialog open={openAddDialog} onClose={() => setOpenAddDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Új intézményi díj / elismerés hozzáadása</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              label="Díj / elismerés neve"
+              value={newDijNeve}
+              onChange={(e) => setNewDijNeve(e.target.value)}
+              fullWidth
+              required
+              autoFocus
+              placeholder="pl. Szakképzési Kiválóság Díja"
+            />
+            <TextField
+              select
+              label="Tanév"
+              value={newDijYear}
+              onChange={(e) => setNewDijYear(e.target.value)}
+              fullWidth
+              SelectProps={{ native: true }}
+            >
+              {schoolYears.map((yr) => (
+                <option key={yr} value={yr}>{yr}</option>
+              ))}
+            </TextField>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setOpenAddDialog(false); setNewDijNeve(""); }}>Mégsem</Button>
+          <Button variant="contained" onClick={handleAddDij} disabled={!newDijNeve.trim()}>
+            Hozzáadás
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ─── Snackbar ─────────────────────────────────────────────────────────── */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert onClose={() => setSnackbar((s) => ({ ...s, open: false }))} severity={snackbar.severity} variant="filled">
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </PageWrapper>
   );
 }
