@@ -31,8 +31,10 @@ export const indicatorApi = createApi({
     "HHesHHHNevelesuTanulok",
     "Vizsgaeredmenyek",
     "SzakmaiVizsgaEredmenyek",
+    "SzakmaiRendezvenyek",
     "SzakkepzesiMunszerzodesArany",
     "Muhelyiskola",
+    "Lemorzsolodas",
     "NSZFH",
     "SZMSZ",
     "EgyOktatoraJutoTanulo",
@@ -689,6 +691,79 @@ export const indicatorApi = createApi({
         method: "DELETE",
       }),
       invalidatesTags: ["Vizsgaeredmenyek"],
+    }),
+
+    getLemorzsolodasBySchoolAndYear: build.query({
+      query: ({ alapadatokId, tanev }) => `lemorzsolodas/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: (result, error, { alapadatokId, tanev }) => [
+        { type: "Lemorzsolodas", id: `${alapadatokId}-${tanev || getCurrentSchoolYearStart()}` },
+        "Lemorzsolodas"
+      ],
+    }),
+    getAllLemorzsolodas: build.query({
+      query: () => `lemorzsolodas/${getCurrentSchoolYearStart()}`,
+      providesTags: ["Lemorzsolodas"],
+    }),
+    addLemorzsolodas: build.mutation({
+      query: (data) => ({
+        url: "lemorzsolodas",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Lemorzsolodas"],
+    }),
+    updateLemorzsolodas: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `lemorzsolodas/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Lemorzsolodas"],
+    }),
+    deleteLemorzsolodas: build.mutation({
+      query: ({ alapadatokId, tanev }) => ({
+        url: `lemorzsolodas/${alapadatokId}/${tanev}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Lemorzsolodas"],
+    }),
+
+    // Szakmai_rendezvenyek (Indicator 14)
+    getSzakmaiRendezvenyekByYear: build.query({
+      query: (tanev) => `szakmairendezvenyek/${tanev}`,
+      providesTags: (result, error, tanev) => [
+        { type: "SzakmaiRendezvenyek", id: tanev },
+      ],
+    }),
+    getSzakmaiRendezvenyekBySchoolAndYear: build.query({
+      query: ({ alapadatokId, tanev }) => `szakmairendezvenyek/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: (result, error, { alapadatokId, tanev }) => [
+        { type: "SzakmaiRendezvenyek", id: `${alapadatokId}-${tanev || getCurrentSchoolYearStart()}` },
+        "SzakmaiRendezvenyek"
+      ],
+    }),
+    addSzakmaiRendezvenyek: build.mutation({
+      query: (data) => ({
+        url: "szakmairendezvenyek",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["SzakmaiRendezvenyek"],
+    }),
+    updateSzakmaiRendezvenyek: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `szakmairendezvenyek/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["SzakmaiRendezvenyek"],
+    }),
+    deleteSzakmaiRendezvenyek: build.mutation({
+      query: (id) => ({
+        url: `szakmairendezvenyek/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["SzakmaiRendezvenyek"],
     }),
 
     // Szakmai_vizsga_eredmenyek (Professional Exam Results)
@@ -1361,11 +1436,17 @@ export const {
   useAddVizsgaeredmenyekMutation,
   useUpdateVizsgaeredmenyekMutation,
   useDeleteVizsgaeredmenyekMutation,
+  useGetSzakmaiRendezvenyekByYearQuery,
+  useGetSzakmaiRendezvenyekBySchoolAndYearQuery,
+  useAddSzakmaiRendezvenyekMutation,
+  useUpdateSzakmaiRendezvenyekMutation,
+  useDeleteSzakmaiRendezvenyekMutation,
   useGetSzakmaiVizsgaEredmenyekByYearQuery,
   useGetAllSzakmaiVizsgaEredmenyekQuery,
   useAddSzakmaiVizsgaEredmenyekMutation,
   useUpdateSzakmaiVizsgaEredmenyekMutation,
   useDeleteSzakmaiVizsgaEredmenyekMutation,
+
   useGetMuhelyiskolaQuery,
   useAddMuhelyiskolaMutation,
   useUpdateMuhelyiskolaMutation,
@@ -1438,4 +1519,9 @@ export const {
   useGetMunkavallalokElismeresekBySchoolQuery,
   useGetMunkavallalokElismeresekByYearQuery,
   useUpsertMunkavallalokElismeresekMutation,
+  useGetAllLemorzsolodasQuery,
+  useGetLemorzsolodasBySchoolAndYearQuery,
+  useAddLemorzsolodasMutation,
+  useUpdateLemorzsolodasMutation,
+  useDeleteLemorzsolodasMutation,
 } = indicatorApi;
