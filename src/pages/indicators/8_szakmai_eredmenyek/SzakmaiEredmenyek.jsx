@@ -4,6 +4,7 @@ import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import {
   useGetVersenyekQuery,
   useGetVersenyKategoriakQuery,
+  useGetTanuloLetszamQuery,
   useAddVersenyekMutation,
   useUpdateVersenyekMutation,
   useDeleteVersenyekMutation,
@@ -52,6 +53,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoSzakmaiEredmenyek from "./info_szakmai_eredmenyek";
 import TitleSzakmaiEredmenyek from "./title_szakmai_eredmenyek";
+import ExportToExcel from "../../../components/ExportToExcel";
 
 export default function SzakmaiEredmenyek() {
   // Predefined competition categories
@@ -91,10 +93,13 @@ export default function SzakmaiEredmenyek() {
   const selectedSchool = useSelector(selectSelectedSchool);
   const [competitionData, setCompetitionData] = useState(createInitialData());
   const [originalData, setOriginalData] = useState(createInitialData());
+  const [competitionCreatedAtMap, setCompetitionCreatedAtMap] = useState({});
   const [isModified, setIsModified] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const [openAddDialog, setOpenAddDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [competitionToDelete, setCompetitionToDelete] = useState(null);
   const [newCompetition, setNewCompetition] = useState({ category: "", name: "" });
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -126,6 +131,18 @@ export default function SzakmaiEredmenyek() {
   const [deleteVersenyek] = useDeleteVersenyekMutation();
 
   const { data: kategoriak } = useGetVersenyKategoriakQuery();
+  const { data: tanuloLetszamData } = useGetTanuloLetszamQuery(
+    { alapadatok_id: selectedSchool?.id },
+    { skip: !selectedSchool?.id }
+  );
+
+  const categoryOrderMap = useMemo(() => {
+    const orderMap = {};
+    competitionCategories.forEach((category, index) => {
+      orderMap[category] = index;
+    });
+    return orderMap;
+  }, [competitionCategories]);
 
   // Build UUID -> name map from backend categories
   const kategoriaMap = useMemo(() => {
@@ -139,11 +156,13 @@ export default function SzakmaiEredmenyek() {
     if (versenyekData && !isVersenyekFetching) {
       const newCompData = createInitialData();
       const originalCompData = createInitialData();
+      const createdAtMap = {};
 
       if (Array.isArray(versenyekData)) {
         versenyekData.forEach(item => {
           const categoryKey = kategoriaMap[item.versenyNev?.kategoria_id] || item.versenyNev?.kategoria_id || "Ismeretlen kategória";
           const competitionName = item.versenyNev?.nev || "Ismeretlen verseny";
+          const competitionCreatedAt = item.versenyNev?.createAt || item.createAt || "";
 
           if (!newCompData[categoryKey]) newCompData[categoryKey] = {};
           if (!newCompData[categoryKey][competitionName]) {
@@ -153,6 +172,11 @@ export default function SzakmaiEredmenyek() {
                 "1_helyezett": "0", "1-3_helyezett": "0", "dontobeJutott": "0", "versenyre_nevezettek": "0"
               };
             });
+          }
+
+          if (!createdAtMap[categoryKey]) createdAtMap[categoryKey] = {};
+          if (!createdAtMap[categoryKey][competitionName]) {
+            createdAtMap[categoryKey][competitionName] = competitionCreatedAt;
           }
 
           const yearData = {
@@ -175,6 +199,7 @@ export default function SzakmaiEredmenyek() {
 
       setCompetitionData(newCompData);
       setOriginalData(originalCompData);
+      setCompetitionCreatedAtMap(createdAtMap);
       setIsModified(false);
     }
   }, [versenyekData, isVersenyekFetching, kategoriaMap]);
@@ -200,23 +225,31 @@ export default function SzakmaiEredmenyek() {
   );
 
   const handleAddCompetition = useCallback(async () => {
-    if (!newCompetition.category || !newCompetition.name || !newCompetition.year || !selectedSchool) return;
+    if (!newCompetition.category || !newCompetition.name || !selectedSchool) return;
 
     try {
+      const availableYears = schoolYears
+        .map((year) => parseInt(year.split("/")[0], 10))
+        .filter((year) => !Number.isNaN(year));
+      const defaultStartYear = availableYears.length > 0
+        ? Math.max(...availableYears)
+        : new Date().getFullYear();
+
       const recordData = {
         alapadatok_id: selectedSchool.id,
         verseny_neve: newCompetition.name,
         kategoria: newCompetition.category,
-        tanev_kezdete: parseInt(newCompetition.year.split("/")[0]),
+        tanev_kezdete: defaultStartYear,
         helyezett_1: 0,
         helyezett_1_3: 0,
         dontobeJutott: 0,
         nevezettekSzama: 0,
       };
+
       await addVersenyek(recordData).unwrap();
 
       setOpenAddDialog(false);
-      setNewCompetition({ category: "", name: "", year: "" });
+      setNewCompetition({ category: "", name: "" });
       setSnackbarMessage("Verseny sikeresen hozzáadva!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
@@ -226,10 +259,17 @@ export default function SzakmaiEredmenyek() {
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
-  }, [newCompetition, selectedSchool, addVersenyek]);
+  }, [newCompetition, selectedSchool, addVersenyek, schoolYears]);
 
-  const handleRemoveCompetition = useCallback(async (category, competition) => {
-    if (!window.confirm(`Biztosan törölni szeretné a(z) ${competition} versenyt?`)) return;
+  const handleRemoveCompetition = useCallback((category, competition) => {
+    setCompetitionToDelete({ category, competition });
+    setOpenDeleteDialog(true);
+  }, []);
+
+  const handleConfirmDeleteCompetition = useCallback(async () => {
+    if (!competitionToDelete) return;
+
+    const { category, competition } = competitionToDelete;
 
     try {
       // Delete from backend if they have an ID
@@ -252,16 +292,24 @@ export default function SzakmaiEredmenyek() {
       }
       setOriginalData(updatedOriginal);
 
+      const updatedCreatedAtMap = { ...competitionCreatedAtMap };
+      if (updatedCreatedAtMap[category]) {
+        delete updatedCreatedAtMap[category][competition];
+      }
+      setCompetitionCreatedAtMap(updatedCreatedAtMap);
+
       setSnackbarMessage("Sikeresen törölve!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
+      setOpenDeleteDialog(false);
+      setCompetitionToDelete(null);
     } catch (error) {
       console.error("Hiba törlés közben:", error);
       setSnackbarMessage("Hiba történt a törlés során!");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
-  }, [competitionData, originalData, deleteVersenyek, schoolYears]);
+  }, [competitionData, originalData, deleteVersenyek, schoolYears, competitionToDelete, competitionCreatedAtMap]);
 
   const isFieldModified = (category, competition, year, placement) => {
     const orig = originalData[category]?.[competition]?.[year]?.[placement] || "0";
@@ -374,6 +422,29 @@ export default function SzakmaiEredmenyek() {
     return calculatedTotals;
   }, [competitionData, schoolYears, placementTypes]);
 
+  const tanuloiLetszamByYear = useMemo(() => {
+    const result = {};
+    schoolYears.forEach((year) => {
+      const startYear = parseInt(year.split("/")[0], 10);
+      result[startYear] = 0;
+    });
+
+    if (!Array.isArray(tanuloLetszamData)) {
+      return result;
+    }
+
+    tanuloLetszamData.forEach((record) => {
+      const startYear = record?.tanev_kezdete;
+      if (typeof startYear !== "number") return;
+      if (record?.jogv_tipus !== 0) return;
+
+      const letszam = Number(record?.letszam) || 0;
+      result[startYear] = (result[startYear] || 0) + letszam;
+    });
+
+    return result;
+  }, [schoolYears, tanuloLetszamData]);
+
   // Show loading state
   if (isVersenyekLoading) {
     return (
@@ -442,6 +513,43 @@ export default function SzakmaiEredmenyek() {
               Visszaállítás
             </Button>
           </LockedTableWrapper>
+          <ExportToExcel
+            fileName="szakmai_eredmenyek"
+            sheetName="Versenyek"
+            columns={[
+              { header: "Kategória", key: "kategoria", width: 35 },
+              { header: "Verseny neve", key: "verseny", width: 40 },
+              ...schoolYears.flatMap((year) =>
+                placementTypes.map((p) => ({
+                  header: `${year} – ${p.label}`,
+                  key: `${year}__${p.key}`,
+                  width: 20,
+                }))
+              ),
+            ]}
+            rows={Object.keys(competitionData).flatMap((category) =>
+              Object.keys(competitionData[category]).map((competition) => {
+                const row = { kategoria: category, verseny: competition };
+                schoolYears.forEach((year) => {
+                  placementTypes.forEach((p) => {
+                    row[`${year}__${p.key}`] =
+                      competitionData[category][competition][year]?.[p.key] ?? 0;
+                  });
+                });
+                return row;
+              })
+            )}
+            groups={[
+              [
+                { label: "", colSpan: 2 },
+                ...schoolYears.map((year) => ({
+                  label: year,
+                  colSpan: placementTypes.length,
+                })),
+              ],
+            ]}
+            buttonLabel="Export Táblázatba"
+          />
         </Stack>
         
             <Typography variant="h6" component="h2" gutterBottom sx={{ ml: 2 }}>
@@ -499,7 +607,7 @@ export default function SzakmaiEredmenyek() {
                         boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)"
                       }}
                     >
-                      Törlés
+                    Művelet
                     </TableCell>
                   </TableRow>
                   <TableRow>
@@ -564,8 +672,26 @@ export default function SzakmaiEredmenyek() {
                   </TableRow>
 
                   {/* Data Rows */}
-                  {Object.keys(competitionData).map((category) => {
-                    const competitions = Object.keys(competitionData[category]);
+                  {Object.keys(competitionData)
+                    .sort((a, b) => {
+                      const aOrder = categoryOrderMap[a] ?? Number.MAX_SAFE_INTEGER;
+                      const bOrder = categoryOrderMap[b] ?? Number.MAX_SAFE_INTEGER;
+                      if (aOrder !== bOrder) return aOrder - bOrder;
+                      return a.localeCompare(b, "hu");
+                    })
+                    .map((category) => {
+                    const competitions = Object.keys(competitionData[category]).sort((a, b) => {
+                      const aCreatedAt = competitionCreatedAtMap[category]?.[a] || "";
+                      const bCreatedAt = competitionCreatedAtMap[category]?.[b] || "";
+                      const aTs = Date.parse(aCreatedAt);
+                      const bTs = Date.parse(bCreatedAt);
+                      const aHasDate = !Number.isNaN(aTs);
+                      const bHasDate = !Number.isNaN(bTs);
+
+                      if (aHasDate && bHasDate && aTs !== bTs) return aTs - bTs;
+                      if (aHasDate !== bHasDate) return aHasDate ? -1 : 1;
+                      return a.localeCompare(b, "hu");
+                    });
                     return competitions.map((competition, index) => (
                       <TableRow
                         key={`${category}-${competition}`}
@@ -674,25 +800,30 @@ export default function SzakmaiEredmenyek() {
                     <TableCell sx={{ fontWeight: "bold" }}>
                       Tanulói jogviszonyban álló tanulók száma (fő)
                     </TableCell>
-                    {schoolYears.map((year) =>
-                      placementTypes.map((placement) => (
+                    {schoolYears.map((year, i) => {
+                      const startYear = parseInt(year.split("/")[0], 10);
+                      return (
                         <TableCell
-                          key={`summary-${year}-${placement.key}`}
+                          key={`summary-${year}`}
                           align="center"
+                          colSpan={placementTypes.length}
+                          sx={{
+                            borderRight: i === schoolYears.length - 1 ? "none" : "2px solid #ddd",
+                          }}
                         >
                           <TextField
                             type="number"
                             size="small"
+                            value={tanuloiLetszamByYear[startYear] || 0}
                             inputProps={{
-                              min: 0,
+                              readOnly: true,
                               style: { textAlign: "center" },
                             }}
-                            sx={{ width: "60px" }}
-                            placeholder="0"
+                            sx={{ width: "90px" }}
                           />
                         </TableCell>
-                      ))
-                    )}
+                      );
+                    })}
                     <TableCell sx={{
                       position: "sticky",
                       right: 0,
@@ -727,22 +858,7 @@ export default function SzakmaiEredmenyek() {
           <DialogTitle>Új verseny hozzáadása</DialogTitle>
           <DialogContent>
             <Stack spacing={3} sx={{ mt: 1 }}>   
-              <FormControl fullWidth>
-                <InputLabel>Tanév</InputLabel>
-                <Select
-                  value={newCompetition.year || ""}
-                  onChange={(e) =>
-                    setNewCompetition({ ...newCompetition, year: e.target.value })
-                  }
-                  label="Tanév"
-                >
-                  {schoolYears.map((year) => (
-                    <MenuItem key={year} value={year}>
-                      {year}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+     
               <FormControl fullWidth>
                 <InputLabel>Kategória</InputLabel>
                 <Select
@@ -780,9 +896,44 @@ export default function SzakmaiEredmenyek() {
             <Button
               onClick={handleAddCompetition}
               variant="contained"
-              disabled={!newCompetition.category || !newCompetition.name || !newCompetition.year}
+              disabled={!newCompetition.category || !newCompetition.name}
             >
               Hozzáadás
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={openDeleteDialog}
+          onClose={() => {
+            setOpenDeleteDialog(false);
+            setCompetitionToDelete(null);
+          }}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Verseny törlése</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Biztosan törölni szeretnéd a(z) {competitionToDelete?.competition || ""} versenyt?
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => {
+                setOpenDeleteDialog(false);
+                setCompetitionToDelete(null);
+              }}
+            >
+              Mégse
+            </Button>
+            <Button
+              onClick={handleConfirmDeleteCompetition}
+              color="error"
+              variant="contained"
+            >
+              Törlés
             </Button>
           </DialogActions>
         </Dialog>

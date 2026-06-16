@@ -914,7 +914,7 @@ export default function TanuloLetszam() {
         );
 
         if (hasAppliedFallback) {
-          setDataSource("TanuloLetszam + TanugyiAdatok (fallback)");
+          setDataSource("TanuloLetszam + TanugyiAdatok ");
         } else {
           setDataSource("TanuloLetszam");
         }
@@ -999,15 +999,7 @@ export default function TanuloLetszam() {
               </Box>
             )}
 
-            {dataSource && (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mt: 1, ml: 2 }}
-              >
-                Adatforrás: {dataSource}
-              </Typography>
-            )}
+       
 
             {activeTab === 0 && (
               <>

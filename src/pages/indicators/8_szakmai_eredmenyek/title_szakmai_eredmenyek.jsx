@@ -5,7 +5,7 @@ const TitleSzakmaiEredmenyek = () => {
   return (
     <IndicatorTitle
       icon={EmojiEventsIcon}
-      title="8. Szakmai eredmények (Versenyek)"
+      title="8. Versenyek"
       description="Országos és nemzetközi szakmai versenyeken elért eredmények és helyezések"
     />
   );
