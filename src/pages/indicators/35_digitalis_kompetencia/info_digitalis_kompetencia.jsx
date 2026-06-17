@@ -1,28 +1,23 @@
+import React from "react";
 import { Typography, Box } from "@mui/material";
 
-/**
- * Info component for Digitális kompetencia indicator
- * Used with PageWrapper's infoContent prop
- */
-const InfoDigitalisKompetencia = () => {
+export default function InfoDigitalisKompetencia() {
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-      <Typography variant="body2" color="text.secondary">
-        Ez az oldal a digitális kompetencia adatait tartalmazza.
+    <Box>
+      <Typography variant="body1" paragraph>
+        Ezen a felületen rögzítheti a digitális tananyagot fejlesztő és használó oktatók számát tanévenként.
       </Typography>
-      <Box component="ul" sx={{ m: 0, pl: 2 }}>
-        <Typography component="li" variant="body2" color="text.secondary">
-          Digitális eszközök használata az oktatásban
-        </Typography>
-        <Typography component="li" variant="body2" color="text.secondary">
-          Pedagógusok digitális felkészültsége
-        </Typography>
-        <Typography component="li" variant="body2" color="text.secondary">
-          Tanulók digitális kompetenciaszintje
-        </Typography>
-      </Box>
+      <Typography variant="body2" color="text.secondary" paragraph>
+        Használat:
+        <br />
+        - Töltse ki az egyes tanévekhez tartozó adatokat a megfelelő sorokban.
+        <br />
+        - A módosított mezők sárga háttérrel jelennek meg a mentésig.
+        <br />
+        - A "Mentés" gombbal rögzítheti az adatokat az adatbázisban.
+        <br />
+        - Mivel ezek fix mérőszámok, új sorokat nem lehet hozzáadni, csak az értékeket szerkeszteni.
+      </Typography>
     </Box>
   );
-};
-
-export default InfoDigitalisKompetencia;
+}

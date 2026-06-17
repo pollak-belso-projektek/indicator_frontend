@@ -1,17 +1,17 @@
 import React from "react";
 import { Typography, Box } from "@mui/material";
 
-const TitleDigitalisKompetencia = () => {
+const TitleDualisKepzohelyek = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column" }}>
       <Typography variant="h5" component="h1" sx={{ fontWeight: "bold" }}>
-        35. Digitális kompetencia
+        30. Duális képzőhelyek száma
       </Typography>
       <Typography variant="subtitle1" color="text.secondary">
-        A digitális tananyagot fejlesztő és használó oktatók számának rögzítése
+        Az intézménnyel kapcsolatban álló duális képzőhelyek számának és adatainak rögzítése
       </Typography>
     </Box>
   );
 };
 
-export default TitleDigitalisKompetencia;
+export default TitleDualisKepzohelyek;

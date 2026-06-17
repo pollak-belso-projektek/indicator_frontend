@@ -1,13 +1,16 @@
-import NatureIcon from "@mui/icons-material/Nature";
-import IndicatorTitle from "../../../components/shared/IndicatorTitle";
+import React from "react";
+import { Typography, Box } from "@mui/material";
 
 const TitleSzakkepzesZolditese = () => {
   return (
-    <IndicatorTitle
-      icon={NatureIcon}
-      title="36. Szakképzés zöldítése"
-      description="Környezettudatos képzési programok és fenntarthatósági kezdeményezések"
-    />
+    <Box sx={{ display: "flex", flexDirection: "column" }}>
+      <Typography variant="h5" component="h1" sx={{ fontWeight: "bold" }}>
+        36. Szakképzés "zöldítése"
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary">
+        A szakképzés "zöldítéséhez" kapcsolódó és Ökoiskola program keretében megszervezett tevékenységek
+      </Typography>
+    </Box>
   );
 };
 

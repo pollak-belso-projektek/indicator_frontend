@@ -115,6 +115,21 @@ const OktatokEgyebTevPage = lazy(
 const PalyazatokPage = lazy(
   () => import("../pages/indicators/24_palyazatok/Palyazatok.jsx"),
 );
+const SzervezetfejlesztesPage = lazy(
+  () => import("../pages/indicators/33_szervezetfejlesztes/Szervezetfejlesztes.jsx"),
+);
+const DualisKepzohelyekSzamaPage = lazy(
+  () => import("../pages/indicators/30_dualis_kepzohelyek_szama/DualisKepzohelyekSzama.jsx"),
+);
+const InnovaciosTevekenysegekPage = lazy(
+  () => import("../pages/indicators/34_innovacios_tevekenysegek/InnovaciosTevekenysegek.jsx"),
+);
+const SzakkepzesZolditesePage = lazy(
+  () => import("../pages/indicators/36_szakkepzes_zolditese/SzakkepzesZolditese.jsx"),
+);
+const DigitalisKompetenciaPage = lazy(
+  () => import("../pages/indicators/35_digitalis_kompetencia/DigitalisKompetencia.jsx"),
+);
 
 
 
@@ -148,6 +163,11 @@ const SCHOOL_REQUIRED_PAGES = [
   "/hianyzas",
   "/szakmai-tovabbkepzesek",
   "/palyazatok",
+  "/szervezetfejlesztes",
+  "/dualis-kepzohelyek-szama",
+  "/innovacios-tevekenysegek",
+  "/szakkepzes-zolditese",
+  "/digitalis-kompetencia",
 ];
 
 export default function Router() {
@@ -579,6 +599,71 @@ export default function Router() {
                       {withSchoolRequired(
                         <PalyazatokPage />,
                         "/palyazatok",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/szervezetfejlesztes"
+                element={
+                  <TableProtectedRoute tableName="szervezetfejlesztes">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <SzervezetfejlesztesPage />,
+                        "/szervezetfejlesztes",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/dualis-kepzohelyek-szama"
+                element={
+                  <TableProtectedRoute tableName="dualis_kepzohelyek">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <DualisKepzohelyekSzamaPage />,
+                        "/dualis-kepzohelyek-szama",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/innovacios-tevekenysegek"
+                element={
+                  <TableProtectedRoute tableName="innovacios_tevekenysegek">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <InnovaciosTevekenysegekPage />,
+                        "/innovacios-tevekenysegek",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/szakkepzes-zolditese"
+                element={
+                  <TableProtectedRoute tableName="szakkepzes_zolditese">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <SzakkepzesZolditesePage />,
+                        "/szakkepzes-zolditese",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/digitalis-kompetencia"
+                element={
+                  <TableProtectedRoute tableName="digitalis_kompetencia">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <DigitalisKompetenciaPage />,
+                        "/digitalis-kompetencia",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>

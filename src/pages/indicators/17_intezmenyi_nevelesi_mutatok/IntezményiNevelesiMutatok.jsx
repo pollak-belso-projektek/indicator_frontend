@@ -28,8 +28,9 @@ import InfoIntezményiNevelesiMutatok from "./info_intezmenyi_nevelesi_mutatok";
 import TitleIntezményiNevelesiMutatok from "./title_intezmenyi_nevelesi_mutatok";
 import { useSelector } from "react-redux";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
-import {
+
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import {
   useAddIntezmenyiNeveltsegiMutatokMutation,
   useGetIntezmenyiNeveltsegiMutatokByYearQuery,
   useGetTanugyiAdatokQuery,
@@ -585,7 +586,7 @@ export default function IntezményiNevelesiMutatok() {
             )}
             <Card sx={{ mb: 3, p: 2 }}>
               <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
-                  <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
+              <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}

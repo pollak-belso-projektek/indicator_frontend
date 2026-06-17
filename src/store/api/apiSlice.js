@@ -56,6 +56,11 @@ export const indicatorApi = createApi({
     "IntezményiElismeresek",
     "MunkavallalokElismeresek",
     "Palyazatok",
+    "Szervezetfejlesztes",
+    "DualisKepzohelyek",
+    "InnovaciosTevekenysegek",
+    "SzakkepzesZolditese",
+    "DigitalisKompetencia",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -1397,6 +1402,159 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["Palyazatok"],
     }),
+
+    // Szervezetfejlesztes (Indicator 33)
+    getSzervezetfejlesztes: build.query({
+      query: ({ alapadatokId, tanev }) => `szervezetfejlesztes/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: (result, error, { alapadatokId, tanev }) => [
+        { type: "Szervezetfejlesztes", id: `${alapadatokId}-${tanev || getCurrentSchoolYearStart()}` },
+        "Szervezetfejlesztes"
+      ],
+    }),
+    addSzervezetfejlesztes: build.mutation({
+      query: (data) => ({
+        url: "szervezetfejlesztes",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Szervezetfejlesztes"],
+    }),
+    updateSzervezetfejlesztes: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `szervezetfejlesztes/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Szervezetfejlesztes"],
+    }),
+    deleteSzervezetfejlesztes: build.mutation({
+      query: (id) => ({
+        url: `szervezetfejlesztes/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Szervezetfejlesztes"],
+    }),
+
+    // DualisKepzohelyek (Indicator 30)
+    getDualisKepzohelyek: build.query({
+      query: ({ alapadatokId, tanev }) => `dualis_kepzohelyek/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: (result, error, { alapadatokId, tanev }) => [
+        { type: "DualisKepzohelyek", id: `${alapadatokId}-${tanev || getCurrentSchoolYearStart()}` },
+        "DualisKepzohelyek"
+      ],
+    }),
+    addDualisKepzohelyek: build.mutation({
+      query: (data) => ({
+        url: "dualis_kepzohelyek",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["DualisKepzohelyek"],
+    }),
+    updateDualisKepzohelyek: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `dualis_kepzohelyek/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["DualisKepzohelyek"],
+    }),
+    deleteDualisKepzohelyek: build.mutation({
+      query: (id) => ({
+        url: `dualis_kepzohelyek/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["DualisKepzohelyek"],
+    }),
+
+    // InnovaciosTevekenysegek (Indicator 34)
+    getInnovaciosTevekenysegek: build.query({
+      query: ({ alapadatokId, tanev }) => `innovacios_tevekenysegek/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: (result, error, { alapadatokId, tanev }) => [
+        { type: "InnovaciosTevekenysegek", id: `${alapadatokId}-${tanev || getCurrentSchoolYearStart()}` },
+        "InnovaciosTevekenysegek"
+      ],
+    }),
+    addInnovaciosTevekenysegek: build.mutation({
+      query: (data) => ({
+        url: "innovacios_tevekenysegek",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["InnovaciosTevekenysegek"],
+    }),
+    updateInnovaciosTevekenysegek: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `innovacios_tevekenysegek/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["InnovaciosTevekenysegek"],
+    }),
+    deleteInnovaciosTevekenysegek: build.mutation({
+      query: (id) => ({
+        url: `innovacios_tevekenysegek/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["InnovaciosTevekenysegek"],
+    }),
+
+    // SzakkepzesZolditese (Indicator 36)
+    getSzakkepzesZolditese: build.query({
+      query: ({ alapadatokId, tanev }) => `szakkepzes_zolditese/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: (result, error, { alapadatokId, tanev }) => [
+        { type: "SzakkepzesZolditese", id: `${alapadatokId}-${tanev || getCurrentSchoolYearStart()}` },
+        "SzakkepzesZolditese"
+      ],
+    }),
+    addSzakkepzesZolditese: build.mutation({
+      query: (data) => ({
+        url: "szakkepzes_zolditese",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["SzakkepzesZolditese"],
+    }),
+    updateSzakkepzesZolditese: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `szakkepzes_zolditese/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["SzakkepzesZolditese"],
+    }),
+    deleteSzakkepzesZolditese: build.mutation({
+      query: (id) => ({
+        url: `szakkepzes_zolditese/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["SzakkepzesZolditese"],
+    }),
+
+    // DigitalisKompetencia (Indicator 35)
+    getDigitalisKompetencia: build.query({
+      query: ({ alapadatokId, tanev }) => `digitalis_kompetencia/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: (result, error, { alapadatokId, tanev }) => [
+        { type: "DigitalisKompetencia", id: `${alapadatokId}-${tanev || getCurrentSchoolYearStart()}` },
+        "DigitalisKompetencia"
+      ],
+    }),
+    addDigitalisKompetencia: build.mutation({
+      query: (data) => ({
+        url: "digitalis_kompetencia",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["DigitalisKompetencia"],
+    }),
+    updateDigitalisKompetencia: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `digitalis_kompetencia/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["DigitalisKompetencia"],
+    }),
   }),
 });
 
@@ -1562,4 +1720,28 @@ export const {
   useAddPalyazatokMutation,
   useUpdatePalyazatokMutation,
   useDeletePalyazatokMutation,
+  // Szervezetfejlesztes hooks
+  useGetSzervezetfejlesztesQuery,
+  useAddSzervezetfejlesztesMutation,
+  useUpdateSzervezetfejlesztesMutation,
+  useDeleteSzervezetfejlesztesMutation,
+  // DualisKepzohelyek hooks
+  useGetDualisKepzohelyekQuery,
+  useAddDualisKepzohelyekMutation,
+  useUpdateDualisKepzohelyekMutation,
+  useDeleteDualisKepzohelyekMutation,
+  // InnovaciosTevekenysegek hooks
+  useGetInnovaciosTevekenysegekQuery,
+  useAddInnovaciosTevekenysegekMutation,
+  useUpdateInnovaciosTevekenysegekMutation,
+  useDeleteInnovaciosTevekenysegekMutation,
+  // SzakkepzesZolditese hooks
+  useGetSzakkepzesZolditeseQuery,
+  useAddSzakkepzesZolditeseMutation,
+  useUpdateSzakkepzesZolditeseMutation,
+  useDeleteSzakkepzesZolditeseMutation,
+  // DigitalisKompetencia hooks
+  useGetDigitalisKompetenciaQuery,
+  useAddDigitalisKompetenciaMutation,
+  useUpdateDigitalisKompetenciaMutation,
 } = indicatorApi;
