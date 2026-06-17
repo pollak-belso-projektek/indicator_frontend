@@ -61,6 +61,7 @@ export const indicatorApi = createApi({
     "InnovaciosTevekenysegek",
     "SzakkepzesZolditese",
     "DigitalisKompetencia",
+    "TanulmanyiEredmeny",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -523,6 +524,30 @@ export const indicatorApi = createApi({
         body: data,
       }),
       invalidatesTags: ["Hianyzas"],
+    }),
+    // Tanulmányi Eredmény (Academic Results - Indicator 25)
+    getTanulmanyiEredmeny: build.query({
+      query: ({ alapadatok_id, tanev }) => `tanulmanyi_eredmeny/${alapadatok_id}/${tanev}`,
+      providesTags: (result, error, { alapadatok_id, tanev }) => [
+        { type: "TanulmanyiEredmeny", id: `${alapadatok_id}-${tanev}` },
+        "TanulmanyiEredmeny",
+      ],
+    }),
+    addTanulmanyiEredmeny: build.mutation({
+      query: (data) => ({
+        url: "tanulmanyi_eredmeny",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["TanulmanyiEredmeny"],
+    }),
+    updateTanulmanyiEredmeny: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `tanulmanyi_eredmeny/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["TanulmanyiEredmeny"],
     }),
 
     // Szakmai továbbképzések endpoints
@@ -1370,7 +1395,7 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["MunkavallalokElismeresek"],
     }),
-    
+
     // Pályázatok (Indicator 24)
     getPalyazatok: build.query({
       query: ({ alapadatokId, tanev }) => `palyazatok/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
@@ -1744,4 +1769,8 @@ export const {
   useGetDigitalisKompetenciaQuery,
   useAddDigitalisKompetenciaMutation,
   useUpdateDigitalisKompetenciaMutation,
+  // TanulmanyiEredmeny hooks
+  useGetTanulmanyiEredmenyQuery,
+  useAddTanulmanyiEredmenyMutation,
+  useUpdateTanulmanyiEredmenyMutation,
 } = indicatorApi;

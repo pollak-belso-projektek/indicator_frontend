@@ -69,6 +69,7 @@ export const AccessNotificationProvider = ({ children }) => {
         "/szakkepzesi-munkaszerződes-arany": "Szakképzési munkaszerződés arány",
         "/hianyzas": "Hiányzás",
         "/szakmai-tovabbkepzesek": "Szakmai továbbképzések",
+        "/tanulmani-eredmeny": "Tanulmányi eredmény",
         "/oktatok-egyeb-tev": "Oktatók egyéb tevékenysége",
         "/adat-import": "Adatok importálása",
         "/schools": "Iskolák",

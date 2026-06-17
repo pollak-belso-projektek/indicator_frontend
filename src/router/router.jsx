@@ -130,7 +130,9 @@ const SzakkepzesZolditesePage = lazy(
 const DigitalisKompetenciaPage = lazy(
   () => import("../pages/indicators/35_digitalis_kompetencia/DigitalisKompetencia.jsx"),
 );
-
+const TanulmanyiEredmenyPage = lazy(
+  () => import("../pages/indicators/25_tanulmani_eredmeny/Tanulmanyi_Eredmeny.jsx"),
+);
 
 
 // List of pages that require school selection
@@ -168,6 +170,7 @@ const SCHOOL_REQUIRED_PAGES = [
   "/innovacios-tevekenysegek",
   "/szakkepzes-zolditese",
   "/digitalis-kompetencia",
+  "/tanulmani-eredmeny",
 ];
 
 export default function Router() {
@@ -729,6 +732,19 @@ export default function Router() {
                   ) : (
                     <Navigate to="/login" />
                   )
+                }
+              />
+              <Route
+                path="/tanulmani-eredmeny"
+                element={
+                  <TableProtectedRoute tableName="tanulmanyi_eredmeny">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <TanulmanyiEredmenyPage />,
+                        "/tanulmani-eredmeny",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
                 }
               />
             </Routes>

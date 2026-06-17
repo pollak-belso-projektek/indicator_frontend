@@ -282,6 +282,12 @@ const NavigationCategories = {
         link: "/digitalis-kompetencia",
         tableName: "digitalis_kompetencia",
       },
+      {
+        name: "Tanulmányi eredmény",
+        icon: MdSchool,
+        link: "/tanulmani-eredmeny",
+        tableName: "tanulmanyi_eredmeny",
+      },
     ],
   },
   // EDUCATION: {
