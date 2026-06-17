@@ -252,6 +252,12 @@ const NavigationCategories = {
         link: "/palyazatok",
         tableName: "palyazatok",
       },
+      {
+        name: "Tanulmányi eredmény",
+        icon: MdSchool,
+        link: "/tanulmani-eredmeny",
+        tableName: "tanulmanyi_eredmeny",
+      },
     ],
   },
   // EDUCATION: {

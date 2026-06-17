@@ -115,7 +115,9 @@ const OktatokEgyebTevPage = lazy(
 const PalyazatokPage = lazy(
   () => import("../pages/indicators/24_palyazatok/Palyazatok.jsx"),
 );
-
+const TanulmanyiEredmenyPage = lazy(
+  () => import("../pages/indicators/25_tanulmani_eredmeny/Tanulmanyi_Eredmeny.jsx"),
+);
 
 
 // List of pages that require school selection
@@ -148,6 +150,7 @@ const SCHOOL_REQUIRED_PAGES = [
   "/hianyzas",
   "/szakmai-tovabbkepzesek",
   "/palyazatok",
+  "/tanulmani-eredmeny",
 ];
 
 export default function Router() {
@@ -644,6 +647,19 @@ export default function Router() {
                   ) : (
                     <Navigate to="/login" />
                   )
+                }
+              />
+              <Route
+                path="/tanulmani-eredmeny"
+                element={
+                  <TableProtectedRoute tableName="tanulmanyi_eredmeny">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <TanulmanyiEredmenyPage />,
+                        "/tanulmani-eredmeny",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
                 }
               />
             </Routes>

@@ -239,6 +239,12 @@ const NavigationCategories = {
         link: "/oktato-egyeb-tev",
         tableName: "oktato-egyeb-tev",
       },
+      {
+        name: "Tanulmányi eredmény",
+        icon: MdSchool,
+        link: "/tanulmani-eredmeny",
+        tableName: "tanulmanyi_eredmeny",
+      },
     ],
   },
   ADMIN: {

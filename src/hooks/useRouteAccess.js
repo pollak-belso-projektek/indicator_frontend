@@ -65,6 +65,7 @@ export const useRouteAccess = () => {
         "/users",
         "/logs",
         "/hianyzas",
+        "/tanulmani-eredmeny",
       ]
     : getAccessibleRoutes(tableAccess, false, userPermissions);
   return {

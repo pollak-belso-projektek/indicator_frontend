@@ -36,6 +36,7 @@ const tableKeyValues = {
   // System
   hianyzas: "Hiányzás",
   szakmai_tovabbkepzesek: "Szakmai továbbképzések",
+  tanulmanyi_eredmeny: "Tanulmányi eredmény",
   user: "Felhasználók",
   log: "Rendszer naplók",
   auth: "Authentikáció",
@@ -84,6 +85,7 @@ const routeToTableMapping = {
   "/szakkepzesi-munkaszerződes-arany": "szmsz",
   "/hianyzas": "hianyzas",
   "/szakmai-tovabbkepzesek": "szakmai_tovabbkepzesek",
+  "/tanulmani-eredmeny": "tanulmanyi_eredmeny",
   "/oktatok-egyeb-tev": "oktato_egyeb_tev",
   "/oktato_per_diak": "egy_oktatora_juto_tanulo",
   "/egy-oktatora-juto-ossz-diak": "egy_oktatora_juto_tanulo",
