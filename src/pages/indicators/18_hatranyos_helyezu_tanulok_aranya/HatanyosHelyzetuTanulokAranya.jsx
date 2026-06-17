@@ -104,6 +104,25 @@ export default function HatanyosHelyzetuTanulokAranya() {
     return initialData;
   });
 
+  // HHH Students count - this is what users will input
+  const [hhhStudentsCount, setHhhStudentsCount] = useState(() => {
+    const initialData = {};
+
+    // Initialize for daytime students (tanulói jogviszony)
+    initialData.daytime = {};
+    schoolYears.forEach((year) => {
+      initialData.daytime[year] = "";
+    });
+
+    // Initialize for adult education (felnőttképzési jogviszony)
+    initialData.adult = {};
+    schoolYears.forEach((year) => {
+      initialData.adult[year] = "";
+    });
+
+    return initialData;
+  });
+
   // Total students data from API
   const [totalStudents, setTotalStudents] = useState(() => {
     const initialData = {};
@@ -194,6 +213,45 @@ export default function HatanyosHelyzetuTanulokAranya() {
 
     if (combinedHh > 0 && combinedTotal > 0) {
       return ((combinedHh / combinedTotal) * 100).toFixed(2);
+    }
+    return "0.00";
+  };
+
+  // Handle HHH student count changes
+  const handleHhhStudentsChange = (category, year, value) => {
+    setHhhStudentsCount((prev) => ({
+      ...prev,
+      [category]: {
+        ...prev[category],
+        [year]: value,
+      },
+    }));
+    setIsModified(true);
+  };
+
+  // Calculate percentage automatically from HHH students count and total
+  const calculateHhhPercentage = (category, year) => {
+    const hhhCount = parseFloat(hhhStudentsCount[category]?.[year] || 0);
+    const total = totalStudents[category]?.[year] || 0;
+
+    if (hhhCount > 0 && total > 0) {
+      return ((hhhCount / total) * 100).toFixed(2);
+    }
+    return "0.00";
+  };
+
+  const getCombinedHhhStudents = (year) => {
+    const daytime = parseFloat(hhhStudentsCount.daytime?.[year] || 0);
+    const adult = parseFloat(hhhStudentsCount.adult?.[year] || 0);
+    return daytime + adult;
+  };
+
+  const getCombinedHhhPercentage = (year) => {
+    const combinedHhh = getCombinedHhhStudents(year);
+    const combinedTotal = getCombinedTotalStudents(year);
+
+    if (combinedHhh > 0 && combinedTotal > 0) {
+      return ((combinedHhh / combinedTotal) * 100).toFixed(2);
     }
     return "0.00";
   };
@@ -316,25 +374,29 @@ export default function HatanyosHelyzetuTanulokAranya() {
       schoolYears.forEach((year) => {
         const yearStart = parseInt(year.split("/")[0]);
 
-        // Save daytime HH students - allow zero values
+        // Save daytime HH and HHH students - allow zero values
         const daytimeCount = parseInt(hhStudentsCount.daytime?.[year] || 0);
-        if (daytimeCount >= 0) {
+        const daytimeHhhCount = parseInt(hhhStudentsCount.daytime?.[year] || 0);
+        if (daytimeCount >= 0 || daytimeHhhCount >= 0) {
           dataToSave.push({
             alapadatok_id: selectedSchool.id,
             tanev_kezdete: yearStart,
-            hh_tanulo_letszam: daytimeCount,
+            hh_tanulo_letszam: daytimeCount >= 0 ? daytimeCount : 0,
+            hhh_tanulo_letszam: daytimeHhhCount >= 0 ? daytimeHhhCount : 0,
             tanuloi_osszletszam: totalStudents.daytime?.[year] || 0,
             jogviszony_tipus: 0, // 0 = tanulói jogviszony (daytime)
           });
         }
 
-        // Save adult education HH students - allow zero values
+        // Save adult education HH and HHH students - allow zero values
         const adultCount = parseInt(hhStudentsCount.adult?.[year] || 0);
-        if (adultCount >= 0) {
+        const adultHhhCount = parseInt(hhhStudentsCount.adult?.[year] || 0);
+        if (adultCount >= 0 || adultHhhCount >= 0) {
           dataToSave.push({
             alapadatok_id: selectedSchool.id,
             tanev_kezdete: yearStart,
-            hh_tanulo_letszam: adultCount,
+            hh_tanulo_letszam: adultCount >= 0 ? adultCount : 0,
+            hhh_tanulo_letszam: adultHhhCount >= 0 ? adultHhhCount : 0,
             tanuloi_osszletszam: totalStudents.adult?.[year] || 0,
             jogviszony_tipus: 1, // 1 = felnőttképzési jogviszony (adult)
           });
@@ -381,7 +443,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
           }
         }
 
-        setSavedData(JSON.parse(JSON.stringify(hhStudentsCount)));
+        setSavedData(JSON.parse(JSON.stringify({ hh: hhStudentsCount, hhh: hhhStudentsCount })));
         setIsModified(false);
 
         showNotification(
@@ -399,7 +461,12 @@ export default function HatanyosHelyzetuTanulokAranya() {
 
   const handleReset = () => {
     if (savedData) {
-      setHhStudentsCount(JSON.parse(JSON.stringify(savedData)));
+      if (savedData.hh) {
+        setHhStudentsCount(JSON.parse(JSON.stringify(savedData.hh)));
+        setHhhStudentsCount(JSON.parse(JSON.stringify(savedData.hhh)));
+      } else {
+        setHhStudentsCount(JSON.parse(JSON.stringify(savedData)));
+      }
       setIsModified(false);
     }
   };
@@ -476,20 +543,27 @@ export default function HatanyosHelyzetuTanulokAranya() {
         daytime: {},
         adult: {},
       };
+      const loadedHhhData = {
+        daytime: {},
+        adult: {},
+      };
 
       // Initialize all years
       schoolYears.forEach((year) => {
         loadedHhData.daytime[year] = "";
         loadedHhData.adult[year] = "";
+        loadedHhhData.daytime[year] = "";
+        loadedHhhData.adult[year] = "";
       });
 
-      // Process existing HH data
+      // Process existing HH and HHH data
       hhApiData.forEach((record) => {
         if (record.alapadatok_id === selectedSchool.id) {
           const yearKey = `${record.tanev_kezdete}/${record.tanev_kezdete + 1}`;
 
           if (schoolYears.includes(yearKey)) {
             const count = record.hh_tanulo_letszam || 0;
+            const hhhCount = record.hhh_tanulo_letszam || 0;
 
             // Check if jogviszony_tipus exists, otherwise default to daytime (tanulói jogviszony)
             if (
@@ -499,20 +573,23 @@ export default function HatanyosHelyzetuTanulokAranya() {
             ) {
               // Tanulói jogviszony (daytime) - ez az alapértelmezett, ha nincs megadva
               loadedHhData.daytime[yearKey] = count.toString();
+              loadedHhhData.daytime[yearKey] = hhhCount.toString();
             } else if (record.jogviszony_tipus === 1) {
               // Felnőttképzési jogviszony (adult education)
               loadedHhData.adult[yearKey] = count.toString();
+              loadedHhhData.adult[yearKey] = hhhCount.toString();
             }
           }
         }
       });
 
       setHhStudentsCount(loadedHhData);
-      setSavedData(JSON.parse(JSON.stringify(loadedHhData)));
+      setHhhStudentsCount(loadedHhhData);
+      setSavedData(JSON.parse(JSON.stringify({ hh: loadedHhData, hhh: loadedHhhData })));
       setIsModified(false);
 
       // Debug log to check what was loaded
-      console.log("Final loaded HH data:", loadedHhData);
+      console.log("Final loaded HH/HHH data:", loadedHhData, loadedHhhData);
     }
   }, [hhApiData, selectedSchool, schoolYears]);
 
@@ -1272,6 +1349,455 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     >
                                       {totalStudents.adult[year] || 0}
                                     </Typography>
+                                  </TableCell>
+                                ))}
+                              </TableRow>
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </CardContent>
+                    </Card>
+
+                    {/* 4. HHH tanulók aránya - AUTO CALCULATED PERCENTAGES */}
+                    <Card sx={{ mb: 4, boxShadow: 3 }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Typography
+                          variant="h5"
+                          gutterBottom
+                          sx={{
+                            color: "#6a1b9a",
+                            textAlign: "center",
+                            fontWeight: "bold",
+                            mb: 3,
+                            pb: 1,
+                            borderBottom: "2px solid #ce93d8",
+                          }}
+                        >
+                          4. HHH tanulók aránya
+                        </Typography>
+                        <TableContainer
+                          component={Paper}
+                          variant="outlined"
+                          sx={{
+                            maxWidth: "100%",
+                            overflowX: "auto",
+                            border: "1px solid #e0e0e0",
+                            borderRadius: 2,
+                          }}
+                        >
+                          <Table size="small" stickyHeader>
+                            <TableHead>
+                              <TableRow>
+                                <TableCell
+                                  colSpan={4}
+                                  sx={{
+                                    fontWeight: "bold",
+                                    textAlign: "center",
+                                    backgroundColor: "#f3e5f5",
+                                    color: "#6a1b9a",
+                                    fontSize: "0.9rem",
+                                    py: 2,
+                                    border: "1px solid #ce93d8",
+                                    width: "33%",
+                                  }}
+                                >
+                                  Összesen (tanulói + felnőttképzési) (%)
+                                </TableCell>
+                                <TableCell
+                                  colSpan={4}
+                                  sx={{
+                                    fontWeight: "bold",
+                                    textAlign: "center",
+                                    backgroundColor: "#e3f2fd",
+                                    color: "#1976d2",
+                                    fontSize: "0.9rem",
+                                    py: 2,
+                                    border: "1px solid #b3d9ff",
+                                    width: "33%",
+                                  }}
+                                >
+                                  Tanulói jogviszony (%)
+                                </TableCell>
+                                <TableCell
+                                  colSpan={4}
+                                  sx={{
+                                    fontWeight: "bold",
+                                    textAlign: "center",
+                                    backgroundColor: "#f3e5f5",
+                                    color: "#7b1fa2",
+                                    fontSize: "0.9rem",
+                                    py: 2,
+                                    border: "1px solid #d1c4e9",
+                                    width: "33%",
+                                  }}
+                                >
+                                  Felnőttképzési jogviszony (%)
+                                </TableCell>
+                              </TableRow>
+                              <TableRow>
+                                {schoolYears.map((year) => (
+                                  <TableCell
+                                    key={`hhh-combined-pct-header-${year}`}
+                                    align="center"
+                                    sx={{
+                                      fontWeight: "bold",
+                                      backgroundColor: "#f8eaff",
+                                      fontSize: "0.8rem",
+                                      py: 1.5,
+                                      minWidth: "90px",
+                                      border: "1px solid #ce93d8",
+                                    }}
+                                  >
+                                    {year.replace("/", "/")}
+                                  </TableCell>
+                                ))}
+                                {schoolYears.map((year) => (
+                                  <TableCell
+                                    key={`hhh-daytime-pct-header-${year}`}
+                                    align="center"
+                                    sx={{
+                                      fontWeight: "bold",
+                                      backgroundColor: "#f0f8ff",
+                                      fontSize: "0.8rem",
+                                      py: 1.5,
+                                      minWidth: "90px",
+                                      border: "1px solid #e3f2fd",
+                                    }}
+                                  >
+                                    {year.replace("/", "/")}
+                                  </TableCell>
+                                ))}
+                                {schoolYears.map((year) => (
+                                  <TableCell
+                                    key={`hhh-adult-pct-header-${year}`}
+                                    align="center"
+                                    sx={{
+                                      fontWeight: "bold",
+                                      backgroundColor: "#fafafa",
+                                      fontSize: "0.8rem",
+                                      py: 1.5,
+                                      minWidth: "90px",
+                                      border: "1px solid #f3e5f5",
+                                    }}
+                                  >
+                                    {year.replace("/", "/")}
+                                  </TableCell>
+                                ))}
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              <TableRow>
+                                {schoolYears.map((year) => (
+                                  <TableCell
+                                    key={`hhh-combined-pct-${year}`}
+                                    align="center"
+                                    sx={{ py: 2 }}
+                                  >
+                                    <Typography
+                                      variant="body1"
+                                      sx={{
+                                        fontWeight: "bold",
+                                        color: "#6a1b9a",
+                                        backgroundColor: "#f8eaff",
+                                        padding: "12px 8px",
+                                        borderRadius: "8px",
+                                        fontSize: "1rem",
+                                        border: "1px solid #ce93d8",
+                                      }}
+                                    >
+                                      {getCombinedHhhPercentage(year)}%
+                                    </Typography>
+                                  </TableCell>
+                                ))}
+                                {schoolYears.map((year) => (
+                                  <TableCell
+                                    key={`hhh-daytime-pct-${year}`}
+                                    align="center"
+                                    sx={{ py: 2 }}
+                                  >
+                                    <Typography
+                                      variant="body1"
+                                      sx={{
+                                        fontWeight: "bold",
+                                        color: "#1976d2",
+                                        backgroundColor: "#f0f8ff",
+                                        padding: "12px 8px",
+                                        borderRadius: "8px",
+                                        fontSize: "1rem",
+                                        border: "1px solid #e3f2fd",
+                                      }}
+                                    >
+                                      {calculateHhhPercentage("daytime", year)}%
+                                    </Typography>
+                                  </TableCell>
+                                ))}
+                                {schoolYears.map((year) => (
+                                  <TableCell
+                                    key={`hhh-adult-pct-${year}`}
+                                    align="center"
+                                    sx={{ py: 2 }}
+                                  >
+                                    <Typography
+                                      variant="body1"
+                                      sx={{
+                                        fontWeight: "bold",
+                                        color: "#7b1fa2",
+                                        backgroundColor: "#fafafa",
+                                        padding: "12px 8px",
+                                        borderRadius: "8px",
+                                        fontSize: "1rem",
+                                        border: "1px solid #f3e5f5",
+                                      }}
+                                    >
+                                      {calculateHhhPercentage("adult", year)}%
+                                    </Typography>
+                                  </TableCell>
+                                ))}
+                              </TableRow>
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </CardContent>
+                    </Card>
+
+                    {/* 5. HHH tanulók száma - EDITABLE INPUT */}
+                    <Card sx={{ mb: 4, boxShadow: 3 }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Typography
+                          variant="h5"
+                          gutterBottom
+                          sx={{
+                            color: "#6a1b9a",
+                            textAlign: "center",
+                            fontWeight: "bold",
+                            mb: 3,
+                            pb: 1,
+                            borderBottom: "2px solid #ce93d8",
+                          }}
+                        >
+                          5. HHH tanulók száma
+                        </Typography>
+                        <TableContainer
+                          component={Paper}
+                          variant="outlined"
+                          sx={{
+                            maxWidth: "100%",
+                            overflowX: "auto",
+                            border: "1px solid #e0e0e0",
+                            borderRadius: 2,
+                          }}
+                        >
+                          <Table size="small" stickyHeader>
+                            <TableHead>
+                              <TableRow>
+                                <TableCell
+                                  colSpan={4}
+                                  sx={{
+                                    fontWeight: "bold",
+                                    textAlign: "center",
+                                    backgroundColor: "#f3e5f5",
+                                    color: "#6a1b9a",
+                                    fontSize: "0.9rem",
+                                    py: 2,
+                                    border: "1px solid #ce93d8",
+                                    width: "33%",
+                                  }}
+                                >
+                                  Összesen (tanulói + felnőttképzési) (fő)
+                                </TableCell>
+                                <TableCell
+                                  colSpan={4}
+                                  sx={{
+                                    fontWeight: "bold",
+                                    textAlign: "center",
+                                    backgroundColor: "#e3f2fd",
+                                    color: "#1976d2",
+                                    fontSize: "0.9rem",
+                                    py: 2,
+                                    border: "1px solid #b3d9ff",
+                                    width: "33%",
+                                  }}
+                                >
+                                  Tanulói jogviszony (fő)
+                                </TableCell>
+                                <TableCell
+                                  colSpan={4}
+                                  sx={{
+                                    fontWeight: "bold",
+                                    textAlign: "center",
+                                    backgroundColor: "#f3e5f5",
+                                    color: "#7b1fa2",
+                                    fontSize: "0.9rem",
+                                    py: 2,
+                                    border: "1px solid #d1c4e9",
+                                    width: "33%",
+                                  }}
+                                >
+                                  Felnőttképzési jogviszony (fő)
+                                </TableCell>
+                              </TableRow>
+                              <TableRow>
+                                {schoolYears.map((year) => (
+                                  <TableCell
+                                    key={`hhh-combined-count-header-${year}`}
+                                    align="center"
+                                    sx={{
+                                      fontWeight: "bold",
+                                      backgroundColor: "#f8eaff",
+                                      fontSize: "0.8rem",
+                                      py: 1.5,
+                                      minWidth: "90px",
+                                      border: "1px solid #ce93d8",
+                                    }}
+                                  >
+                                    {year.replace("/", "/")}
+                                  </TableCell>
+                                ))}
+                                {schoolYears.map((year) => (
+                                  <TableCell
+                                    key={`hhh-daytime-count-header-${year}`}
+                                    align="center"
+                                    sx={{
+                                      fontWeight: "bold",
+                                      backgroundColor: "#f0f8ff",
+                                      fontSize: "0.8rem",
+                                      py: 1.5,
+                                      minWidth: "90px",
+                                      border: "1px solid #e3f2fd",
+                                    }}
+                                  >
+                                    {year.replace("/", "/")}
+                                  </TableCell>
+                                ))}
+                                {schoolYears.map((year) => (
+                                  <TableCell
+                                    key={`hhh-adult-count-header-${year}`}
+                                    align="center"
+                                    sx={{
+                                      fontWeight: "bold",
+                                      backgroundColor: "#fafafa",
+                                      fontSize: "0.8rem",
+                                      py: 1.5,
+                                      minWidth: "90px",
+                                      border: "1px solid #f3e5f5",
+                                    }}
+                                  >
+                                    {year.replace("/", "/")}
+                                  </TableCell>
+                                ))}
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              <TableRow>
+                                {/* Combined HHH counts - auto calculated */}
+                                {schoolYears.map((year) => (
+                                  <TableCell
+                                    key={`hhh-combined-count-${year}`}
+                                    align="center"
+                                    sx={{ py: 2 }}
+                                  >
+                                    <Typography
+                                      variant="body1"
+                                      sx={{
+                                        fontWeight: "bold",
+                                        color: "#6a1b9a",
+                                        backgroundColor: "#f8eaff",
+                                        padding: "12px 8px",
+                                        borderRadius: "8px",
+                                        fontSize: "1rem",
+                                        border: "1px solid #ce93d8",
+                                      }}
+                                    >
+                                      {getCombinedHhhStudents(year)}
+                                    </Typography>
+                                  </TableCell>
+                                ))}
+                                {/* Daytime HHH counts - editable */}
+                                {schoolYears.map((year) => (
+                                  <TableCell
+                                    key={`hhh-daytime-input-${year}`}
+                                    align="center"
+                                    sx={{ py: 2 }}
+                                  >
+                                    <TextField
+                                      type="number"
+                                      value={
+                                        hhhStudentsCount.daytime?.[year] || ""
+                                      }
+                                      onChange={(e) =>
+                                        handleHhhStudentsChange(
+                                          "daytime",
+                                          year,
+                                          e.target.value
+                                        )
+                                      }
+                                      size="small"
+                                      inputProps={{
+                                        min: 0,
+                                        step: 1,
+                                        style: {
+                                          textAlign: "center",
+                                          fontSize: "1rem",
+                                        },
+                                      }}
+                                      sx={{
+                                        width: "100px",
+                                        "& .MuiOutlinedInput-root": {
+                                          backgroundColor: "#f0f8ff",
+                                          "&:hover": {
+                                            backgroundColor: "#e3f2fd",
+                                          },
+                                          "&.Mui-focused": {
+                                            backgroundColor: "#e3f2fd",
+                                          },
+                                        },
+                                      }}
+                                      placeholder="0"
+                                    />
+                                  </TableCell>
+                                ))}
+                                {/* Adult education HHH counts - editable */}
+                                {schoolYears.map((year) => (
+                                  <TableCell
+                                    key={`hhh-adult-input-${year}`}
+                                    align="center"
+                                    sx={{ py: 2 }}
+                                  >
+                                    <TextField
+                                      type="number"
+                                      value={
+                                        hhhStudentsCount.adult?.[year] || ""
+                                      }
+                                      onChange={(e) =>
+                                        handleHhhStudentsChange(
+                                          "adult",
+                                          year,
+                                          e.target.value
+                                        )
+                                      }
+                                      size="small"
+                                      inputProps={{
+                                        min: 0,
+                                        step: 1,
+                                        style: {
+                                          textAlign: "center",
+                                          fontSize: "1rem",
+                                        },
+                                      }}
+                                      sx={{
+                                        width: "100px",
+                                        "& .MuiOutlinedInput-root": {
+                                          backgroundColor: "#fafafa",
+                                          "&:hover": {
+                                            backgroundColor: "#f3e5f5",
+                                          },
+                                          "&.Mui-focused": {
+                                            backgroundColor: "#f3e5f5",
+                                          },
+                                        },
+                                      }}
+                                      placeholder="0"
+                                    />
                                   </TableCell>
                                 ))}
                               </TableRow>

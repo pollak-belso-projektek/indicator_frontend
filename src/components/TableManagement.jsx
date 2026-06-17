@@ -66,6 +66,11 @@ const TableNameToRoute = {
   muhelyiskola: "/muhelyiskolai-reszszakmat",
   "oktato-egyeb-tev": "/oktato-egyeb-tev",
   palyazatok: "/palyazatok",
+  szervezetfejlesztes: "/szervezetfejlesztes",
+  dualis_kepzohelyek: "/dualis-kepzohelyek-szama",
+  innovacios_tevekenysegek: "/innovacios-tevekenysegek",
+  szakkepzes_zolditese: "/szakkepzes-zolditese",
+  digitalis_kompetencia: "/digitalis-kompetencia",
 };
 
 // Helper function to get page number for a table name

@@ -253,6 +253,36 @@ const NavigationCategories = {
         tableName: "palyazatok",
       },
       {
+        name: "Szervezetfejlesztés",
+        icon: MdStar,
+        link: "/szervezetfejlesztes",
+        tableName: "szervezetfejlesztes",
+      },
+      {
+        name: "Duális képzőhelyek száma",
+        icon: MdStar,
+        link: "/dualis-kepzohelyek-szama",
+        tableName: "dualis_kepzohelyek",
+      },
+      {
+        name: "Innovációs tevékenységek",
+        icon: MdStar,
+        link: "/innovacios-tevekenysegek",
+        tableName: "innovacios_tevekenysegek",
+      },
+      {
+        name: "Szakképzés \"zöldítése\"",
+        icon: MdStar,
+        link: "/szakkepzes-zolditese",
+        tableName: "szakkepzes_zolditese",
+      },
+      {
+        name: "Digitális kompetencia",
+        icon: MdStar,
+        link: "/digitalis-kompetencia",
+        tableName: "digitalis_kompetencia",
+      },
+      {
         name: "Tanulmányi eredmény",
         icon: MdSchool,
         link: "/tanulmani-eredmeny",

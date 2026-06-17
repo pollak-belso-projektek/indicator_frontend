@@ -29,11 +29,11 @@ export default {
   "/egy-oktatora-juto-ossz-diak": 27,
   "/nyelvvizsgak-szama": 28, // Note: This page doesn't exist yet in navigation
   "/projektek": 29, // Note: This page doesn't exist yet in navigation
-  "/dualis-kepzohelyek-szama": 30, // Note: This page doesn't exist yet in navigation
+  "/dualis-kepzohelyek-szama": 30,
   "/palyaorientacio": 31, // Note: This page doesn't exist yet in navigation
   "/egyuttmukudesek-szama": 32, // Note: This page doesn't exist yet in navigation
-  "/szervezetfejlesztes": 33, // Note: This page doesn't exist yet in navigation
-  "/innovacios-tevekenysegek": 34, // Note: This page doesn't exist yet in navigation
-  "/digitalis-kompetencia": 35, // Note: This page doesn't exist yet in navigation
-  "/szakkepzes-zolditese": 36, // Note: This page doesn't exist yet in navigation
+  "/szervezetfejlesztes": 33,
+  "/innovacios-tevekenysegek": 34,
+  "/digitalis-kompetencia": 35,
+  "/szakkepzes-zolditese": 36,
 };
