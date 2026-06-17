@@ -57,6 +57,7 @@ export const indicatorApi = createApi({
     "MunkavallalokElismeresek",
     "Palyazatok",
     "TanulmanyiEredmeny",
+    "Projektek",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -522,9 +523,9 @@ export const indicatorApi = createApi({
     }),
     // Tanulmányi Eredmény (Academic Results - Indicator 25)
     getTanulmanyiEredmeny: build.query({
-      query: ({ alapadatok_id, tanev }) => `tanulmanyi_eredmeny/${alapadatok_id}/${tanev}`,
-      providesTags: (result, error, { alapadatok_id, tanev }) => [
-        { type: "TanulmanyiEredmeny", id: `${alapadatok_id}-${tanev}` },
+      query: ({ alapadatok_id }) => `tanulmanyi_eredmeny/${alapadatok_id}`,
+      providesTags: (result, error, { alapadatok_id }) => [
+        { type: "TanulmanyiEredmeny", id: alapadatok_id },
         "TanulmanyiEredmeny",
       ],
     }),
@@ -1422,6 +1423,40 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["Palyazatok"],
     }),
+    // Projektek (Indicator 29)
+    getProjektek: build.query({
+      query: (params) => {
+        let url = `projektek`;
+        if (params?.alapadatok_id) {
+          url += `?alapadatok_id=${params.alapadatok_id}`;
+        }
+        return url;
+      },
+      providesTags: ["Projektek"],
+    }),
+    addProjektek: build.mutation({
+      query: (data) => ({
+        url: "projektek",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Projektek"],
+    }),
+    updateProjektek: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `projektek/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Projektek"],
+    }),
+    deleteProjektek: build.mutation({
+      query: (id) => ({
+        url: `projektek/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Projektek"],
+    }),
   }),
 });
 
@@ -1591,4 +1626,9 @@ export const {
   useGetTanulmanyiEredmenyQuery,
   useAddTanulmanyiEredmenyMutation,
   useUpdateTanulmanyiEredmenyMutation,
+  // Projektek hooks
+  useGetProjektekQuery,
+  useAddProjektekMutation,
+  useUpdateProjektekMutation,
+  useDeleteProjektekMutation,
 } = indicatorApi;

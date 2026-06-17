@@ -258,6 +258,12 @@ const NavigationCategories = {
         link: "/tanulmani-eredmeny",
         tableName: "tanulmanyi_eredmeny",
       },
+      {
+        name: "Projektek",
+        icon: MdWork,
+        link: "/projektek",
+        tableName: "projektek",
+      },
     ],
   },
   // EDUCATION: {

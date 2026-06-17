@@ -118,6 +118,9 @@ const PalyazatokPage = lazy(
 const TanulmanyiEredmenyPage = lazy(
   () => import("../pages/indicators/25_tanulmani_eredmeny/Tanulmanyi_Eredmeny.jsx"),
 );
+const ProjektekPage = lazy(
+  () => import("../pages/indicators/29_projektek/Projektek"),
+);
 
 
 // List of pages that require school selection
@@ -151,6 +154,7 @@ const SCHOOL_REQUIRED_PAGES = [
   "/szakmai-tovabbkepzesek",
   "/palyazatok",
   "/tanulmani-eredmeny",
+  "/projektek",
 ];
 
 export default function Router() {
@@ -582,6 +586,19 @@ export default function Router() {
                       {withSchoolRequired(
                         <PalyazatokPage />,
                         "/palyazatok",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/projektek"
+                element={
+                  <TableProtectedRoute tableName="projektek">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <ProjektekPage />,
+                        "/projektek",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
