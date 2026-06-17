@@ -25,6 +25,7 @@ import {
 } from "../../../store/api/apiSlice";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import PageWrapper from "../../PageWrapper";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import InfoTanulmanyiEredmeny from "./info_tanulmani_eredmeny";
 import TitleTanulmanyiEredmeny from "./title_tanulmani_eredmeny";
 
@@ -132,7 +133,10 @@ export default function TanulmanyiEredmeny() {
   });
 
   const handleDataChange = (yearStr, instType, jogviszony, semester, field, value) => {
-    if (value && isNaN(value)) return;
+    if (value !== "") {
+      if (isNaN(value)) return;
+      if (parseFloat(value) < 0) return; // Prevent negative numbers
+    }
 
     setTableData((prev) => {
       const yearData = prev[yearStr] || {};
@@ -342,6 +346,7 @@ export default function TanulmanyiEredmeny() {
                         handleDataChange(yearStr, instType, jogv, 'felev1', 'kituno', e.target.value)
                       }
                       sx={getFieldSx(yearStr, instType, jogv, 'felev1', 'kituno')}
+                      inputProps={{ min: 0 }}
                     />
                   </TableCell>
                   <TableCell sx={cellSx}>
@@ -354,6 +359,7 @@ export default function TanulmanyiEredmeny() {
                         handleDataChange(yearStr, instType, jogv, 'felev1', 'bukott', e.target.value)
                       }
                       sx={getFieldSx(yearStr, instType, jogv, 'felev1', 'bukott')}
+                      inputProps={{ min: 0 }}
                     />
                   </TableCell>
 
@@ -368,6 +374,7 @@ export default function TanulmanyiEredmeny() {
                         handleDataChange(yearStr, instType, jogv, 'felev2', 'kituno', e.target.value)
                       }
                       sx={getFieldSx(yearStr, instType, jogv, 'felev2', 'kituno')}
+                      inputProps={{ min: 0 }}
                     />
                   </TableCell>
                   <TableCell sx={cellSx}>
@@ -380,6 +387,7 @@ export default function TanulmanyiEredmeny() {
                         handleDataChange(yearStr, instType, jogv, 'felev2', 'bukott', e.target.value)
                       }
                       sx={getFieldSx(yearStr, instType, jogv, 'felev2', 'bukott')}
+                      inputProps={{ min: 0 }}
                     />
                   </TableCell>
                 </TableRow>
@@ -455,25 +463,30 @@ export default function TanulmanyiEredmeny() {
       infoContent={<InfoTanulmanyiEredmeny />}
     >
       <Box sx={{ p: 3 }}>
-        <Stack direction="row" spacing={2} justifyContent="flex-end" alignItems="center" mb={3}>
-          <Button
-            variant="outlined"
-            color="warning"
-            startIcon={<RestartAltIcon />}
-            onClick={handleReset}
-            disabled={!isModified || isSaving}
-          >
-            Visszaállítás
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<SaveIcon />}
-            onClick={handleSaveData}
-            disabled={!isModified || isSaving}
-          >
-            Mentés
-          </Button>
+        <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center" mb={3}>
+          <Box>
+            <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="tanulmanyi_eredmeny_export" />
+          </Box>
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="outlined"
+              color="warning"
+              startIcon={<RestartAltIcon />}
+              onClick={handleReset}
+              disabled={!isModified || isSaving}
+            >
+              Visszaállítás
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<SaveIcon />}
+              onClick={handleSaveData}
+              disabled={!isModified || isSaving}
+            >
+              Mentés
+            </Button>
+          </Stack>
         </Stack>
 
         {!selectedSchool ? (
