@@ -55,6 +55,7 @@ export const indicatorApi = createApi({
     "VersenyKategoria",
     "IntezményiElismeresek",
     "MunkavallalokElismeresek",
+    "Palyazatok",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -1364,6 +1365,38 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["MunkavallalokElismeresek"],
     }),
+    
+    // Pályázatok (Indicator 24)
+    getPalyazatok: build.query({
+      query: ({ alapadatokId, tanev }) => `palyazatok/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: (result, error, { alapadatokId, tanev }) => [
+        { type: "Palyazatok", id: `${alapadatokId}-${tanev || getCurrentSchoolYearStart()}` },
+        "Palyazatok"
+      ],
+    }),
+    addPalyazatok: build.mutation({
+      query: (data) => ({
+        url: "palyazatok",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Palyazatok"],
+    }),
+    updatePalyazatok: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `palyazatok/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Palyazatok"],
+    }),
+    deletePalyazatok: build.mutation({
+      query: (id) => ({
+        url: `palyazatok/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Palyazatok"],
+    }),
   }),
 });
 
@@ -1524,4 +1557,9 @@ export const {
   useAddLemorzsolodasMutation,
   useUpdateLemorzsolodasMutation,
   useDeleteLemorzsolodasMutation,
+  // Palyazatok hooks
+  useGetPalyazatokQuery,
+  useAddPalyazatokMutation,
+  useUpdatePalyazatokMutation,
+  useDeletePalyazatokMutation,
 } = indicatorApi;

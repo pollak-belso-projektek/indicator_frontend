@@ -33,6 +33,7 @@ import { generateSchoolYears, getCurrentSchoolYear } from "../../../utils/school
 import PageWrapper from "../../PageWrapper";
 import InfoHianyzas from "./info_hianyzas";
 import TitleHianyzas from "./title_hianyzas";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 const evszamok = generateSchoolYears();
 

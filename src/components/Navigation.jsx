@@ -246,6 +246,12 @@ const NavigationCategories = {
         link: "/oktato-egyeb-tev",
         tableName: "oktato-egyeb-tev",
       },
+      {
+        name: "Pályázatok",
+        icon: MdStar,
+        link: "/palyazatok",
+        tableName: "palyazatok",
+      },
     ],
   },
   // EDUCATION: {

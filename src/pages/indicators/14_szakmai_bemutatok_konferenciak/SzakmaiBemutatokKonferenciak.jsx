@@ -31,6 +31,7 @@ import {
   useUpdateSzakmaiRendezvenyekMutation,
 } from "../../../store/api/apiSlice";
 import { getCurrentSchoolYearStart } from "../../../utils/dateUtils";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 export default function SzakmaiBemutatokKonferenciak() {
   const selectedSchool = useSelector((state) => state.auth.selectedSchool);
@@ -279,7 +280,8 @@ export default function SzakmaiBemutatokKonferenciak() {
         <LockStatusIndicator tableName="szakmai_bemutatok_konferenciak" />
 
         <Card sx={{ mb: 3, p: 2, display: "flex", flexDirection: "row", gap: 2 }}>
-          <LockedTableWrapper tableName="szakmai_bemutatok_konferenciak">
+          <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+                  <LockedTableWrapper tableName="szakmai_bemutatok_konferenciak">
             <Button
               variant="contained"
               startIcon={<SaveIcon />}

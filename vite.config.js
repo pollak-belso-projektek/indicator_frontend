@@ -27,6 +27,7 @@ export default defineConfig({
   ],
   server: {
     allowedHosts: ["indikator.pollak.info"],
+    //["*"],
   },
   build: {
     // rollupOptions: {

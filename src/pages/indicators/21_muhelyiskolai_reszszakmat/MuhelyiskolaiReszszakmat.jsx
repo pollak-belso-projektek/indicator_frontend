@@ -38,6 +38,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoMuhelyiskolaiReszszakmat from "./info_muhelyiskolai_reszszakmat";
 import TitleMuhelyiskolaiReszszakmat from "./title_muhelyiskolai_reszszakmat";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 
 export default function MuhelyiskolaiReszszakmat() {
@@ -400,7 +401,8 @@ export default function MuhelyiskolaiReszszakmat() {
             <>
 
               <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 3, position: 'sticky', top: 2, zIndex: 10, backgroundColor: 'white', padding: 1, borderRadius: 1 }}>
-                <LockedTableWrapper tableName="muhelyiskola">
+                <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+                  <LockedTableWrapper tableName="muhelyiskola">
                   <Button
                     variant="contained"
                     startIcon={<SaveIcon />}

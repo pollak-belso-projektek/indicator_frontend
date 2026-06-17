@@ -112,6 +112,9 @@ const ChangelogPage = lazy(() => import("../pages/Changelog.jsx"));
 const OktatokEgyebTevPage = lazy(
   () => import("../pages/indicators/23_oktato_egyeb_tev/Oktatok_egyeb_tev.jsx"),
 );
+const PalyazatokPage = lazy(
+  () => import("../pages/indicators/24_palyazatok/Palyazatok.jsx"),
+);
 
 
 
@@ -144,6 +147,7 @@ const SCHOOL_REQUIRED_PAGES = [
   "/alapadatok",
   "/hianyzas",
   "/szakmai-tovabbkepzesek",
+  "/palyazatok",
 ];
 
 export default function Router() {
@@ -562,6 +566,19 @@ export default function Router() {
                       {withSchoolRequired(
                         <SzakmaiTovabbkepzesekPage />,
                         "/szakmai-tovabbkepzesek",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/palyazatok"
+                element={
+                  <TableProtectedRoute tableName="palyazatok">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <PalyazatokPage />,
+                        "/palyazatok",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>

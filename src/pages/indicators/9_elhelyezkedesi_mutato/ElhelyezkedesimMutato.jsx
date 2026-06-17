@@ -34,6 +34,7 @@ import {
 import PageWrapper from "../../PageWrapper";
 import InfoElhelyezkedes from "./info_elhelyezkedesi_mutato";
 import TitleElhelyezkedes from "./title_elhelyezkedesi_mutato";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 const evszamok = generateSchoolYears();
 
@@ -322,6 +323,7 @@ export default function ElhelyezkedesimMutato() {
 
             {/* Action Buttons */}
             <Stack direction="row" spacing={2} sx={{ mb: 3, ml: 2 }}>
+              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="elhelyezkedesi_mutato" />
               <Button
                 variant="contained"
                 startIcon={<SaveIcon />}

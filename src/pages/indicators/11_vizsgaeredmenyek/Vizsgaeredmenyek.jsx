@@ -34,6 +34,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoVizsgaeredmenyek from "./info_vizsgaeredmenyek";
 import TitleVizsgaeredmenyek from "./title_vizsgaeredmenyek";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 export default function Vizsgaeredmenyek() {
   const selectedSchool = useSelector(selectSelectedSchool);
@@ -427,7 +428,8 @@ export default function Vizsgaeredmenyek() {
 
             {/* Action Buttons */}
             <Stack direction="row" spacing={2} sx={{ mb: 3, ml: 2 }}>
-              <LockedTableWrapper tableName="vizsgaeredmenyek">
+              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+                  <LockedTableWrapper tableName="vizsgaeredmenyek">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}

@@ -61,6 +61,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoEgyOktatoraJutoTanulo from "./info_oktato_per_diak";
 import TitleEgyOktatoraJutoTanulo from "./title_oktato_per_diak";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 export default function EgyOktatoraJutoTanulo() {
   const schoolYears = generateSchoolYears();
@@ -358,7 +359,10 @@ export default function EgyOktatoraJutoTanulo() {
       infoContent={<InfoEgyOktatoraJutoTanulo />}
     >
       <Box sx={{ p: 3 }}>
-        <LockStatusIndicator tableName="egy_oktatora_juto_tanulo" />
+        <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+          <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="egy_oktatora_juto_tanulo" />
+          <LockStatusIndicator tableName="egy_oktatora_juto_tanulo" />
+        </Stack>
 
         {/* Loading State */}
         {isFetching && (
@@ -681,6 +685,7 @@ export default function EgyOktatoraJutoTanulo() {
 
                 {/* Action Buttons */}
                 <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+                  <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
                   <LockedTableWrapper tableName="egy_oktatora_juto_tanulo">
                     <Button
                       variant="contained"

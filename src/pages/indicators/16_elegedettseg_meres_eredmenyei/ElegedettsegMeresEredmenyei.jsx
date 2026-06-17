@@ -39,6 +39,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoElegedettsegMeres from "./info_elegedettseg_meres_eredmenyei";
 import TitleElegedettsegMeres from "./title_elegedettseg_meres_eredmenyei";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 const evszamok = generateSchoolYears();
 
 // Mapping for the exact JSON properties the backend expects
@@ -362,7 +363,8 @@ export default function ElegedettsegMeresEredmenyei() {
           <CardContent>
            
             <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-              <LockedTableWrapper tableName="elegedettseg">
+              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+                  <LockedTableWrapper tableName="elegedettseg">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}

@@ -40,6 +40,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoSzakkepzesiMunkaszerzodes from "./info_szakkepzesi_munkaszerződes_arany";
 import TitleSzakkepzesiMunkaszerzodes from "./title_szakkepzesi_munkaszerződes_arany";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 export default function SzakképzésiMunkaszerződésArány() {
   const schoolYears = generateSchoolYears();
@@ -1568,7 +1569,8 @@ export default function SzakképzésiMunkaszerződésArány() {
               boxShadow: 1,
             }}
           >
-             <LockedTableWrapper tableName="szmsz">
+             <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+                  <LockedTableWrapper tableName="szmsz">
             <Button
               variant="contained"
               startIcon={<SaveIcon />}

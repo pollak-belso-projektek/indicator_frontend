@@ -57,6 +57,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoSajatosNevelesiIgenyu from "./info_sajatos_nevelesi_igenyu_tanulok_aranya";
 import TitleSajatosNevelesiIgenyu from "./title_sajatos_nevelesi_igenyu_tanulok_aranya";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 export default function SajatosNevelesiIgenyuTanulokAranya() {
   const schoolYears = generateSchoolYears();
@@ -437,7 +438,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                     <Card>
                       <CardContent>
                         <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
-                          <LockedTableWrapper tableName="sajatos_nevelesu_tanulok">
+                          <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+                  <LockedTableWrapper tableName="sajatos_nevelesu_tanulok">
                             <Button
                               variant="contained"
                               startIcon={<SaveIcon />}

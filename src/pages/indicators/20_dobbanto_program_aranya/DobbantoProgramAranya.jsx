@@ -38,6 +38,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoDobbantoProgramAranya from "./info_dobbanto_program_aranya";
 import TitleDobbantoProgramAranya from "./title_dobbanto_program_aranya";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 
 export default function DobbantoProgramAránya() {
@@ -428,6 +429,7 @@ export default function DobbantoProgramAránya() {
                 {/* Main Data Tables */}
                 {/* Action Buttons */}
                 <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 2 }}>
+                  <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
                   <LockedTableWrapper tableName="dobbanto">
                     <Button
                       variant="contained"

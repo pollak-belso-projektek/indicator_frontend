@@ -37,6 +37,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoOktatoEgyebTev from "./info_oktato_egyeb_tev";
 import TitleOktatoEgyebTev from "./title_oktato_egyeb_tev";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 
 export default function OktatokEgyebTev() {
@@ -720,6 +721,7 @@ export default function OktatokEgyebTev() {
 
                 {/* Action buttons */}
                 <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+                  <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
                   <LockedTableWrapper tableName="oktato-egyeb-tev">
                     <Button
                       variant="contained"

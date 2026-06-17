@@ -32,6 +32,7 @@ import {
 } from "../../../store/api/apiSlice";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import { generateSchoolYears } from "../../../utils/schoolYears";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 export default function Kompetencia() {
   const selectedSchool = useSelector(selectSelectedSchool);
@@ -238,7 +239,8 @@ export default function Kompetencia() {
         <Card>
           <CardContent>
             <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-              <LockedTableWrapper tableName="kompetencia">
+              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+                  <LockedTableWrapper tableName="kompetencia">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}

@@ -34,6 +34,7 @@ import { generateSchoolYears, getCurrentSchoolYear } from "../../../utils/school
 import PageWrapper from "../../PageWrapper";
 import InfoEgyOktatoraJutoOsszDiak from "./info_egy_oktatora_juto_ossz_diak";
 import TitleEgyOktatoraJutoOsszDiak from "./title_egy_oktatora_juto_ossz_diak";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 const evszamok = generateSchoolYears();
 

@@ -65,6 +65,7 @@ const TableNameToRoute = {
   dobbanto: "/dobbanto-program-aranya",
   muhelyiskola: "/muhelyiskolai-reszszakmat",
   "oktato-egyeb-tev": "/oktato-egyeb-tev",
+  palyazatok: "/palyazatok",
 };
 
 // Helper function to get page number for a table name

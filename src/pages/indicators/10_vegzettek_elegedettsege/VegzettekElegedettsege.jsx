@@ -32,6 +32,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoVegzettekElegedettsege from "./info_vegzettek_elegedettsege";
 import TitleVegzettekElegedettsege from "./title_vegzettek_elegedettsege";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 const evszamok = generateSchoolYears();
 
@@ -39,7 +40,13 @@ export default function VegzettekElegedettsege() {
   const selectedSchool = useSelector(selectSelectedSchool);
 
   // API Hooks
-  const { data: schoolsData, isLoading: isLoadingSchools } = useGetAllAlapadatokQuery();
+  const {
+    data: schoolsData,
+    isLoading: isLoadingSchools,
+    isFetching,
+    error: fetchError,
+    refetch,
+  } = useGetAllAlapadatokQuery();
   const [addElegedettseg, { isLoading: isAdding }] = useAddElegedettsegMutation();
   const [updateElegedettseg, { isLoading: isUpdating }] = useUpdateElegedettsegMutation();
 
@@ -107,28 +114,32 @@ export default function VegzettekElegedettsege() {
   // Load API data into tableData state
   useEffect(() => {
 
-      const initialData = {};
+    const initialData = {};
 
-      const relevantData = selectedSchool
+    const relevantData = selectedSchool
+      ? (Array.isArray(selectedSchool.elegedettseg) ? selectedSchool.elegedettseg : [])
+      : (Array.isArray(schoolsData)
+        ? schoolsData.flatMap((school) => (Array.isArray(school.elegedettseg) ? school.elegedettseg : []))
+        : []);
 
-      relevantData.forEach(item => {
-        const year = item.tanev_kezdete;
-        const szakmaId = item.szakma_id || item.szakma?.id;
-        const szakiranyId = item.szakirany_id || item.szakirany?.id;
-        const key = szakmaId ? `szakma_${szakmaId}_${szakiranyId}` : `szakirany_${szakiranyId}`;
+    relevantData.forEach(item => {
+      const year = item.tanev_kezdete;
+      const szakmaId = item.szakma_id || item.szakma?.id;
+      const szakiranyId = item.szakirany_id || item.szakirany?.id;
+      const key = szakmaId ? `szakma_${szakmaId}_${szakiranyId}` : `szakirany_${szakiranyId}`;
 
-        if (!initialData[key]) initialData[key] = {};
-        initialData[key][year] = {
-          id: item.id,
-          munkaadok_elegedettsege: item.munkaadok_elegedettsege ?? "",
-        };
-      });
+      if (!initialData[key]) initialData[key] = {};
+      initialData[key][year] = {
+        id: item.id,
+        munkaadok_elegedettsege: item.munkaadok_elegedettsege ?? "",
+      };
+    });
 
-      setTableData(initialData);
-      setSavedData(JSON.parse(JSON.stringify(initialData)));
-      setIsModified(false);
-  
-  }, [selectedSchool]);
+    setTableData(initialData);
+    setSavedData(JSON.parse(JSON.stringify(initialData)));
+    setIsModified(false);
+
+  }, [selectedSchool, schoolsData]);
 
   // Handle Input Changes
   const handleDataChange = (key, yearStr, value) => {
@@ -257,6 +268,7 @@ export default function VegzettekElegedettsege() {
 
             {/* Action Buttons */}
             <Stack direction="row" spacing={2} sx={{ mb: 3, ml: 2 }}>
+              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
               <LockedTableWrapper tableName="elegedettseg">
                 <Button
                   variant="contained"

@@ -37,6 +37,7 @@ import {
   useGetFelvettekSzamaByAlapadatokIdAndYearQuery,
 } from "../../../store/api/apiSlice";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 export default function NszfhMeresek() {
   const selectedSchool = useSelector(selectSelectedSchool);
@@ -524,7 +525,8 @@ export default function NszfhMeresek() {
         <Card>
           <CardContent>
             <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-              <LockedTableWrapper tableName="nszfh">
+              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+                  <LockedTableWrapper tableName="nszfh">
                 <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSave} disabled={!isModified || isSaving}>
                   {isSaving ? "Mentés..." : "Mentés"}
                 </Button>

@@ -36,6 +36,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoSzakmaiVizsga from "./info_szakmai_vizsga";
 import TitleSzakmaiVizsga from "./title_szakmai_vizsga";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 const evszamok = generateSchoolYears();
 const numberFormatter = new Intl.NumberFormat("hu-HU");
@@ -299,7 +300,8 @@ export default function SzakmaiVizsga() {
 
             {/* Action Buttons */}
             <Stack direction="row" spacing={2} sx={{ mb: 3, ml: 2 }}>
-              <LockedTableWrapper tableName="szakmai_vizsga_eredmenyek">
+              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+                  <LockedTableWrapper tableName="szakmai_vizsga_eredmenyek">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}

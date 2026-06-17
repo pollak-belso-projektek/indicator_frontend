@@ -26,6 +26,7 @@ import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import InfoFelnottkepzes from "./info_felnottkepzes";
 import TitleFelnottkepzes from "./title_felnottkepzes";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 
 export default function Felnottkepzes() {
@@ -173,7 +174,10 @@ export default function Felnottkepzes() {
       >
         <Fade in={true} timeout={800}>
           <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
-            <LockStatusIndicator tableName="felnottkepzes" />
+            <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="felnottkepzes" />
+              <LockStatusIndicator tableName="felnottkepzes" />
+            </Stack>
 
             {/* Loading State */}
             {isFetching && (

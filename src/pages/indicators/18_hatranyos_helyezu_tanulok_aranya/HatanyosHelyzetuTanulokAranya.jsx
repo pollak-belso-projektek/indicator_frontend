@@ -46,6 +46,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoHatranyosHelyzetu from "../18_hatranyos_helyezu_tanulok_aranya/info_hatranyos_helyezu_tanulok_aranya";
 import TitleHatranyosHelyzetu from "../18_hatranyos_helyezu_tanulok_aranya/title_hatranyos_helyezu_tanulok_aranya";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 export default function HatanyosHelyzetuTanulokAranya() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -593,7 +594,8 @@ export default function HatanyosHelyzetuTanulokAranya() {
                         py: 1,
                       }}
                     >
-                      <LockedTableWrapper tableName="hh_es_hhh_nevelesu_tanulok">
+                      <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+                  <LockedTableWrapper tableName="hh_es_hhh_nevelesu_tanulok">
                         <Button
                           variant="contained"
                           startIcon={<SaveIcon />}

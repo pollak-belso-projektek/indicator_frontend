@@ -38,6 +38,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import PageWrapper from "../../PageWrapper";
 import InfoTanuloLetszam from "./info_tanulo_letszam";
 import TitleTanuloLetszam from "./title_tanulo_letszam";
+import ExportToExcel from "../../../components/ExportToExcel";
 
 const evszamok = generateSchoolYears();
 
@@ -933,6 +934,72 @@ export default function TanuloLetszam() {
     }
   }, [apiStudentData, tanugyiData, calculateFromTanugyiData]);
 
+  const exportRows = useMemo(() => {
+    const rows = [];
+    
+    // Létszámváltozás
+    const changeRowTotal = { megnevezes: "Létszámváltozás (%) - Összesen" };
+    const changeRowStudent = { megnevezes: "Létszámváltozás (%) - Tanulói" };
+    const changeRowAdult = { megnevezes: "Létszámváltozás (%) - Felnőttképzési" };
+    
+    evszamok.forEach(schoolYear => {
+      const startYear = parseInt(schoolYear.split("/")[0]);
+      changeRowTotal[`${schoolYear}_osszesen`] = calculateGrandTotalPercentageChange(startYear, "total");
+      changeRowStudent[`${schoolYear}_tanuloi`] = calculateGrandTotalPercentageChange(startYear, "tanuloi_jogviszony");
+      changeRowAdult[`${schoolYear}_felnott`] = calculateGrandTotalPercentageChange(startYear, "felnottkepzesi_jogviszony");
+    });
+    rows.push(changeRowTotal);
+    rows.push(changeRowStudent);
+    rows.push(changeRowAdult);
+
+    // Kategóriák
+    programTypes.forEach((category) => {
+      if (category.isSzakirany) {
+        rows.push({ megnevezes: category.category });
+        const subcatRow = { megnevezes: `  ${category.subcategory}` };
+        evszamok.forEach(schoolYear => {
+          const startYear = parseInt(schoolYear.split("/")[0]);
+          let subcategoryTotal = 0;
+          let subcategoryTanuloi = 0;
+          let subcategoryFelnottkepzesi = 0;
+          category.subTypes.forEach((subType) => {
+            subcategoryTotal += calculateTotal(subType, startYear);
+            subcategoryTanuloi += tableData[subType]?.[startYear]?.tanuloi_jogviszony || 0;
+            subcategoryFelnottkepzesi += tableData[subType]?.[startYear]?.felnottkepzesi_jogviszony || 0;
+          });
+          subcatRow[`${schoolYear}_osszesen`] = subcategoryTotal;
+          subcatRow[`${schoolYear}_tanuloi`] = subcategoryTanuloi;
+          subcatRow[`${schoolYear}_felnott`] = subcategoryFelnottkepzesi;
+        });
+        rows.push(subcatRow);
+        
+        category.subTypes.forEach((subType) => {
+          const dataRow = { megnevezes: `    ${subType}` };
+          evszamok.forEach(schoolYear => {
+            const startYear = parseInt(schoolYear.split("/")[0]);
+            dataRow[`${schoolYear}_osszesen`] = calculateTotal(subType, startYear);
+            dataRow[`${schoolYear}_tanuloi`] = tableData[subType]?.[startYear]?.tanuloi_jogviszony || 0;
+            dataRow[`${schoolYear}_felnott`] = tableData[subType]?.[startYear]?.felnottkepzesi_jogviszony || 0;
+          });
+          rows.push(dataRow);
+        });
+      }
+    });
+
+    return rows;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [programTypes, tableData]);
+
+  const exportColumns = useMemo(() => {
+    const columns = [{ header: "Megnevezés", key: "megnevezes", width: 50 }];
+    evszamok.forEach(year => {
+      columns.push({ header: `${year} Összesen`, key: `${year}_osszesen`, width: 15 });
+      columns.push({ header: `${year} Tanulói`, key: `${year}_tanuloi`, width: 15 });
+      columns.push({ header: `${year} Felnőtt`, key: `${year}_felnott`, width: 15 });
+    });
+    return columns;
+  }, []);
+
   if (isFetching || isLoadingSchools || isLoadingTanugyi) {
     return (
       <Backdrop
@@ -1027,6 +1094,13 @@ export default function TanuloLetszam() {
                       Visszaállítás
                     </Button>
                   </LockedTableWrapper>
+                  <ExportToExcel 
+                    fileName="tanulo_letszam"
+                    sheetName="Tanulólétszám"
+                    columns={exportColumns}
+                    rows={exportRows}
+                    buttonLabel="Export Táblázatba"
+                  />
                 </Stack>
                 <TableContainer
                   component={Paper}

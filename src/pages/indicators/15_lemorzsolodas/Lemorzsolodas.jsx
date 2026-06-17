@@ -36,6 +36,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoLemorzsolodas from "./info_lemorzsolodas";
 import TitleLemorzsolodas from "./title_lemorzsolodas";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 
 export default function Lemorzsolodas() {
   const selectedSchool = useSelector(selectSelectedSchool);
@@ -315,7 +316,8 @@ export default function Lemorzsolodas() {
             )}
 
             <Card sx={{ mb: 3, p: 2, display: "flex", flexDirection: "row", gap: 2 }}>
-              <LockedTableWrapper tableName="lemorzsolodas">
+              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+                  <LockedTableWrapper tableName="lemorzsolodas">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}

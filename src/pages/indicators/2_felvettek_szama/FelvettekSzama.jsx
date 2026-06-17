@@ -30,6 +30,7 @@ import {
   NotificationSnackbar,
 } from "../../../components/shared";
 import TitleFelvettekSzama from "./title_felvettek_szama";
+import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageWrapper from "../../PageWrapper";
 import InfoFelvettekSzama from "./info_felvettek_szama";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
@@ -860,6 +861,7 @@ const FelvettekSzama = () => {
               </Alert>
             )}
             <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="felvettek_szama" />
               <LockedTableWrapper tableName="felvettek_szama">
                 <Button
                   variant="contained"
