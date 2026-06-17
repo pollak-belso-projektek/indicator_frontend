@@ -354,7 +354,13 @@ export default function DataImport() {
           </Typography>
 
           <Paper sx={{ width: "100%" }}>
-            <Tabs value={tabValue} onChange={handleTabChange} centered>
+            <Tabs 
+              value={tabValue} 
+              onChange={handleTabChange} 
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+            >
               <Tab label="Tanügyi Adatok" />
               <Tab label="Alkalmazottak Munkaugyi Adatai" />
               {/* TODO: Uncomment when done */}

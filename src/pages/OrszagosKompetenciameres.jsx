@@ -142,7 +142,7 @@ export default function OrszagosKompetenciameres() {
             variant="outlined"
             sx={{ overflowX: "auto" }}
           >
-            <Table size="small">
+            <Table size="small" sx={{ minWidth: 800 }}>
               <TableHead>
                 <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                   <TableCell
@@ -287,7 +287,7 @@ export default function OrszagosKompetenciameres() {
           </TableContainer>
 
           {/* Action Buttons */}
-          <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mt: 3 }}>
             <Button
               variant="contained"
               startIcon={<SaveIcon />}
@@ -328,7 +328,7 @@ export default function OrszagosKompetenciameres() {
           <Typography variant="h6" component="h3" gutterBottom>
             Jelmagyarázat
           </Typography>
-          <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 2 }}>
             <Chip label="országos" variant="outlined" />
             <Chip
               label="intézményi"

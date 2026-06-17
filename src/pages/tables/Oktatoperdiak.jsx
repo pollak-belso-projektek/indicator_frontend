@@ -261,7 +261,7 @@ const Oktatoperdiak = () => {
           </Card>
       {/* Divisor Configuration */}
       <Box sx={{ margin: 2, mb: 3 }}>
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "flex-start", sm: "center" }}>
           <Typography variant="body1">
             Heti óratömeg osztója (oktatói létszám számításához):
           </Typography>
@@ -283,7 +283,7 @@ const Oktatoperdiak = () => {
 
       {/* Action Buttons */}
       <Box sx={{ margin: 2, mb: 3 }}>
-        <Stack direction="row" spacing={2}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <Button
             variant="contained"
             startIcon={<SaveIcon />}
@@ -356,7 +356,7 @@ const Oktatoperdiak = () => {
       </Card>
 
       <Box sx={{ margin: 2 }}>
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>
@@ -402,7 +402,7 @@ fenntartó által engedélyezett heti óratömeg
 
         */}
       <Box sx={{ margin: 2 }}>
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>
@@ -436,7 +436,7 @@ fenntartó által engedélyezett heti óratömeg
         </TableContainer>
       </Box>
       <Box sx={{ margin: 2 }}>
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>

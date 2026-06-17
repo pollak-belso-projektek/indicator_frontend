@@ -378,8 +378,10 @@ const Schools = () => {
       {/* Header */}
       <Box
         display="flex"
+        flexDirection={{ xs: "column", sm: "row" }}
         justifyContent="space-between"
-        alignItems="center"
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        gap={2}
         mb={3}
       >
         <Typography variant="h4" component="h1">
@@ -694,8 +696,10 @@ const Schools = () => {
                 <Box
                   sx={{
                     display: "flex",
+                    flexDirection: { xs: "column", md: "row" },
                     justifyContent: "space-between",
-                    alignItems: "flex-start",
+                    alignItems: { xs: "flex-start", md: "center" },
+                    gap: 2,
                     mb: 2,
                   }}
                 >
@@ -708,7 +712,7 @@ const Schools = () => {
                       használja a főoldal részleteit.
                     </Typography>
                   </Box>
-                  <Box sx={{ width: 300 }}>
+                  <Box sx={{ width: { xs: "100%", sm: 300 } }}>
                     <CustomCreatableSelect
                       options={szakiranyOptions}
                       placeholder="Válasszon vagy hozzon létre szakirányt"
@@ -770,8 +774,10 @@ const Schools = () => {
                             <Box
                               sx={{
                                 display: "flex",
+                                flexDirection: { xs: "column", sm: "row" },
                                 justifyContent: "space-between",
-                                alignItems: "flex-start",
+                                alignItems: { xs: "flex-start", sm: "center" },
+                                gap: 2,
                                 mb: 1,
                               }}
                             >
@@ -787,7 +793,7 @@ const Schools = () => {
                                   Kapcsolat módosítása
                                 </Typography>
                               </Box>
-                              <Box sx={{ width: 250 }}>
+                              <Box sx={{ width: { xs: "100%", sm: 250 } }}>
                                 <CustomCreatableSelect
                                   options={szakmaOptions}
                                   placeholder="Válasszon vagy hozzon létre szakmát"

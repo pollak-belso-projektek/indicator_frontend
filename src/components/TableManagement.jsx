@@ -440,8 +440,10 @@ const TableManagement = () => {
           <Box
             sx={{
               display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
               justifyContent: "space-between",
-              alignItems: "center",
+              alignItems: { xs: "flex-start", sm: "center" },
+              gap: 2,
               mb: 3,
             }}
           >
@@ -456,8 +458,8 @@ const TableManagement = () => {
           </Box>
 
           {/* Tables List */}
-          <TableContainer component={Paper} variant="outlined">
-            <Table>
+          <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+            <Table sx={{ minWidth: 800 }}>
               <TableHead>
                 <TableRow>
                   {userPermissions?.isSuperadmin && (

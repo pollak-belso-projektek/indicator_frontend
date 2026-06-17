@@ -35,21 +35,21 @@ export default function Alapadatok() {
     { skip: !selectedSchool?.id }
   );
 
-  // If no school is selected, show a message
   if (!selectedSchool) {
     return (
-      <div
-        style={{
+      <Box
+        sx={{
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
           height: "90vh",
+          p: 2,
         }}
       >
-        <h1 style={{ color: "#666" }}>
+        <Typography variant="h5" color="textSecondary" align="center">
           Kérjük válasszon ki egy iskolát az adatok megtekintéséhez!
-        </h1>
-      </div>
+        </Typography>
+      </Box>
     );
   }
 
@@ -91,8 +91,8 @@ export default function Alapadatok() {
 
   const summary = calculateSummary(studentData);
   return isLoading || isStudentLoading ? (
-    <div
-      style={{
+    <Box
+      sx={{
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -100,29 +100,31 @@ export default function Alapadatok() {
       }}
     >
       <Spinner size="xl" />
-    </div>
+    </Box>
   ) : error ? (
-    <div
-      style={{
+    <Box
+      sx={{
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         height: "90vh",
+        p: 2,
       }}
     >
-      <h1 style={{ color: "red" }}>Hiba történt az adatok betöltésekor!</h1>
-    </div>
+      <Typography variant="h5" color="error" align="center">Hiba történt az adatok betöltésekor!</Typography>
+    </Box>
   ) : !data ? (
-    <div
-      style={{
+    <Box
+      sx={{
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         height: "90vh",
+        p: 2,
       }}
     >
-      <h1 style={{ color: "red" }}>Nincsenek elérhető adatok!</h1>
-    </div>
+      <Typography variant="h5" color="error" align="center">Nincsenek elérhető adatok!</Typography>
+    </Box>
   ) : (
     <Box sx={{ p: 3 }}>
       {/* School Basic Information */}

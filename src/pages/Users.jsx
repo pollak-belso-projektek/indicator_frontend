@@ -154,7 +154,16 @@ const Users = () => {
         <CardContent sx={{ p: 3 }}>
           {/* Header with Search and Actions */}
 
-          <Flex sx={{ width: "100%" }} justify="space-evenly">
+          <Box
+            sx={{
+              display: "flex",
+              width: "100%",
+              flexDirection: { xs: "column", lg: "row" },
+              justifyContent: "space-between",
+              gap: 2,
+              mb: 2,
+            }}
+          >
             {/* Left Side: Column Visibility, Density, Width */}
             <Box
               sx={{
@@ -220,7 +229,7 @@ const Users = () => {
                 </Button>
               )}
             </Box>
-          </Flex>
+          </Box>
 
           {/* Table Card */}
           <Card variant="outlined" sx={{ mb: 3 }}>

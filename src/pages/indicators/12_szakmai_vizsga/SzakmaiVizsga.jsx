@@ -299,7 +299,7 @@ export default function SzakmaiVizsga() {
             )}
 
             {/* Action Buttons */}
-            <Stack direction="row" spacing={2} sx={{ mb: 3, ml: 2 }}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3, ml: 2 }}>
               <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
                   <LockedTableWrapper tableName="szakmai_vizsga_eredmenyek">
                 <Button

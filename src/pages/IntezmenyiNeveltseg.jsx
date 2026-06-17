@@ -572,8 +572,8 @@ export default function IntezmenyiNeveltseg() {
               </Typography>
             </Box>
           ) : (
-            <TableContainer component={Paper} variant="outlined">
-              <Table size="small">
+            <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+              <Table size="small" sx={{ minWidth: 800 }}>
                 <TableHead>
                   <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                     <TableCell sx={{ fontWeight: "bold" }}>Tanév</TableCell>
@@ -782,8 +782,8 @@ export default function IntezmenyiNeveltseg() {
                   </Typography>
                 </AccordionSummary>
                 <AccordionDetails>
-                  <TableContainer component={Paper} variant="outlined">
-                    <Table size="small">
+                  <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+                    <Table size="small" sx={{ minWidth: 800 }}>
                       <TableHead>
                         <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                           <TableCell sx={{ fontWeight: "bold" }}>

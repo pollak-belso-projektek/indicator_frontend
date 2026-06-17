@@ -556,9 +556,11 @@ export default function Dashboard() {
           <Box
             sx={{
               display: "flex",
-              alignItems: "center",
+              alignItems: { xs: "flex-start", sm: "center" },
+              flexDirection: { xs: "column", sm: "row" },
               mb: 2,
               justifyContent: "space-between",
+              gap: { xs: 2, sm: 0 },
             }}
           >
             <Typography

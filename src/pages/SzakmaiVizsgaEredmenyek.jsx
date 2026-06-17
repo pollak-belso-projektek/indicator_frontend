@@ -464,8 +464,8 @@ export default function SzakmaiVizsgaEredmenyek() {
                 </Typography>
               </Box>
             ) : (
-              <TableContainer component={Paper} variant="outlined">
-                <Table size="small">
+              <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+                <Table size="small" sx={{ minWidth: 800 }}>
                   <TableHead>
                     <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                       <TableCell sx={{ fontWeight: "bold" }}>Tanév</TableCell>
@@ -656,9 +656,9 @@ export default function SzakmaiVizsgaEredmenyek() {
                         <TableContainer
                           component={Paper}
                           variant="outlined"
-                          sx={{ mb: 2 }}
+                          sx={{ mb: 2, overflowX: "auto" }}
                         >
-                          <Table size="small">
+                          <Table size="small" sx={{ minWidth: 800 }}>
                             <TableHead>
                               <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                                 <TableCell sx={{ fontWeight: "bold" }}>
