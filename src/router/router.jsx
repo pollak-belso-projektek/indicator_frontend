@@ -127,8 +127,14 @@ const InnovaciosTevekenysegekPage = lazy(
 const SzakkepzesZolditesePage = lazy(
   () => import("../pages/indicators/36_szakkepzes_zolditese/SzakkepzesZolditese.jsx"),
 );
+const PalyaOrientacioPage = lazy(
+  () => import("../pages/indicators/31_palyaorientacio/PalyaOrientacio.jsx"),
+);
 const DigitalisKompetenciaPage = lazy(
   () => import("../pages/indicators/35_digitalis_kompetencia/DigitalisKompetencia.jsx"),
+);
+const EgyuttmukodesekSzamaPage = lazy(
+  () => import("../pages/indicators/32_egyuttmukudesek_szama/EgyuttmukodesekSzama.jsx"),
 );
 const TanulmanyiEredmenyPage = lazy(
   () => import("../pages/indicators/25_tanulmani_eredmeny/Tanulmanyi_Eredmeny.jsx"),
@@ -171,6 +177,8 @@ const SCHOOL_REQUIRED_PAGES = [
   "/szakkepzes-zolditese",
   "/digitalis-kompetencia",
   "/tanulmani-eredmeny",
+  "/palyaorientacio",
+  "/egyuttmukudesek-szama",
 ];
 
 export default function Router() {
@@ -660,6 +668,19 @@ export default function Router() {
                 }
               />
               <Route
+                path="/palyaorientacio"
+                element={
+                  <TableProtectedRoute tableName="palya_orientacio">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <PalyaOrientacioPage />,
+                        "/palyaorientacio",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
                 path="/digitalis-kompetencia"
                 element={
                   <TableProtectedRoute tableName="digitalis_kompetencia">
@@ -667,6 +688,19 @@ export default function Router() {
                       {withSchoolRequired(
                         <DigitalisKompetenciaPage />,
                         "/digitalis-kompetencia",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/egyuttmukudesek-szama"
+                element={
+                  <TableProtectedRoute tableName="egyuttmukudesek_szama">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <EgyuttmukodesekSzamaPage />,
+                        "/egyuttmukudesek-szama",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>

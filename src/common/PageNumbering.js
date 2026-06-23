@@ -30,7 +30,7 @@ export default {
   "/nyelvvizsgak-szama": 28, // Note: This page doesn't exist yet in navigation
   "/projektek": 29, // Note: This page doesn't exist yet in navigation
   "/dualis-kepzohelyek-szama": 30,
-  "/palyaorientacio": 31, // Note: This page doesn't exist yet in navigation
+  "/palyaorientacio": 31,
   "/egyuttmukudesek-szama": 32, // Note: This page doesn't exist yet in navigation
   "/szervezetfejlesztes": 33,
   "/innovacios-tevekenysegek": 34,

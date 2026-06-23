@@ -62,6 +62,8 @@ export const indicatorApi = createApi({
     "SzakkepzesZolditese",
     "DigitalisKompetencia",
     "TanulmanyiEredmeny",
+    "PalyaOrientacio",
+    "EgyuttmukodesekSzama",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -1556,6 +1558,38 @@ export const indicatorApi = createApi({
       invalidatesTags: ["SzakkepzesZolditese"],
     }),
 
+    // PalyaOrientacio (Indicator 31)
+    getPalyaOrientacio: build.query({
+      query: ({ alapadatokId, tanev }) => `palya_orientacio/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: (result, error, { alapadatokId, tanev }) => [
+        { type: "PalyaOrientacio", id: `${alapadatokId}-${tanev || getCurrentSchoolYearStart()}` },
+        "PalyaOrientacio"
+      ],
+    }),
+    addPalyaOrientacio: build.mutation({
+      query: (data) => ({
+        url: "palya_orientacio",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["PalyaOrientacio"],
+    }),
+    updatePalyaOrientacio: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `palya_orientacio/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["PalyaOrientacio"],
+    }),
+    deletePalyaOrientacio: build.mutation({
+      query: (id) => ({
+        url: `palya_orientacio/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["PalyaOrientacio"],
+    }),
+
     // DigitalisKompetencia (Indicator 35)
     getDigitalisKompetencia: build.query({
       query: ({ alapadatokId, tanev }) => `digitalis_kompetencia/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
@@ -1579,6 +1613,38 @@ export const indicatorApi = createApi({
         body: data,
       }),
       invalidatesTags: ["DigitalisKompetencia"],
+    }),
+
+    // EgyuttmukodesekSzama (Indicator 32)
+    getEgyuttmukodesekSzama: build.query({
+      query: ({ alapadatokId, tanev }) => `egyuttmukudesek_szama/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
+      providesTags: (result, error, { alapadatokId, tanev }) => [
+        { type: "EgyuttmukodesekSzama", id: `${alapadatokId}-${tanev || getCurrentSchoolYearStart()}` },
+        "EgyuttmukodesekSzama"
+      ],
+    }),
+    addEgyuttmukodesekSzama: build.mutation({
+      query: (data) => ({
+        url: "egyuttmukudesek_szama",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["EgyuttmukodesekSzama"],
+    }),
+    updateEgyuttmukodesekSzama: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `egyuttmukudesek_szama/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["EgyuttmukodesekSzama"],
+    }),
+    deleteEgyuttmukodesekSzama: build.mutation({
+      query: (id) => ({
+        url: `egyuttmukudesek_szama/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["EgyuttmukodesekSzama"],
     }),
   }),
 });
@@ -1773,4 +1839,14 @@ export const {
   useGetTanulmanyiEredmenyQuery,
   useAddTanulmanyiEredmenyMutation,
   useUpdateTanulmanyiEredmenyMutation,
+  // PalyaOrientacio hooks
+  useGetPalyaOrientacioQuery,
+  useAddPalyaOrientacioMutation,
+  useUpdatePalyaOrientacioMutation,
+  useDeletePalyaOrientacioMutation,
+  // EgyuttmukodesekSzama hooks
+  useGetEgyuttmukodesekSzamaQuery,
+  useAddEgyuttmukodesekSzamaMutation,
+  useUpdateEgyuttmukodesekSzamaMutation,
+  useDeleteEgyuttmukodesekSzamaMutation,
 } = indicatorApi;

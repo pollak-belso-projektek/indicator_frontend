@@ -71,6 +71,7 @@ const TableNameToRoute = {
   innovacios_tevekenysegek: "/innovacios-tevekenysegek",
   szakkepzes_zolditese: "/szakkepzes-zolditese",
   digitalis_kompetencia: "/digitalis-kompetencia",
+  egyuttmukudesek_szama: "/egyuttmukudesek-szama",
 };
 
 // Helper function to get page number for a table name

@@ -271,6 +271,12 @@ const NavigationCategories = {
         tableName: "innovacios_tevekenysegek",
       },
       {
+        name: "Pályaorientáció",
+        icon: MdStar,
+        link: "/palyaorientacio",
+        tableName: "palya_orientacio",
+      },
+      {
         name: "Szakképzés \"zöldítése\"",
         icon: MdStar,
         link: "/szakkepzes-zolditese",
@@ -281,6 +287,12 @@ const NavigationCategories = {
         icon: MdStar,
         link: "/digitalis-kompetencia",
         tableName: "digitalis_kompetencia",
+      },
+      {
+        name: "Együttműködések száma",
+        icon: MdStar,
+        link: "/egyuttmukudesek-szama",
+        tableName: "egyuttmukudesek_szama",
       },
       {
         name: "Tanulmányi eredmény",
