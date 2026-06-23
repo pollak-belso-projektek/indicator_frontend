@@ -63,6 +63,7 @@ export const indicatorApi = createApi({
     "DigitalisKompetencia",
     "TanulmanyiEredmeny",
     "Projektek",
+    "NyelvvizsgakSzama",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -1614,6 +1615,38 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["DigitalisKompetencia"],
     }),
+
+    // NyelvvizsgakSzama (Indicator 28)
+    getNyelvvizsgakSzama: build.query({
+      query: ({ alapadatok_id, tanev }) => `nyelvvizsgak_szama/${alapadatok_id}/${tanev}`,
+      providesTags: (result, error, { alapadatok_id, tanev }) => [
+        { type: "NyelvvizsgakSzama", id: `${alapadatok_id}-${tanev}` },
+        "NyelvvizsgakSzama",
+      ],
+    }),
+    addNyelvvizsgakSzama: build.mutation({
+      query: (data) => ({
+        url: "nyelvvizsgak_szama",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["NyelvvizsgakSzama"],
+    }),
+    updateNyelvvizsgakSzama: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `nyelvvizsgak_szama/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["NyelvvizsgakSzama"],
+    }),
+    deleteNyelvvizsgakSzama: build.mutation({
+      query: (id) => ({
+        url: `nyelvvizsgak_szama/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["NyelvvizsgakSzama"],
+    }),
   }),
 });
 
@@ -1812,4 +1845,9 @@ export const {
   useAddProjektekMutation,
   useUpdateProjektekMutation,
   useDeleteProjektekMutation,
+  // NyelvvizsgakSzama hooks (Indicator 28)
+  useGetNyelvvizsgakSzamaQuery,
+  useAddNyelvvizsgakSzamaMutation,
+  useUpdateNyelvvizsgakSzamaMutation,
+  useDeleteNyelvvizsgakSzamaMutation,
 } = indicatorApi;

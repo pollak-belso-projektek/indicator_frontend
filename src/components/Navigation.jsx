@@ -294,6 +294,12 @@ const NavigationCategories = {
         link: "/projektek",
         tableName: "projektek",
       },
+      {
+        name: "Nyelvvizsgák száma",
+        icon: MdSchool,
+        link: "/nyelvvizsgak-szama",
+        tableName: "nyelvvizsgak_szama",
+      },
     ],
   },
   // EDUCATION: {

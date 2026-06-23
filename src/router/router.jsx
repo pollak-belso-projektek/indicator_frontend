@@ -136,6 +136,9 @@ const TanulmanyiEredmenyPage = lazy(
 const ProjektekPage = lazy(
   () => import("../pages/indicators/29_projektek/Projektek"),
 );
+const NyelvvizsgakSzamaPage = lazy(
+  () => import("../pages/indicators/28_nyelvvizsgak_szama/NyelvvizsgakSzama.jsx"),
+);
 
 
 // List of pages that require school selection
@@ -175,6 +178,7 @@ const SCHOOL_REQUIRED_PAGES = [
   "/digitalis-kompetencia",
   "/tanulmani-eredmeny",
   "/projektek",
+  "/nyelvvizsgak-szama",
 ];
 
 export default function Router() {
@@ -759,6 +763,19 @@ export default function Router() {
                       {withSchoolRequired(
                         <TanulmanyiEredmenyPage />,
                         "/tanulmani-eredmeny",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/nyelvvizsgak-szama"
+                element={
+                  <TableProtectedRoute tableName="nyelvvizsgak_szama">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <NyelvvizsgakSzamaPage />,
+                        "/nyelvvizsgak-szama",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>
