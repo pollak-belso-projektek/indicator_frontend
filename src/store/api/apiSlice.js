@@ -64,6 +64,8 @@ export const indicatorApi = createApi({
     "TanulmanyiEredmeny",
     "PalyaOrientacio",
     "EgyuttmukodesekSzama",
+    "Projektek",
+    "NyelvvizsgakSzama",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -529,9 +531,9 @@ export const indicatorApi = createApi({
     }),
     // Tanulmányi Eredmény (Academic Results - Indicator 25)
     getTanulmanyiEredmeny: build.query({
-      query: ({ alapadatok_id, tanev }) => `tanulmanyi_eredmeny/${alapadatok_id}/${tanev}`,
-      providesTags: (result, error, { alapadatok_id, tanev }) => [
-        { type: "TanulmanyiEredmeny", id: `${alapadatok_id}-${tanev}` },
+      query: ({ alapadatok_id }) => `tanulmanyi_eredmeny/${alapadatok_id}`,
+      providesTags: (result, error, { alapadatok_id }) => [
+        { type: "TanulmanyiEredmeny", id: alapadatok_id },
         "TanulmanyiEredmeny",
       ],
     }),
@@ -1429,7 +1431,40 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["Palyazatok"],
     }),
-
+    // Projektek (Indicator 29)
+    getProjektek: build.query({
+      query: (params) => {
+        let url = `projektek`;
+        if (params?.alapadatok_id) {
+          url += `?alapadatok_id=${params.alapadatok_id}`;
+        }
+        return url;
+      },
+      providesTags: ["Projektek"],
+    }),
+    addProjektek: build.mutation({
+      query: (data) => ({
+        url: "projektek",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Projektek"],
+    }),
+    updateProjektek: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `projektek/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Projektek"],
+    }),
+    deleteProjektek: build.mutation({
+      query: (id) => ({
+        url: `projektek/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Projektek"],
+    }),
     // Szervezetfejlesztes (Indicator 33)
     getSzervezetfejlesztes: build.query({
       query: ({ alapadatokId, tanev }) => `szervezetfejlesztes/${alapadatokId}/${tanev || getCurrentSchoolYearStart()}`,
@@ -1646,6 +1681,38 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["EgyuttmukodesekSzama"],
     }),
+
+    // NyelvvizsgakSzama (Indicator 28)
+    getNyelvvizsgakSzama: build.query({
+      query: ({ alapadatok_id, tanev }) => `nyelvvizsgak_szama/${alapadatok_id}/${tanev}`,
+      providesTags: (result, error, { alapadatok_id, tanev }) => [
+        { type: "NyelvvizsgakSzama", id: `${alapadatok_id}-${tanev}` },
+        "NyelvvizsgakSzama",
+      ],
+    }),
+    addNyelvvizsgakSzama: build.mutation({
+      query: (data) => ({
+        url: "nyelvvizsgak_szama",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["NyelvvizsgakSzama"],
+    }),
+    updateNyelvvizsgakSzama: build.mutation({
+      query: ({ id, ...data }) => ({
+        url: `nyelvvizsgak_szama/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["NyelvvizsgakSzama"],
+    }),
+    deleteNyelvvizsgakSzama: build.mutation({
+      query: (id) => ({
+        url: `nyelvvizsgak_szama/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["NyelvvizsgakSzama"],
+    }),
   }),
 });
 
@@ -1849,4 +1916,14 @@ export const {
   useAddEgyuttmukodesekSzamaMutation,
   useUpdateEgyuttmukodesekSzamaMutation,
   useDeleteEgyuttmukodesekSzamaMutation,
+  // Projektek hooks
+  useGetProjektekQuery,
+  useAddProjektekMutation,
+  useUpdateProjektekMutation,
+  useDeleteProjektekMutation,
+  // NyelvvizsgakSzama hooks (Indicator 28)
+  useGetNyelvvizsgakSzamaQuery,
+  useAddNyelvvizsgakSzamaMutation,
+  useUpdateNyelvvizsgakSzamaMutation,
+  useDeleteNyelvvizsgakSzamaMutation,
 } = indicatorApi;

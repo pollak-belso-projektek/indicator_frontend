@@ -85,30 +85,16 @@ export default function ElegedettsegMeresEredmenyei() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
   const selectedSchool = useSelector(selectSelectedSchool);
 
-  // One query per school year
-  const elegedettsegQueries = schoolYears.map((yearRange) => {
-    const startYear = parseInt(yearRange.split("/")[0]);
-    return useGetElegedettsegMeresQuery(
-      { alapadatok_id: selectedSchool?.id, tanev_kezdete: startYear },
-      { skip: !selectedSchool }
-    );
-  });
-
-  const apiData = useMemo(() => {
-    return elegedettsegQueries.flatMap((q) => q.data || []);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [elegedettsegQueries.map((q) => q.fulfilledTimeStamp).join(","), selectedSchool?.id]);
-
-  const isLoading = useMemo(
-    () => elegedettsegQueries.some((q) => q.isLoading),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [elegedettsegQueries.map((q) => q.isLoading).join(",")]
+  const {
+    data: apiDataRaw,
+    isLoading,
+    isFetching
+  } = useGetElegedettsegMeresQuery(
+    { alapadatok_id: selectedSchool?.id },
+    { skip: !selectedSchool }
   );
-  const isFetching = useMemo(
-    () => elegedettsegQueries.some((q) => q.isFetching),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [elegedettsegQueries.map((q) => q.isFetching).join(",")]
-  );
+
+  const apiData = useMemo(() => apiDataRaw || [], [apiDataRaw]);
 
   const [addElegedettseg] = useAddElegedettsegMeresMutation();
   const [updateElegedettseg] = useUpdateElegedettsegMeresMutation();

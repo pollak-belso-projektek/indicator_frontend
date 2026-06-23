@@ -33,7 +33,7 @@ const evszamok = generateSchoolYears();
 
 export default function TanulmanyiEredmeny() {
   const selectedSchool = useSelector(selectSelectedSchool);
-  const { data: schoolsData, isLoading: isLoadingSchools } = useGetAllAlapadatokQuery();
+  const { data: schoolsData } = useGetAllAlapadatokQuery();
 
   const [tableData, setTableData] = useState({});
   const [originalData, setOriginalData] = useState({});
@@ -62,8 +62,8 @@ export default function TanulmanyiEredmeny() {
   // Fetch data for all years
   const currentYearFormatted = evszamok.length > 0 ? parseInt(evszamok[evszamok.length - 1].split('/')[0]) : new Date().getFullYear();
 
-  const { data: tanulmanyiData, isLoading: isTanulmanyiLoading, isFetching: isTanulmanyiFetching } = useGetTanulmanyiEredmenyQuery(
-    { alapadatok_id: selectedSchool?.id, tanev: currentYearFormatted },
+  const { data: tanulmanyiData, isFetching: isTanulmanyiFetching } = useGetTanulmanyiEredmenyQuery(
+    { alapadatok_id: selectedSchool?.id },
     { skip: !selectedSchool }
   );
 
@@ -133,11 +133,10 @@ export default function TanulmanyiEredmeny() {
   });
 
   const handleDataChange = (yearStr, instType, jogviszony, semester, field, value) => {
-    if (value !== "") {
-      if (isNaN(value)) return;
-      if (parseFloat(value) < 0) return; // Prevent negative numbers
-    }
-
+    // Prevent negative numbers entirely by sanitizing input
+    const sanitizedValue = value.replace(/-/g, "");
+    if (sanitizedValue !== "" && isNaN(sanitizedValue)) return;
+    
     setTableData((prev) => {
       const yearData = prev[yearStr] || {};
       const instData = yearData[instType] || {};
@@ -154,7 +153,7 @@ export default function TanulmanyiEredmeny() {
               ...jogvData,
               [semester]: {
                 ...semesterData,
-                [field]: value === "" ? "" : parseFloat(value),
+                [field]: sanitizedValue === "" ? "" : parseFloat(sanitizedValue),
               },
             },
           },

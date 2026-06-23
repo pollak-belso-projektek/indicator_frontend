@@ -139,6 +139,12 @@ const EgyuttmukodesekSzamaPage = lazy(
 const TanulmanyiEredmenyPage = lazy(
   () => import("../pages/indicators/25_tanulmani_eredmeny/Tanulmanyi_Eredmeny.jsx"),
 );
+const ProjektekPage = lazy(
+  () => import("../pages/indicators/29_projektek/Projektek"),
+);
+const NyelvvizsgakSzamaPage = lazy(
+  () => import("../pages/indicators/28_nyelvvizsgak_szama/NyelvvizsgakSzama.jsx"),
+);
 
 
 // List of pages that require school selection
@@ -179,6 +185,8 @@ const SCHOOL_REQUIRED_PAGES = [
   "/tanulmani-eredmeny",
   "/palyaorientacio",
   "/egyuttmukudesek-szama",
+  "/projektek",
+  "/nyelvvizsgak-szama",
 ];
 
 export default function Router() {
@@ -616,6 +624,19 @@ export default function Router() {
                 }
               />
               <Route
+                path="/projektek"
+                element={
+                  <TableProtectedRoute tableName="projektek">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <ProjektekPage />,
+                        "/projektek",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
                 path="/szervezetfejlesztes"
                 element={
                   <TableProtectedRoute tableName="szervezetfejlesztes">
@@ -776,6 +797,19 @@ export default function Router() {
                       {withSchoolRequired(
                         <TanulmanyiEredmenyPage />,
                         "/tanulmani-eredmeny",
+                      )}
+                    </NavigationWithLoading>
+                  </TableProtectedRoute>
+                }
+              />
+              <Route
+                path="/nyelvvizsgak-szama"
+                element={
+                  <TableProtectedRoute tableName="nyelvvizsgak_szama">
+                    <NavigationWithLoading>
+                      {withSchoolRequired(
+                        <NyelvvizsgakSzamaPage />,
+                        "/nyelvvizsgak-szama",
                       )}
                     </NavigationWithLoading>
                   </TableProtectedRoute>

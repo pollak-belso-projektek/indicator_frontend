@@ -300,6 +300,18 @@ const NavigationCategories = {
         link: "/tanulmani-eredmeny",
         tableName: "tanulmanyi_eredmeny",
       },
+      {
+        name: "Projektek",
+        icon: MdWork,
+        link: "/projektek",
+        tableName: "projektek",
+      },
+      {
+        name: "Nyelvvizsgák száma",
+        icon: MdSchool,
+        link: "/nyelvvizsgak-szama",
+        tableName: "nyelvvizsgak_szama",
+      },
     ],
   },
   // EDUCATION: {

@@ -110,25 +110,16 @@ export default function Palyazatok() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  const palyazatokQueries = schoolYears.map((yearRange) => {
-    const startYear = parseInt(yearRange.split("/")[0]);
-    return useGetPalyazatokQuery(
-      { alapadatokId: selectedSchool?.id, tanev: startYear },
-      { skip: !selectedSchool }
-    );
-  });
+  const {
+    data: palyazatokDbDataRaw,
+    isLoading,
+    isFetching
+  } = useGetPalyazatokQuery(
+    { alapadatokId: selectedSchool?.id },
+    { skip: !selectedSchool }
+  );
 
-  const palyazatokDbData = useMemo(() => {
-    return palyazatokQueries.flatMap((query) => query.data || []);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [palyazatokQueries.map((q) => q.fulfilledTimeStamp).join(","), selectedSchool?.id]);
-
-  const isLoading = useMemo(() => palyazatokQueries.some((q) => q.isLoading),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [palyazatokQueries.map((q) => q.isLoading).join(",")]);
-  const isFetching = useMemo(() => palyazatokQueries.some((q) => q.isFetching),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [palyazatokQueries.map((q) => q.isFetching).join(",")]);
+  const palyazatokDbData = useMemo(() => palyazatokDbDataRaw || [], [palyazatokDbDataRaw]);
 
   const [addPalyazatok] = useAddPalyazatokMutation();
   const [updatePalyazatok] = useUpdatePalyazatokMutation();

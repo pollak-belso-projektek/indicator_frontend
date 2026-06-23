@@ -105,26 +105,16 @@ export default function SzakmaiEredmenyek() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
+  const {
+    data: rawDbData,
+    isLoading,
+    isFetching
+  } = useGetVersenyekQuery(
+    { alapadatok_id: selectedSchool?.id },
+    { skip: !selectedSchool }
+  );
 
-  const versenyekQueries = schoolYears.map((yearRange) => {
-    const startYear = parseInt(yearRange.split("/")[0]);
-    return useGetVersenyekQuery(
-      { alapadatok_id: selectedSchool?.id, tanev_kezdete: startYear },
-      { skip: !selectedSchool }
-    );
-  });
-
-  const versenyekData = useMemo(() => {
-    return versenyekQueries.flatMap((query) => query.data || []);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [versenyekQueries.map((q) => q.fulfilledTimeStamp).join(","), selectedSchool?.id]);
-
-  const isVersenyekLoading = useMemo(() => versenyekQueries.some((q) => q.isLoading),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [versenyekQueries.map((q) => q.isLoading).join(",")]);
-  const isVersenyekFetching = useMemo(() => versenyekQueries.some((q) => q.isFetching),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [versenyekQueries.map((q) => q.isFetching).join(",")]);
+  const dbData = useMemo(() => rawDbData || [], [rawDbData]);
 
   const [addVersenyek] = useAddVersenyekMutation();
   const [updateVersenyek] = useUpdateVersenyekMutation();
@@ -153,13 +143,13 @@ export default function SzakmaiEredmenyek() {
   }, [kategoriak]);
 
   useEffect(() => {
-    if (versenyekData && !isVersenyekFetching) {
+    if (dbData && !isFetching) {
       const newCompData = createInitialData();
       const originalCompData = createInitialData();
       const createdAtMap = {};
 
-      if (Array.isArray(versenyekData)) {
-        versenyekData.forEach(item => {
+      if (Array.isArray(dbData)) {
+        dbData.forEach(item => {
           const categoryKey = kategoriaMap[item.versenyNev?.kategoria_id] || item.versenyNev?.kategoria_id || "Ismeretlen kategória";
           const competitionName = item.versenyNev?.nev || "Ismeretlen verseny";
           const competitionCreatedAt = item.versenyNev?.createAt || item.createAt || "";
@@ -202,7 +192,7 @@ export default function SzakmaiEredmenyek() {
       setCompetitionCreatedAtMap(createdAtMap);
       setIsModified(false);
     }
-  }, [versenyekData, isVersenyekFetching, kategoriaMap]);
+  }, [dbData, isFetching, kategoriaMap]);
 
   const handleDataChange = useCallback(
     (category, competition, year, placement, value) => {
@@ -446,7 +436,7 @@ export default function SzakmaiEredmenyek() {
   }, [schoolYears, tanuloLetszamData]);
 
   // Show loading state
-  if (isVersenyekLoading) {
+  if (isLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
         <CircularProgress />
