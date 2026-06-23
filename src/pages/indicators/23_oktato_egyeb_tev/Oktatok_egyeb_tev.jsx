@@ -720,9 +720,10 @@ export default function OktatokEgyebTev() {
                 </Typography>
 
                 {/* Action buttons */}
-                <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3, ml: 2 }}>
                   <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
                   <LockedTableWrapper tableName="oktato-egyeb-tev">
+
                     <Button
                       variant="contained"
                       startIcon={<SaveIcon />}
@@ -739,7 +740,7 @@ export default function OktatokEgyebTev() {
                     >
                       Visszaállítás
                     </Button>
-                  </LockedTableWrapper>
+                                    </LockedTableWrapper>
                   {isModified && (
                     <Chip
                       label="Van nem mentett módosítás"

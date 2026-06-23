@@ -524,9 +524,10 @@ export default function NszfhMeresek() {
         <LockStatusIndicator tableName="nszfh" />
         <Card>
           <CardContent>
-            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3, ml: 2 }}>
               <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
                   <LockedTableWrapper tableName="nszfh">
+
                 <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSave} disabled={!isModified || isSaving}>
                   {isSaving ? "Mentés..." : "Mentés"}
                 </Button>
@@ -537,19 +538,25 @@ export default function NszfhMeresek() {
                   Excel feltöltés
                 </Button>
                 <input type="file" ref={fileInputRef} onChange={handleExcelUpload} accept=".xlsx,.xls,.csv" style={{ display: "none" }} />
-              </LockedTableWrapper>
+                                </LockedTableWrapper>
             </Stack>
             {uploadAlert.open && <Alert severity={uploadAlert.severity} sx={{ mb: 2 }} onClose={() => setUploadAlert({ ...uploadAlert, open: false })}>{uploadAlert.message}</Alert>}
             {saveSuccess && <Alert severity="success" sx={{ mb: 2 }}>Sikeres mentés!</Alert>}
-            <Box display="flex" alignItems="center" justifyContent="center" sx={{ position: "relative", mb: 2 }}>
-              <Box sx={{ position: "absolute", left: 0 }}>
+            <Box 
+              display="flex" 
+              flexDirection={{ xs: 'column', md: 'row' }} 
+              alignItems="center" 
+              justifyContent="center" 
+              sx={{ position: "relative", mb: 2, gap: 2 }}
+            >
+              <Box sx={{ position: { xs: "static", md: "absolute" }, left: 0 }}>
                 <FormControl size="small" sx={{ minWidth: 150 }}>
                   <Select value={selectedYear} onChange={(e) => { setSelectedYear(e.target.value); setIsModified(false); setSaveSuccess(false); }} displayEmpty sx={{ backgroundColor: "#fff" }}>
                     {schoolYears.slice(0, 4).map((year) => <MenuItem key={year} value={year}>{year}</MenuItem>)}
                   </Select>
                 </FormControl>
               </Box>
-              <Typography variant="h6" component="h2">NSZFH kompetenciamérés eredményei</Typography>
+              <Typography variant="h6" component="h2" sx={{ textAlign: 'center' }}>NSZFH kompetenciamérés eredményei</Typography>
             </Box>
             <TableContainer component={Paper} sx={{ mt: 3, mb: 4, overflowX: 'auto', borderRadius: 2, border: '1px solid #ffcc80' }}>
               <Table size="small" sx={{ minWidth: 1000, '& .MuiTableCell-root': { borderRight: '1px solid rgba(224, 224, 224, 1)' } }}>

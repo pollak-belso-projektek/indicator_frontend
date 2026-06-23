@@ -362,9 +362,10 @@ export default function ElegedettsegMeresEredmenyei() {
         <Card>
           <CardContent>
            
-            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3, ml: 2 }}>
               <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
                   <LockedTableWrapper tableName="elegedettseg">
+
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}
@@ -381,7 +382,7 @@ export default function ElegedettsegMeresEredmenyei() {
                 >
                   Visszaállítás
                 </Button>
-              </LockedTableWrapper>
+                                </LockedTableWrapper>
             </Stack>
 
             <Typography variant="h6" component="h2" gutterBottom sx={{ ml: 2 }}>
@@ -648,7 +649,7 @@ export default function ElegedettsegMeresEredmenyei() {
             <Typography variant="h6" component="h3" gutterBottom>
               Jelmagyarázat
             </Typography>
-            <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3, ml: 2 }}>
               <Chip
                 label="0-100% skála"
                 variant="outlined"

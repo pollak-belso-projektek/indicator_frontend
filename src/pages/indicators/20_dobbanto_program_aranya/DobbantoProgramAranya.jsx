@@ -428,9 +428,10 @@ export default function DobbantoProgramAránya() {
 
                 {/* Main Data Tables */}
                 {/* Action Buttons */}
-                <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 2 }}>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3, ml: 2 }}>
                   <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
                   <LockedTableWrapper tableName="dobbanto">
+
                     <Button
                       variant="contained"
                       startIcon={<SaveIcon />}
@@ -452,7 +453,7 @@ export default function DobbantoProgramAránya() {
                     >
                       Visszaállítás
                     </Button>
-                  </LockedTableWrapper>
+                                    </LockedTableWrapper>
                 </Stack>
 
 

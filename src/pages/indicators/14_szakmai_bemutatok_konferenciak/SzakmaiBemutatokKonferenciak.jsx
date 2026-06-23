@@ -282,6 +282,7 @@ export default function SzakmaiBemutatokKonferenciak() {
         <Card sx={{ mb: 3, p: 2, display: "flex", flexDirection: "row", gap: 2 }}>
           <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
                   <LockedTableWrapper tableName="szakmai_bemutatok_konferenciak">
+
             <Button
               variant="contained"
               startIcon={<SaveIcon />}
@@ -298,7 +299,7 @@ export default function SzakmaiBemutatokKonferenciak() {
             >
               Visszaállítás
             </Button>
-          </LockedTableWrapper>
+                            </LockedTableWrapper>
         </Card>
 
         {/* Status Messages */}

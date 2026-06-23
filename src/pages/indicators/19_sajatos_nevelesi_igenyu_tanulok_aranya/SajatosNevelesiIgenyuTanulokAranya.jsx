@@ -437,9 +437,10 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
                     <Card>
                       <CardContent>
-                        <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
+                        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3, ml: 2 }}>
                           <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
                   <LockedTableWrapper tableName="sajatos_nevelesu_tanulok">
+
                             <Button
                               variant="contained"
                               startIcon={<SaveIcon />}
@@ -475,7 +476,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                             >
                               Új rekord hozzáadása
                             </Button>
-                          </LockedTableWrapper>
+                                            </LockedTableWrapper>
                         </Stack>
 
                         <Typography variant="h6" component="h2" gutterBottom>

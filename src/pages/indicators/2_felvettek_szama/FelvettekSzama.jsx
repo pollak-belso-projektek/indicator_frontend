@@ -860,9 +860,10 @@ const FelvettekSzama = () => {
                 változtatásokat!
               </Alert>
             )}
-            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3, ml: 2 }}>
               <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="felvettek_szama" />
               <LockedTableWrapper tableName="felvettek_szama">
+
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}
@@ -879,7 +880,7 @@ const FelvettekSzama = () => {
                 >
                   Visszaállítás
                 </Button>
-              </LockedTableWrapper>
+                                </LockedTableWrapper>
             </Stack>
             <TableContainer
               component={Paper}

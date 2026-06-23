@@ -1072,8 +1072,17 @@ export default function TanuloLetszam() {
               <>
                 {" "}
                 {/* Action Buttons */}
-                <Stack direction="row" spacing={2} sx={{ mb: 3, ml: 2 }}>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3, ml: 2 }}>
+              <ExportToExcel 
+                    fileName="tanulo_letszam"
+                    sheetName="Tanulólétszám"
+                    columns={exportColumns}
+                    rows={exportRows}
+                    buttonLabel="Export Táblázatba"
+                  />
+
                   <LockedTableWrapper tableName="tanulo_letszam">
+
                     <Button
                       variant="contained"
                       startIcon={<SaveIcon />}
@@ -1093,14 +1102,8 @@ export default function TanuloLetszam() {
                     >
                       Visszaállítás
                     </Button>
-                  </LockedTableWrapper>
-                  <ExportToExcel 
-                    fileName="tanulo_letszam"
-                    sheetName="Tanulólétszám"
-                    columns={exportColumns}
-                    rows={exportRows}
-                    buttonLabel="Export Táblázatba"
-                  />
+                    </LockedTableWrapper>
+                  
                 </Stack>
                 <TableContainer
                   component={Paper}

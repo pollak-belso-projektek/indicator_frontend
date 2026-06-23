@@ -318,6 +318,7 @@ export default function Lemorzsolodas() {
             <Card sx={{ mb: 3, p: 2, display: "flex", flexDirection: "row", gap: 2 }}>
               <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
                   <LockedTableWrapper tableName="lemorzsolodas">
+
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}
@@ -335,7 +336,7 @@ export default function Lemorzsolodas() {
                 >
                   Visszaállítás
                 </Button>
-              </LockedTableWrapper>
+                                </LockedTableWrapper>
             </Card>
 
             {isModified && (

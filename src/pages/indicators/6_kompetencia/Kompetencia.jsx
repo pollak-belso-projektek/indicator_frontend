@@ -238,9 +238,10 @@ export default function Kompetencia() {
 
         <Card>
           <CardContent>
-            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3, ml: 2 }}>
               <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
                   <LockedTableWrapper tableName="kompetencia">
+
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}
@@ -257,7 +258,7 @@ export default function Kompetencia() {
                 >
                   Visszaállítás
                 </Button>
-              </LockedTableWrapper>
+                                </LockedTableWrapper>
             </Stack>
 
             {saveSuccess && (

@@ -1542,7 +1542,6 @@ export default function SzakképzésiMunkaszerződésArány() {
       </Card>
     );
   };
-
   return (
     <Container maxWidth="xl">
       <PageWrapper
@@ -1554,23 +1553,10 @@ export default function SzakképzésiMunkaszerződésArány() {
 
           <LockStatusIndicator tableName={"szmsz"} />
          
-          <Stack
-            direction="row"
-            spacing={2}
-            sx={{
-              mt: 3,
-              mb: 2,
-              position: "sticky",
-              top: 2,
-              backgroundColor: "white",
-              zIndex: 10,
-              p: 2,
-              borderRadius: 2,
-              boxShadow: 1,
-            }}
-          >
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mt: 3, mb: 2, position: "sticky", top: 2, backgroundColor: "white", zIndex: 10, p: 2, borderRadius: 2, boxShadow: 1 }}>
              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
                   <LockedTableWrapper tableName="szmsz">
+
             <Button
               variant="contained"
               startIcon={<SaveIcon />}
@@ -1589,7 +1575,7 @@ export default function SzakképzésiMunkaszerződésArány() {
             >
               Visszaállítás
             </Button>
-            </LockedTableWrapper>
+                              </LockedTableWrapper>
           </Stack>
           {/* Percentage Table */}
           {renderTableSection(

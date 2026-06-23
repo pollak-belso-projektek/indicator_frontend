@@ -400,9 +400,10 @@ export default function MuhelyiskolaiReszszakmat() {
 
             <>
 
-              <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 3, position: 'sticky', top: 2, zIndex: 10, backgroundColor: 'white', padding: 1, borderRadius: 1 }}>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3, ml: 2 }}>
                 <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
                   <LockedTableWrapper tableName="muhelyiskola">
+
                   <Button
                     variant="contained"
                     startIcon={<SaveIcon />}
@@ -419,7 +420,7 @@ export default function MuhelyiskolaiReszszakmat() {
                   >
                     Visszaállítás
                   </Button>
-                </LockedTableWrapper>
+                                  </LockedTableWrapper>
               </Stack>
 
               {/* Instructions Card */}

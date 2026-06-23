@@ -526,8 +526,27 @@ export default function Palyazatok() {
 
 
 
-        <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3, ml: 2 }}>
+              <ExportToExcel
+            fileName="palyazatok"
+            sheetName="Pályázatok"
+            columns={[
+              { header: "Kategória", key: "kategoria", width: 40 },
+              { header: "Pályázat neve", key: "palyazat", width: 40 },
+              ...schoolYears.flatMap((year) =>
+                metrics.map((m) => ({
+                  header: `${year} – ${m.label}`,
+                  key: `${year}__${m.key}`,
+                  width: 20,
+                }))
+              ),
+            ]}
+            rows={exportRows}
+            buttonLabel="Export Táblázatba"
+          />
+
           <LockedTableWrapper tableName="palyazatok">
+
             <Button
               variant="outlined"
               startIcon={<AddIcon />}
@@ -551,24 +570,8 @@ export default function Palyazatok() {
             >
               Visszaállítás
             </Button>
-          </LockedTableWrapper>
-          <ExportToExcel
-            fileName="palyazatok"
-            sheetName="Pályázatok"
-            columns={[
-              { header: "Kategória", key: "kategoria", width: 40 },
-              { header: "Pályázat neve", key: "palyazat", width: 40 },
-              ...schoolYears.flatMap((year) =>
-                metrics.map((m) => ({
-                  header: `${year} – ${m.label}`,
-                  key: `${year}__${m.key}`,
-                  width: 20,
-                }))
-              ),
-            ]}
-            rows={exportRows}
-            buttonLabel="Export Táblázatba"
-          />
+                            </LockedTableWrapper>
+          
         </Stack>
 
         <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>

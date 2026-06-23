@@ -580,22 +580,10 @@ export default function HatanyosHelyzetuTanulokAranya() {
                 {activeTab === 0 && (
                   <Box>
                     {/* Action Buttons */}
-                    <Stack
-                      direction="row"
-                      spacing={2}
-                      sx={{
-                        mt: 3,
-                        mb: 2,
-                        position: "sticky",
-                        top: 2,
-                        p: 2,
-                        zIndex: 10,
-                        backgroundColor: "white",
-                        py: 1,
-                      }}
-                    >
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mt: 3, mb: 2, position: "sticky", top: 2, backgroundColor: "white", zIndex: 10, p: 2, borderRadius: 2, boxShadow: 1 }}>
                       <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
                   <LockedTableWrapper tableName="hh_es_hhh_nevelesu_tanulok">
+
                         <Button
                           variant="contained"
                           startIcon={<SaveIcon />}
@@ -614,7 +602,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                         >
                           Visszaállítás
                         </Button>
-                      </LockedTableWrapper>
+                                        </LockedTableWrapper>
                     </Stack>
 
                     {/* DATA TABLES TAB CONTENT */}

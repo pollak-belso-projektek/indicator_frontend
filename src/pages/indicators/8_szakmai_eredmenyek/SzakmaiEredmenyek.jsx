@@ -487,33 +487,8 @@ export default function SzakmaiEredmenyek() {
         </Card>
 
         {/* Add Competition Button */}
-        <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 3 }}>
-          <LockedTableWrapper tableName="versenyek">
-            <Button
-              variant="outlined"
-              startIcon={<AddIcon />}
-              onClick={() => setOpenAddDialog(true)}
-            >
-              Új verseny hozzáadása
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSave}
-              disabled={!isModified || isSaving || !selectedSchool}
-            >
-              Mentés
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleReset}
-              disabled={!isModified || isSaving}
-            >
-              Visszaállítás
-            </Button>
-          </LockedTableWrapper>
-          <ExportToExcel
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3, ml: 2 }}>
+              <ExportToExcel
             fileName="szakmai_eredmenyek"
             sheetName="Versenyek"
             columns={[
@@ -550,6 +525,34 @@ export default function SzakmaiEredmenyek() {
             ]}
             buttonLabel="Export Táblázatba"
           />
+
+          <LockedTableWrapper tableName="versenyek">
+
+            <Button
+              variant="outlined"
+              startIcon={<AddIcon />}
+              onClick={() => setOpenAddDialog(true)}
+            >
+              Új verseny hozzáadása
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<SaveIcon />}
+              onClick={handleSave}
+              disabled={!isModified || isSaving || !selectedSchool}
+            >
+              Mentés
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleReset}
+              disabled={!isModified || isSaving}
+            >
+              Visszaállítás
+            </Button>
+                            </LockedTableWrapper>
+          
         </Stack>
         
             <Typography variant="h6" component="h2" gutterBottom sx={{ ml: 2 }}>
@@ -944,7 +947,7 @@ export default function SzakmaiEredmenyek() {
             <Typography variant="h6" component="h3" gutterBottom>
               Jelmagyarázat
             </Typography>
-            <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap">
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3, ml: 2 }}>
               {placementTypes.map((placement) => (
                 <Chip
                   key={placement.key}

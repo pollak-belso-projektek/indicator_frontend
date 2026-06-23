@@ -322,7 +322,7 @@ export default function ElhelyezkedesimMutato() {
             )}
 
             {/* Action Buttons */}
-            <Stack direction="row" spacing={2} sx={{ mb: 3, ml: 2 }}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3, ml: 2 }}>
               <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="elhelyezkedesi_mutato" />
               <Button
                 variant="contained"
