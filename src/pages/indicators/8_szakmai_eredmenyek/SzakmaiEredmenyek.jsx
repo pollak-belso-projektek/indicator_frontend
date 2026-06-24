@@ -323,7 +323,7 @@ export default function SzakmaiEredmenyek() {
         Object.keys(competitionData[category]).forEach((competition) => {
           schoolYears.forEach((year) => {
             let rowModified = false;
-            
+
             // Ha a verseny nincs benne az eredeti adatokban, de mi hozzáadtuk, mentsük el mindet
             const isNewCompetition = !originalData[category]?.[competition];
 
@@ -459,22 +459,7 @@ export default function SzakmaiEredmenyek() {
           </Alert>
         )}
 
-        {/* Instructions Card */}
-        <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
-          <CardContent>
-            <Typography variant="h6" component="h3" gutterBottom>
-              Megjegyzés
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              Az indikátor számításánál figyelembe vehetők a tanulói és a
-              felnőttképzési jogviszonyban elért eredmények egyaránt.
-            </Typography>
-            <Typography variant="body2">
-              <strong>Kérdés:</strong> Itt szóba jöhet az, hogy új versenyt visz
-              majd fel valaki, vagy az egyébhez írja be mindenki?
-            </Typography>
-          </CardContent>
-        </Card>
+
 
         {/* Add Competition Button */}
         <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 3 }}>
@@ -541,302 +526,316 @@ export default function SzakmaiEredmenyek() {
             buttonLabel="Export Táblázatba"
           />
         </Stack>
-        
-            <Typography variant="h6" component="h2" gutterBottom sx={{ ml: 2 }}>
-              Szakmai és Közismereti Versenyek Eredményei
-            </Typography>
 
-            <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
-              <Table size="small" sx={{ minWidth: 1000 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell
-                      rowSpan={2}
-                      sx={{
-                        fontWeight: "bold",
-                        minWidth: 250,
-                        borderRight: "2px solid #ddd",
-                        position: "sticky",
-                        left: 0,
-                        backgroundColor: "#ffffff",
-                        zIndex: 3,
-                        verticalAlign: "middle",
-                      }}
-                    >
-                      Verseny megnevezése
-                    </TableCell>
-                    {schoolYears.map((year, i) => (
+        <Typography variant="h6" component="h2" gutterBottom sx={{ ml: 2 }}>
+          Szakmai és Közismereti Versenyek Eredményei
+        </Typography>
+
+        <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
+          <Table size="small" sx={{ minWidth: 1000 }}>
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  rowSpan={2}
+                  sx={{
+                    fontWeight: "bold",
+                    minWidth: 250,
+                    borderRight: "2px solid #ddd",
+                    position: "sticky",
+                    left: 0,
+                    backgroundColor: "#ffffff",
+                    zIndex: 3,
+                    verticalAlign: "middle",
+                  }}
+                >
+                  Verseny megnevezése
+                </TableCell>
+                {schoolYears.map((year, i) => (
+                  <TableCell
+                    key={`${year}-header`}
+                    align="center"
+                    colSpan={4}
+                    sx={{
+                      fontWeight: "bold",
+                      backgroundColor: "#fff2cc",
+                      borderBottom: "1px solid #ddd",
+                      borderRight: i === schoolYears.length - 1 ? "none" : "2px solid #ddd",
+                    }}
+                  >
+                    {year}
+                  </TableCell>
+                ))}
+                <TableCell
+                  rowSpan={2}
+                  sx={{
+                    fontWeight: "bold",
+                    minWidth: 80,
+                    backgroundColor: "#ffffff",
+                    zIndex: 3,
+                    verticalAlign: "middle",
+                    minWidth: 60,
+                    textAlign: "center",
+                    position: "sticky",
+                    right: 0,
+                    backgroundColor: "#f5f5f5",
+                    zIndex: 2,
+                    boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)"
+                  }}
+                >
+                  Művelet
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                {schoolYears.map((year, i) => (
+                  <React.Fragment key={`${year}-metric-head`}>
+                    {placementTypes.map((placement, j) => (
                       <TableCell
-                        key={`${year}-header`}
+                        key={`head-${year}-${placement.key}`}
                         align="center"
-                        colSpan={4}
                         sx={{
-                          fontWeight: "bold",
-                          backgroundColor: "#fff2cc",
-                          borderBottom: "1px solid #ddd",
-                          borderRight: i === schoolYears.length - 1 ? "none" : "2px solid #ddd",
+                          fontWeight: 600,
+                          backgroundColor: placement.color,
+                          borderBottom: "2px solid #ddd",
+                          borderRight: (j === placementTypes.length - 1 && i !== schoolYears.length - 1) ? "2px solid #ddd" : "1px solid #ddd",
+                          minWidth: 90,
+                          fontSize: "0.75rem",
+                          lineHeight: 1.2
                         }}
                       >
-                        {year}
+                        {placement.label}
                       </TableCell>
                     ))}
-                    <TableCell
-                      rowSpan={2}
-                      sx={{
-                        fontWeight: "bold",
-                        minWidth: 80,
-                        backgroundColor: "#ffffff",
-                        zIndex: 3,
-                        verticalAlign: "middle",
-                        minWidth: 60,
-                        textAlign: "center",
+                  </React.Fragment>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {/* Totals Row */}
+              <TableRow sx={{ backgroundColor: "#fffde7" }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    borderRight: "2px solid #ddd",
+                    position: "sticky",
+                    left: 0,
+                    backgroundColor: "#fffde7",
+                    zIndex: 1,
+                  }}
+                >
+                  Összesen
+                </TableCell>
+                {schoolYears.map((year, i) => {
+                  const startYear = parseInt(year.split("/")[0], 10);
+                  return (
+                    <React.Fragment key={`total-${year}-metrics`}>
+                      {placementTypes.map((placement, j) => (
+                        <TableCell
+                          key={`tot-${year}-${placement.key}`}
+                          align="center"
+                          sx={{
+                            fontWeight: "bold",
+                            borderRight: (j === placementTypes.length - 1 && i !== schoolYears.length - 1) ? "2px solid #ddd" : "1px solid #ddd",
+                          }}
+                        >
+                          {totals[startYear]?.[placement.key] || 0}
+                        </TableCell>
+                      ))}
+                    </React.Fragment>
+                  );
+                })}
+                <TableCell></TableCell>
+              </TableRow>
+
+              {/* Data Rows */}
+              {Object.keys(competitionData)
+                .sort((a, b) => {
+                  const aOrder = categoryOrderMap[a] ?? Number.MAX_SAFE_INTEGER;
+                  const bOrder = categoryOrderMap[b] ?? Number.MAX_SAFE_INTEGER;
+                  if (aOrder !== bOrder) return aOrder - bOrder;
+                  return a.localeCompare(b, "hu");
+                })
+                .map((category) => {
+                  const competitions = Object.keys(competitionData[category]).sort((a, b) => {
+                    const aCreatedAt = competitionCreatedAtMap[category]?.[a] || "";
+                    const bCreatedAt = competitionCreatedAtMap[category]?.[b] || "";
+                    const aTs = Date.parse(aCreatedAt);
+                    const bTs = Date.parse(bCreatedAt);
+                    const aHasDate = !Number.isNaN(aTs);
+                    const bHasDate = !Number.isNaN(bTs);
+
+                    if (aHasDate && bHasDate && aTs !== bTs) return aTs - bTs;
+                    if (aHasDate !== bHasDate) return aHasDate ? -1 : 1;
+                    return a.localeCompare(b, "hu");
+                  });
+                  return competitions.map((competition, index) => (
+                    <TableRow
+                      key={`${category}-${competition}`}
+                      hover
+                    >
+                      <TableCell
+                        sx={{
+                          borderRight: "2px solid #ddd",
+                          position: "sticky",
+                          left: 0,
+                          backgroundColor: "#fff",
+                          zIndex: 1,
+                        }}
+                      >
+                        {index === 0 && (
+                          <Typography variant="subtitle2" color="primary" sx={{ fontWeight: "bold", mb: 0.5 }}>
+                            {category}
+                          </Typography>
+                        )}
+                        <Box sx={{ pl: 2, fontSize: "0.875rem" }}>{competition}</Box>
+                      </TableCell>
+                      {schoolYears.map((year) =>
+                        placementTypes.map((placement) => (
+                          <TableCell
+                            key={`${year}-${placement.key}`}
+                            align="center"
+                          >
+                            <TextField
+                              type="number"
+                              value={
+                                competitionData[category][competition][
+                                year
+                                ]?.[placement.key] || "0"
+                              }
+                              onChange={(e) =>
+                                handleDataChange(
+                                  category,
+                                  competition,
+                                  year,
+                                  placement.key,
+                                  e.target.value
+                                )
+                              }
+                              size="small"
+                              inputProps={{
+                                min: 0,
+                                style: { textAlign: "center" },
+                              }}
+                              sx={{
+                                width: "60px",
+                                backgroundColor: isFieldModified(category, competition, year, placement.key) ? "#fef08a" : "inherit"
+                              }}
+                            />
+                          </TableCell>
+                        ))
+                      )}
+                      <TableCell align="center" sx={{
                         position: "sticky",
                         right: 0,
-                        backgroundColor: "#f5f5f5",
-                        zIndex: 2,
-                        boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)"
-                      }}
-                    >
-                    Művelet
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    {schoolYears.map((year, i) => (
-                      <React.Fragment key={`${year}-metric-head`}>
-                        {placementTypes.map((placement, j) => (
-                          <TableCell
-                            key={`head-${year}-${placement.key}`}
-                            align="center"
-                            sx={{
-                              fontWeight: 600,
-                              backgroundColor: placement.color,
-                              borderBottom: "2px solid #ddd",
-                              borderRight: (j === placementTypes.length - 1 && i !== schoolYears.length - 1) ? "2px solid #ddd" : "1px solid #ddd",
-                              minWidth: 90,
-                              fontSize: "0.75rem",
-                              lineHeight: 1.2
-                            }}
-                          >
-                            {placement.label}
-                          </TableCell>
-                        ))}
-                      </React.Fragment>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {/* Totals Row */}
-                  <TableRow sx={{ backgroundColor: "#fffde7" }}>
+                        backgroundColor: "#fff",
+                        boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                        zIndex: 1
+                      }}>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleRemoveCompetition(category, competition)}
+                          disabled={!selectedSchool}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ));
+                })}
+
+              {/* Totals Row */}
+              <TableRow
+                sx={{ backgroundColor: "#fff2cc", fontWeight: "bold" }}
+              >
+                <TableCell sx={{
+                  position: "sticky",
+                  left: 0,
+                  fontWeight: "bold",
+
+                  backgroundColor: "#fff2cc",
+                  boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                  zIndex: 10
+                }}>
+                  Összesen
+                </TableCell>
+                {schoolYears.map((year) =>
+                  placementTypes.map((placement) => (
                     <TableCell
+                      key={`total-${year}-${placement.key}`}
+                      align="center"
+                      sx={{ fontWeight: "bold" }}
+                    >
+                      {totals[parseInt(year.split("/")[0], 10)]?.[placement.key] || 0}
+                    </TableCell>
+                  ))
+                )}
+                <TableCell sx={{
+                  position: "sticky",
+                  right: 0,
+                  backgroundColor: "#fff2cc",
+                  boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                  zIndex: 1000
+                }}></TableCell>
+              </TableRow>
+
+              {/* Summary Row */}
+              <TableRow sx={{ backgroundColor: "#e8f4fd" }}>
+                <TableCell sx={{
+                  fontWeight: "bold", position: "sticky",
+                  left: 0,
+                  backgroundColor: "#e8f4fd",
+                  boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                  zIndex: 1
+                }}>
+                  Tanulói jogviszonyban álló tanulók száma (fő)
+                </TableCell>
+                {schoolYears.map((year, i) => {
+                  const startYear = parseInt(year.split("/")[0], 10);
+                  return (
+                    <TableCell
+                      key={`summary-${year}`}
+                      align="center"
+                      colSpan={placementTypes.length}
                       sx={{
-                        fontWeight: "bold",
-                        borderRight: "2px solid #ddd",
-                        position: "sticky",
-                        left: 0,
-                        backgroundColor: "#fffde7",
-                        zIndex: 1,
+                        borderRight: i === schoolYears.length - 1 ? "none" : "2px solid #ddd",
                       }}
                     >
-                      Összesen
+                      <TextField
+                        type="number"
+                        size="small"
+                        value={tanuloiLetszamByYear[startYear] || 0}
+                        inputProps={{
+                          readOnly: true,
+                          style: { textAlign: "center" },
+                        }}
+                        sx={{ width: "90px" }}
+                      />
                     </TableCell>
-                    {schoolYears.map((year, i) => {
-                      const startYear = parseInt(year.split("/")[0], 10);
-                      return (
-                        <React.Fragment key={`total-${year}-metrics`}>
-                          {placementTypes.map((placement, j) => (
-                            <TableCell 
-                              key={`tot-${year}-${placement.key}`} 
-                              align="center" 
-                              sx={{ 
-                                fontWeight: "bold",
-                                borderRight: (j === placementTypes.length - 1 && i !== schoolYears.length - 1) ? "2px solid #ddd" : "1px solid #ddd",
-                              }}
-                            >
-                              {totals[startYear]?.[placement.key] || 0}
-                            </TableCell>
-                          ))}
-                        </React.Fragment>
-                      );
-                    })}
-                    <TableCell></TableCell>
-                  </TableRow>
+                  );
+                })}
+                <TableCell sx={{
+                  position: "sticky",
+                  right: 0,
+                  backgroundColor: "#e8f4fd",
+                  boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                  zIndex: 1
+                }}></TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-                  {/* Data Rows */}
-                  {Object.keys(competitionData)
-                    .sort((a, b) => {
-                      const aOrder = categoryOrderMap[a] ?? Number.MAX_SAFE_INTEGER;
-                      const bOrder = categoryOrderMap[b] ?? Number.MAX_SAFE_INTEGER;
-                      if (aOrder !== bOrder) return aOrder - bOrder;
-                      return a.localeCompare(b, "hu");
-                    })
-                    .map((category) => {
-                    const competitions = Object.keys(competitionData[category]).sort((a, b) => {
-                      const aCreatedAt = competitionCreatedAtMap[category]?.[a] || "";
-                      const bCreatedAt = competitionCreatedAtMap[category]?.[b] || "";
-                      const aTs = Date.parse(aCreatedAt);
-                      const bTs = Date.parse(bCreatedAt);
-                      const aHasDate = !Number.isNaN(aTs);
-                      const bHasDate = !Number.isNaN(bTs);
+        {/* Action Buttons */}
 
-                      if (aHasDate && bHasDate && aTs !== bTs) return aTs - bTs;
-                      if (aHasDate !== bHasDate) return aHasDate ? -1 : 1;
-                      return a.localeCompare(b, "hu");
-                    });
-                    return competitions.map((competition, index) => (
-                      <TableRow
-                        key={`${category}-${competition}`}
-                        hover
-                      >
-                        <TableCell
-                          sx={{
-                            borderRight: "2px solid #ddd",
-                            position: "sticky",
-                            left: 0,
-                            backgroundColor: "#fff",
-                            zIndex: 1,
-                          }}
-                        >
-                          {index === 0 && (
-                            <Typography variant="subtitle2" color="primary" sx={{ fontWeight: "bold", mb: 0.5 }}>
-                              {category}
-                            </Typography>
-                          )}
-                          <Box sx={{ pl: 2, fontSize: "0.875rem" }}>{competition}</Box>
-                        </TableCell>
-                        {schoolYears.map((year) =>
-                          placementTypes.map((placement) => (
-                            <TableCell
-                              key={`${year}-${placement.key}`}
-                              align="center"
-                            >
-                              <TextField
-                                type="number"
-                                value={
-                                  competitionData[category][competition][
-                                  year
-                                  ]?.[placement.key] || "0"
-                                }
-                                onChange={(e) =>
-                                  handleDataChange(
-                                    category,
-                                    competition,
-                                    year,
-                                    placement.key,
-                                    e.target.value
-                                  )
-                                }
-                                size="small"
-                                inputProps={{
-                                  min: 0,
-                                  style: { textAlign: "center" },
-                                }}
-                                sx={{
-                                  width: "60px",
-                                  backgroundColor: isFieldModified(category, competition, year, placement.key) ? "#fef08a" : "inherit"
-                                }}
-                              />
-                            </TableCell>
-                          ))
-                        )}
-                        <TableCell align="center" sx={{
-                          position: "sticky",
-                          right: 0,
-                          backgroundColor: "#fff",
-                          boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
-                          zIndex: 1
-                        }}>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleRemoveCompetition(category, competition)}
-                            disabled={!selectedSchool}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ));
-                  })}
+        {/* Status Messages */}
+        {isModified && (
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            Mentetlen módosítások vannak. Ne felejtsd el menteni a
+            változtatásokat!
+          </Alert>
+        )}
 
-                  {/* Totals Row */}
-                  <TableRow
-                    sx={{ backgroundColor: "#fff2cc", fontWeight: "bold" }}
-                  >
-                    <TableCell sx={{ fontWeight: "bold", fontSize: "1rem" }}>
-                      Összesen
-                    </TableCell>
-                    {schoolYears.map((year) =>
-                      placementTypes.map((placement) => (
-                        <TableCell
-                          key={`total-${year}-${placement.key}`}
-                          align="center"
-                          sx={{ fontWeight: "bold" }}
-                        >
-                          {totals[parseInt(year.split("/")[0], 10)]?.[placement.key] || 0}
-                        </TableCell>
-                      ))
-                    )}
-                    <TableCell sx={{
-                      position: "sticky",
-                      right: 0,
-                      backgroundColor: "#fff2cc",
-                      boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
-                      zIndex: 1
-                    }}></TableCell>
-                  </TableRow>
 
-                  {/* Summary Row */}
-                  <TableRow sx={{ backgroundColor: "#e8f4fd" }}>
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      Tanulói jogviszonyban álló tanulók száma (fő)
-                    </TableCell>
-                    {schoolYears.map((year, i) => {
-                      const startYear = parseInt(year.split("/")[0], 10);
-                      return (
-                        <TableCell
-                          key={`summary-${year}`}
-                          align="center"
-                          colSpan={placementTypes.length}
-                          sx={{
-                            borderRight: i === schoolYears.length - 1 ? "none" : "2px solid #ddd",
-                          }}
-                        >
-                          <TextField
-                            type="number"
-                            size="small"
-                            value={tanuloiLetszamByYear[startYear] || 0}
-                            inputProps={{
-                              readOnly: true,
-                              style: { textAlign: "center" },
-                            }}
-                            sx={{ width: "90px" }}
-                          />
-                        </TableCell>
-                      );
-                    })}
-                    <TableCell sx={{
-                      position: "sticky",
-                      right: 0,
-                      backgroundColor: "#e8f4fd",
-                      boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
-                      zIndex: 1
-                    }}></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-
-            {/* Action Buttons */}
-
-            {/* Status Messages */}
-            {isModified && (
-              <Alert severity="warning" sx={{ mt: 2 }}>
-                Mentetlen módosítások vannak. Ne felejtsd el menteni a
-                változtatásokat!
-              </Alert>
-            )}
-
-      
 
         {/* Add Competition Dialog */}
         <Dialog
@@ -847,8 +846,8 @@ export default function SzakmaiEredmenyek() {
         >
           <DialogTitle>Új verseny hozzáadása</DialogTitle>
           <DialogContent>
-            <Stack spacing={3} sx={{ mt: 1 }}>   
-     
+            <Stack spacing={3} sx={{ mt: 1 }}>
+
               <FormControl fullWidth>
                 <InputLabel>Kategória</InputLabel>
                 <Select
@@ -877,8 +876,8 @@ export default function SzakmaiEredmenyek() {
                 }
                 placeholder="pl. Új verseny neve"
               />
-             
-           
+
+
             </Stack>
           </DialogContent>
           <DialogActions>
@@ -957,6 +956,7 @@ export default function SzakmaiEredmenyek() {
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
         <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
           {snackbarMessage}

@@ -90,11 +90,10 @@ export default function Login() {
 
       dispatch(loginSuccess(result));
     } catch (err) {
+      const errorMsg = parseApiError(err);
       dispatch(
         loginFailure(
-          err?.data?.message ||
-          err?.message ||
-          "Hiba történt a bejelentkezés során"
+          errorMsg || "Hiba történt a bejelentkezés során"
         )
       );
     }

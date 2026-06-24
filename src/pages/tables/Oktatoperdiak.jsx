@@ -80,10 +80,10 @@ const Oktatoperdiak = () => {
     const yearKey = `${year}/${year + 1}`;
     acc[yearKey] = tanuloLetszamData
       ? tanuloLetszamData
-          .filter(
-            (item) => item.tanev_kezdete === year && item.jogv_tipus === 0
-          )
-          .reduce((sum, item) => sum + item.letszam, 0)
+        .filter(
+          (item) => item.tanev_kezdete === year && item.jogv_tipus === 0
+        )
+        .reduce((sum, item) => sum + item.letszam, 0)
       : 0;
     return acc;
   }, {});
@@ -236,10 +236,10 @@ const Oktatoperdiak = () => {
       <Fade in={true} timeout={800}>
         <Box sx={{ minHeight: 'calc(100vh - 120px)' }}>
           {/* Header Section */}
-          <Card 
-            elevation={6} 
-            sx={{ 
-              mb: 2, 
+          <Card
+            elevation={6}
+            sx={{
+              mb: 2,
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               color: 'white',
               borderRadius: 3,
@@ -253,143 +253,143 @@ const Oktatoperdiak = () => {
                   3. Egy oktatóra jutó tanulók száma
                 </Typography>
               </Stack>
-            
+
               <Typography variant="body1" sx={{ opacity: 0.8 }}>
                 Egy oktatóra jutó tanulói jogviszonyú tanulók számának nyomon követése tanévenként
               </Typography>
             </CardContent>
           </Card>
-      {/* Divisor Configuration */}
-      <Box sx={{ margin: 2, mb: 3 }}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Typography variant="body1">
-            Heti óratömeg osztója (oktatói létszám számításához):
-          </Typography>
-          <TextField
-            value={divisor}
-            onChange={(e) => setDivisor(parseFloat(e.target.value) || 22)}
-            size="small"
-            type="number"
-            inputProps={{
-              min: 0.1,
-              max: 100,
-              step: 0.1,
-              style: { textAlign: "center" },
+          {/* Divisor Configuration */}
+          <Box sx={{ margin: 2, mb: 3 }}>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Typography variant="body1">
+                Heti óratömeg osztója (oktatói létszám számításához):
+              </Typography>
+              <TextField
+                value={divisor}
+                onChange={(e) => setDivisor(parseFloat(e.target.value) || 22)}
+                size="small"
+                type="number"
+                inputProps={{
+                  min: 0.1,
+                  max: 100,
+                  step: 0.1,
+                  style: { textAlign: "center" },
+                }}
+                sx={{ width: "80px" }}
+              />
+            </Stack>
+          </Box>
+
+          {/* Action Buttons */}
+          <Box sx={{ margin: 2, mb: 3 }}>
+            <Stack direction="row" spacing={2}>
+              <Button
+                variant="contained"
+                startIcon={<SaveIcon />}
+                onClick={handleSave}
+                disabled={!isModified || isAdding || isUpdating}
+              >
+                {isAdding || isUpdating ? "Mentés..." : "Mentés"}
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                onClick={handleReset}
+                disabled={!isModified}
+              >
+                Visszaállítás
+              </Button>
+            </Stack>
+
+            {/* Status Message */}
+            {isModified && (
+              <Alert severity="warning" sx={{ mt: 2 }}>
+                Mentetlen módosítások vannak. Ne felejtsd el menteni a
+                változtatásokat!
+              </Alert>
+            )}
+          </Box>
+
+          <Card
+            sx={{
+              mx: 2,
+              mb: 3,
+              borderRadius: 2,
+              border: "1px dashed rgba(0,0,0,0.12)",
+              backgroundColor: "#fff",
             }}
-            sx={{ width: "80px" }}
-          />
-        </Stack>
-      </Box>
-
-      {/* Action Buttons */}
-      <Box sx={{ margin: 2, mb: 3 }}>
-        <Stack direction="row" spacing={2}>
-          <Button
-            variant="contained"
-            startIcon={<SaveIcon />}
-            onClick={handleSave}
-            disabled={!isModified || isAdding || isUpdating}
           >
-            {isAdding || isUpdating ? "Mentés..." : "Mentés"}
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={handleReset}
-            disabled={!isModified}
-          >
-            Visszaállítás
-          </Button>
-        </Stack>
+            <CardContent>
+              <Stack
+                direction={{ xs: "column", md: "row" }}
+                spacing={2}
+                alignItems={{ xs: "flex-start", md: "center" }}
+                justifyContent="space-between"
+              >
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Chip
+                    icon={<CalculateIcon sx={{ fontSize: 18 }} />}
+                    label="Automatikus eredmények"
+                    color="success"
+                    variant="outlined"
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    A felső két táblázat értékei számított eredmények, nem
+                    szerkeszthetők.
+                  </Typography>
+                </Stack>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Chip
+                    icon={<SaveIcon sx={{ fontSize: 18 }} />}
+                    label="Szerkeszthető mezők"
+                    color="primary"
+                    variant="outlined"
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    Az alsó táblázat kék keretes mezői kitölthetők; módosítás után
+                    ne felejtse el a Mentés gombot használni.
+                  </Typography>
+                </Stack>
+              </Stack>
+            </CardContent>
+          </Card>
 
-        {/* Status Message */}
-        {isModified && (
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            Mentetlen módosítások vannak. Ne felejtsd el menteni a
-            változtatásokat!
-          </Alert>
-        )}
-      </Box>
-
-      <Card
-        sx={{
-          mx: 2,
-          mb: 3,
-          borderRadius: 2,
-          border: "1px dashed rgba(0,0,0,0.12)",
-          backgroundColor: "#fff",
-        }}
-      >
-        <CardContent>
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={2}
-            alignItems={{ xs: "flex-start", md: "center" }}
-            justifyContent="space-between"
-          >
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Chip
-                icon={<CalculateIcon sx={{ fontSize: 18 }} />}
-                label="Automatikus eredmények"
-                color="success"
-                variant="outlined"
-              />
-              <Typography variant="body2" color="text.secondary">
-                A felső két táblázat értékei számított eredmények, nem
-                szerkeszthetők.
-              </Typography>
-            </Stack>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Chip
-                icon={<SaveIcon sx={{ fontSize: 18 }} />}
-                label="Szerkeszthető mezők"
-                color="primary"
-                variant="outlined"
-              />
-              <Typography variant="body2" color="text.secondary">
-                Az alsó táblázat kék keretes mezői kitölthetők; módosítás után
-                ne felejtse el a Mentés gombot használni.
-              </Typography>
-            </Stack>
-          </Stack>
-        </CardContent>
-      </Card>
-
-      <Box sx={{ margin: 2 }}>
-        <TableContainer component={Paper}>
-          <Table sx={{ minWidth: 650 }} aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                <TableCell align="center" colSpan={years.length}>
-                  Egy oktatóra jutó tanulói jogviszonyú tanulók száma
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell align="center" colSpan={years.length}>
-                  (tanuló/oktató)
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                {years.map((year) => (
-                  <TableCell key={year} align="center">
-                    {year}/{year + 1}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              <TableRow>
-                {egyOktatoraJutoTanulok.map((value, index) => (
-                  <TableCell key={index} align="center">
-                    {value}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
-      {/*
+          <Box sx={{ margin: 2 }}>
+            <TableContainer component={Paper}>
+              <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell align="center" colSpan={years.length}>
+                      Egy oktatóra jutó tanulói jogviszonyú tanulók száma
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell align="center" colSpan={years.length}>
+                      (tanuló/oktató)
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    {years.map((year) => (
+                      <TableCell key={year} align="center">
+                        {year}/{year + 1}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow>
+                    {egyOktatoraJutoTanulok.map((value, index) => (
+                      <TableCell key={index} align="center">
+                        {value}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+          {/*
         számított oktatói létszám			
 (fő)			
 2020/2021	2021/2022	2022/2023	2022/2024
@@ -401,124 +401,124 @@ fenntartó által engedélyezett heti óratömeg
 500			
 
         */}
-      <Box sx={{ margin: 2 }}>
-        <TableContainer component={Paper}>
-          <Table sx={{ minWidth: 650 }} aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                <TableCell align="center" colSpan={years.length}>
-                  Számított oktatói létszám
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell align="center" colSpan={years.length}>
-                  (fő)
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                {years.map((year) => (
-                  <TableCell key={year} align="center">
-                    {year}/{year + 1}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              <TableRow>
-                {szamitottOktatoiLetszam.map((value, index) => (
-                  <TableCell key={index} align="center">
-                    {value}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
-      <Box sx={{ margin: 2 }}>
-        <TableContainer component={Paper}>
-          <Table sx={{ minWidth: 650 }} aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                <TableCell align="center" colSpan={years.length}>
-                  Fenntartó által engedélyezett heti óratömeg
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell align="center" colSpan={years.length}>
-                  (óra)
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                {years.map((year) => (
-                  <TableCell key={year} align="center">
-                    {year}/{year + 1}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              <TableRow>
-                {hetiOratomeg.map((value, index) => (
-                  <TableCell
-                    key={index}
-                    align="center"
-                    sx={{
-                      backgroundColor: "rgba(33, 150, 243, 0.08)",
-                      transition: "background-color 0.2s ease",
-                    }}
-                  >
-                    <Tooltip title={editableFieldTooltip} arrow>
-                      <TextField
-                        value={value}
-                        onChange={(e) =>
-                          handleValueChange(index, e.target.value)
-                        }
-                        size="small"
-                        type="number"
-                        inputProps={{
-                          min: 0,
-                          step: 0.1,
-                          style: { textAlign: "center" },
-                        }}
+          <Box sx={{ margin: 2 }}>
+            <TableContainer component={Paper}>
+              <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell align="center" colSpan={years.length}>
+                      Számított oktatói létszám
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell align="center" colSpan={years.length}>
+                      (fő)
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    {years.map((year) => (
+                      <TableCell key={year} align="center">
+                        {year}/{year + 1}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow>
+                    {szamitottOktatoiLetszam.map((value, index) => (
+                      <TableCell key={index} align="center">
+                        {value}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+          <Box sx={{ margin: 2 }}>
+            <TableContainer component={Paper}>
+              <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell align="center" colSpan={years.length}>
+                      Fenntartó által engedélyezett heti óratömeg
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell align="center" colSpan={years.length}>
+                      (óra)
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    {years.map((year) => (
+                      <TableCell key={year} align="center">
+                        {year}/{year + 1}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow>
+                    {hetiOratomeg.map((value, index) => (
+                      <TableCell
+                        key={index}
+                        align="center"
                         sx={{
-                          width: "110px",
-                          "& .MuiOutlinedInput-root": {
-                            borderRadius: 2,
-                            backgroundColor: "white",
-                            "&:hover fieldset": {
-                              borderColor: "#2196f3",
-                            },
-                            "&.Mui-focused fieldset": {
-                              borderColor: "#2196f3",
-                            },
-                          },
+                          backgroundColor: "rgba(33, 150, 243, 0.08)",
+                          transition: "background-color 0.2s ease",
                         }}
-                      />
-                    </Tooltip>
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
+                      >
+                        <Tooltip title={editableFieldTooltip} arrow>
+                          <TextField
+                            value={value}
+                            onChange={(e) =>
+                              handleValueChange(index, e.target.value)
+                            }
+                            size="small"
+                            type="number"
+                            inputProps={{
+                              min: 0,
+                              step: 0.1,
+                              style: { textAlign: "center" },
+                            }}
+                            sx={{
+                              width: "110px",
+                              "& .MuiOutlinedInput-root": {
+                                borderRadius: 2,
+                                backgroundColor: "white",
+                                "&:hover fieldset": {
+                                  borderColor: "#2196f3",
+                                },
+                                "&.Mui-focused fieldset": {
+                                  borderColor: "#2196f3",
+                                },
+                              },
+                            }}
+                          />
+                        </Tooltip>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
 
-      {/* Notification Snackbar */}
-      <Snackbar
-        open={notification.open}
-        autoHideDuration={6000}
-        onClose={handleNotificationClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          onClose={handleNotificationClose}
-          severity={notification.severity}
-          sx={{ width: "100%" }}
-        >
-          {notification.message}
-        </Alert>
-      </Snackbar>
+          {/* Notification Snackbar */}
+          <Snackbar
+            open={notification.open}
+            autoHideDuration={6000}
+            onClose={handleNotificationClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          >
+            <Alert
+              onClose={handleNotificationClose}
+              severity={notification.severity}
+              sx={{ width: "100%" }}
+            >
+              {notification.message}
+            </Alert>
+          </Snackbar>
         </Box>
       </Fade>
     </Container>

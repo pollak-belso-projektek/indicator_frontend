@@ -354,7 +354,10 @@ export default function DataImport() {
           </Typography>
 
           <Paper sx={{ width: "100%" }}>
-            <Tabs value={tabValue} onChange={handleTabChange} centered>
+            <Tabs value={tabValue} onChange={handleTabChange}
+              scrollButtons="auto"
+              centered
+              allowScrollButtonsMobile>
               <Tab label="Tanügyi Adatok" />
               <Tab label="Alkalmazottak Munkaugyi Adatai" />
               {/* TODO: Uncomment when done */}
@@ -473,7 +476,7 @@ export default function DataImport() {
                     <Chip
                       label={
                         alkalmazottDataFromAPI &&
-                        Array.isArray(alkalmazottDataFromAPI)
+                          Array.isArray(alkalmazottDataFromAPI)
                           ? alkalmazottDataFromAPI.length
                           : 0
                       }
@@ -528,23 +531,23 @@ export default function DataImport() {
                           munkakor.toLowerCase().includes("tanár")
                         );
                       }).length !== alkalmazottData.length && (
-                        <Alert severity="warning" sx={{ mt: 1 }}>
-                          <AlertTitle>Szűrés alkalmazva</AlertTitle>
-                          Csak{" "}
-                          {
-                            alkalmazottData.filter((item) => {
-                              const munkakor =
-                                item.Munkakor || item.munkakor || "";
-                              return (
-                                munkakor.toLowerCase().includes("oktató") ||
-                                munkakor.toLowerCase().includes("tanár")
-                              );
-                            }).length
-                          }{" "}
-                          oktató/tanár kerül feltöltésre a{" "}
-                          {alkalmazottData.length} alkalmazottból.
-                        </Alert>
-                      )}
+                          <Alert severity="warning" sx={{ mt: 1 }}>
+                            <AlertTitle>Szűrés alkalmazva</AlertTitle>
+                            Csak{" "}
+                            {
+                              alkalmazottData.filter((item) => {
+                                const munkakor =
+                                  item.Munkakor || item.munkakor || "";
+                                return (
+                                  munkakor.toLowerCase().includes("oktató") ||
+                                  munkakor.toLowerCase().includes("tanár")
+                                );
+                              }).length
+                            }{" "}
+                            oktató/tanár kerül feltöltésre a{" "}
+                            {alkalmazottData.length} alkalmazottból.
+                          </Alert>
+                        )}
                     </Box>
                   )}
                 </Paper>
@@ -575,7 +578,7 @@ export default function DataImport() {
                     <Chip
                       label={
                         tanuloAdatszolgaltatasDataFromAPI &&
-                        Array.isArray(tanuloAdatszolgaltatasDataFromAPI)
+                          Array.isArray(tanuloAdatszolgaltatasDataFromAPI)
                           ? tanuloAdatszolgaltatasDataFromAPI.length
                           : 0
                       }
@@ -656,7 +659,7 @@ export default function DataImport() {
                     <Chip
                       label={
                         oktatoAdatszolgaltatasDataFromAPI &&
-                        Array.isArray(oktatoAdatszolgaltatasDataFromAPI)
+                          Array.isArray(oktatoAdatszolgaltatasDataFromAPI)
                           ? oktatoAdatszolgaltatasDataFromAPI.length
                           : 0
                       }
