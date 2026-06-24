@@ -2,24 +2,28 @@ const tableKeyValues = {
   // Core tables
   tanulo_letszam: "Tanuló létszám",
   alapadatok: "Alapadatok",
-  kompetencia: "Kompetencia",
+  kompetencia: "Országos kompetenciamérés",
   felvettek_szama: "Felvettek száma",
   tanugyi_adatok: "Tanügyi adatok",
+  felnottkepzes: "Felnőttképzés",
 
   // Competition and achievements
   versenyek: "Versenyek",
   vizsgaeredmenyek: "Vizsgaeredmények",
-  szmsz: "Szakmai vizsga eredmények",
-  intezmenyi_nevelesi_mutatok: "Intézményi neveltség",
+  szakmai_vizsga_eredmenyek: "Szakmai vizsga",
+  intezmenyi_neveltsegi_mutatok: "Intézményi neveltség",
+  intezmenyi_elismeresek: "Intézményi elismerések",
+  tanulmanyi_eredmeny: "Tanulmányi eredmény",
 
   // Assessment and satisfaction
-  nszfh: "NSZFH",
+  nszfh: "NSZFH mérések",
   elegedettseg_meres: "Elégedettség mérés",
   elegedettseg: "Elégedettség",
 
   // Student categories
   sajatos_nevelesu_tanulok: "Sajátos nevelésű tanulók",
-  hh_es_hhh_nevelesu_tanulok: "HH és HHH nevelésű tanulók",
+  hh_es_hhh: "HH és HHH tanulók",
+  lemorzsolodas: "Lemorzsolódás",
 
   // Career and employment
   elhelyezkedes: "Elhelyezkedés",
@@ -31,12 +35,24 @@ const tableKeyValues = {
 
   // Staff and activities
   egy_oktatora_juto_tanulo: "Egy oktatóra jutó tanuló",
-  oktato_egyeb_tev: "Oktató egyéb tevékenység",
+  egy_oktatora_juto_ossz_diak: "Egy oktatóra jutó össz diák",
+  "oktato-egyeb-tev": "Oktatók egyéb tevékenységei",
+  szakmai_rendezvenyek: "Rendezvények",
 
-  // System
+  // System and others
   hianyzas: "Hiányzás",
   szakmai_tovabbkepzesek: "Szakmai továbbképzések",
-  tanulmanyi_eredmeny: "Tanulmányi eredmény",
+  palyazatok: "Pályázatok",
+  projektek: "Projektek",
+  szervezetfejlesztes: "Szervezetfejlesztés",
+  dualis_kepzohelyek: "Duális képzőhelyek száma",
+  innovacios_tevekenysegek: "Innovációs tevékenységek",
+  szakkepzes_zolditese: "Szakképzés \"zöldítése\"",
+  palyaorientacio: "Pályaorientáció",
+  digitalis_kompetencia: "Digitális kompetencia",
+  egyuttmukudesek_szama: "Együttműködések száma",
+  nyelvvizsgak_szama: "Nyelvvizsgák száma",
+  
   user: "Felhasználók",
   log: "Rendszer naplók",
   auth: "Authentikáció",
@@ -69,26 +85,39 @@ const routeToTableMapping = {
   "/tanugyi_adatok": "tanugyi_adatok",
   "/felvettek_szama": "felvettek_szama",
   "/users": "user",
+  "/felnottkepzes": "felnottkepzes",
+  "/orszagos-kompetenciameres": "kompetencia",
   "/nszfh-meresek": "nszfh",
-  "/versenyek": "versenyek",
   "/elhelyezkedesi-mutato": "elhelyezkedes",
   "/vegzettek-elegedettsege": "elegedettseg",
   "/vizsgaeredmenyek": "vizsgaeredmenyek",
-  "/intezmenyi-elismeresek": "intezmenyi_nevelesi_mutatok",
-  "/szakmai-bemutatok-konferenciak": "oktato_egyeb_tev",
+  "/szakmai-vizsga": "szakmai_vizsga_eredmenyek",
+  "/intezmenyi-elismeresek": "intezmenyi_elismeresek",
+  "/szakmai-bemutatok-konferenciak": "szakmai_rendezvenyek",
+  "/lemorzsolodas": "lemorzsolodas",
   "/elegedettseg-meres-eredmenyei": "elegedettseg_meres",
   "/muhelyiskolai-reszszakmat": "muhelyiskola",
   "/dobbanto-program-aranya": "dobbanto",
   "/sajatos-nevelesi-igenyu-tanulok-aranya": "sajatos_nevelesu_tanulok",
-  "/hatranyos-helyezu-tanulok-aranya": "hh_es_hhh_nevelesu_tanulok",
-  "/intezmenyi-nevelesi-mutatok": "intezmenyi_nevelesi_mutatok",
+  "/hatranyos-helyezu-tanulok-aranya": "hh_es_hhh",
+  "/intezmenyi-nevelesi-mutatok": "intezmenyi_neveltsegi_mutatok",
   "/szakkepzesi-munkaszerződes-arany": "szmsz",
   "/hianyzas": "hianyzas",
   "/szakmai-tovabbkepzesek": "szakmai_tovabbkepzesek",
   "/tanulmani-eredmeny": "tanulmanyi_eredmeny",
-  "/oktatok-egyeb-tev": "oktato_egyeb_tev",
+  "/oktato-egyeb-tev": "oktato-egyeb-tev",
   "/oktato_per_diak": "egy_oktatora_juto_tanulo",
-  "/egy-oktatora-juto-ossz-diak": "egy_oktatora_juto_tanulo",
+  "/egy-oktatora-juto-ossz-diak": "egy_oktatora_juto_ossz_diak",
+  "/palyazatok": "palyazatok",
+  "/projektek": "projektek",
+  "/szervezetfejlesztes": "szervezetfejlesztes",
+  "/dualis-kepzohelyek-szama": "dualis_kepzohelyek",
+  "/innovacios-tevekenysegek": "innovacios_tevekenysegek",
+  "/szakkepzes-zolditese": "szakkepzes_zolditese",
+  "/palyaorientacio": "palyaorientacio",
+  "/digitalis-kompetencia": "digitalis_kompetencia",
+  "/egyuttmukudesek-szama": "egyuttmukudesek_szama",
+  "/nyelvvizsgak-szama": "nyelvvizsgak_szama",
   "/logs": "log",
 };
 
@@ -140,25 +169,13 @@ export const getAccessibleRoutes = (
   isSuperadmin = false,
   userPermissions = {}
 ) => {
+  const allRoutes = Object.keys(routeToTableMapping);
+  const publicRoutes = ["/dashboard", "/adat-import", "/table-management", "/profile"];
+
   // Superadmin gets all routes
   if (isSuperadmin) {
-    return [
-      "/dashboard",
-      "/adat-import",
-      "/table-management",
-      "/alapadatok",
-      "/tanulo_letszam",
-      "/kompetencia",
-      "/versenyek",
-      "/tanugyi_adatok",
-      "/felvettek_szama",
-      "/users",
-      "/logs",
-    ];
+    return [...new Set([...publicRoutes, ...allRoutes, "/users", "/logs"])];
   }
-
-  const allRoutes = Object.keys(routeToTableMapping);
-  const publicRoutes = ["/dashboard", "/adat-import", "/table-management"];
 
   const accessibleRoutes = allRoutes.filter((route) => {
     const tableName = getTableNameFromRoute(route);
@@ -176,5 +193,5 @@ export const getAccessibleRoutes = (
     return tableName ? hasTableAccess(tableAccess, tableName) : false;
   });
 
-  return [...publicRoutes, ...accessibleRoutes];
+  return [...new Set([...publicRoutes, ...accessibleRoutes])];
 };
