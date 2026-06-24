@@ -26,6 +26,7 @@ import {
   useAddElegedettsegMutation,
   useUpdateElegedettsegMutation,
   useGetAllAlapadatokQuery,
+  useGetElegedettsegQuery,
 } from "../../../store/api/apiSlice";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
@@ -45,8 +46,17 @@ export default function VegzettekElegedettsege() {
     isLoading: isLoadingSchools,
     isFetching,
     error: fetchError,
-    refetch,
   } = useGetAllAlapadatokQuery();
+
+  const {
+    data: apiData,
+    isLoading: isLoadingElegedettseg,
+    isFetching: isFetchingElegedettseg,
+    refetch: refetchElegedettseg,
+  } = useGetElegedettsegQuery(
+    { alapadatok_id: selectedSchool?.id }
+  );
+
   const [addElegedettseg, { isLoading: isAdding }] = useAddElegedettsegMutation();
   const [updateElegedettseg, { isLoading: isUpdating }] = useUpdateElegedettsegMutation();
 
@@ -113,14 +123,9 @@ export default function VegzettekElegedettsege() {
 
   // Load API data into tableData state
   useEffect(() => {
-
     const initialData = {};
-
-    const relevantData = selectedSchool
-      ? (Array.isArray(selectedSchool.elegedettseg) ? selectedSchool.elegedettseg : [])
-      : (Array.isArray(schoolsData)
-        ? schoolsData.flatMap((school) => (Array.isArray(school.elegedettseg) ? school.elegedettseg : []))
-        : []);
+    const relevantData = apiData || [];
+    const sumData = {};
 
     relevantData.forEach(item => {
       const year = item.tanev_kezdete;
@@ -128,18 +133,38 @@ export default function VegzettekElegedettsege() {
       const szakiranyId = item.szakirany_id || item.szakirany?.id;
       const key = szakmaId ? `szakma_${szakmaId}_${szakiranyId}` : `szakirany_${szakiranyId}`;
 
-      if (!initialData[key]) initialData[key] = {};
-      initialData[key][year] = {
-        id: item.id,
-        munkaadok_elegedettsege: item.munkaadok_elegedettsege ?? "",
-      };
+      if (!initialData[key]) {
+        initialData[key] = {};
+        sumData[key] = {};
+      }
+      if (!initialData[key][year]) {
+        initialData[key][year] = { id: item.id, munkaadok_elegedettsege: "" };
+        sumData[key][year] = { sum: 0, count: 0 };
+      }
+      
+      const val = item.munkaadok_elegedettsege;
+      if (val !== undefined && val !== null && val !== "") {
+        sumData[key][year].sum += Number(val);
+        sumData[key][year].count += 1;
+        initialData[key][year].munkaadok_elegedettsege = val;
+      }
     });
+
+    if (!selectedSchool) {
+      Object.keys(sumData).forEach(key => {
+        Object.keys(sumData[key]).forEach(year => {
+          const entry = sumData[key][year];
+          if (entry.count > 0) {
+            initialData[key][year].munkaadok_elegedettsege = Number((entry.sum / entry.count).toFixed(2));
+          }
+        });
+      });
+    }
 
     setTableData(initialData);
     setSavedData(JSON.parse(JSON.stringify(initialData)));
     setIsModified(false);
-
-  }, [selectedSchool, schoolsData]);
+  }, [apiData, selectedSchool]);
 
   // Handle Input Changes
   const handleDataChange = (key, yearStr, value) => {
@@ -209,7 +234,7 @@ export default function VegzettekElegedettsege() {
 
       setSavedData(JSON.parse(JSON.stringify(tableData)));
       setIsModified(false);
-      refetch();
+      refetchElegedettseg();
 
       setSnackbarMessage(`Sikeresen mentve: ${savedCount} új rekord és ${updatedCount} frissített rekord`);
       setSnackbarSeverity("success");
@@ -229,7 +254,7 @@ export default function VegzettekElegedettsege() {
     setSnackbarOpen(false);
   };
 
-  if (isFetching || isLoadingSchools) {
+  if (isFetching || isLoadingSchools || isLoadingElegedettseg || isFetchingElegedettseg) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
         <CircularProgress />
@@ -382,6 +407,7 @@ export default function VegzettekElegedettsege() {
                               <TextField
                                 type="number"
                                 size="small"
+                                disabled={!selectedSchool}
                                 value={tableData[row.key]?.[startYear]?.munkaadok_elegedettsege ?? ""}
                                 onChange={(e) => handleDataChange(row.key, startYear, e.target.value)}
                                 inputProps={{
@@ -390,7 +416,7 @@ export default function VegzettekElegedettsege() {
                                   step: 0.1,
                                   style: { textAlign: "center", padding: "4px" },
                                 }}
-                                sx={{ width: "80px", backgroundColor: "#fff" }}
+                                sx={{ width: "80px", backgroundColor: !selectedSchool ? "#f5f5f5" : "#fff" }}
                                 placeholder=""
                               />
                             </TableCell>

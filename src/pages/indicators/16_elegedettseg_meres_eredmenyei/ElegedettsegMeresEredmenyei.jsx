@@ -270,7 +270,7 @@ export default function ElegedettsegMeresEredmenyei() {
       const year = parseInt(yearStr.split("/")[0], 10);
       let sum = 0;
       let count = 0;
-      
+
       categoryTypes.forEach(cat => {
         const val = parseFloat(tableData[year]?.[cat.key]);
         if (!isNaN(val)) {
@@ -278,7 +278,7 @@ export default function ElegedettsegMeresEredmenyei() {
           count++;
         }
       });
-      
+
       totals[year] = count > 0 ? (sum / count).toFixed(1) : "0.0";
     });
     return totals;
@@ -334,23 +334,23 @@ export default function ElegedettsegMeresEredmenyei() {
 
       <Box>
 
- <LockStatusIndicator tableName="elegedettseg" sx={{mb:1}}/>
+        <LockStatusIndicator tableName="elegedettseg" sx={{ mb: 1 }} />
         {isModified && (
-          <Alert severity="warning" sx={{mb:3}}>
+          <Alert severity="warning" sx={{ mb: 3 }}>
             Mentetlen módosítások vannak. Ne felejtsd el menteni a
             változtatásokat!
           </Alert>
         )}
-         
+
 
 
         {/* Main Data Table */}
         <Card>
           <CardContent>
-           
+
             <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
               <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
-                  <LockedTableWrapper tableName="elegedettseg">
+              <LockedTableWrapper tableName="elegedettseg">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}
@@ -443,11 +443,13 @@ export default function ElegedettsegMeresEredmenyei() {
                               InputProps={{
                                 endAdornment: <InputAdornment position="end">%</InputAdornment>,
                               }}
-                              inputProps={{
-                                min: 0,
-                                max: 100,
-                                step: 0.1,
-                                style: { textAlign: "center", padding: "8px" },
+                              slotProps={{
+                                input: {
+                                  min: 0,
+
+                                  step: 0.1,
+                                  style: { textAlign: "center", padding: "8px" },
+                                }
                               }}
                               sx={{ width: "98px", backgroundColor: "#fff" }}
                               placeholder="0.0"
@@ -476,10 +478,10 @@ export default function ElegedettsegMeresEredmenyei() {
                     {evszamok.map((yearStr, i) => {
                       const year = parseInt(yearStr.split("/")[0], 10);
                       return (
-                        <TableCell 
-                          key={`avg-${year}`} 
-                          align="center" 
-                          sx={{ 
+                        <TableCell
+                          key={`avg-${year}`}
+                          align="center"
+                          sx={{
                             fontWeight: "bold",
                             borderRight: i === evszamok.length - 1 ? "none" : "1px solid #ddd",
                             fontSize: "1.1rem"

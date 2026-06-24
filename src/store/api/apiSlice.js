@@ -1054,7 +1054,9 @@ export const indicatorApi = createApi({
     }),
     getVersenyek: build.query({
       query: ({ alapadatok_id, tanev_kezdete }) =>
-        `versenyek/${alapadatok_id}/${tanev_kezdete}`,
+        tanev_kezdete !== undefined && tanev_kezdete !== null
+          ? `versenyek/${alapadatok_id}/${tanev_kezdete}`
+          : `versenyek/${alapadatok_id}`,
       providesTags: (result, error, params) => [
         { type: "Versenyek", id: params?.alapadatok_id },
         "Versenyek"
@@ -1086,10 +1088,15 @@ export const indicatorApi = createApi({
 
     // Elegedettseg (Satisfaction measurement)
     getElegedettseg: build.query({
-      query: ({ alapadatok_id, tanev_kezdete }) =>
-        `elegedettseg/${alapadatok_id}/${tanev_kezdete}`,
+      query: ({ alapadatok_id, tanev_kezdete }) => {
+        const year = tanev_kezdete !== undefined && tanev_kezdete !== null ? tanev_kezdete : getCurrentSchoolYearStart();
+        if (alapadatok_id) {
+          return `elegedettseg/${alapadatok_id}/${year}`;
+        }
+        return `elegedettseg/${year}`;
+      },
       providesTags: (result, error, params) => [
-        { type: "Elegedettseg", id: params?.alapadatok_id },
+        { type: "Elegedettseg", id: params?.alapadatok_id || "ALL" },
         "Elegedettseg",
       ],
     }),
@@ -1119,10 +1126,15 @@ export const indicatorApi = createApi({
 
     // ElegedettsegMeres (Partner satisfaction measurement)
     getElegedettsegMeres: build.query({
-      query: ({ alapadatok_id, tanev_kezdete }) =>
-        `elegedettseg_meres/${alapadatok_id}/${tanev_kezdete}`,
+      query: ({ alapadatok_id, tanev_kezdete }) => {
+        const year = tanev_kezdete !== undefined && tanev_kezdete !== null ? tanev_kezdete : getCurrentSchoolYearStart();
+        if (alapadatok_id) {
+          return `elegedettseg_meres/${alapadatok_id}/${year}`;
+        }
+        return `elegedettseg_meres/${year}`;
+      },
       providesTags: (result, error, params) => [
-        { type: "ElegedettsegMeres", id: params?.alapadatok_id },
+        { type: "ElegedettsegMeres", id: params?.alapadatok_id || "ALL" },
         "ElegedettsegMeres",
       ],
     }),
