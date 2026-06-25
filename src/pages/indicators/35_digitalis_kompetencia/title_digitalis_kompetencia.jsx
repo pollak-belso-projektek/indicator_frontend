@@ -1,16 +1,13 @@
-import React from "react";
-import { Typography, Box } from "@mui/material";
+import ComputerIcon from "@mui/icons-material/Computer";
+import IndicatorTitle from "../../../components/shared/IndicatorTitle";
 
 const TitleDigitalisKompetencia = () => {
   return (
-    <Box sx={{ display: "flex", flexDirection: "column" }}>
-      <Typography variant="h5" component="h1" sx={{ fontWeight: "bold" }}>
-        35. Digitális kompetencia
-      </Typography>
-      <Typography variant="subtitle1" color="text.secondary">
-        A digitális tananyagot fejlesztő és használó oktatók számának rögzítése
-      </Typography>
-    </Box>
+    <IndicatorTitle
+      icon={ComputerIcon}
+      title="35. Digitális kompetencia"
+      description="A digitális tananyagot fejlesztő és használó oktatók számának rögzítése"
+    />
   );
 };
 

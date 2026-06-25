@@ -301,6 +301,12 @@ const NavigationCategories = {
         tableName: "tanulmanyi_eredmeny",
       },
       {
+        name: "Hiányzás",
+        icon: MdEvent,
+        link: "/hianyzas",
+        tableName: "hianyzas",
+      },
+      {
         name: "Projektek",
         icon: MdWork,
         link: "/projektek",
@@ -604,8 +610,9 @@ const SidebarContent = ({ onClose, ...rest }) => {
   const navigate = useNavigate();
   const [itemSearch, setItemSearch] = useState("");
   const [expandedCategories, setExpandedCategories] = useState({
-    GENERAL: true, // Keep general expanded by default
-    FIXED_GENERAL: true, // Keep fixed general expanded by default
+    GENERAL: false, // Keep general collapsed by default
+    FIXED_GENERAL: false, // Keep fixed general collapsed by default
+    INDICATORS: true, // Keep indicators expanded by default
   });
 
   const tableAccess = useSelector(selectUserTableAccess);
@@ -1312,7 +1319,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
       {/* Version Display */}
       <Box
-        p={4}
+        py={2}
         borderTop="1px solid"
         borderColor={footerBorderColor}
         textAlign="center"

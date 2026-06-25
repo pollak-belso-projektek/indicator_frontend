@@ -39,10 +39,9 @@ import { generateSchoolYears } from "../../../utils/schoolYears";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
-import InfoDualisKepzohelyek from "./info_dualis_kepzohelyek";
-import TitleDualisKepzohelyek from "./title_dualis_kepzohelyek";
 import ExportToExcel from "../../../components/ExportToExcel";
-
+import InfoDualisKepzohelyekSzama from "./info_dualis_kepzohelyek_szama";
+import TitleDualisKepzohelyekSzama from "./title_dualis_kepzohelyek_szama";
 export default function DualisKepzohelyekSzama() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
 
@@ -251,8 +250,8 @@ export default function DualisKepzohelyekSzama() {
           if (!isNew) {
             if (isRowModified(name, year)) rowModified = true;
           } else {
-             // Ha új és van benne érték
-             if (hasData(name, year)) rowModified = true;
+            // Ha új és van benne érték
+            if (hasData(name, year)) rowModified = true;
           }
 
           if (rowModified) {
@@ -342,8 +341,8 @@ export default function DualisKepzohelyekSzama() {
 
   return (
     <PageWrapper
-      titleContent={<TitleDualisKepzohelyek />}
-      infoContent={<InfoDualisKepzohelyek />}
+      titleContent={<TitleDualisKepzohelyekSzama />}
+      infoContent={<InfoDualisKepzohelyekSzama />}
     >
       <Box>
         <LockStatusIndicator tableName="dualis_kepzohelyek" />

@@ -1,16 +1,13 @@
-import React from "react";
-import { Typography, Box } from "@mui/material";
+import LightbulbIcon from "@mui/icons-material/Lightbulb";
+import IndicatorTitle from "../../../components/shared/IndicatorTitle";
 
 const TitleInnovaciosTevekenysegek = () => {
   return (
-    <Box sx={{ display: "flex", flexDirection: "column" }}>
-      <Typography variant="h5" component="h1" sx={{ fontWeight: "bold" }}>
-        34. Innovációs tevékenységek
-      </Typography>
-      <Typography variant="subtitle1" color="text.secondary">
-        Az intézményben folyó innovációs tevékenységek és jó gyakorlatok rögzítése
-      </Typography>
-    </Box>
+    <IndicatorTitle
+      icon={LightbulbIcon}
+      title="34. Innovációs tevékenységek"
+      description="Az intézményben folyó innovációs tevékenységek és jó gyakorlatok rögzítése"
+    />
   );
 };
 
