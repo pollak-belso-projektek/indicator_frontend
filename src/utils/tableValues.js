@@ -47,12 +47,12 @@ const tableKeyValues = {
   szervezetfejlesztes: "Szervezetfejlesztés",
   dualis_kepzohelyek: "Duális képzőhelyek száma",
   innovacios_tevekenysegek: "Innovációs tevékenységek",
-  szakkepzes_zolditese: "Szakképzés \"zöldítése\"",
+  szakkepzes_zolditese: "Szakképzés zöldítése",
   palyaorientacio: "Pályaorientáció",
   digitalis_kompetencia: "Digitális kompetencia",
   egyuttmukudesek_szama: "Együttműködések száma",
   nyelvvizsgak_szama: "Nyelvvizsgák száma",
-  
+
   user: "Felhasználók",
   log: "Rendszer naplók",
   auth: "Authentikáció",

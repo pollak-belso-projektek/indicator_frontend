@@ -48,7 +48,7 @@ import TitleSzakkepzesZolditese from "./title_szakkepzes_zolditese";
 import ExportToExcel from "../../../components/ExportToExcel";
 
 const CATEGORIES = [
-  "A szakképzés \"zöldítéséhez\" kapcsolódó rendezvény/tevékenység megnevezése",
+  "A szakképzés zöldítéséhez kapcsolódó rendezvény/tevékenység megnevezése",
   "Ökoiskola program keretében megszervezett tevékenységek megnevezése"
 ];
 
@@ -247,7 +247,7 @@ export default function SzakkepzesZolditese() {
           if (!isNew) {
             if (isFieldModified(key, year)) rowModified = true;
           } else {
-             if (tableData[key][year]?.resztvevok_szama) rowModified = true;
+            if (tableData[key][year]?.resztvevok_szama) rowModified = true;
           }
 
           if (rowModified) {
@@ -434,8 +434,8 @@ export default function SzakkepzesZolditese() {
                   return (
                     <TableRow key={key} hover>
                       {isFirstInCategory && (
-                        <TableCell 
-                          rowSpan={categoryCounts[category]} 
+                        <TableCell
+                          rowSpan={categoryCounts[category]}
                           sx={{ borderRight: "2px solid #ccc", borderBottom: "1px solid #ddd", position: "sticky", left: 0, backgroundColor: "#fdfdfd", zIndex: 1, fontWeight: "bold", width: "30%", verticalAlign: "top" }}
                         >
                           {category}
@@ -493,7 +493,7 @@ export default function SzakkepzesZolditese() {
                   ))}
                 </Select>
               </FormControl>
-              
+
               <TextField
                 fullWidth
                 label="Tevékenység megnevezése"
@@ -522,7 +522,7 @@ export default function SzakkepzesZolditese() {
           <DialogContent>
             <Typography>
               Biztosan törölni szeretné a következő tevékenységet minden évből:
-              <br/>
+              <br />
               <strong>{itemToDelete?.split("::")[1]}</strong>?
             </Typography>
             <Typography variant="body2" color="error" sx={{ mt: 1 }}>

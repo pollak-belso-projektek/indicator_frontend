@@ -277,7 +277,7 @@ const NavigationCategories = {
         tableName: "palya_orientacio",
       },
       {
-        name: "Szakképzés \"zöldítése\"",
+        name: "Szakképzés zöldítése",
         icon: MdStar,
         link: "/szakkepzes-zolditese",
         tableName: "szakkepzes_zolditese",
