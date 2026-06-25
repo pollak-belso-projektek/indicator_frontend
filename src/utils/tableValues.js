@@ -63,6 +63,13 @@ export const getTableName = (tableKey) => {
   return tableKeyValues[tableKey] || "Ismeretlen tábla";
 };
 
+export const getTableDisplayName = (option) => {
+  if (!option) return "";
+  const name = tableKeyValues[option.name];
+  if (name) return name;
+  return option.alias || option.name || "";
+};
+
 export const getAccessableTables = (tableAccess) => {
   if (!tableAccess || !Array.isArray(tableAccess)) {
     return [];

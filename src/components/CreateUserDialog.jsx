@@ -29,6 +29,7 @@ import {
   useGetTableListQuery,
   useGetAllAlapadatokQuery,
 } from "../store/api/apiSlice";
+import { getTableDisplayName } from "../utils/tableValues";
 import {
   getAvailableTables,
   getPermissionOptions,
@@ -629,7 +630,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
             disableCloseOnSelect
             id="table-access-select"
             options={getAvailableTables(tableList)}
-            getOptionLabel={(option) => option.alias}
+            getOptionLabel={getTableDisplayName}
             value={selectedTables}
             onChange={(event, newValue) => handleTableAccessChange(newValue)}
             loading={tablesLoading}
@@ -637,7 +638,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
               value.map((option, index) => (
                 <Chip
                   variant="outlined"
-                  label={option.alias}
+                  label={getTableDisplayName(option)}
                   {...getTagProps({ index })}
                   key={option.id}
                 />

@@ -45,6 +45,7 @@ import {
 } from "../../utils/tableAccessUtils";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../store/slices/authSlice";
+import { getTableDisplayName } from "../../utils/tableValues";
 
 export const EditUserDialog = ({
   open,
@@ -773,7 +774,7 @@ export const EditUserDialog = ({
             disableCloseOnSelect
             id="table-access-edit"
             options={tableOptions}
-            getOptionLabel={(option) => option.alias}
+            getOptionLabel={getTableDisplayName}
             value={selectedTables}
             onChange={(event, newValue) => handleTableAccessChange(newValue)}
             loading={tablesLoading}
@@ -781,7 +782,7 @@ export const EditUserDialog = ({
               value.map((option, index) => (
                 <Chip
                   variant="outlined"
-                  label={option.name}
+                  label={getTableDisplayName(option)}
                   {...getTagProps({ index })}
                   key={option.id || option.name}
                 />
