@@ -58,6 +58,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoSajatosNevelesiIgenyu from "./info_sajatos_nevelesi_igenyu_tanulok_aranya";
 import TitleSajatosNevelesiIgenyu from "./title_sajatos_nevelesi_igenyu_tanulok_aranya";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 export default function SajatosNevelesiIgenyuTanulokAranya() {
   const schoolYears = generateSchoolYears();
@@ -150,8 +151,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
         sni_arany:
           item.sni_tanulok_szama && item.tanulok_osszesen
             ? ((item.sni_tanulok_szama / item.tanulok_osszesen) * 100).toFixed(
-                2
-              )
+              2
+            )
             : 0,
       };
     });
@@ -238,9 +239,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       console.error("Error saving SNI data:", error);
       setNotification({
         open: true,
-        message: `Hiba történt a mentés során: ${
-          error.data?.message || error.message
-        }`,
+        message: `Hiba történt a mentés során: ${error.data?.message || error.message
+          }`,
         severity: "error",
       });
     }
@@ -273,9 +273,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       console.error("Error deleting SNI data:", error);
       setNotification({
         open: true,
-        message: `Hiba történt a törlés során: ${
-          error.data?.message || error.message
-        }`,
+        message: `Hiba történt a törlés során: ${error.data?.message || error.message
+          }`,
         severity: "error",
       });
     }
@@ -352,9 +351,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
       setNotification({
         open: true,
-        message: `Új SNI tanuló arány rekord sikeresen hozzáadva: ${
-          selectedSchool?.iskola_neve || "Ismeretlen iskola"
-        } - ${newRecord.tanev_kezdete}/${newRecord.tanev_kezdete + 1}`,
+        message: `Új SNI tanuló arány rekord sikeresen hozzáadva: ${selectedSchool?.iskola_neve || "Ismeretlen iskola"
+          } - ${newRecord.tanev_kezdete}/${newRecord.tanev_kezdete + 1}`,
         severity: "success",
       });
 
@@ -363,9 +361,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       console.error("Error adding new SNI data:", error);
       setNotification({
         open: true,
-        message: `Hiba történt az új rekord hozzáadása során: ${
-          error.data?.message || error.message
-        }`,
+        message: `Hiba történt az új rekord hozzáadása során: ${error.data?.message || error.message
+          }`,
         severity: "error",
       });
     }
@@ -382,18 +379,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
             <LockStatusIndicator tableName="sajatos_nevelesi_igenyu" />
 
             {/* Loading State */}
-            {isFetching && (
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  minHeight: "200px",
-                }}
-              >
-                <CircularProgress />
-              </Box>
-            )}
+            <PageLoadingOverlay isLoading={isFetching} />
 
             {/* Error State */}
             {fetchError && (
@@ -439,7 +425,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                       <CardContent>
                         <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
                           <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
-                  <LockedTableWrapper tableName="sajatos_nevelesu_tanulok">
+                          <LockedTableWrapper tableName="sajatos_nevelesu_tanulok">
                             <Button
                               variant="contained"
                               startIcon={<SaveIcon />}
@@ -892,10 +878,10 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                           <strong>Számított SNI arány:</strong>{" "}
                           {addDialog.newRecord.tanulok_osszesen > 0
                             ? (
-                                (addDialog.newRecord.sni_tanulok_szama /
-                                  addDialog.newRecord.tanulok_osszesen) *
-                                100
-                              ).toFixed(2)
+                              (addDialog.newRecord.sni_tanulok_szama /
+                                addDialog.newRecord.tanulok_osszesen) *
+                              100
+                            ).toFixed(2)
                             : 0}
                           %
                         </Typography>

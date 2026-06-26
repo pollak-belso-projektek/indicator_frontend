@@ -27,6 +27,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import InfoFelnottkepzes from "./info_felnottkepzes";
 import TitleFelnottkepzes from "./title_felnottkepzes";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 
 export default function Felnottkepzes() {
@@ -180,11 +181,7 @@ export default function Felnottkepzes() {
             </Stack>
 
             {/* Loading State */}
-            {isFetching && (
-              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-                <CircularProgress />
-              </Box>
-            )}
+            <PageLoadingOverlay isLoading={isFetching} />
 
             {/* Content - only show when not loading */}
             {!isFetching && (

@@ -31,6 +31,7 @@ import PageWrapper from "../../PageWrapper";
 import InfoNyelvvizsgakSzama from "./info_nyelvvizsgak_szama";
 import TitleNyelvvizsgakSzama from "./title_nyelvvizsgak_szama";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 // Fixed class list
 const FIXED_CLASSES = [
@@ -256,11 +257,7 @@ export default function NyelvvizsgakSzama() {
   }, [originalData]);
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   // Styling matching indicator 29 (Projektek)

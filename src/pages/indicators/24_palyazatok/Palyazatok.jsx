@@ -48,6 +48,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoPalyazatok from "./info_palyazatok";
 import TitlePalyazatok from "./title_palyazatok";
 import ExportToExcel from "../../../components/ExportToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 const formatMoney = (val) => {
   if (val === undefined || val === null) return "0";
@@ -493,11 +494,7 @@ export default function Palyazatok() {
   }, [palyazatokData, categoryOrderMap, schoolYears, metrics, totals, eloiranyzatData]);
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   return (

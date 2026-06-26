@@ -43,6 +43,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoEgyuttmukodesekSzama from "./info_egyuttmukudesek_szama";
 import TitleEgyuttmukodesekSzama from "./title_egyuttmukudesek_szama";
 import ExportToExcel from "../../../components/ExportToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 // Táblázat 1 mezői: felsőoktatási intézménnyel való együttműködések
 // Táblázat 2 mezői: felsőoktatásba továbbtanulók
@@ -403,11 +404,7 @@ export default function EgyuttmukodesekSzama() {
   }, [table1Data, table2Data, schoolYears]);
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   const commonHeaderCell = (label, extraSx = {}) => (

@@ -42,6 +42,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import ExportToExcel from "../../../components/ExportToExcel";
 import InfoDualisKepzohelyekSzama from "./info_dualis_kepzohelyek_szama";
 import TitleDualisKepzohelyekSzama from "./title_dualis_kepzohelyek_szama";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 export default function DualisKepzohelyekSzama() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
 
@@ -332,11 +333,7 @@ export default function DualisKepzohelyekSzama() {
 
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   return (

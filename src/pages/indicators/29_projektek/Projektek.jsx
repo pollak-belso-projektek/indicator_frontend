@@ -53,6 +53,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoProjektek from "./info_projektek";
 import TitleProjektek from "./title_projektek";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 export default function Projektek() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -307,11 +308,7 @@ export default function Projektek() {
   };
 
   if (isLoading || isLoadingSchools) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   const tableHeaderSx = { fontWeight: "bold", backgroundColor: "#e1f5fe", borderBottom: "2px solid #ccc" };

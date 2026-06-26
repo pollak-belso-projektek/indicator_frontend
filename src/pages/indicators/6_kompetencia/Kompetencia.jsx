@@ -33,6 +33,7 @@ import {
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 export default function Kompetencia() {
   const selectedSchool = useSelector(selectSelectedSchool);
@@ -213,11 +214,7 @@ export default function Kompetencia() {
   };
 
   if (isLoading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   if (error) {

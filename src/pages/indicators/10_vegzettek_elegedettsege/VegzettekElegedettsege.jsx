@@ -34,6 +34,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoVegzettekElegedettsege from "./info_vegzettek_elegedettsege";
 import TitleVegzettekElegedettsege from "./title_vegzettek_elegedettsege";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 const evszamok = generateSchoolYears();
 
@@ -255,11 +256,7 @@ export default function VegzettekElegedettsege() {
   };
 
   if (isFetching || isLoadingSchools || isLoadingElegedettseg || isFetchingElegedettseg) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   return (

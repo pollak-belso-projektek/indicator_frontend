@@ -48,6 +48,7 @@ import InfoIntézményiElismeresek from "./info_intezmenyi_elismeresek";
 import TitleIntézményiElismeresek from "./title_intezmenyi_elismeresek";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import ExportToExcel from "../../../components/ExportToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 // Fix munkavállalói kategóriák (a képernyőkép alapján)
 const MUNKAVALLALOI_KATEGORIAK = [
@@ -406,11 +407,7 @@ export default function IntézményiElismeresek() {
   }, [munkavallalokData, schoolYears]);
 
   if (intezményiLoading || munkavallalokLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   return (

@@ -1,3 +1,4 @@
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -393,6 +394,7 @@ export default function MuhelyiskolaiReszszakmat() {
         <Fade in={true} timeout={800}>
           <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
             <LockStatusIndicator tableName="muhelyiskola" />
+            <PageLoadingOverlay isLoading={isFetching} />
 
             {/* Loading overlay */}
 

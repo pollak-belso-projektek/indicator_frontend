@@ -1,3 +1,4 @@
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import React, { useState, useMemo, useEffect } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -315,6 +316,7 @@ export default function SzakmaiTovabbkepzesek() {
     >
       <Box sx={{ mb: 3 }}>
         <LockStatusIndicator tableName="szakmai_tovabbkepzes" />
+            <PageLoadingOverlay isLoading={isFetching} />
 
         {!selectedSchool && (
           <Alert severity="info" sx={{ mb: 3 }}>

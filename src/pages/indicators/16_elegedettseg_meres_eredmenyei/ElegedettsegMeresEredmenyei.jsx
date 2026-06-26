@@ -1,3 +1,4 @@
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
@@ -335,6 +336,7 @@ export default function ElegedettsegMeresEredmenyei() {
       <Box>
 
         <LockStatusIndicator tableName="elegedettseg" sx={{ mb: 1 }} />
+            <PageLoadingOverlay isLoading={isFetching} />
         {isModified && (
           <Alert severity="warning" sx={{ mb: 3 }}>
             Mentetlen módosítások vannak. Ne felejtsd el menteni a

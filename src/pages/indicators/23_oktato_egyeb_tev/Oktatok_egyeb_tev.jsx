@@ -38,6 +38,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoOktatoEgyebTev from "./info_oktato_egyeb_tev";
 import TitleOktatoEgyebTev from "./title_oktato_egyeb_tev";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 
 export default function OktatokEgyebTev() {
@@ -703,11 +704,7 @@ export default function OktatokEgyebTev() {
             <LockStatusIndicator tableName="oktato-egyeb-tev" />
 
             {/* Loading State */}
-            {isLoading && (
-              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-                <CircularProgress />
-              </Box>
-            )}
+            <PageLoadingOverlay isLoading={isLoading} />
 
             {/* Content - only show when not loading */}
             {!isLoading && (

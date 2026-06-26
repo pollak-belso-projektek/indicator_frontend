@@ -46,6 +46,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoSzakkepzesZolditese from "./info_szakkepzes_zolditese";
 import TitleSzakkepzesZolditese from "./title_szakkepzes_zolditese";
 import ExportToExcel from "../../../components/ExportToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 const CATEGORIES = [
   "A szakképzés zöldítéséhez kapcsolódó rendezvény/tevékenység megnevezése",
@@ -328,11 +329,7 @@ export default function SzakkepzesZolditese() {
   }, [tableData, sortedKeys, schoolYears]);
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   let currentCategory = null;

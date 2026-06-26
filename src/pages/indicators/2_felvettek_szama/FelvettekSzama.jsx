@@ -1,3 +1,4 @@
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import Table from "@mui/material/Table";
@@ -846,6 +847,7 @@ const FelvettekSzama = () => {
           <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
             {/* Header Section */}
             <LockStatusIndicator tableName="felvettek_szama" />
+            <PageLoadingOverlay isLoading={_isFetching} />
 
             {!selectedSchool && (
               <Alert severity="info" sx={{ mb: 2 }}>

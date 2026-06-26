@@ -37,6 +37,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoLemorzsolodas from "./info_lemorzsolodas";
 import TitleLemorzsolodas from "./title_lemorzsolodas";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 export default function Lemorzsolodas() {
   const selectedSchool = useSelector(selectSelectedSchool);
@@ -290,11 +291,7 @@ export default function Lemorzsolodas() {
   };
 
   if (isLoading) {
-    return (
-      <Backdrop sx={{ zIndex: 1300, backgroundColor: "rgba(255, 255, 255, 0.8)" }} open={isLoading}>
-        <CircularProgress size={50} />
-      </Backdrop>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   const allSzakmaIds = dynamicCategories.flatMap(c => c.szakmak.map(s => s.szakma_id));

@@ -1,3 +1,4 @@
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -278,6 +279,7 @@ export default function SzakmaiBemutatokKonferenciak() {
     >
       <Box>
         <LockStatusIndicator tableName="szakmai_bemutatok_konferenciak" />
+            <PageLoadingOverlay isLoading={query1?.isFetching || query2?.isFetching || query3?.isFetching || query4?.isFetching} />
 
         <Card sx={{ mb: 3, p: 2, display: "flex", flexDirection: "row", gap: 2 }}>
           <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />

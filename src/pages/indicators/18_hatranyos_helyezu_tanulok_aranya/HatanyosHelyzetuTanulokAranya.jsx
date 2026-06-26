@@ -1,3 +1,4 @@
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -283,7 +284,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
     };
 
     // Calculate yearly data and trends
-    schoolYears.forEach((year) => {
+    schoolYears.forEach((year, index) => {
       const combinedPerc = parseFloat(getCombinedPercentage(year));
       const daytimePerc = parseFloat(calculatePercentage("daytime", year));
       const adultPerc = parseFloat(calculatePercentage("adult", year));
@@ -604,11 +605,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
             <LockStatusIndicator tableName="hh_es_hhh_nevelesu_tanulok" />
 
             {/* Loading State */}
-            {(isFetching || isHhFetching) && (
-              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-                <CircularProgress />
-              </Box>
-            )}
+            <PageLoadingOverlay isLoading={isFetching || isHhFetching} />
 
             {/* Content - only show when not loading */}
             {!isFetching && !isHhFetching && (

@@ -38,6 +38,7 @@ import {
 } from "../../../store/api/apiSlice";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 export default function NszfhMeresek() {
   const selectedSchool = useSelector(selectSelectedSchool);
@@ -511,11 +512,7 @@ export default function NszfhMeresek() {
   };
 
   if (isNSZFHLoading || isAlapadatokLoading || isFelvettekLoading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   return (

@@ -1,6 +1,10 @@
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import { useState, useEffect, useMemo } from "react";
 import {
   Box,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   Card,
   CardContent,
   Typography,
@@ -24,6 +28,7 @@ import {
 import {
   Save as SaveIcon,
   Refresh as RefreshIcon,
+  ExpandMore as ExpandMoreIcon,
   Description as DescriptionIcon,
 } from "@mui/icons-material";
 import { generateSchoolYears } from "../../../utils/schoolYears";
@@ -47,7 +52,7 @@ export default function SzakképzésiMunkaszerződésArány() {
 
   const selectedSchool = useSelector(selectSelectedSchool);
 
-  const { data: szmszData } = useGetAllSZMSZQuery({
+  const { data: szmszData, isFetching: isFetchingSzmsz } = useGetAllSZMSZQuery({
     alapadatok_id: selectedSchool?.id,
     tanev:
       new Date().getMonth() >= 8
@@ -55,7 +60,7 @@ export default function SzakképzésiMunkaszerződésArány() {
         : new Date().getFullYear() - 1,
   });
 
-  const { data } = useGetTanugyiAdatokQuery({
+  const { data, isFetching: isFetchingData } = useGetTanugyiAdatokQuery({
     alapadatok_id: selectedSchool?.id,
     ev:
       new Date().getMonth() >= 8
@@ -145,6 +150,7 @@ export default function SzakképzésiMunkaszerződésArány() {
   const [structureInitialized, setStructureInitialized] = useState(false);
   const [shouldProcessAPIData, setShouldProcessAPIData] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCalculating, setIsCalculating] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
@@ -233,9 +239,11 @@ export default function SzakképzésiMunkaszerződésArány() {
     // 1. Never initialized before and have some data
     // 2. Previously initialized with student data but now SZMSZ data is available
     // 3. User hasn't made manual changes
+    // We use isFetching to know when the APIs have returned, successfully or not.
+    const queriesFinished = !isFetchingSzmsz && !isFetchingData;
     const shouldInitialize =
       !isModified &&
-      ((!hasInitializedFromAPI && (hasSZMSZData || hasStudentData)) ||
+      ((!hasInitializedFromAPI && queriesFinished) ||
         (hasInitializedFromAPI && !initializedWithSZMSZ && hasSZMSZData));
 
     if (shouldInitialize) {
@@ -246,6 +254,8 @@ export default function SzakképzésiMunkaszerződésArány() {
         );
       }
 
+      setIsCalculating(true);
+      setTimeout(() => {
       // Function to calculate data from SZMSZ endpoint or fall back to student data
       const calculateDataFromAPI = () => {
         const calculatedData = {
@@ -900,7 +910,8 @@ export default function SzakképzésiMunkaszerződésArány() {
         return calculatedData;
       };
 
-      const calculatedData = calculateDataFromAPI();
+      try {
+        const calculatedData = calculateDataFromAPI();
       console.log("Calculated data:", calculatedData);
       setSzakképzésiData(calculatedData);
       setHasInitializedFromAPI(true);
@@ -913,6 +924,12 @@ export default function SzakképzésiMunkaszerződésArány() {
         setInitializedWithSZMSZ(false);
         console.log("Initialized with student data");
       }
+      } catch (error) {
+        console.error("Error calculating data:", error);
+      } finally {
+        setIsCalculating(false);
+      }
+      }, 50);
     }
   }, [
     data,
@@ -924,6 +941,8 @@ export default function SzakképzésiMunkaszerződésArány() {
     isModified,
     structureInitialized,
     shouldProcessAPIData,
+    isFetchingSzmsz,
+    isFetchingData,
   ]);
 
   // Enhanced handle data change that triggers auto-calculation
@@ -1314,20 +1333,22 @@ export default function SzakképzésiMunkaszerződésArány() {
   // Render table section
   const renderTableSection = (dataKey, title, unit, bgColor) => {
     return (
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
+      <Accordion sx={{ mb: 3 }} defaultExpanded={false}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography
             variant="h6"
             component="h2"
-            gutterBottom
             sx={{
               color: dataKey === "percentage" ? "#d32f2f" : "#1976d2",
               fontWeight: "bold",
-              textAlign: "center",
             }}
           >
             {title}
           </Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ p: 0 }}>
+          <Card sx={{ boxShadow: "none", border: "none", borderRadius: 0 }}>
+            <CardContent>
 
           <TableContainer
             component={Paper}
@@ -1538,8 +1559,10 @@ export default function SzakképzésiMunkaszerződésArány() {
               </TableBody>
             </Table>
           </TableContainer>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </AccordionDetails>
+      </Accordion>
     );
   };
 
@@ -1553,6 +1576,7 @@ export default function SzakképzésiMunkaszerződésArány() {
         <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
 
           <LockStatusIndicator tableName={"szmsz"} />
+          <PageLoadingOverlay isLoading={isFetchingSzmsz || isFetchingData || !hasInitializedFromAPI || isCalculating} />
          
           <Stack
             direction="row"
@@ -1591,26 +1615,31 @@ export default function SzakképzésiMunkaszerződésArány() {
             </Button>
             </LockedTableWrapper>
           </Stack>
-          {/* Percentage Table */}
-          {renderTableSection(
-            "percentage",
-            "szakképzési munkaszerződéssel rendelkezők aránya (%) - AUTOMATIKUSAN SZÁMÍTOTT",
-            "%",
-            "#ffebee"
-          )}
-          {/* Contract Students Count Table */}
-          {renderTableSection(
-            "contract_students",
-            "szakképzési munkaszerződéssel rendelkező tanulók száma (tanulói jogviszony) (fő) - SZERKESZTHETŐ",
-            "fő",
-            "#e3f2fd"
-          )}
-          {/* Total Students Table */}
-          {renderTableSection(
-            "total_students",
-            "szakirányú oktatásban részt vevő tanulók összlétszáma (tanulói jogviszony) (fő) - SZERKESZTHETŐ",
-            "fő",
-            "#e8f5e8"
+          {!isFetchingSzmsz && !isFetchingData && hasInitializedFromAPI && (
+            <>
+              {/* Percentage Table */}
+                        {renderTableSection(
+                          "percentage",
+                          "szakképzési munkaszerződéssel rendelkezők aránya (%) - AUTOMATIKUSAN SZÁMÍTOTT",
+                          "%",
+                          "#ffebee"
+                        )}
+                        {/* Contract Students Count Table */}
+                        {renderTableSection(
+                          "contract_students",
+                          "szakképzési munkaszerződéssel rendelkező tanulók száma (tanulói jogviszony) (fő) - SZERKESZTHETŐ",
+                          "fő",
+                          "#e3f2fd"
+                        )}
+                        {/* Total Students Table */}
+                        {renderTableSection(
+                          "total_students",
+                          "szakirányú oktatásban részt vevő tanulók összlétszáma (tanulói jogviszony) (fő) - SZERKESZTHETŐ",
+                          "fő",
+                          "#e8f5e8"
+                        )}
+                        
+            </>
           )}
           {/* Action Buttons */}
 

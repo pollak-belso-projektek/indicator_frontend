@@ -39,6 +39,7 @@ import PageWrapper from "../../PageWrapper";
 import InfoTanuloLetszam from "./info_tanulo_letszam";
 import TitleTanuloLetszam from "./title_tanulo_letszam";
 import ExportToExcel from "../../../components/ExportToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 const evszamok = generateSchoolYears();
 
@@ -1001,25 +1002,7 @@ export default function TanuloLetszam() {
   }, []);
 
   if (isFetching || isLoadingSchools || isLoadingTanugyi) {
-    return (
-      <Backdrop
-        sx={{
-          position: "fixed",
-          zIndex: 1300,
-          backgroundColor: "rgba(255, 255, 255, 0.8)",
-          color: "primary.main",
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-        }}
-        open={isFetching || isLoadingSchools || isLoadingTanugyi}
-      >
-        <CircularProgress size={50} />
-        <Box sx={{ textAlign: "center", fontWeight: "medium" }}>
-          Adatok betöltése folyamatban, kérjük várjon...
-        </Box>
-      </Backdrop>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   return (

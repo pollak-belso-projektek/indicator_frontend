@@ -37,6 +37,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoSzakmaiVizsga from "./info_szakmai_vizsga";
 import TitleSzakmaiVizsga from "./title_szakmai_vizsga";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 const evszamok = generateSchoolYears();
 const numberFormatter = new Intl.NumberFormat("hu-HU");
@@ -262,11 +263,7 @@ export default function SzakmaiVizsga() {
   };
 
   if (isFetching || isLoadingSchools) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   return (

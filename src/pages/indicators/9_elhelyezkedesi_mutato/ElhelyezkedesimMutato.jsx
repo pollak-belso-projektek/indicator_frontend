@@ -35,6 +35,7 @@ import PageWrapper from "../../PageWrapper";
 import InfoElhelyezkedes from "./info_elhelyezkedesi_mutato";
 import TitleElhelyezkedes from "./title_elhelyezkedesi_mutato";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 const evszamok = generateSchoolYears();
 
@@ -287,11 +288,7 @@ export default function ElhelyezkedesimMutato() {
   };
 
   if (isFetching || isLoadingSchools) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   return (

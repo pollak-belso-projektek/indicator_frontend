@@ -365,16 +365,7 @@ export default function EgyOktatoraJutoTanulo() {
         </Stack>
 
         {/* Loading State */}
-        {isFetching && (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="200px"
-          >
-            <CircularProgress />
-          </Box>
-        )}
+        <PageLoadingOverlay isLoading={isFetching } />
 
         {/* Error State */}
         {fetchError && (

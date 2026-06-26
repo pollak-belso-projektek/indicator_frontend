@@ -46,6 +46,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoPalyaorientacio from "./info_palyaorientacio";
 import TitlePalyaorientacio from "./title_palyaorientacio";
 import ExportToExcel from "../../../components/ExportToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 const CATEGORIES = [
   "Pályaorientációs rendezvény megnevezése",
@@ -338,11 +339,7 @@ export default function PalyaOrientacio() {
   }, [tableData, sortedKeys, schoolYears]);
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   let currentCategory = null;

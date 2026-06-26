@@ -42,6 +42,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoInnovaciosTevekenysegek from "./info_innovacios_tevekenysegek";
 import TitleInnovaciosTevekenysegek from "./title_innovacios_tevekenysegek";
 import ExportToExcel from "../../../components/ExportToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 export default function InnovaciosTevekenysegek() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -295,11 +296,7 @@ export default function InnovaciosTevekenysegek() {
   }, [tableData, schoolYears]);
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   return (

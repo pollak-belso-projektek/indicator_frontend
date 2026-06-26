@@ -1,3 +1,4 @@
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import { useEffect, useMemo, useState } from "react";
 import {
   Box,
@@ -539,6 +540,7 @@ export default function IntezményiNevelesiMutatok() {
     >
       <Box>
         <LockStatusIndicator tableName="intezmenyi_nevelesi_mutatok" />
+            <PageLoadingOverlay isLoading={isRefreshing || isFetchingTanugyi} />
 
         {isInitialLoading && (
           <Card sx={{ mt: 2, mb: 3 }}>

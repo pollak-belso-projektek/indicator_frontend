@@ -35,6 +35,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoVizsgaeredmenyek from "./info_vizsgaeredmenyek";
 import TitleVizsgaeredmenyek from "./title_vizsgaeredmenyek";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 export default function Vizsgaeredmenyek() {
   const selectedSchool = useSelector(selectSelectedSchool);
@@ -380,25 +381,7 @@ export default function Vizsgaeredmenyek() {
   };
 
   if (isLoading) {
-    return (
-      <Backdrop
-        sx={{
-          position: "fixed",
-          zIndex: 1300,
-          backgroundColor: "rgba(255, 255, 255, 0.8)",
-          color: "primary.main",
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-        }}
-        open={isLoading}
-      >
-        <CircularProgress size={50} />
-        <Box sx={{ textAlign: "center", fontWeight: "medium" }}>
-          Adatok betöltése folyamatban, kérjük várjon...
-        </Box>
-      </Backdrop>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   return (

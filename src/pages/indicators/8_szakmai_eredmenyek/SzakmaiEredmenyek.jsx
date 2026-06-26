@@ -54,6 +54,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoSzakmaiEredmenyek from "./info_szakmai_eredmenyek";
 import TitleSzakmaiEredmenyek from "./title_szakmai_eredmenyek";
 import ExportToExcel from "../../../components/ExportToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 export default function SzakmaiEredmenyek() {
   // Predefined competition categories
@@ -437,11 +438,7 @@ export default function SzakmaiEredmenyek() {
 
   // Show loading state
   if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   return (

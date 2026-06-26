@@ -34,6 +34,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoDigitalisKompetencia from "./info_digitalis_kompetencia";
 import TitleDigitalisKompetencia from "./title_digitalis_kompetencia";
 import ExportToExcel from "../../../components/ExportToExcel";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 export default function DigitalisKompetencia() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -202,11 +203,7 @@ export default function DigitalisKompetencia() {
   }, [tableData, schoolYears]);
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <PageLoadingOverlay isLoading={true} />;
   }
 
   return (
