@@ -672,10 +672,9 @@ const SidebarContent = ({ onClose, ...rest }) => {
   }, [itemSearch, navigate, onClose]);
 
   // Get navigation items that the user has access to
-  const accessibleNavItems = getAccessibleNavItems(
-    tableAccess,
-    userPermissions,
-  );
+  const accessibleNavItems = useMemo(() => {
+    return getAccessibleNavItems(tableAccess, userPermissions);
+  }, [tableAccess, userPermissions]);
 
   // Initialize recent pages hook
   useRecentPages(NavigationCategories);
@@ -696,10 +695,9 @@ const SidebarContent = ({ onClose, ...rest }) => {
   }, [accessibleNavItems]);
 
   // Get organized categories
-  const organizedCategories = getOrganizedAccessibleItems(
-    tableAccess,
-    userPermissions,
-  );
+  const organizedCategories = useMemo(() => {
+    return getOrganizedAccessibleItems(tableAccess, userPermissions);
+  }, [tableAccess, userPermissions]);
 
   // Find which category contains the current active page and expand it
   useEffect(() => {
@@ -709,10 +707,13 @@ const SidebarContent = ({ onClose, ...rest }) => {
     // Check if current path is in fixed items
     const isInFixedItems = fixedItems.some((item) => item.link === currentPath);
     if (isInFixedItems) {
-      setExpandedCategories((prev) => ({
-        ...prev,
-        FIXED_GENERAL: true,
-      }));
+      setExpandedCategories((prev) => {
+        if (prev.FIXED_GENERAL) return prev;
+        return {
+          ...prev,
+          FIXED_GENERAL: true,
+        };
+      });
       return;
     }
 
@@ -728,10 +729,13 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
     // If we found an active category, expand it
     if (activeCategoryKey) {
-      setExpandedCategories((prev) => ({
-        ...prev,
-        [activeCategoryKey]: true,
-      }));
+      setExpandedCategories((prev) => {
+        if (prev[activeCategoryKey]) return prev;
+        return {
+          ...prev,
+          [activeCategoryKey]: true,
+        };
+      });
     }
   }, [fixedItems, location.pathname]);
 
