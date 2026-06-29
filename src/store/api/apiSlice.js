@@ -1785,6 +1785,7 @@ export const {
   useAddKompetenciaMutation,
   useUpdateKompetenciaMutation,
   useGetTanuloLetszamQuery,
+  useAddTanuloLetszamBulkMutation,
   useAddTanuloLetszamMutation,
   useUpdateTanuloLetszamMutation,
   useDeleteTanuloLetszamMutation,

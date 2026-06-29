@@ -162,8 +162,8 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
           </Box>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {sortedHistoryList.map((item, index) => {
-              const isActive = index === 0;
+            {sortedHistoryList.map((item) => {
+              const isActive = item.is_active;
 
               return (
                 <Box
