@@ -26,8 +26,7 @@ import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import {
   useGetTanuloLetszamQuery,
-  useAddTanuloLetszamMutation,
-  useUpdateTanuloLetszamMutation,
+  useAddTanuloLetszamBulkMutation,
   useGetTanugyiAdatokQuery,
   useGetAllAlapadatokQuery,
 } from "../../../store/api/apiSlice";
@@ -73,11 +72,8 @@ export default function TanuloLetszam() {
           : new Date().getFullYear() - 1,
     });
 
-  const [addStudentData, { isLoading: isUpdating }] =
-    useAddTanuloLetszamMutation();
-
-  const [updateTanuloLetszam, { isLoading: _isUpdatingRecord }] =
-    useUpdateTanuloLetszamMutation();
+  const [addTanuloLetszamBulk, { isLoading: isUpdating }] =
+    useAddTanuloLetszamBulkMutation();
 
   // State for the integrated table data
   const [tableData, setTableData] = useState({});
@@ -442,8 +438,7 @@ export default function TanuloLetszam() {
   const handleSaveData = async () => {
     try {
       setIsSaving(true);
-      let savedCount = 0;
-      let updatedCount = 0;
+      const bulkRecords = [];
 
       // Get all displayed program types from the table structure
       const displayedProgramTypes = new Set();
@@ -531,6 +526,7 @@ export default function TanuloLetszam() {
             });
 
             const recordData = {
+              id: existingRecord ? existingRecord.id : undefined,
               alapadatok_id: selectedSchool?.id,
               letszam: fields.tanuloi_jogviszony,
               jogv_tipus: 0, // 0 for tanulói jogviszony
@@ -539,26 +535,7 @@ export default function TanuloLetszam() {
               tanev_kezdete: parseInt(year),
             };
 
-            try {
-              if (existingRecord) {
-                // Update existing record
-                await updateTanuloLetszam({
-                  id: existingRecord.id,
-                  ...recordData,
-                }).unwrap();
-                updatedCount++;
-              } else {
-                // Create new record
-                await addStudentData(recordData).unwrap();
-                savedCount++;
-              }
-            } catch (recordError) {
-              console.error(
-                `Error saving student record for ${programType} - tanulói jogviszony - ${year}:`,
-                recordError,
-              );
-              throw recordError;
-            }
+            bulkRecords.push(recordData);
           }
 
           // Handle felnőttképzési jogviszony - allow zero values
@@ -622,6 +599,7 @@ export default function TanuloLetszam() {
             });
 
             const recordData = {
+              id: existingRecord ? existingRecord.id : undefined,
               alapadatok_id: selectedSchool?.id,
               letszam: fields.felnottkepzesi_jogviszony,
               jogv_tipus: 1, // 1 for felnőttképzési jogviszony
@@ -630,36 +608,22 @@ export default function TanuloLetszam() {
               tanev_kezdete: parseInt(year),
             };
 
-            try {
-              if (existingRecord) {
-                // Update existing record
-                await updateTanuloLetszam({
-                  id: existingRecord.id,
-                  ...recordData,
-                }).unwrap();
-                updatedCount++;
-              } else {
-                // Create new record
-                await addStudentData(recordData).unwrap();
-                savedCount++;
-              }
-            } catch (recordError) {
-              console.error(
-                `Error saving student record for ${programType} - felnőttképzési jogviszony - ${year}:`,
-                recordError,
-              );
-              throw recordError;
-            }
+            bulkRecords.push(recordData);
           }
         }
       }
+
+      const result = await addTanuloLetszamBulk({
+        alapadatok_id: selectedSchool?.id,
+        records: bulkRecords
+      }).unwrap();
 
       setSavedData(JSON.parse(JSON.stringify(tableData)));
       setIsModified(false);
 
       // Show success snackbar
       setSnackbarMessage(
-        `Sikeresen mentve: ${savedCount} új rekord és ${updatedCount} frissített rekord`,
+        `Sikeresen mentve: ${result?.count || bulkRecords.length} rekord`,
       );
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
