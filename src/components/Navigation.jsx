@@ -707,13 +707,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
     // Check if current path is in fixed items
     const isInFixedItems = fixedItems.some((item) => item.link === currentPath);
     if (isInFixedItems) {
-      setExpandedCategories((prev) => {
-        if (prev.FIXED_GENERAL) return prev;
-        return {
-          ...prev,
-          FIXED_GENERAL: true,
-        };
-      });
+      // Az "Általános" részleget alapból nem nyitjuk ki
       return;
     }
 

@@ -486,7 +486,7 @@ export default function EgyuttmukodesekSzama() {
         </LockedTableWrapper>
 
         <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto", mb: 4 }}>
-          <Table size="medium" sx={{ minWidth: 900, border: "2px solid #ccc" }}>
+          <Table size="medium" sx={{ minWidth: 600, border: "2px solid #ccc" }}>
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontWeight: "bold", minWidth: 260, borderRight: "2px solid #ccc", borderBottom: "2px solid #ccc", backgroundColor: "#f5f5f5", position: "sticky", left: 0, zIndex: 3 }}>
