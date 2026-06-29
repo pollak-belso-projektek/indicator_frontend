@@ -61,7 +61,7 @@ export default function EgyOktatoraJutoOsszDiak() {
   const formattedYear = selectedYear ? parseInt(selectedYear.split('/')[0]) : new Date().getFullYear();
 
   // Fetch saved data
-  const { data: egyOktatoraData, isFetching: isEgyOktatoraFetching } = useGetEgyOktatoraJutoTanuloByAlapadatokQuery(
+  const { data: egyOktatoraData, isFetching: isEgyOktatoraFetching, refetch: refetchEgyOktatora } = useGetEgyOktatoraJutoTanuloByAlapadatokQuery(
     { alapadatok_id: selectedSchool?.id, year: formattedYear },
     { skip: !selectedSchool || !selectedYear }
   );
@@ -360,10 +360,8 @@ export default function EgyOktatoraJutoOsszDiak() {
             setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
             setSnackbarSeverity("success");
             setSnackbarOpen(true);
-            // Invalidate query by refetching data from api
-            // We could dispatch an invalidateTags here but we rely on the parent or window reload if needed.
-            // Actually, since RTK query automatically updates on invalidate tags, let's just do a manual window reload for simplicity, or we can just leave it as it will update on next interaction, but better yet RTK query has refetch.
-            window.location.reload(); 
+            // We use RTK Query refetch to get the updated data smoothly without a page reload
+            refetchEgyOktatora(); 
           }}
         />
       </Box>

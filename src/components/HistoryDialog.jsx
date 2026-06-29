@@ -27,6 +27,14 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
 
   const [rollbackFormHistory, { isLoading: isRollingBack }] = useRollbackFormHistoryMutation();
   const [errorMsg, setErrorMsg] = useState("");
+  const [activeHistoryId, setActiveHistoryId] = useState(null);
+
+  // Set the first item as active initially if nothing is set
+  React.useEffect(() => {
+    if (historyList && historyList.length > 0 && !activeHistoryId) {
+      setActiveHistoryId(historyList[0].id);
+    }
+  }, [historyList, activeHistoryId]);
 
   const handleRollback = async (historyId) => {
     if (!window.confirm("Biztosan visszaállítod az adatokat erre az állapotra? A jelenlegi adatok felülíródnak!")) {
@@ -36,8 +44,9 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
     try {
       setErrorMsg("");
       await rollbackFormHistory(historyId).unwrap();
+      setActiveHistoryId(historyId); // Update the active history to the restored one
       onRollbackSuccess(); // Parent should refetch or show success message
-      onClose();
+      // Don't close automatically so user sees the "Jelenleg betöltve" state change
     } catch (err) {
       console.error("Visszaállítási hiba:", err);
       setErrorMsg(err?.data?.error || err?.message || "Hiba történt a visszaállítás során.");
@@ -85,35 +94,48 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
           </Typography>
         ) : (
           <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-            {historyList.map((item, index) => (
-              <React.Fragment key={item.id}>
-                <ListItem
-                  alignItems="center"
-                  sx={{ py: 1.5 }}
-                  secondaryAction={
-                    <Button 
-                      variant="outlined" 
-                      color="warning" 
-                      startIcon={<RestoreIcon />}
-                      onClick={() => handleRollback(item.id)}
-                      disabled={isRollingBack}
-                    >
-                      Visszaállítás
-                    </Button>
-                  }
-                >
-                  <ListItemText
-                    primary={
-                      <Typography variant="subtitle1" fontWeight={index === 0 ? 'bold' : 'normal'}>
-                        {formatDate(item.created_at)}
-                      </Typography>
+            {historyList.map((item, index) => {
+              const isActive = item.id === activeHistoryId;
+              return (
+                <React.Fragment key={item.id}>
+                  <ListItem
+                    alignItems="center"
+                    sx={{ 
+                      py: 1.5,
+                      bgcolor: isActive ? 'success.50' : 'transparent',
+                      borderRadius: 1
+                    }}
+                    secondaryAction={
+                      <Button 
+                        variant={isActive ? "contained" : "outlined"} 
+                        color={isActive ? "success" : "warning"} 
+                        startIcon={!isActive && <RestoreIcon />}
+                        onClick={() => handleRollback(item.id)}
+                        disabled={isRollingBack || isActive}
+                      >
+                        {isActive ? "Jelenleg betöltve" : "Visszaállítás"}
+                      </Button>
                     }
-                    secondary={index === 0 ? "Utolsó mentett állapot" : "Korábbi állapot"}
-                  />
-                </ListItem>
-                {index < historyList.length - 1 && <Divider component="li" />}
-              </React.Fragment>
-            ))}
+                  >
+                    <ListItemText
+                      primary={
+                        <Typography variant="subtitle1" fontWeight={index === 0 || isActive ? 'bold' : 'normal'}>
+                          {formatDate(item.created_at)}
+                        </Typography>
+                      }
+                      secondary={
+                        isActive 
+                          ? "Aktív állapot" 
+                          : index === 0 
+                            ? "Utolsó mentett állapot" 
+                            : "Korábbi állapot"
+                      }
+                    />
+                  </ListItem>
+                  {index < historyList.length - 1 && <Divider component="li" sx={{ my: 0.5 }} />}
+                </React.Fragment>
+              );
+            })}
           </List>
         )}
       </DialogContent>
