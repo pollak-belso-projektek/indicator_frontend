@@ -1945,7 +1945,7 @@ export default function TanuloLetszam() {
           open={historyOpen}
           onClose={() => setHistoryOpen(false)}
           alapadatokId={selectedSchool?.id}
-          tableName="tanuloLetszam"
+          tableName="tanulo_Letszam"
           onRollbackSuccess={() => {
             setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
             setSnackbarSeverity("success");
