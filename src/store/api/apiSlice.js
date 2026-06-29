@@ -213,6 +213,34 @@ export const indicatorApi = createApi({
         { type: "TanuloLetszam", id: params.alapadatok_id },
       ],
     }),
+    addTanuloLetszamBulk: build.mutation({
+      query: (params) => ({
+        url: "tanulo_letszam/bulk",
+        method: "POST",
+        body: {
+          alapadatok_id: params.alapadatok_id,
+          records: params.records,
+        },
+      }),
+      invalidatesTags: (result, error, params) => [
+        { type: "TanuloLetszam", id: params.alapadatok_id },
+        "TanuloLetszam",
+        "TanugyiAdatok",
+      ],
+      async onQueryStarted(params, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          dispatch(
+            indicatorApi.util.invalidateTags([
+              "TanuloLetszam",
+              "TanugyiAdatok",
+            ]),
+          );
+        } catch (e) {
+          console.error("Error in addTanuloLetszamBulk onQueryStarted:", e);
+        }
+      },
+    }),
     addTanuloLetszam: build.mutation({
       query: (params) => ({
         url: "tanulo_letszam/",
