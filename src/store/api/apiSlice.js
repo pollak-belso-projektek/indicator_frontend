@@ -64,8 +64,8 @@ export const indicatorApi = createApi({
     "TanulmanyiEredmeny",
     "PalyaOrientacio",
     "EgyuttmukodesekSzama",
-    "Projektek",
     "NyelvvizsgakSzama",
+    "FormHistory",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -1721,9 +1721,20 @@ export const indicatorApi = createApi({
     deleteNyelvvizsgakSzama: build.mutation({
       query: (id) => ({
         url: `nyelvvizsgak_szama/${id}`,
-        method: "DELETE",
-      }),
       invalidatesTags: ["NyelvvizsgakSzama"],
+    }),
+
+    // FormHistory endpoints
+    getFormHistory: build.query({
+      query: ({ alapadatok_id, table_name }) => `form_history/${alapadatok_id}/${table_name}`,
+      providesTags: ["FormHistory"],
+    }),
+    rollbackFormHistory: build.mutation({
+      query: (id) => ({
+        url: `form_history/rollback/${id}`,
+        method: "POST",
+      }),
+      invalidatesTags: ["FormHistory"],
     }),
   }),
 });
@@ -1938,4 +1949,8 @@ export const {
   useAddNyelvvizsgakSzamaMutation,
   useUpdateNyelvvizsgakSzamaMutation,
   useDeleteNyelvvizsgakSzamaMutation,
+
+  // FormHistory hooks
+  useGetFormHistoryQuery,
+  useRollbackFormHistoryMutation,
 } = indicatorApi;

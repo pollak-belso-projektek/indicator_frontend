@@ -36,6 +36,8 @@ import PageWrapper from "../../PageWrapper";
 import InfoEgyOktatoraJutoOsszDiak from "./info_egy_oktatora_juto_ossz_diak";
 import TitleEgyOktatoraJutoOsszDiak from "./title_egy_oktatora_juto_ossz_diak";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from '@mui/icons-material/History';
 
 const evszamok = generateSchoolYears();
 
@@ -51,6 +53,7 @@ export default function EgyOktatoraJutoOsszDiak() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [isSaving, setIsSaving] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const [addEgyOktatora] = useAddEgyOktatoraJutoTanuloMutation();
   const [updateEgyOktatora] = useUpdateEgyOktatoraJutoTanuloMutation();
@@ -236,6 +239,15 @@ export default function EgyOktatoraJutoOsszDiak() {
             >
               {isSaving ? "Mentés..." : "Mentés"}
             </Button>
+            <Button
+              variant="outlined"
+              color="info"
+              startIcon={<HistoryIcon />}
+              onClick={() => setHistoryOpen(true)}
+              disabled={!selectedSchool}
+            >
+              Előzmények
+            </Button>
           </Stack>
           {isModified && (
             <Alert severity="warning" sx={{ py: 0 }}>Módosítás történt!</Alert>
@@ -338,6 +350,22 @@ export default function EgyOktatoraJutoOsszDiak() {
             {snackbarMessage}
           </Alert>
         </Snackbar>
+
+        <HistoryDialog
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          alapadatokId={selectedSchool?.id}
+          tableName="egyOktatoraJutoTanulo"
+          onRollbackSuccess={() => {
+            setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+            // Invalidate query by refetching data from api
+            // We could dispatch an invalidateTags here but we rely on the parent or window reload if needed.
+            // Actually, since RTK query automatically updates on invalidate tags, let's just do a manual window reload for simplicity, or we can just leave it as it will update on next interaction, but better yet RTK query has refetch.
+            window.location.reload(); 
+          }}
+        />
       </Box>
     </PageWrapper>
   );
