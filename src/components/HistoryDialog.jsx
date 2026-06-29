@@ -18,8 +18,11 @@ import {
 import RestoreIcon from '@mui/icons-material/Restore';
 import CloseIcon from '@mui/icons-material/Close';
 import { useGetFormHistoryQuery, useRollbackFormHistoryMutation } from '../store/api/apiSlice';
+import { useDispatch } from 'react-redux';
+import { indicatorApi } from '../store/api/apiSlice';
 
 export default function HistoryDialog({ open, onClose, alapadatokId, tableName, onRollbackSuccess }) {
+  const dispatch = useDispatch();
   const { data: historyList, isLoading, isError, refetch } = useGetFormHistoryQuery(
     { alapadatok_id: alapadatokId, table_name: tableName },
     { skip: !open || !alapadatokId || !tableName, refetchOnMountOrArgChange: true }
@@ -45,7 +48,21 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
       setErrorMsg("");
       await rollbackFormHistory(historyId).unwrap();
       setActiveHistoryId(historyId); // Update the active history to the restored one
-      onRollbackSuccess(); // Parent should refetch or show success message
+      
+      // Invalidate all relevant tags so the UI automatically updates without a page reload
+      dispatch(indicatorApi.util.invalidateTags([
+        'Alapadatok', 'TanugyiAdatok', 'Kompetencia', 'TanuloLetszam', 'FelvettekSzama', 
+        'Alkalmazottak', 'OktatokEgyebTev', 'Elhelyezkedes', 'VegzettekElegedettsege', 
+        'Vizsgaeredmenyek', 'SzakmaiVizsgaEredmenyek', 'SzakmaiRendezvenyek', 'SzakkepzesiMunszerzodesArany', 
+        'Muhelyiskola', 'Lemorzsolodas', 'NSZFH', 'SZMSZ', 'EgyOktatoraJutoTanulo', 
+        'IntezmenyiNeveltsegiMutatok', 'Dobbanto', 'SzakmaiTovabbkepzesek', 'Versenyek', 
+        'Elegedettseg', 'ElegedettsegMeres', 'IntezményiElismeresek', 'Palyazatok', 
+        'Szervezetfejlesztes', 'DualisKepzohelyek', 'InnovaciosTevekenysegek', 'SzakkepzesZolditese', 
+        'DigitalisKompetencia', 'TanulmanyiEredmeny', 'PalyaOrientacio', 'EgyuttmukodesekSzama', 
+        'NyelvvizsgakSzama'
+      ]));
+
+      if (onRollbackSuccess) onRollbackSuccess(); // Parent should refetch or show success message
       // Don't close automatically so user sees the "Jelenleg betöltve" state change
     } catch (err) {
       console.error("Visszaállítási hiba:", err);

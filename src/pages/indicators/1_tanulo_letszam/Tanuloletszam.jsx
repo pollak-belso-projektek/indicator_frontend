@@ -40,11 +40,14 @@ import InfoTanuloLetszam from "./info_tanulo_letszam";
 import TitleTanuloLetszam from "./title_tanulo_letszam";
 import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from '@mui/icons-material/History';
 
 const evszamok = generateSchoolYears();
 
 export default function TanuloLetszam() {
   const selectedSchool = useSelector(selectSelectedSchool);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // API hooks - Database
   const {
@@ -1065,6 +1068,16 @@ export default function TanuloLetszam() {
                     >
                       {isUpdating || isSaving ? "Mentés..." : "Mentés"}
                     </Button>
+                    
+                    <Button
+                      variant="outlined"
+                      color="info"
+                      startIcon={<HistoryIcon />}
+                      onClick={() => setHistoryOpen(true)}
+                      disabled={!selectedSchool}
+                    >
+                      Előzmények
+                    </Button>
 
                     <Button
                       variant="outlined"
@@ -1963,6 +1976,18 @@ export default function TanuloLetszam() {
             </Snackbar>
           </Box>
         </Fade>
+        
+        <HistoryDialog
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          alapadatokId={selectedSchool?.id}
+          tableName="tanuloLetszam"
+          onRollbackSuccess={() => {
+            setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+          }}
+        />
       </PageWrapper>
     </Container>
   );
