@@ -967,7 +967,7 @@ export default function Dashboard() {
                     <Typography variant="h6">Gateway</Typography>
                   </Box>
                   <Typography variant="h4" sx={{ mb: 1 }}>
-                    {formatUptime(healthData.gateway.uptime)}
+                    {formatUptime(healthData.gateway?.uptime || 0)}
                   </Typography>
                   <Typography
                     variant="body2"
@@ -977,10 +977,10 @@ export default function Dashboard() {
                     Működési idő
                   </Typography>
                   <Typography variant="caption" color="textSecondary">
-                    {healthData.gateway.version
+                    {healthData.gateway?.version
                       ? `v${healthData.gateway.version}`
                       : "Verzió ismeretlen"}{" "}
-                    | {formatTimestamp(healthData.gateway.timestamp)}
+                    | {healthData.gateway?.timestamp ? formatTimestamp(healthData.gateway.timestamp) : "Ismeretlen időpont"}
                   </Typography>
                 </CardContent>
               </Card>

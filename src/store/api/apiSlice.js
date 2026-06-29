@@ -1721,6 +1721,8 @@ export const indicatorApi = createApi({
     deleteNyelvvizsgakSzama: build.mutation({
       query: (id) => ({
         url: `nyelvvizsgak_szama/${id}`,
+        method: "DELETE",
+      }),
       invalidatesTags: ["NyelvvizsgakSzama"],
     }),
 
