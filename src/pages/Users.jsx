@@ -6,8 +6,10 @@ import {
   CardContent,
   TextField,
   CircularProgress,
+  Stack,
+  Container,
 } from "@mui/material";
-import { Add as AddIcon } from "@mui/icons-material";
+import { Add as AddIcon, Group as GroupIcon } from "@mui/icons-material";
 import { useState } from "react";
 import NotificationSnackbar from "../components/shared/NotificationSnackbar";
 import { useUserManagement } from "../hooks/useUserManagement";
@@ -21,7 +23,6 @@ import {
   TablePagination,
 } from "../components/UserTable";
 import CreateUserDialog from "../components/CreateUserDialog";
-import { Flex } from "@chakra-ui/react";
 
 const Users = () => {
   // Notification state
@@ -119,11 +120,40 @@ const Users = () => {
     );
   }
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Page Title */}
-      <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 3 }}>
-        Felhasználó kezelés
-      </Typography>
+    <Box sx={{ pb: 8, bgcolor: "background.default", minHeight: "100vh" }}>
+      {/* Premium Header */}
+      <Box 
+        sx={{ 
+          background: "linear-gradient(135deg, #1976d2 0%, #1565c0 100%)",
+          pt: { xs: 8, md: 10 },
+          pb: { xs: 8, md: 12 },
+          px: 2,
+          position: "relative",
+          overflow: "hidden"
+        }}
+      >
+        <Box sx={{ 
+          position: "absolute", top: -50, right: -50, width: 300, height: 300, 
+          borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%)" 
+        }} />
+        <Container maxWidth="xl">
+          <Box sx={{ display: "flex", alignItems: "center", gap: 3, position: "relative", zIndex: 1, color: "white" }}>
+            <Box sx={{ p: 2, bgcolor: "rgba(255,255,255,0.15)", borderRadius: 3, backdropFilter: "blur(10px)" }}>
+              <GroupIcon sx={{ fontSize: 40 }} />
+            </Box>
+            <Box>
+              <Typography variant="h4" fontWeight="700" gutterBottom>
+                Felhasználók Kezelése
+              </Typography>
+              <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
+                Kezeld a rendszerhez tartozó felhasználói fiókokat és jogosultságokat
+              </Typography>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+
+      <Container maxWidth="xl" sx={{ mt: { xs: -4, md: -6 }, position: "relative", zIndex: 2 }}>
 
       <CreateUserDialog
         open={openCreate}
@@ -150,11 +180,17 @@ const Users = () => {
       />
 
       {/* Main Content Card */}
-      <Card sx={{ boxShadow: 3 }}>
-        <CardContent sx={{ p: 3 }}>
+      <Card sx={{ boxShadow: "0 4px 20px rgba(0,0,0,0.05)", borderRadius: 4, overflow: "visible" }}>
+        <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
           {/* Header with Search and Actions */}
 
-          <Flex sx={{ width: "100%" }} justify="space-evenly">
+          <Stack 
+            direction={{ xs: "column", lg: "row" }} 
+            spacing={3} 
+            justifyContent="space-between" 
+            alignItems={{ xs: "stretch", lg: "center" }}
+            sx={{ mb: 4 }}
+          >
             {/* Left Side: Column Visibility, Density, Width */}
             <Box
               sx={{
@@ -220,7 +256,7 @@ const Users = () => {
                 </Button>
               )}
             </Box>
-          </Flex>
+          </Stack>
 
           {/* Table Card */}
           <Card variant="outlined" sx={{ mb: 3 }}>
@@ -233,6 +269,7 @@ const Users = () => {
           </Box>
         </CardContent>
       </Card>
+      </Container>
       <NotificationSnackbar
         open={notification.open}
         message={notification.message}

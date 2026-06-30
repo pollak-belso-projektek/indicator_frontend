@@ -40,6 +40,11 @@ const StyledInput = styled(InputBase)(({ theme }) => ({
   },
 }));
 
+const formatSchoolName = (name) => {
+  if (!name) return "";
+  return name.replace("Hódmezővásárhelyi SZC ", "").trim();
+};
+
 const SchoolSelector = () => {
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
@@ -142,10 +147,10 @@ const SchoolSelector = () => {
   if (!canSelectSchool) {
     if (selectedSchool) {
       return (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, py: 1, bgcolor: "grey.50", borderRadius: 3, border: "1px solid", borderColor: "grey.200" }}>
-          <MdSchool style={{ color: "#757575", fontSize: 20 }} />
-          <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 600 }}>
-            {selectedSchool.iskola_neve}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, py: 1, bgcolor: "grey.50", borderRadius: 3, border: "1px solid", borderColor: "grey.200", maxWidth: 400, overflow: "hidden" }}>
+          <MdSchool style={{ color: "#757575", fontSize: 20, flexShrink: 0 }} />
+          <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {formatSchoolName(selectedSchool.iskola_neve)}
           </Typography>
         </Box>
       );
@@ -155,7 +160,7 @@ const SchoolSelector = () => {
 
   // Render the school selector for users who can select schools
   return (
-    <Box sx={{ minWidth: 260, maxWidth: 350 }}>
+    <Box sx={{ minWidth: 260, maxWidth: 400 }}>
       <Select
         value={selectedSchool?.id?.toString() || ""}
         onChange={handleChange}
@@ -171,18 +176,18 @@ const SchoolSelector = () => {
         renderValue={(value) => {
           if (!value) {
             return (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
-                <MdSchool size={18} />
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>Válassz iskolát</Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary", overflow: "hidden" }}>
+                <MdSchool size={18} style={{ flexShrink: 0 }} />
+                <Typography variant="body2" sx={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Válassz iskolát</Typography>
               </Box>
             );
           }
           const found = schools.items.find((item) => item.value === value);
           return (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <MdSchool size={18} style={{ color: "#1976d2" }} />
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, overflow: "hidden" }}>
+              <MdSchool size={18} style={{ color: "#1976d2", flexShrink: 0 }} />
               <Typography variant="body2" sx={{ fontWeight: 600, color: "primary.main", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {found ? found.label : "Ismeretlen iskola"}
+                {found ? formatSchoolName(found.label) : "Ismeretlen iskola"}
               </Typography>
             </Box>
           );
