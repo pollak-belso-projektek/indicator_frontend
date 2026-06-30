@@ -489,65 +489,136 @@ export default function Dashboard() {
     return "Alapszintű hozzáférés az intézmény adataihoz";
   };
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 9) return "Jó reggelt";
+    if (hour < 18) return "Szép napot";
+    return "Jó estét";
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       {/* Header Section */}
       <Paper
+        elevation={0}
         sx={{
-          p: 3,
-          mb: 3,
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          p: { xs: 3, md: 4 },
+          mb: 4,
+          background: "linear-gradient(135deg, rgba(102,126,234,0.9) 0%, rgba(118,75,162,0.9) 100%)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
           color: "white",
+          borderRadius: 4,
+          position: "relative",
+          overflow: "hidden",
+          boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.2)",
+          border: "1px solid rgba(255, 255, 255, 0.18)"
         }}
       >
         <Box
           sx={{
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "space-between",
             flexWrap: "wrap",
             gap: 2,
+            position: "relative",
+            zIndex: 1
           }}
         >
           <Box>
             <Typography
-              variant="h4"
+              variant="h3"
               component="h1"
-              sx={{ fontWeight: "bold", mb: 1 }}
+              sx={{ fontWeight: 800, mb: 1, letterSpacing: "-0.5px" }}
             >
-              <DashboardIcon sx={{ mr: 2, verticalAlign: "middle" }} />
-              Üdvözöljük a rendszerben!
-            </Typography>
-            <Typography variant="h6" sx={{ opacity: 0.9, mb: 1 }}>
-              {user?.name || "Felhasználó"}
+              {getGreeting()}, {user?.name || "Felhasználó"}!
             </Typography>
             {selectedSchoolName && (
-              <Typography variant="body2" sx={{ opacity: 0.75 }}>
-                Aktív iskola: {selectedSchoolName}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, mt: 2 }}>
+                <SchoolIcon sx={{ opacity: 0.9 }} fontSize="small" />
+                <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                  {selectedSchoolName}
+                </Typography>
+              </Box>
             )}
-            <Typography variant="body1" sx={{ opacity: 0.8 }}>
-              {getUserTypeDescription()}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <PersonIcon sx={{ opacity: 0.75 }} fontSize="small" />
+              <Typography variant="body2" sx={{ opacity: 0.75 }}>
+                {getUserTypeDescription()}
+              </Typography>
+            </Box>
           </Box>
-          {/* Alias Mode Button for Superadmins */}
-          {isSuperadmin && !isInAliasMode && (
-            <Button
-              variant="contained"
-              color="inherit"
-              startIcon={<SupervisorAccountIcon />}
-              onClick={() => setShowAliasModeDialog(true)}
-              sx={{
-                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                "&:hover": {
-                  backgroundColor: "rgba(255, 255, 255, 0.3)",
-                },
-              }}
-            >
-              Alias mód
-            </Button>
-          )}
+          {/* Right side actions and status */}
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+            {/* Health Chip moved here */}
+            {healthData ? (
+                (() => {
+                  const systemHealth = getSystemHealth();
+                  const statusLabels = {
+                    healthy: "Rendszer online",
+                    degraded: "Részleges leállás",
+                    unhealthy: "Problémás",
+                    unknown: "Ismeretlen",
+                  };
+                  return (
+                    <Chip
+                      label={statusLabels[systemHealth.status]}
+                      color={systemHealth.color}
+                      size="small"
+                      icon={systemHealth.status === "healthy" ? <CheckCircleIcon /> : <ErrorIcon />}
+                      sx={{ 
+                        backgroundColor: "rgba(255,255,255,0.2)", 
+                        color: "white", 
+                        fontWeight: 600,
+                        border: "1px solid rgba(255,255,255,0.3)",
+                        backdropFilter: "blur(4px)",
+                        '& .MuiChip-icon': { color: "white" }
+                      }}
+                    />
+                  );
+                })()
+            ) : healthError ? (
+              <Chip label="Offline" color="error" size="small" icon={<ErrorIcon />} />
+            ) : (
+              <Chip label="Ellenőrzés..." color="default" size="small" />
+            )}
+
+            {/* Alias Mode Button for Superadmins */}
+            {isSuperadmin && !isInAliasMode && (
+              <Button
+                variant="contained"
+                color="inherit"
+                startIcon={<SupervisorAccountIcon />}
+                onClick={() => setShowAliasModeDialog(true)}
+                sx={{
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  backdropFilter: "blur(5px)",
+                  boxShadow: "none",
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.35)",
+                    boxShadow: "none",
+                  },
+                }}
+              >
+                Alias mód
+              </Button>
+            )}
+          </Box>
         </Box>
+
+        {/* Decorative background circles */}
+        <Box sx={{
+          position: 'absolute', top: -50, right: -50, width: 200, height: 200, 
+          borderRadius: '50%', background: 'rgba(255,255,255,0.1)', zIndex: 0
+        }} />
+        <Box sx={{
+          position: 'absolute', bottom: -80, right: 100, width: 150, height: 150, 
+          borderRadius: '50%', background: 'rgba(255,255,255,0.05)', zIndex: 0
+        }} />
       </Paper>
 
       {/* Alias Mode Dialog */}
@@ -599,42 +670,53 @@ export default function Dashboard() {
                     sx={{
                       height: "100%",
                       cursor: "pointer",
-                      transition: "all 0.3s ease",
+                      borderRadius: 3,
+                      borderLeft: "4px solid",
+                      borderLeftColor: "primary.main",
+                      boxShadow: "0 2px 12px 0 rgba(0,0,0,0.03)",
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                       "&:hover": {
                         transform: "translateY(-4px)",
-                        boxShadow: 4,
+                        boxShadow: "0 8px 24px 0 rgba(0,0,0,0.1)",
                       },
                     }}
                     onClick={() => navigate(page.link)}
                   >
-                    <CardContent>
+                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                       <Box
                         sx={{
                           display: "flex",
                           alignItems: "flex-start",
-                          mb: 2,
+                          mb: 1.5,
                         }}
                       >
-                        <Box sx={{ mr: 2, color: "primary.main" }}>
-                          <HistoryIcon />
+                        <Box sx={{ 
+                          mr: 2, 
+                          p: 1, 
+                          borderRadius: 2, 
+                          backgroundColor: "primary.50", 
+                          color: "primary.main",
+                          display: "flex" 
+                        }}>
+                          <HistoryIcon fontSize="small" />
                         </Box>
                         <Box sx={{ flex: 1 }}>
                           <Typography
-                            variant="h6"
+                            variant="subtitle1"
                             component="h3"
-                            sx={{ mb: 1 }}
+                            sx={{ fontWeight: 600, lineHeight: 1.2, mb: 0.5 }}
                           >
                             {page.name}
                           </Typography>
                           <Typography
-                            variant="h7"
-                            component="h6"
-                            sx={{ mb: 1 }}
+                            variant="body2"
+                            color="textSecondary"
+                            sx={{ mb: 1, fontSize: '0.8rem' }}
                           >
                             {categoryName}
                           </Typography>
 
-                          <Typography variant="caption" color="textSecondary">
+                          <Typography variant="caption" color="text.disabled">
                             {page.timestamp &&
                               new Date(page.timestamp).toLocaleDateString(
                                 "hu-HU",
@@ -653,14 +735,11 @@ export default function Dashboard() {
                             e.stopPropagation();
                             removeRecentPage(page.link);
                           }}
-                          sx={{ p: 0.5 }}
+                          sx={{ p: 0.5, opacity: 0.5, '&:hover': { opacity: 1 } }}
                         >
                           <CloseIcon fontSize="small" />
                         </IconButton>
                       </Box>
-                      <Button size="small" color="primary" sx={{ mt: 1 }}>
-                        Megnyitás
-                      </Button>
                     </CardContent>
                   </Card>
                 </Grid>
@@ -672,158 +751,88 @@ export default function Dashboard() {
 
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Box>
-                  <Typography color="textSecondary" gutterBottom>
-                    Elérhető funkciók
-                  </Typography>
-                  <Typography variant="h4">
-                    {quickAccessItems.length}
-                  </Typography>
+        {[
+          {
+            title: "Elérhető funkciók",
+            value: quickAccessItems.length,
+            icon: <DataIcon sx={{ fontSize: 40, color: "primary.main" }} />,
+            color: "primary"
+          },
+          {
+            title: "Tábla jogosultságok",
+            value: tableAccess ? tableAccess.length : 0,
+            icon: <AssessmentIcon sx={{ fontSize: 40, color: "success.main" }} />,
+            color: "success"
+          },
+          {
+            title: "Felhasználói szint",
+            value: isSuperadmin ? "Fejlesztő" : isAdmin ? "Admin" : isHSZC ? "HSZC" : "Alapszint",
+            icon: <PersonIcon sx={{ fontSize: 40, color: "info.main" }} />,
+            color: "info"
+          },
+          {
+            title: "Aktivitási index",
+            value: "Kiváló",
+            icon: <TrendingUpIcon sx={{ fontSize: 40, color: "warning.main" }} />,
+            color: "warning"
+          }
+        ].map((stat, index) => (
+          <Grid item xs={12} sm={6} md={3} key={index}>
+            <Card
+              sx={{
+                borderRadius: 4,
+                boxShadow: "0 4px 20px 0 rgba(0,0,0,0.05)",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                border: "1px solid rgba(0,0,0,0.03)",
+                position: "relative",
+                overflow: "hidden",
+                "&:hover": {
+                  transform: "translateY(-6px)",
+                  boxShadow: "0 12px 28px 0 rgba(0,0,0,0.08)",
+                  "& .stat-icon-bg": {
+                    transform: "scale(1.2)",
+                    opacity: 0.15
+                  }
+                },
+              }}
+            >
+              <CardContent sx={{ position: "relative", zIndex: 1, p: 3 }}>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <Box>
+                    <Typography color="textSecondary" variant="body2" fontWeight={600} textTransform="uppercase" letterSpacing={0.5} gutterBottom>
+                      {stat.title}
+                    </Typography>
+                    <Typography variant="h4" fontWeight={700}>
+                      {stat.value}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ 
+                    p: 1.5, 
+                    borderRadius: '50%', 
+                    backgroundColor: `${stat.color}.light`, 
+                    display: 'flex',
+                    opacity: 0.8
+                  }}>
+                    {stat.icon}
+                  </Box>
                 </Box>
-                <DataIcon sx={{ fontSize: 40, color: "primary.main" }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Box>
-                  <Typography color="textSecondary" gutterBottom>
-                    Tábla jogosultságok
-                  </Typography>
-                  <Typography variant="h4">
-                    {tableAccess ? tableAccess.length : 0}
-                  </Typography>
-                </Box>
-                <AssessmentIcon sx={{ fontSize: 40, color: "success.main" }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Box>
-                  <Typography color="textSecondary" gutterBottom>
-                    Felhasználói szint
-                  </Typography>
-                  <Typography variant="h6">
-                    {isSuperadmin
-                      ? "Fejlesztő"
-                      : isAdmin
-                        ? "Admin"
-                        : isHSZC
-                          ? "HSZC"
-                          : "Alapszint"}
-                  </Typography>
-                </Box>
-                <PersonIcon sx={{ fontSize: 40, color: "info.main" }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Box>
-                  <Typography color="textSecondary" gutterBottom>
-                    Rendszer állapot
-                  </Typography>
-                  {healthData ? (
-                    <Box>
-                      {(() => {
-                        const systemHealth = getSystemHealth();
-                        const statusLabels = {
-                          healthy: "Egészséges",
-                          degraded: "Részlegesen működik",
-                          unhealthy: "Problémás",
-                          unknown: "Ismeretlen",
-                        };
-                        return (
-                          <Chip
-                            label={statusLabels[systemHealth.status]}
-                            color={systemHealth.color}
-                            size="small"
-                            icon={
-                              systemHealth.status === "healthy" ? (
-                                <CheckCircleIcon />
-                              ) : (
-                                <ErrorIcon />
-                              )
-                            }
-                          />
-                        );
-                      })()}
-                      <Typography
-                        variant="caption"
-                        display="block"
-                        sx={{ mt: 0.5 }}
-                      >
-                        {healthData.services
-                          ? `${Object.values(healthData.services).filter(
-                            (service) => service.status === "healthy",
-                          ).length
-                          }/${Object.keys(healthData.services).length
-                          } szolgáltatás`
-                          : `v${healthData.version || "ismeretlen"}`}
-                      </Typography>
-                    </Box>
-                  ) : healthError ? (
-                    <Chip
-                      label="Offline"
-                      color="error"
-                      size="small"
-                      icon={<ErrorIcon />}
-                    />
-                  ) : (
-                    <Chip label="Ellenőrzés..." color="default" size="small" />
-                  )}
-                </Box>
-                <TrendingUpIcon
-                  sx={{
-                    fontSize: 40,
-                    color: getSystemHealth().color + ".main",
-                  }}
-                />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+              </CardContent>
+              {/* Decorative background shape */}
+              <Box className="stat-icon-bg" sx={{
+                position: "absolute",
+                right: -20,
+                bottom: -20,
+                width: 100,
+                height: 100,
+                borderRadius: "50%",
+                backgroundColor: `${stat.color}.main`,
+                opacity: 0.05,
+                transition: "all 0.4s ease",
+                zIndex: 0
+              }} />
+            </Card>
+          </Grid>
+        ))}
       </Grid>
 
       {/* Quick Access Section */}
@@ -842,32 +851,77 @@ export default function Dashboard() {
               sx={{
                 height: "100%",
                 cursor: "pointer",
-                transition: "all 0.3s ease",
+                borderRadius: 4,
+                boxShadow: "0 2px 12px 0 rgba(0,0,0,0.03)",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                border: "1px solid rgba(0,0,0,0.03)",
+                position: "relative",
+                overflow: "hidden",
                 "&:hover": {
                   transform: "translateY(-4px)",
-                  boxShadow: 4,
+                  boxShadow: "0 8px 24px 0 rgba(0,0,0,0.08)",
+                  "& .quick-icon-bg": {
+                    transform: "scale(1.5)",
+                    opacity: 0.1
+                  }
                 },
               }}
               onClick={() => navigate(item.route)}
             >
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "flex-start", mb: 2 }}>
-                  <Box sx={{ mr: 2, color: `${item.color}.main` }}>
+              <CardContent sx={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%", p: 2.5 }}>
+                <Box sx={{ display: "flex", alignItems: "flex-start", mb: 2, flex: 1 }}>
+                  <Box sx={{ 
+                    mr: 2, 
+                    p: 1.2,
+                    borderRadius: 3,
+                    backgroundColor: `${item.color}.50`,
+                    color: `${item.color}.main`,
+                    display: "flex",
+                    boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.05)"
+                  }}>
                     {item.icon}
                   </Box>
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
+                    <Typography variant="h6" component="h3" sx={{ mb: 0.5, fontWeight: 600, fontSize: "1.05rem", lineHeight: 1.2 }}>
                       {item.title}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary">
+                    <Typography variant="body2" color="textSecondary" sx={{ lineHeight: 1.4, fontSize: '0.85rem' }}>
                       {item.description}
                     </Typography>
                   </Box>
                 </Box>
-                <Button size="small" color={item.color} sx={{ mt: 1 }}>
-                  Megnyitás
-                </Button>
+                <Box sx={{ display: "flex", justifyContent: "flex-start", mt: "auto" }}>
+                  <Button 
+                    size="small" 
+                    color={item.color} 
+                    sx={{ 
+                      fontWeight: 600, 
+                      borderRadius: 2,
+                      textTransform: "none",
+                      px: 2,
+                      backgroundColor: `${item.color}.50`,
+                      '&:hover': {
+                        backgroundColor: `${item.color}.100`,
+                      }
+                    }}
+                  >
+                    Megnyitás
+                  </Button>
+                </Box>
               </CardContent>
+              {/* Decorative hover background */}
+              <Box className="quick-icon-bg" sx={{
+                position: "absolute",
+                left: -20,
+                top: -20,
+                width: 80,
+                height: 80,
+                borderRadius: "50%",
+                backgroundColor: `${item.color}.main`,
+                opacity: 0,
+                transition: "all 0.4s ease",
+                zIndex: 0
+              }} />
             </Card>
           </Grid>
         ))}

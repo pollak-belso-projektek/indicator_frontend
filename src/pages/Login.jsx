@@ -35,6 +35,8 @@ import ForgotPasswordDialog from "../components/ForgotPasswordDialog";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [requires2FA, setRequires2FA] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const dispatch = useDispatch();
@@ -45,18 +47,16 @@ export default function Login() {
   const mustChangePassword = useSelector(selectMustChangePassword);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Clear any stale error/loading state on mount
   useEffect(() => {
     dispatch(clearError());
     setErrorMessage("");
-  }, [dispatch, setErrorMessage]); // Run once on mount
+  }, [dispatch, setErrorMessage]);
 
-  // Add timeout for loading state
   useEffect(() => {
     if (loading) {
       const timeout = setTimeout(() => {
         dispatch(loginFailure("Bejelentkezés időtúllépés miatt sikertelen"));
-      }, 10000); // 10 second timeout
+      }, 10000);
 
       return () => clearTimeout(timeout);
     }
@@ -70,11 +70,8 @@ export default function Login() {
     }
   }, [error]);
 
-  // Remove the old selectErrorMessage function since we're using parseApiError now
-
   const [loginMutation] = useLoginMutation();
 
-  // Redirect if already authenticated
   if (isAuthenticated) {
     // If must change password, redirect to profile with flag
     if (mustChangePassword) {
@@ -91,12 +88,26 @@ export default function Login() {
       return;
     }
 
+    if (requires2FA && !twoFactorCode) {
+      dispatch(loginFailure("Kétlépcsős kód megadása kötelező"));
+      return;
+    }
+
     dispatch(loginStart());
     try {
-      const result = await loginMutation({
-        email,
-        password,
-      }).unwrap();
+      const payload = { email, password };
+      if (requires2FA) {
+        payload.twoFactorCode = twoFactorCode;
+      }
+
+      const result = await loginMutation(payload).unwrap();
+
+      if (result.requires2FA) {
+        setRequires2FA(true);
+        dispatch(clearError()); // Clear loading and error state without failing
+        dispatch(loginFailure(null)); // Specifically setting to null to stop loading indicator
+        return;
+      }
 
       dispatch(loginSuccess(result));
 
@@ -113,6 +124,7 @@ export default function Login() {
       );
     }
   };
+
   return (
     <Container
       maxWidth="sm"
@@ -148,42 +160,63 @@ export default function Login() {
               sx={{ width: "100%" }}
             >
               <Stack spacing={3}>
-                <TextField
-                  type="email"
-                  label="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Add meg az email címed"
-                  required
-                  fullWidth
-                  variant="outlined"
-                />
+                {!requires2FA ? (
+                  <>
+                    <TextField
+                      type="email"
+                      label="Email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Add meg az email címed"
+                      required
+                      fullWidth
+                      variant="outlined"
+                    />
 
-                <TextField
-                  type={showPassword ? "text" : "password"}
-                  label="Jelszó"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Add meg a jelszavad"
-                  required
-                  fullWidth
-                  variant="outlined"
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => setShowPassword(!showPassword)}
-                          edge="end"
-                          aria-label={
-                            showPassword ? "Hide password" : "Show password"
-                          }
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
+                    <TextField
+                      type={showPassword ? "text" : "password"}
+                      label="Jelszó"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Add meg a jelszavad"
+                      required
+                      fullWidth
+                      variant="outlined"
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowPassword(!showPassword)}
+                              edge="end"
+                              aria-label={
+                                showPassword ? "Hide password" : "Show password"
+                              }
+                            >
+                              {showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Typography variant="body1" textAlign="center">
+                      Kétlépcsős azonosítás (2FA) szükséges a bejelentkezéshez.
+                    </Typography>
+                    <TextField
+                      type="text"
+                      label="6 számjegyű kód"
+                      value={twoFactorCode}
+                      onChange={(e) => setTwoFactorCode(e.target.value)}
+                      placeholder="000000"
+                      required
+                      fullWidth
+                      variant="outlined"
+                      autoFocus
+                    />
+                  </>
+                )}
 
                 <Button
                   type="submit"
@@ -199,10 +232,25 @@ export default function Login() {
                       <CircularProgress size={20} sx={{ mr: 1 }} />
                       Bejelentkezés...
                     </>
+                  ) : requires2FA ? (
+                    "Kód ellenőrzése"
                   ) : (
                     "Bejelentkezés"
                   )}
                 </Button>
+                {requires2FA && (
+                  <Button
+                    variant="text"
+                    fullWidth
+                    disabled={loading}
+                    onClick={() => {
+                      setRequires2FA(false);
+                      setTwoFactorCode("");
+                    }}
+                  >
+                    Vissza
+                  </Button>
+                )}
 
                 <Box sx={{ textAlign: "center" }}>
                   <Link

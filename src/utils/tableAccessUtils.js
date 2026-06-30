@@ -179,13 +179,13 @@ export const parseApiError = (error) => {
     if (error.status && error.data) {
       switch (error.status) {
         case 401:
-          return "Nincs jogosultság a művelet végrehajtásához. Kérjük, jelentkezz be újra.";
+          return error.data?.message || "Nincs jogosultság a művelet végrehajtásához. Kérjük, jelentkezz be újra.";
         case 403:
-          return "Hozzáférés megtagadva. Nincs megfelelő jogosultságod.";
+          return error.data?.message || "Hozzáférés megtagadva. Nincs megfelelő jogosultságod.";
         case 404:
-          return "A keresett erőforrás nem található.";
+          return error.data?.message || "A keresett erőforrás nem található.";
         case 422:
-          return "Hibás adatok. Kérjük, ellenőrizd a bevitt információkat.";
+          return error.data?.message || "Hibás adatok. Kérjük, ellenőrizd a bevitt információkat.";
         case 500:
           return "Szerver hiba történt. Kérjük, próbáld újra később.";
         default:
