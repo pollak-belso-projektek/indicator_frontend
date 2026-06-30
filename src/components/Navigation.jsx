@@ -38,6 +38,7 @@ import {
   MdInfo,
   MdAccessible,
   MdHistory,
+  MdBugReport,
 } from "react-icons/md";
 
 import { useColorModeValue } from "./ui/color-mode";
@@ -65,6 +66,7 @@ import {
 import { useRecentPages } from "../hooks/useRecentPages";
 import AliasModeBanner from "./AliasModeBanner";
 import PageNumbering from "../common/PageNumbering";
+import BugReportDialog from "./BugReportDialog";
 
 // Function to get the page number for a given link
 const getPageNumber = (link) => {
@@ -1153,6 +1155,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const openMenu = Boolean(anchorEl);
+  const [bugReportOpen, setBugReportOpen] = useState(false);
 
   useRecentPages(NavigationCategories);
 
@@ -1244,6 +1247,11 @@ const MobileNav = ({ onOpen, ...rest }) => {
         </Box>
 
         <Stack direction="row" spacing={2} alignItems="center">
+          <Tooltip title="Hibabejelentés">
+            <IconButton onClick={() => setBugReportOpen(true)} sx={{ bgcolor: 'error.50', color: 'error.main', '&:hover': { bgcolor: 'error.100' } }}>
+              <MdBugReport size={20} />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Változások naplója">
             <IconButton component={Link} to="/changelog" sx={{ bgcolor: 'primary.50', color: 'primary.main', '&:hover': { bgcolor: 'primary.100' } }}>
               <MdHistory size={20} />
@@ -1277,6 +1285,11 @@ const MobileNav = ({ onOpen, ...rest }) => {
           </Menu>
         </Stack>
       </Toolbar>
+
+      <BugReportDialog 
+        open={bugReportOpen} 
+        onClose={() => setBugReportOpen(false)} 
+      />
     </AppBar>
   );
 };
