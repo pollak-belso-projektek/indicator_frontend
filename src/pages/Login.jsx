@@ -15,6 +15,8 @@ import {
   InputAdornment,
   CircularProgress,
   Link,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useLoginMutation } from "../store/api/apiSlice";
@@ -36,6 +38,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [trustDevice, setTrustDevice] = useState(false);
   const [requires2FA, setRequires2FA] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
@@ -96,8 +99,15 @@ export default function Login() {
     dispatch(loginStart());
     try {
       const payload = { email, password };
+      
+      const trustedDeviceToken = localStorage.getItem("trustedDeviceToken");
+      if (trustedDeviceToken) {
+        payload.trustedDeviceToken = trustedDeviceToken;
+      }
+      
       if (requires2FA) {
         payload.twoFactorCode = twoFactorCode;
+        payload.trustDevice = trustDevice;
       }
 
       const result = await loginMutation(payload).unwrap();
@@ -107,6 +117,10 @@ export default function Login() {
         dispatch(clearError()); // Clear loading and error state without failing
         dispatch(loginFailure(null)); // Specifically setting to null to stop loading indicator
         return;
+      }
+
+      if (result.trustedDeviceToken) {
+        localStorage.setItem("trustedDeviceToken", result.trustedDeviceToken);
       }
 
       dispatch(loginSuccess(result));
@@ -214,6 +228,16 @@ export default function Login() {
                       fullWidth
                       variant="outlined"
                       autoFocus
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={trustDevice}
+                          onChange={(e) => setTrustDevice(e.target.checked)}
+                          color="primary"
+                        />
+                      }
+                      label="Megbízható eszköz (nem kér kódot 30 napig)"
                     />
                   </>
                 )}
