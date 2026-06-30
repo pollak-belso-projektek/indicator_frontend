@@ -95,7 +95,7 @@ const Oktatoperdiak = () => {
   }, [sumLetszamPerYear, tanuloLetszamData]);
 
   // State for editable data
-  const [hetiOratomeg, setHetiOratomeg] = useState([0, 0, 0, 0]); // Fenntartó által engedélyezett heti óratömeg
+  const [hetiOratomeg, setHetiOratomeg] = useState(["0", "0", "0", "0"]); // Fenntartó által engedélyezett heti óratömeg
   const [divisor, setDivisor] = useState(22); // Configurable divisor for calculating teacher count
   const editableFieldTooltip =
     "Szerkeszthető mező – adja meg a fenntartó által engedélyezett heti óratömeget.";
@@ -109,7 +109,7 @@ const Oktatoperdiak = () => {
           (item) => item.tanev_kezdete === year
         );
         console.log(`Record for year ${year}:`, record);
-        return record ? parseFloat(record.letszam) || 0 : 0;
+        return record && record.letszam !== null ? String(record.letszam) : "0";
       });
       setHetiOratomeg(newHetiOratomeg);
       console.log("Loaded hetiOratomeg from API:", newHetiOratomeg);
@@ -117,9 +117,11 @@ const Oktatoperdiak = () => {
   }, [oktatorPerDiakData, years]);
 
   // Calculate számított oktatói létszám: hetiOratomeg / divisor
-  const szamitottOktatoiLetszam = hetiOratomeg.map((value) =>
-    value > 0 ? Math.round(value / divisor) : 0
-  );
+  const szamitottOktatoiLetszam = hetiOratomeg.map((val) => {
+    const parsed = parseFloat(String(val).replace(',', '.'));
+    const value = Number.isNaN(parsed) ? 0 : parsed;
+    return value > 0 ? Math.round(value / divisor) : 0;
+  });
 
   // Calculate egy oktatóra jutó tanulói jogviszonyú tanulók száma: sumLetszamPerYear / szamitottOktatoiLetszam
   const egyOktatoraJutoTanulok = szamitottOktatoiLetszam.map((value, index) => {
@@ -133,10 +135,15 @@ const Oktatoperdiak = () => {
 
   // Handle value change
   const handleValueChange = (index, newValue) => {
-    const numericValue = newValue === "" ? 0 : parseFloat(newValue);
-    const safeValue = Number.isFinite(numericValue) ? numericValue : 0;
+    // Allow numbers, dots, and commas
+    if (!/^[0-9.,]*$/.test(newValue)) return;
+    
+    // Prevent multiple dots/commas
+    const dotsAndCommas = newValue.match(/[.,]/g);
+    if (dotsAndCommas && dotsAndCommas.length > 1) return;
+
     const newHetiOratomeg = [...hetiOratomeg];
-    newHetiOratomeg[index] = safeValue;
+    newHetiOratomeg[index] = newValue;
     setHetiOratomeg(newHetiOratomeg);
     setIsModified(true); // Mark as modified when data changes
   };
@@ -150,7 +157,9 @@ const Oktatoperdiak = () => {
       for (let i = 0; i < years.length; i++) {
         const year = years[i];
         const yearKey = `${year}/${year + 1}`;
-        const hetiOraValue = hetiOratomeg[i];
+        const hetiOraStr = hetiOratomeg[i];
+        const parsedValue = parseFloat(String(hetiOraStr).replace(',', '.'));
+        const hetiOraValue = Number.isNaN(parsedValue) ? 0 : parsedValue;
 
         // Allow zero values, only filter out null/undefined
         if (
@@ -216,11 +225,11 @@ const Oktatoperdiak = () => {
         const record = oktatorPerDiakData.find(
           (item) => item.tanev_kezdete === year
         );
-        return record ? parseFloat(record.letszam) || 0 : 0;
+        return record && record.letszam !== null ? String(record.letszam) : "0";
       });
       setHetiOratomeg(newHetiOratomeg);
     } else {
-      setHetiOratomeg([0, 0, 0, 0]);
+      setHetiOratomeg(["0", "0", "0", "0"]);
     }
     setDivisor(22);
     setIsModified(false);
@@ -475,10 +484,9 @@ fenntartó által engedélyezett heti óratömeg
                               handleValueChange(index, e.target.value)
                             }
                             size="small"
-                            type="number"
+                            type="text"
                             inputProps={{
-                              min: 0,
-                              step: 0.1,
+                              inputMode: "decimal",
                               style: { textAlign: "center" },
                             }}
                             sx={{

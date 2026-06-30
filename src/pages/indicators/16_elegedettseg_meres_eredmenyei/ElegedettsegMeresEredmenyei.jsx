@@ -157,21 +157,18 @@ export default function ElegedettsegMeresEredmenyei() {
 
   // Handle data changes
   const handleDataChange = useCallback((year, categoryKey, value) => {
-    // Validate value to be between 0 and 100 (%).
-    let numValue = parseFloat(value);
-    if (isNaN(numValue)) {
-      numValue = "";
-    } else if (numValue < 0) {
-      numValue = 0;
-    } else if (numValue > 100) {
-      numValue = 100;
-    }
+    // Allow empty string, numbers, dots, and commas
+    if (value !== "" && !/^[0-9.,]*$/.test(value)) return;
+    
+    // Prevent multiple dots/commas
+    const dotsAndCommas = value.match(/[.,]/g);
+    if (dotsAndCommas && dotsAndCommas.length > 1) return;
 
     setTableData((prev) => ({
       ...prev,
       [year]: {
         ...prev[year],
-        [categoryKey]: numValue === "" ? "" : numValue,
+        [categoryKey]: value,
       },
     }));
     setIsModified(true);
@@ -207,7 +204,12 @@ export default function ElegedettsegMeresEredmenyei() {
         };
 
         categoryTypes.forEach((category) => {
-          payload[category.key] = Number(tableData[year]?.[category.key] || 0);
+          const valStr = String(tableData[year]?.[category.key] || 0).replace(',', '.');
+          let numVal = parseFloat(valStr);
+          if (isNaN(numVal)) numVal = 0;
+          if (numVal < 0) numVal = 0;
+          if (numVal > 100) numVal = 100;
+          payload[category.key] = numVal;
         });
 
         const id = recordIds[year];
@@ -460,7 +462,7 @@ export default function ElegedettsegMeresEredmenyei() {
                             }}
                           >
                             <TextField
-                              type="number"
+                              type="text"
                               size="small"
                               value={tableData[year]?.[category.key] ?? ""}
                               onChange={(e) =>
@@ -479,9 +481,7 @@ export default function ElegedettsegMeresEredmenyei() {
                               }}
                               slotProps={{
                                 input: {
-                                  min: 0,
-
-                                  step: 0.1,
+                                  inputMode: "decimal",
                                   style: {
                                     textAlign: "center",
                                     padding: "8px",

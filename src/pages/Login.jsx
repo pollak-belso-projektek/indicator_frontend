@@ -200,6 +200,11 @@ export default function Login() {
         navigate("/profile?mustChangePassword=true", { replace: true });
       }
     } catch (err) {
+      // Ignore AbortError caused by strict mode double-fetching or rapid clicks
+      if (err.name === "AbortError" || err.message?.includes("AbortError") || err.error?.includes("AbortError")) {
+        return;
+      }
+      
       const errorMsg = parseApiError(err);
       dispatch(
         loginFailure(

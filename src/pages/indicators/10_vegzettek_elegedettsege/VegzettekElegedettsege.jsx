@@ -187,7 +187,13 @@ export default function VegzettekElegedettsege() {
   // Handle Input Changes
   const handleDataChange = (key, yearStr, value) => {
     const year = parseInt(yearStr, 10);
-    const numValue = parseFloat(value);
+
+    // Allow empty string, numbers, dots, and commas
+    if (value !== "" && !/^[0-9.,]*$/.test(value)) return;
+    
+    // Prevent multiple dots/commas
+    const dotsAndCommas = value.match(/[.,]/g);
+    if (dotsAndCommas && dotsAndCommas.length > 1) return;
 
     setTableData((prev) => ({
       ...prev,
@@ -195,7 +201,7 @@ export default function VegzettekElegedettsege() {
         ...(prev[key] || {}),
         [year]: {
           ...(prev[key]?.[year] || {}),
-          munkaadok_elegedettsege: isNaN(numValue) ? "" : numValue,
+          munkaadok_elegedettsege: value,
         },
       },
     }));
@@ -242,7 +248,7 @@ export default function VegzettekElegedettsege() {
               szakma_id: programMap[key].szakma_id,
               tanev_kezdete: year,
               munkaadok_elegedettsege:
-                parseFloat(fields.munkaadok_elegedettsege) || 0,
+                parseFloat(String(fields.munkaadok_elegedettsege).replace(',', '.')) || 0,
             };
 
             if (fields.id) {
@@ -464,27 +470,28 @@ export default function VegzettekElegedettsege() {
                               }}
                             >
                               <TextField
-                                type="number"
+                                type="text"
                                 size="small"
                                 disabled={!selectedSchool}
                                 value={
-                                  tableData[row.key]?.[startYear]
-                                    ?.munkaadok_elegedettsege ?? ""
+                                  String(
+                                    tableData[row.key]?.[startYear]?.munkaadok_elegedettsege ?? ""
+                                  ).replace(".", ",")
                                 }
                                 onChange={(e) =>
                                   handleDataChange(
                                     row.key,
                                     startYear,
-                                    e.target.value,
+                                    e.target.value.replace(",", "."),
                                   )
                                 }
-                                inputProps={{
-                                  min: 0,
-                                  max: 100,
-                                  step: 0.1,
-                                  style: {
-                                    textAlign: "center",
-                                    padding: "4px",
+                                slotProps={{
+                                  input: {
+                                    inputMode: "decimal",
+                                    style: {
+                                      textAlign: "center",
+                                      padding: "4px",
+                                    },
                                   },
                                 }}
                                 sx={{

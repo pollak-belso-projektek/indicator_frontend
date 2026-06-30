@@ -71,6 +71,13 @@ export default function OrszagosKompetenciameres() {
 
   // Handle data changes
   const handleDataChange = (subject, formType, year, type, value) => {
+    // Allow empty string, numbers, dots, and commas
+    if (value !== "" && !/^[0-9.,]*$/.test(value)) return;
+    
+    // Prevent multiple dots/commas
+    const dotsAndCommas = value.match(/[.,]/g);
+    if (dotsAndCommas && dotsAndCommas.length > 1) return;
+
     setCompetencyData((prev) => ({
       ...prev,
       [subject]: {
@@ -220,7 +227,7 @@ export default function OrszagosKompetenciameres() {
                         <>
                           <TableCell key={`${year}-orszagos`} align="center">
                             <TextField
-                              type="number"
+                              type="text"
                               value={
                                 competencyData[subject.key][formType.key][year]
                                   .orszagos
@@ -236,9 +243,7 @@ export default function OrszagosKompetenciameres() {
                               }
                               size="small"
                               inputProps={{
-                                min: 0,
-                                max: 100,
-                                step: 0.1,
+                                inputMode: "decimal",
                                 style: { textAlign: "center" },
                               }}
                               sx={{ width: "70px" }}
@@ -247,7 +252,7 @@ export default function OrszagosKompetenciameres() {
                           </TableCell>
                           <TableCell key={`${year}-intezmenyi`} align="center">
                             <TextField
-                              type="number"
+                              type="text"
                               value={
                                 competencyData[subject.key][formType.key][year]
                                   .intezmenyi
@@ -263,9 +268,7 @@ export default function OrszagosKompetenciameres() {
                               }
                               size="small"
                               inputProps={{
-                                min: 0,
-                                max: 100,
-                                step: 0.1,
+                                inputMode: "decimal",
                                 style: { textAlign: "center", color: "red" },
                               }}
                               sx={{
