@@ -159,6 +159,27 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["User"],
     }),
+    generate2FA: build.mutation({
+      query: () => ({
+        url: `auth/2fa/generate`,
+        method: "POST",
+      }),
+    }),
+    verify2FA: build.mutation({
+      query: ({ token }) => ({
+        url: `auth/2fa/verify`,
+        method: "POST",
+        body: { token },
+      }),
+      invalidatesTags: ["User"],
+    }),
+    disable2FA: build.mutation({
+      query: () => ({
+        url: `auth/2fa/disable`,
+        method: "POST",
+      }),
+      invalidatesTags: ["User"],
+    }),
     getTanugyiAdatok: build.query({
       query: (params) => `tanugyi_adatok/${params.alapadatok_id}/${params.ev}`,
       providesTags: (result, error, params) => [
@@ -1799,6 +1820,9 @@ export const {
   useUpdateMeMutation,
   useChangeMePasswordMutation,
   useLoginMutation,
+  useGenerate2FAMutation,
+  useVerify2FAMutation,
+  useDisable2FAMutation,
   useLogoutMutation,
   useRefreshTokenMutation,
   useGetTableListQuery,
