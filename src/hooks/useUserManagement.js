@@ -15,6 +15,7 @@ import {
   useGetUsersQuery,
   useAddUserMutation,
   useUpdateUserMutation,
+  useDisable2FAForUserMutation,
 } from "../store/api/apiSlice";
 import { useSelector } from "react-redux";
 import { selectUser } from "../store/slices/authSlice";
@@ -24,7 +25,9 @@ export const useUserManagement = () => {
   const [openModify, setOpenModify] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
   const [open, setOpen] = useState(false);
+  const [openDisable2FA, setOpenDisable2FA] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUserFor2FA, setSelectedUserFor2FA] = useState(null);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [columnSizing, setColumnSizing] = useState({});
   const [density, setDensity] = useState(
@@ -49,6 +52,7 @@ export const useUserManagement = () => {
   const { data: usersData = [], isLoading, refetch } = useGetUsersQuery();
   const [addUser] = useAddUserMutation();
   const [updateUser] = useUpdateUserMutation();
+  const [disable2FAForUser, { isLoading: isDisabling2FA }] = useDisable2FAForUserMutation();
 
   // Filter users based on current user's school for Iskolai users
   const filteredUsersData = useMemo(() => {
@@ -165,6 +169,21 @@ export const useUserManagement = () => {
     },
     [userPermissions]
   );
+
+  const handleDisable2FA = useCallback(
+    (user) => {
+      if (!userPermissions.canModifyUser(user)) {
+        return {
+          error: "Nincs jogosultsága ennek a felhasználónak a módosításához!",
+        };
+      }
+      setSelectedUserFor2FA(user);
+      setOpenDisable2FA(true);
+      return { success: true };
+    },
+    [userPermissions]
+  );
+
   const handleModify = async (modifiedUser) => {
     try {
       // Check if user can modify this type of user
@@ -231,10 +250,29 @@ export const useUserManagement = () => {
       return { error: "Hiba történt a felhasználó inaktiválása során!" };
     }
   };
+
+  const handleDisable2FAConfirm = async () => {
+    try {
+      if (!selectedUserFor2FA?.id) {
+        return { error: "Felhasználó azonosító hiányzik!" };
+      }
+
+      await disable2FAForUser(selectedUserFor2FA.id).unwrap();
+      console.log(`Disabled 2FA for user: ${selectedUserFor2FA.name}`);
+      refetch();
+      setOpenDisable2FA(false);
+      return { success: true, message: "2FA sikeresen kikapcsolva!" };
+    } catch (error) {
+      console.error("Error disabling 2FA:", error);
+      return { error: "Hiba történt a 2FA kikapcsolása során!" };
+    }
+  };
+
   const handleClose = () => {
     setOpen(false);
     setOpenModify(false);
     setOpenCreate(false);
+    setOpenDisable2FA(false);
   };
 
   const handleResetColumnSizing = () => {
@@ -243,8 +281,8 @@ export const useUserManagement = () => {
   };
 
   const columns = useMemo(
-    () => createUserColumns(handleEdit, handleDeactivate, userPermissions),
-    [handleDeactivate, handleEdit, userPermissions]
+    () => createUserColumns(handleEdit, handleDeactivate, handleDisable2FA),
+    [handleDeactivate, handleEdit, handleDisable2FA]
   );
 
   const table = useReactTable({
@@ -302,5 +340,10 @@ export const useUserManagement = () => {
     handleDeactivateConfirm,
     handleClose,
     handleResetColumnSizing,
+    openDisable2FA,
+    setOpenDisable2FA,
+    selectedUserFor2FA,
+    handleDisable2FAConfirm,
+    isDisabling2FA,
   };
 };

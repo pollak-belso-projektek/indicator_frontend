@@ -1,11 +1,12 @@
 import { createColumnHelper } from "@tanstack/react-table";
 import { FiEdit2 } from "react-icons/fi";
 import { TbHandStop } from "react-icons/tb";
+import { MdKeyOff } from "react-icons/md";
 import { formatAccessLevel } from "../../utils/tableAccessUtils";
 import { Grid, Tooltip, Box, Typography, Stack, Chip, IconButton, alpha } from "@mui/material";
 const columnHelper = createColumnHelper();
 
-export const createUserColumns = (onEdit, onDelete) => [
+export const createUserColumns = (onEdit, onDelete, onDisable2FA) => [
   columnHelper.accessor("name", {
     header: "Név",
     cell: (info) => info.getValue(),
@@ -175,22 +176,38 @@ export const createUserColumns = (onEdit, onDelete) => [
     header: "Műveletek",
     cell: ({ row }) => (
       <Stack direction="row" spacing={1}>
-        <IconButton
-          size="small"
-          onClick={() => onEdit(row.original)}
-          color="primary"
-          sx={{ bgcolor: alpha("#1976d2", 0.1) }}
-        >
-          <FiEdit2 size={16} />
-        </IconButton>
-        <IconButton
-          size="small"
-          color="error"
-          onClick={() => onDelete(row.original)}
-          sx={{ bgcolor: alpha("#d32f2f", 0.1) }}
-        >
-          <TbHandStop size={16} />
-        </IconButton>
+        {row.original.isTwoFactorEnabled && (
+          <Tooltip title="2FA kikapcsolása">
+            <IconButton
+              size="small"
+              onClick={() => onDisable2FA(row.original)}
+              color="warning"
+              sx={{ bgcolor: alpha("#ed6c02", 0.1) }}
+            >
+              <MdKeyOff size={16} />
+            </IconButton>
+          </Tooltip>
+        )}
+        <Tooltip title="Szerkesztés">
+          <IconButton
+            size="small"
+            onClick={() => onEdit(row.original)}
+            color="primary"
+            sx={{ bgcolor: alpha("#1976d2", 0.1) }}
+          >
+            <FiEdit2 size={16} />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Inaktiválás">
+          <IconButton
+            size="small"
+            color="error"
+            onClick={() => onDelete(row.original)}
+            sx={{ bgcolor: alpha("#d32f2f", 0.1) }}
+          >
+            <TbHandStop size={16} />
+          </IconButton>
+        </Tooltip>
       </Stack>
     ),
     size: 120,

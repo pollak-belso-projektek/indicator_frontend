@@ -96,6 +96,13 @@ export const indicatorApi = createApi({
         body: { email },
       }),
     }),
+    submitBugReport: build.mutation({
+      query: (reportData) => ({
+        url: "bug-report",
+        method: "POST",
+        body: reportData,
+      }),
+    }),
     // User management endpoints
     getUsers: build.query({
       query: () => "users/",
@@ -146,6 +153,13 @@ export const indicatorApi = createApi({
         },
       }),
       invalidatesTags: (result, error, { id }) => [{ type: "User", id }],
+    }),
+    disable2FAForUser: build.mutation({
+      query: (id) => ({
+        url: `users/${id}/disable-2fa`,
+        method: "POST",
+      }),
+      invalidatesTags: ["User"],
     }),
     updateMe: build.mutation({
       query: (userData) => ({
@@ -1824,6 +1838,7 @@ export const {
   useUpdateUserMutation,
   useDeleteUserMutation,
   useChangeUserPasswordMutation,
+  useDisable2FAForUserMutation,
   useUpdateMeMutation,
   useChangeMePasswordMutation,
   useLoginMutation,
@@ -2016,4 +2031,6 @@ export const {
   // FormHistory hooks
   useGetFormHistoryQuery,
   useRollbackFormHistoryMutation,
+  // Bug report hook
+  useSubmitBugReportMutation,
 } = indicatorApi;

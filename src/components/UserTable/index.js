@@ -1,5 +1,5 @@
 export { UserTable } from "./UserTable";
-export { EditUserDialog, DeleteUserDialog } from "./UserDialogs";
+export { EditUserDialog, DeleteUserDialog, Disable2FADialog } from "./UserDialogs";
 export { ColumnVisibilitySelector } from "./ColumnVisibilitySelector";
 export { TableDensitySelector } from "./TableDensitySelector";
 export { TableWidthSelector } from "./TableWidthSelector";
