@@ -1,16 +1,22 @@
 import {
-  IconButton,
   Box,
-  CloseButton,
-  Flex,
-  HStack,
-  VStack,
-  Icon,
-  Text,
-  Menu,
   Drawer,
-  Image,
-} from "@chakra-ui/react";
+  Typography as Text,
+  Menu,
+  MenuItem,
+  IconButton,
+  AppBar,
+  Toolbar,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Collapse,
+  Divider,
+  Avatar,
+  Stack
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 import {
   MdPerson,
   MdMenu,
@@ -36,7 +42,7 @@ import {
 
 import { useColorModeValue } from "./ui/color-mode";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLogoutMutation, indicatorApi } from "../store/api/apiSlice";
 import {
@@ -618,15 +624,6 @@ const SidebarContent = ({ onClose, ...rest }) => {
   const tableAccess = useSelector(selectUserTableAccess);
   const userPermissions = useSelector(selectUserPermissions);
 
-  const sidebarBorderColor = useColorModeValue("gray.200", "gray.700");
-  const sidebarBg = useColorModeValue("white", "gray.50");
-  const sidebarShadow = useColorModeValue("lg", "2xl");
-  const headerBg = useColorModeValue("white", "gray.50");
-  const headerBorderColor = useColorModeValue("gray.100", "gray.200");
-  const neutralBg = useColorModeValue("gray.50", "gray.100");
-  const neutralHoverBg = useColorModeValue("gray.100", "gray.200");
-  const separatorColor = useColorModeValue("gray.200", "gray.600");
-  const footerBorderColor = useColorModeValue("gray.200", "gray.700");
 
   // Add keyboard shortcuts for navigation
   useEffect(() => {
@@ -876,47 +873,36 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
   return (
     <Box
-      transition="all 0.3s ease-in-out"
-      borderRight="1px"
-      borderRightColor={sidebarBorderColor}
-      w={{ base: "full", md: 64 }}
-      pos="fixed"
-      h="100vh"
-      bg={sidebarBg}
-      boxShadow={sidebarShadow}
-      zIndex={1000}
+      sx={{
+        transition: "all 0.3s ease-in-out",
+        borderRight: "1px solid",
+        borderColor: "divider",
+        width: { xs: "100%", md: 256 },
+        position: "fixed",
+        height: "100vh",
+        bgcolor: "background.paper",
+        boxShadow: { xs: 1, md: 3 },
+        zIndex: 1000,
+        display: "flex",
+        flexDirection: "column"
+      }}
       {...rest}
     >
-      {/* Header */}
-      <Box
-        bg={headerBg}
-        borderBottom="1px"
-        borderColor={headerBorderColor}
-      >
-        <Flex h="20" alignItems="center" mx="6" justifyContent="space-between">
-          <Link to="/dashboard" onClick={onClose}>
-            <Image
+      <Box sx={{ bgcolor: "background.paper", borderBottom: "1px solid", borderColor: "divider" }}>
+        <Box sx={{ height: 80, display: "flex", alignItems: "center", mx: 3, justifyContent: "space-between" }}>
+          <Box component={Link} to="/dashboard" onClick={onClose} sx={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
+            <img
               src="https://cms.hodmezovasarhelyi.szc.edir.hu/uploads/HSZC_logo_color_tomb_k_4b19d45dc7.png"
               alt="HSZC Logo"
-              maxW="140px"
-              h="auto"
-              objectFit="contain"
-              transition="all 0.2s ease-in-out"
-              _hover={{ transform: "scale(1.02)" }}
+              style={{ maxWidth: "140px", height: "auto", objectFit: "contain", transition: "all 0.2s ease-in-out" }}
             />
-          </Link>
-          <CloseButton
-            display={{ base: "flex", md: "none" }}
-            onClick={onClose}
-            size="lg"
-            color="gray.500"
-            _hover={{ color: "gray.700", bg: "gray.100" }}
-            borderRadius="md"
-          />
-        </Flex>
+          </Box>
+          <IconButton sx={{ display: { xs: "flex", md: "none" } }} onClick={onClose} size="small">
+            <MdClose />
+          </IconButton>
+        </Box>
 
-        {/* Search */}
-        <Box mx="4" my="4">
+        <Box sx={{ mx: 2, my: 2 }}>
           <TextField
             placeholder="Keresés név vagy szám alapján... (Ctrl+K)"
             value={itemSearch}
@@ -929,400 +915,165 @@ const SidebarContent = ({ onClose, ...rest }) => {
                 borderRadius: "12px",
                 transition: "all 0.2s ease-in-out",
                 backgroundColor: "rgba(0,0,0,0.02)",
-                "&:hover": {
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                  backgroundColor: "rgba(0,0,0,0.03)",
-                },
-                "&.Mui-focused": {
-                  boxShadow: "0 2px 12px rgba(66, 153, 225, 0.3)",
-                  backgroundColor: "white",
-                },
+                "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.1)", backgroundColor: "rgba(0,0,0,0.03)" },
+                "&.Mui-focused": { boxShadow: "0 2px 12px rgba(66, 153, 225, 0.3)", backgroundColor: "white" },
               },
-              "& .MuiOutlinedInput-input": {
-                fontSize: "14px",
-              },
+              "& .MuiOutlinedInput-input": { fontSize: "14px" },
             }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <MdSearch
-                    style={{ color: itemSearch ? "#4299E1" : "#9CA3AF" }}
-                  />
+                  <MdSearch style={{ color: itemSearch ? "#4299E1" : "#9CA3AF" }} />
                 </InputAdornment>
               ),
-              endAdornment:
-                itemSearch !== "" ? (
-                  <InputAdornment position="end">
-                    <MuiIconButton
-                      aria-label="Keresés törlése"
-                      onClick={() => {
-                        setItemSearch("");
-                        // Refocus the search input after clearing
-                        setTimeout(() => {
-                          const searchInput = document.querySelector(
-                            'input[placeholder*="Keresés"]',
-                          );
-                          if (searchInput) searchInput.focus();
-                        }, 100);
-                      }}
-                      edge="end"
-                      size="small"
-                      sx={{
-                        color: "gray.500",
-                        transition: "all 0.2s ease-in-out",
-                        "&:hover": {
-                          color: "red.500",
-                          bg: "red.50",
-                          transform: "scale(1.1)",
-                        },
-                      }}
-                    >
-                      <MdClose />
-                    </MuiIconButton>
-                  </InputAdornment>
-                ) : null,
+              endAdornment: itemSearch !== "" ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="Keresés törlése"
+                    onClick={() => {
+                      setItemSearch("");
+                      setTimeout(() => {
+                        const searchInput = document.querySelector('input[placeholder*="Keresés"]');
+                        if (searchInput) searchInput.focus();
+                      }, 100);
+                    }}
+                    edge="end"
+                    size="small"
+                    sx={{ color: "gray.500", transition: "all 0.2s ease-in-out", "&:hover": { color: "error.main", bgcolor: "error.light", transform: "scale(1.1)" } }}
+                  >
+                    <MdClose />
+                  </IconButton>
+                </InputAdornment>
+              ) : null,
             }}
           />
-          {/* Search Results Count */}
           {itemSearch && (
-            <Text fontSize="xs" color="gray.500" mt="2" ml="1">
-              {Object.keys(filteredCategories).length === 0 &&
-                filteredScrollableItems.length === 0
+            <Text variant="caption" sx={{ color: "text.secondary", mt: 1, ml: 1, display: "block" }}>
+              {Object.keys(filteredCategories).length === 0 && filteredScrollableItems.length === 0
                 ? "Nincs találat"
                 : `${filteredScrollableItems.length} találat`}
             </Text>
           )}
         </Box>
 
-        {/* Recent Pages Section
-        <RecentPages
-          recentPages={recentPages}
-          onRemovePage={removeRecentPage}
-          onClearAll={clearRecentPages}
-          onClose={onClose}
-        />
-*/}
-        {/* Fixed Navigation Items - Collapsible */}
-        <Box mb="2">
-          {/* Fixed Category Header */}
-          <Flex
-            align="center"
-            p="3"
-            mx="4"
-            borderRadius="xl"
-            cursor="pointer"
-            role="button"
-            tabIndex={0}
-            transition="all 0.2s ease-in-out"
-            bg={
-              isFixedGeneralActive()
-                ? "blue.50"
-                : neutralBg
-            }
-            _hover={{
-              bg: isFixedGeneralActive()
-                ? "blue.100"
-                : neutralHoverBg,
-              transform: "translateY(-1px)",
-              boxShadow: "sm",
-            }}
-            _focus={{
-              boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.6)",
-              outline: "none",
-            }}
+        <Box sx={{ mb: 1 }}>
+          <ListItemButton
             onClick={() => toggleCategory("FIXED_GENERAL")}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                toggleCategory("FIXED_GENERAL");
-              }
+            sx={{
+              mx: 2, p: 1.5, borderRadius: 3, transition: "all 0.2s ease-in-out",
+              bgcolor: isFixedGeneralActive() ? "primary.50" : "grey.50",
+              "&:hover": { bgcolor: isFixedGeneralActive() ? "primary.100" : "grey.100", transform: "translateY(-1px)", boxShadow: 1 }
             }}
-            aria-expanded={expandedCategories["FIXED_GENERAL"]}
-            aria-label="Toggle general navigation section"
           >
-            <Icon
-              as={MdHome}
-              mr="3"
-              fontSize="18"
-              color={isFixedGeneralActive() ? "blue.600" : "gray.600"}
+            <ListItemIcon sx={{ minWidth: 40, color: isFixedGeneralActive() ? "primary.main" : "grey.600" }}>
+              <MdHome size={20} />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Általános" 
+              primaryTypographyProps={{ fontSize: "0.875rem", fontWeight: isFixedGeneralActive() ? 700 : 600, color: isFixedGeneralActive() ? "primary.main" : "text.primary" }} 
             />
-            <Text
-              fontSize="sm"
-              fontWeight={isFixedGeneralActive() ? "bold" : "semibold"}
-              flex="1"
-              color={isFixedGeneralActive() ? "blue.700" : "gray.700"}
-            >
-              Általános
-            </Text>
-            <Icon
-              as={FiChevronDown}
-              fontSize="14"
-              transform={
-                expandedCategories["FIXED_GENERAL"]
-                  ? "rotate(0deg)"
-                  : "rotate(-90deg)"
-              }
-              transition="transform 0.2s ease-in-out"
-              color={isFixedGeneralActive() ? "blue.600" : "gray.500"}
-            />
-          </Flex>
+            <FiChevronDown style={{ transform: expandedCategories["FIXED_GENERAL"] ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 0.2s", color: isFixedGeneralActive() ? "#1976d2" : "#9e9e9e" }} />
+          </ListItemButton>
 
-          {/* Fixed Category Items */}
-          {expandedCategories["FIXED_GENERAL"] && (
-            <Box
-              overflow="hidden"
-              transition="all 0.3s ease-in-out"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-            >
-              <VStack align="stretch" spacing="1" mt="2">
-                {fixedItems.map((link, index) => (
-                  <Box
-                    key={link.name}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <NavItem
-                      icon={link.icon}
-                      as={Link}
-                      to={link.link}
-                      link={link.link}
-                      onClick={() => onClose()}
-                      p="3"
-                      pl="6"
-                      fontSize="sm"
-                    >
-                      {getDisplayName(link)}
-                    </NavItem>
-                  </Box>
-                ))}
-              </VStack>
-            </Box>
-          )}
+          <Collapse in={expandedCategories["FIXED_GENERAL"]} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding sx={{ mt: 0.5 }}>
+              {fixedItems.map((link) => (
+                <NavItem key={link.name} icon={link.icon} to={link.link} link={link.link} onClick={() => onClose()}>
+                  {getDisplayName(link)}
+                </NavItem>
+              ))}
+            </List>
+          </Collapse>
         </Box>
 
-        {/* Separator if there are scrollable items */}
         {filteredScrollableItems.length > 0 && (
-          <Box mx="4" my="2">
-            <Box
-              height="1px"
-              bg={separatorColor}
-              width="100%"
-            />
+          <Box sx={{ mx: 2, my: 1 }}>
+            <Divider />
           </Box>
         )}
       </Box>
 
-      {/* Scrollable Navigation Items - Organized by Categories */}
       <Box
-        flex="1"
-        overflowY="auto"
-        overflowX="hidden"
-        maxHeight={
-          expandedCategories["FIXED_GENERAL"]
-            ? "calc(100% - 600px)"
-            : "calc(100% - 240px)"
-        }
         sx={{
+          flex: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
           scrollBehavior: "smooth",
-          "&::-webkit-scrollbar": {
-            width: "4px",
-          },
-          "&::-webkit-scrollbar-track": {
-            background: "transparent",
-          },
-          "&::-webkit-scrollbar-thumb": {
-            background: "rgba(0,0,0,0.2)",
-            borderRadius: "20px",
-            "&:hover": {
-              background: "rgba(0,0,0,0.3)",
-            },
-          },
+          pb: 2,
+          pt: 1,
+          "&::-webkit-scrollbar": { width: "6px" },
+          "&::-webkit-scrollbar-track": { background: "transparent" },
+          "&::-webkit-scrollbar-thumb": { background: "rgba(0,0,0,0.15)", borderRadius: "10px", "&:hover": { background: "rgba(0,0,0,0.25)" } },
         }}
-        pb="4"
-        py="4"
       >
-        {/* Show categorized navigation */}
         {!itemSearch
-          ? // When not searching, show categories
-          Object.entries(filteredCategories).map(
-            ([categoryKey, category]) => (
-              <Box key={categoryKey} mb="2">
-                {/* Category Header */}
-                <Flex
-                  align="center"
-                  p="3"
-                  mx="4"
-                  borderRadius="xl"
-                  cursor="pointer"
-                  role="button"
-                  tabIndex={0}
-                  transition="all 0.2s ease-in-out"
-                  bg={
-                    isCategoryActive(categoryKey)
-                      ? "blue.50"
-                      : neutralBg
-                  }
-                  _hover={{
-                    bg: isCategoryActive(categoryKey)
-                      ? "blue.100"
-                      : neutralHoverBg,
-                    transform: "translateY(-1px)",
-                    boxShadow: "sm",
-                  }}
-                  _focus={{
-                    boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.6)",
-                    outline: "none",
-                  }}
+          ? Object.entries(filteredCategories).map(([categoryKey, category]) => (
+              <Box key={categoryKey} sx={{ mb: 1 }}>
+                <ListItemButton
                   onClick={() => toggleCategory(categoryKey)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      toggleCategory(categoryKey);
-                    }
+                  sx={{
+                    mx: 2, p: 1.5, borderRadius: 3, transition: "all 0.2s ease-in-out",
+                    bgcolor: isCategoryActive(categoryKey) ? "primary.50" : "transparent",
+                    "&:hover": { bgcolor: isCategoryActive(categoryKey) ? "primary.100" : "grey.50" }
                   }}
-                  aria-expanded={expandedCategories[categoryKey]}
-                  aria-label={`Toggle ${category.name} section`}
                 >
-                  <Icon
-                    as={category.icon}
-                    mr="3"
-                    fontSize="18"
-                    color={
-                      isCategoryActive(categoryKey) ? "blue.600" : "gray.600"
-                    }
+                  <ListItemIcon sx={{ minWidth: 40, color: isCategoryActive(categoryKey) ? "primary.main" : "grey.600" }}>
+                    {React.createElement(category.icon, { size: 20 })}
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={category.name} 
+                    primaryTypographyProps={{ fontSize: "0.875rem", fontWeight: isCategoryActive(categoryKey) ? 700 : 600, color: isCategoryActive(categoryKey) ? "primary.main" : "text.primary" }} 
                   />
-                  <Text
-                    fontSize="sm"
-                    fontWeight={
-                      isCategoryActive(categoryKey) ? "bold" : "semibold"
-                    }
-                    flex="1"
-                    color={
-                      isCategoryActive(categoryKey) ? "blue.700" : "gray.700"
-                    }
-                  >
-                    {category.name}
-                  </Text>
-                  <Icon
-                    as={FiChevronDown}
-                    fontSize="14"
-                    transform={
-                      expandedCategories[categoryKey]
-                        ? "rotate(180deg)"
-                        : "rotate(0deg)"
-                    }
-                    transition="transform 0.2s ease-in-out"
-                    color={
-                      isCategoryActive(categoryKey) ? "blue.600" : "gray.500"
-                    }
-                  />
-                </Flex>
+                  <FiChevronDown style={{ transform: expandedCategories[categoryKey] ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 0.2s", color: isCategoryActive(categoryKey) ? "#1976d2" : "#9e9e9e" }} />
+                </ListItemButton>
 
-                {/* Category Items */}
-                {expandedCategories[categoryKey] && (
-                  <Box
-                    overflow="hidden"
-                    transition="all 0.3s ease-in-out"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                  >
-                    <VStack align="stretch" spacing="1" mt="2">
-                      {category.items.map((link, index) => (
-                        <Box
-                          key={link.name}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                        >
-                          <NavItem
-                            icon={link.icon}
-                            as={Link}
-                            to={link.link}
-                            link={link.link}
-                            onClick={() => onClose()}
-                            fontSize="sm"
-                            p="3"
-                            pl="6"
-                          >
-                            {getDisplayName(link)}
-                          </NavItem>
-                        </Box>
-                      ))}
-                    </VStack>
-                  </Box>
-                )}
+                <Collapse in={expandedCategories[categoryKey]} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding sx={{ mt: 0.5 }}>
+                    {category.items.map((link) => (
+                      <NavItem key={link.name} icon={link.icon} to={link.link} link={link.link} onClick={() => onClose()}>
+                        {getDisplayName(link)}
+                      </NavItem>
+                    ))}
+                  </List>
+                </Collapse>
               </Box>
-            ),
-          )
-          : // When searching, show flat list
-          filteredScrollableItems
-            .sort((a, b) => {
-              const searchValue = itemSearch.trim();
-              const searchClean = searchValue.replace(/\.$/, ""); // Remove trailing dot
+            ))
+          : filteredScrollableItems
+              .sort((a, b) => {
+                const searchValue = itemSearch.trim();
+                const searchClean = searchValue.replace(/\.$/, "");
+                if (searchClean && !isNaN(searchClean)) {
+                  const aNumber = getPageNumber(a.link);
+                  const bNumber = getPageNumber(b.link);
+                  const searchNum = parseInt(searchClean);
+                  if (aNumber === searchNum && bNumber !== searchNum) return -1;
+                  if (bNumber === searchNum && aNumber !== searchNum) return 1;
+                  if (aNumber && bNumber) return aNumber - bNumber;
+                  if (aNumber && !bNumber) return -1;
+                  if (!aNumber && bNumber) return 1;
+                }
+                return a.name.localeCompare(b.name);
+              })
+              .map((link) => (
+                <NavItem key={link.name} icon={link.icon} to={link.link} link={link.link} onClick={() => onClose()}>
+                  {getDisplayName(link)}
+                </NavItem>
+              ))}
 
-              // If searching by number, prioritize exact number matches and sort numerically
-              if (searchClean && !isNaN(searchClean)) {
-                const aNumber = getPageNumber(a.link);
-                const bNumber = getPageNumber(b.link);
-                const searchNum = parseInt(searchClean);
-
-                // Exact matches first
-                if (aNumber === searchNum && bNumber !== searchNum) return -1;
-                if (bNumber === searchNum && aNumber !== searchNum) return 1;
-
-                // Then sort numerically if both have numbers
-                if (aNumber && bNumber) return aNumber - bNumber;
-
-                // Items with numbers come before items without numbers
-                if (aNumber && !bNumber) return -1;
-                if (!aNumber && bNumber) return 1;
-              }
-
-              // Default alphabetical sort
-              return a.name.localeCompare(b.name);
-            })
-            .map((link) => (
-              <NavItem
-                key={link.name}
-                icon={link.icon}
-                as={Link}
-                to={link.link}
-                link={link.link}
-                onClick={() => onClose()}
-              >
-                {getDisplayName(link)}
-              </NavItem>
-            ))}
-        {/* Show message if no items found in search */}
-        {itemSearch &&
-          Object.keys(filteredCategories).length === 0 &&
-          filteredScrollableItems.length === 0 && (
-            <Box mx="4" my="2">
-              <Text fontSize="sm" color="gray.500">
-                Nincs találat a keresésre
-              </Text>
-            </Box>
-          )}
-        {/* Show message if user has no table access */}
+        {itemSearch && Object.keys(filteredCategories).length === 0 && filteredScrollableItems.length === 0 && (
+          <Box sx={{ mx: 2, my: 1 }}>
+            <Text variant="body2" color="text.secondary">Nincs találat a keresésre</Text>
+          </Box>
+        )}
         {!itemSearch && Object.keys(filteredCategories).length === 0 && (
-          <Box mx="4" my="2">
-            <Text fontSize="sm" color="gray.500">
-              Nincs további elérhető menü a jogosultságai alapján
-            </Text>
+          <Box sx={{ mx: 2, my: 1 }}>
+            <Text variant="body2" color="text.secondary">Nincs további elérhető menü a jogosultságai alapján</Text>
           </Box>
         )}
       </Box>
 
-      {/* Version Display */}
-      <Box
-        py={2}
-        borderTop="1px solid"
-        borderColor={footerBorderColor}
-        textAlign="center"
-      >
-        <Text fontSize="xs" color="gray.500">
+      <Box sx={{ py: 2, borderTop: "1px solid", borderColor: "divider", textAlign: "center" }}>
+        <Text variant="caption" color="text.secondary">
           v{import.meta.env.PACKAGE_VERSION}
         </Text>
       </Box>
@@ -1332,73 +1083,63 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
 const NavItem = ({ icon, children, onClick, ...rest }) => {
   const location = useLocation();
-  // Extract the 'to' prop from rest to check if it's active
-  const { to, ...otherProps } = rest;
-  const isActive = to && location.pathname === to;
+  const { to, link, ...otherProps } = rest;
+  const targetLink = to || link;
+  const isActive = targetLink && location.pathname === targetLink;
 
-  // Handle both the navigation and onClick (for mobile closing)
   const handleClick = (e) => {
     if (onClick) onClick(e);
   };
 
-  // Handle keyboard navigation
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      handleClick(e);
-    }
-  };
+  const IconComponent = icon;
 
   return (
-    <Flex
-      align="center"
-      p="3"
-      mx="4"
-      borderRadius="xl"
-      role="button"
-      tabIndex={0}
-      cursor="pointer"
-      style={{ textDecoration: "none" }}
-      transition="all 0.2s ease-in-out"
-      _focus={{
-        boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.6)",
-        outline: "none",
-      }}
-      _hover={{
-        bg: isActive ? "blue.600" : "blue.50",
-        color: isActive ? "white" : "blue.700",
-        transform: "translateX(4px)",
-        boxShadow: "md",
-      }}
-      bg={isActive ? "blue.500" : "transparent"}
-      color={isActive ? "white" : "gray.700"}
+    <ListItemButton
+      component={Link}
+      to={targetLink}
       onClick={handleClick}
-      onKeyDown={handleKeyDown}
-      to={to}
-      aria-label={`Navigate to ${children}`}
+      selected={isActive}
+      sx={{
+        mx: 2,
+        borderRadius: 2,
+        mb: 0.5,
+        p: 1.5,
+        transition: "all 0.2s ease-in-out",
+        ...(isActive && {
+          bgcolor: "primary.50",
+          borderLeft: "4px solid",
+          borderColor: "primary.main",
+          color: "primary.main",
+          "&:hover": {
+            bgcolor: "primary.100",
+          }
+        }),
+        ...(!isActive && {
+          color: "text.secondary",
+          "&:hover": {
+            bgcolor: "grey.50",
+            transform: "translateX(4px)",
+          }
+        })
+      }}
       {...otherProps}
     >
-      {icon && (
-        <Icon
-          mr="3"
-          fontSize="18"
-          flexShrink={0}
-          _groupHover={{
-            color: isActive ? "white" : "blue.600",
-          }}
-          color={isActive ? "white" : "gray.500"}
-          as={icon}
-        />
+      {IconComponent && (
+        <ListItemIcon sx={{ 
+          minWidth: 40,
+          color: isActive ? "primary.main" : "grey.500"
+        }}>
+          <IconComponent size={20} />
+        </ListItemIcon>
       )}
-      <Text
-        fontSize="sm"
-        fontWeight={isActive ? "semibold" : "medium"}
-        noOfLines={1}
-        flex="1"
-      >
-        {children}
-      </Text>
-    </Flex>
+      <ListItemText 
+        primary={children} 
+        primaryTypographyProps={{
+          fontSize: "0.875rem",
+          fontWeight: isActive ? 600 : 500,
+        }}
+      />
+    </ListItemButton>
   );
 };
 
@@ -1410,71 +1151,47 @@ const MobileNav = ({ onOpen, ...rest }) => {
   const userPermissions = useSelector(selectUserPermissions);
   const [logoutMutation] = useLogoutMutation();
 
-  // Initialize recent pages hook for mobile nav
-  useRecentPages(NavigationCategories);
-  const mobileNavBg = useColorModeValue("white", "gray.50");
-  const mobileNavBorderColor = useColorModeValue("gray.200", "gray.300");
-  const mobileNavShadow = useColorModeValue("sm", "md");
-  const menuContentBg = useColorModeValue("white", "gray.900");
-  const menuBorderColor = useColorModeValue("gray.200", "gray.700");
-  const menuHoverBg = useColorModeValue("gray.50", "gray.800");
-  // Emergency logout handler (bypasses API call)
-  const handleEmergencyLogout = useCallback(() => {
-    console.log("Emergency logout triggered - bypassing API call");
+  const [anchorEl, setAnchorEl] = useState(null);
+  const openMenu = Boolean(anchorEl);
 
-    // Show immediate toast
+  useRecentPages(NavigationCategories);
+
+  const handleEmergencyLogout = useCallback(() => {
     toaster.create({
       title: "Azonnali kijelentkezés",
       description: "Helyi kijelentkezést hajt végre API hívás nélkül.",
       status: "info",
       duration: 2000,
     });
-
-    // Clear all RTK Query cache data
     dispatch(indicatorApi.util.resetApiState());
-    // Clear auth state
     dispatch(logout());
-    // Navigate to login immediately
     navigate("/login");
   }, [dispatch, navigate]);
 
-  // Add keyboard shortcut for emergency logout (Ctrl+Shift+L)
   useEffect(() => {
     const handleKeyPress = (event) => {
       if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "l") {
         event.preventDefault();
-        console.log("Emergency logout shortcut activated");
         handleEmergencyLogout();
       }
     };
-
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [handleEmergencyLogout]);
 
   const handleLogout = async () => {
-    // Show loading toast
     const loadingToast = toaster.create({
       title: "Kijelentkezés...",
       description: "Kérjük várjon, amíg a kijelentkezés folyamata befejeződik.",
       status: "loading",
-      duration: null, // Don't auto-close
+      duration: null,
     });
 
     try {
-      console.log("Starting logout process...");
-
-      // Add a timeout for the logout API call - shorter timeout for logout
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Logout request timed out")), 3000),
       );
-
-      // Try to call the logout API with timeout
       await Promise.race([logoutMutation().unwrap(), timeoutPromise]);
-
-      console.log("Server logout successful");
-
-      // Update loading toast to success
       toaster.update(loadingToast, {
         title: "Sikeres kijelentkezés",
         description: "A szerver kijelentkeztette Önt.",
@@ -1482,262 +1199,111 @@ const MobileNav = ({ onOpen, ...rest }) => {
         duration: 2000,
       });
     } catch (error) {
-      console.error("Logout API error (proceeding with local logout):", error);
-
-      // Update loading toast to warning
       toaster.update(loadingToast, {
         title: "Helyi kijelentkezés",
-        description:
-          "Szerver kapcsolat megszakadt, de a helyi kijelentkezés megtörtént.",
+        description: "Szerver kapcsolat megszakadt, de a helyi kijelentkezés megtörtént.",
         status: "warning",
         duration: 3000,
       });
-
-      // Check if it's a timeout or connection error
-      if (
-        error.message?.includes("timeout") ||
-        error.status === "FETCH_ERROR"
-      ) {
-        console.log("Network issue detected - logging out locally");
-      }
-
-      // Even if API logout fails, we still want to log out locally
-      // This is important for security - never leave user "stuck" logged in
     } finally {
-      // Always perform local logout regardless of API response
-      console.log("Performing local logout...");
-
-      // Clear all RTK Query cache data
       dispatch(indicatorApi.util.resetApiState());
-
-      // Clear auth state
       dispatch(logout());
-
-      // Navigate to login
       setTimeout(() => {
         navigate("/login");
-      }, 1000); // Small delay to show the toast
+      }, 1000);
     }
   };
 
   return (
-    <Flex
-      ml={{ base: 0, md: 64 }}
-      px={{ base: 4, md: 6 }}
-      height="20"
-      alignItems="center"
-      bg={mobileNavBg}
-      borderBottomWidth="1px"
-      borderBottomColor={mobileNavBorderColor}
-      justifyContent={{ base: "space-between", md: "flex-end" }}
-      boxShadow={mobileNavShadow}
-      zIndex={999}
+    <AppBar 
+      position="static" 
+      color="default" 
+      elevation={0}
+      sx={{ 
+        bgcolor: 'white',
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+        ml: { md: "256px" },
+        width: { md: "calc(100% - 256px)" },
+      }}
       {...rest}
     >
-      <Box position="relative">
+      <Toolbar>
         <IconButton
-          display={{ base: "flex", md: "none" }}
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
           onClick={onOpen}
-          variant="outline"
-          aria-label="Open navigation menu"
-          size="lg"
-          borderRadius="xl"
-          transition="all 0.2s ease-in-out"
-          _hover={{
-            bg: "blue.50",
-            borderColor: "blue.200",
-            transform: "scale(1.05)",
-          }}
-          _active={{
-            transform: "scale(0.95)",
-          }}
+          sx={{ mr: 2, display: { md: 'none' } }}
         >
-          <MdMenu size={20} />
+          <MenuIcon />
         </IconButton>
 
-        {/* Recent pages indicator for mobile
-        {recentPages && recentPages.length > 0 && (
-          <Box
-            position="absolute"
-            top="-1"
-            right="-1"
-            w="5"
-            h="5"
-            bg="blue.500"
-            borderRadius="full"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            fontSize="xs"
-            color="white"
-            fontWeight="bold"
-            border="2px solid white"
-          >
-            {recentPages.length}
-          </Box>
-        )}*/}
-      </Box>
-
-      <Box flex="1" flexGrow={1} justifyContent="center">
-        <SchoolSelector />
-      </Box>
-
-      <HStack spacing={{ base: "0", md: "6" }}>
-        {/* Recent Pages Dropdown - Desktop Only
-
-        <Box display={{ base: "none", md: "block" }}>
-          <RecentPagesDropdown
-            recentPages={recentPages}
-            onRemovePage={removeRecentPage}
-            onClearAll={clearRecentPages}
-          />
+        <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+          <SchoolSelector />
         </Box>
-*/}
 
-        <Flex alignItems={"center"} gap={3}>
+        <Stack direction="row" spacing={2} alignItems="center">
           <Tooltip title="Változások naplója">
-            <Link to="/changelog">
-              <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                w="8"
-                h="8"
-                borderRadius="full"
-                bg="blue.100"
-                color="blue.600"
-                cursor="pointer"
-                transition="all 0.2s ease-in-out"
-                _hover={{
-                  bg: "blue.200",
-                  transform: "scale(1.1)",
-                }}
-              >
-                <MdHistory size={18} />
-              </Box>
-            </Link>
+            <IconButton component={Link} to="/changelog" sx={{ bgcolor: 'primary.50', color: 'primary.main', '&:hover': { bgcolor: 'primary.100' } }}>
+              <MdHistory size={20} />
+            </IconButton>
           </Tooltip>
           <Tooltip title="Az oldal fejlesztés alatt áll.">
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              w="8"
-              h="8"
-              borderRadius="full"
-              bg="orange.100"
-              color="orange.600"
-              cursor="pointer"
-              transition="all 0.2s ease-in-out"
-              _hover={{
-                bg: "orange.200",
-                transform: "scale(1.1)",
-              }}
-            >
-              <MdInfo size={18} />
-            </Box>
+            <IconButton sx={{ bgcolor: 'warning.50', color: 'warning.main', '&:hover': { bgcolor: 'warning.100' } }}>
+              <MdInfo size={20} />
+            </IconButton>
           </Tooltip>
-          <Menu.Root>
-            <Menu.Trigger
-              py={2}
-              px={3}
-              borderRadius="xl"
-              transition="all 0.2s ease-in-out"
-              _focus={{ boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.6)" }}
-              _hover={{ bg: "gray.50" }}
-            >
-              {" "}
-              <HStack>
-                <VStack
-                  display={{ base: "none", md: "flex" }}
-                  alignItems="center"
-                  spacing="1px"
-                  ml="2"
-                  fontWeight={600}
-                >
-                  {" "}
-                  <Text fontSize="sm">
-                    {user?.name || user?.email || "User"}
-                  </Text>
-                  <UserRoleBadge
-                    role={userRole}
-                    permissions={userPermissions}
-                  />
-                </VStack>
-                <Box display={{ base: "none", md: "flex" }}>
-                  <FiChevronDown />
-                </Box>
-              </HStack>
-            </Menu.Trigger>{" "}
-            <Menu.Positioner>
-              <Menu.Content
-                bg={menuContentBg}
-                borderColor={menuBorderColor}
-                _hover={{
-                  bg: menuHoverBg,
-                  cursor: "pointer",
-                }}
-              >
-                <Menu.Item
-                  _hover={{
-                    bg: menuHoverBg,
-                    cursor: "pointer",
-                  }}
-                  onClick={() => navigate("/profile")}
-                >
-                  Profil
-                </Menu.Item>
-                <Menu.Item
-                  _hover={{
-                    bg: menuHoverBg,
-                    cursor: "pointer",
-                  }}
-                  onClick={handleLogout}
-                >
-                  Kijelentkezés
-                </Menu.Item>
-              </Menu.Content>
-            </Menu.Positioner>
-          </Menu.Root>
-        </Flex>
-      </HStack>
-    </Flex>
+
+          <Box onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center', p: 0.5, borderRadius: 2, '&:hover': { bgcolor: 'grey.50' } }}>
+            <Stack direction="column" sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, alignItems: 'flex-end' }}>
+              <Text variant="body2" sx={{ fontWeight: 600 }}>{user?.name || user?.email || "User"}</Text>
+              <UserRoleBadge role={userRole} permissions={userPermissions} />
+            </Stack>
+            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
+              <MdPerson size={20} />
+            </Avatar>
+            <FiChevronDown style={{ marginLeft: '4px' }} />
+          </Box>
+          <Menu
+            anchorEl={anchorEl}
+            open={openMenu}
+            onClose={() => setAnchorEl(null)}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          >
+            <MenuItem onClick={() => { setAnchorEl(null); navigate("/profile"); }}>Profil</MenuItem>
+            <MenuItem onClick={() => { setAnchorEl(null); handleLogout(); }}>Kijelentkezés</MenuItem>
+          </Menu>
+        </Stack>
+      </Toolbar>
+    </AppBar>
   );
 };
 
 export default function Navigation({ children }) {
   const [isOpen, setIsOpen] = useState(false);
-  const appBackground = useColorModeValue("gray.100", "gray.900");
+  const appBackground = "#F3F4F6"; // MUI equivalent of gray.100
 
   return (
     <>
-      {/* Alias Mode Banner - Shows when in alias mode */}
       <AliasModeBanner />
-      <Box minH="100vh" bg={appBackground}>
-        <SidebarContent
-          onClose={() => setIsOpen(false)}
-          display={{ base: "none", md: "block" }}
-          bg="white"
-        />
-        <Drawer.Root
+      <Box sx={{ minHeight: "100vh", bgcolor: appBackground }}>
+        <Box sx={{ display: { xs: "none", md: "block" }, bgcolor: "white" }}>
+          <SidebarContent onClose={() => setIsOpen(false)} />
+        </Box>
+        <Drawer
+          anchor="left"
           open={isOpen}
-          onOpenChange={(open) => setIsOpen(open)}
-          placement={"left"}
-          restoreFocus={false}
-          size={"full"}
+          onClose={() => setIsOpen(false)}
+          PaperProps={{
+            sx: { width: { xs: "100%", sm: 300 } }
+          }}
         >
-          <Drawer.Positioner>
-            <Drawer.Content>
-              <Drawer.CloseTrigger />
-              <Drawer.Body>
-                <SidebarContent onClose={() => setIsOpen(false)} />
-              </Drawer.Body>
-            </Drawer.Content>
-          </Drawer.Positioner>
-        </Drawer.Root>
-        {/* mobilenav */}
+          <SidebarContent onClose={() => setIsOpen(false)} />
+        </Drawer>
         <MobileNav onOpen={() => setIsOpen(true)} />
-        <Box ml={{ base: 0, md: 64 }} p="4">
+        <Box sx={{ ml: { xs: 0, md: "256px" }, p: 3 }}>
           {children}
         </Box>
       </Box>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { FormControl, OutlinedInput, MenuItem, Select } from "@mui/material";
-import { HStack, Text } from "@chakra-ui/react";
+import { Box, Typography, MenuItem, Select, InputBase, alpha, styled } from "@mui/material";
+import { MdSchool } from "react-icons/md";
 import { useGetAllAlapadatokQuery, indicatorApi } from "../store/api/apiSlice";
 import {
   selectUser,
@@ -9,6 +9,36 @@ import {
   selectSelectedSchool,
   setSelectedSchool,
 } from "../store/slices/authSlice";
+
+const StyledInput = styled(InputBase)(({ theme }) => ({
+  "& .MuiInputBase-input": {
+    borderRadius: 12,
+    backgroundColor: alpha(theme.palette.primary.main, 0.04),
+    border: "1px solid",
+    borderColor: alpha(theme.palette.primary.main, 0.1),
+    fontSize: 14,
+    padding: "8px 36px 8px 16px",
+    display: "flex",
+    alignItems: "center",
+    transition: theme.transitions.create(["border-color", "box-shadow", "background-color"]),
+    fontWeight: 600,
+    color: theme.palette.text.primary,
+    "&:focus": {
+      borderRadius: 12,
+      borderColor: theme.palette.primary.main,
+      backgroundColor: alpha(theme.palette.primary.main, 0.08),
+      boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.15)}`,
+    },
+    "&:hover": {
+      backgroundColor: alpha(theme.palette.primary.main, 0.08),
+      borderColor: alpha(theme.palette.primary.main, 0.2),
+    },
+  },
+  "& .MuiSelect-icon": {
+    color: theme.palette.primary.main,
+    right: 12,
+  },
+}));
 
 const SchoolSelector = () => {
   const dispatch = useDispatch();
@@ -51,70 +81,35 @@ const SchoolSelector = () => {
       isInitializing.current = false;
       return;
     }
-    console.log(
-      "User changed in SchoolSelector, resetting auto-selection flag"
-    );
     hasAutoSelectedSchool.current = false;
   }, [user?.id]);
 
   // Auto-select user's assigned school for Iskolai users - ONE TIME ONLY
   useEffect(() => {
-    // Early return conditions to prevent infinite loops
-    if (hasAutoSelectedSchool.current) {
-      return;
-    }
-
+    if (hasAutoSelectedSchool.current) return;
     if (canSelectSchool) {
-      // User can select schools, no auto-selection needed
       hasAutoSelectedSchool.current = true;
       return;
     }
-
     if (!userSchoolId) {
-      // User has no assigned school
       hasAutoSelectedSchool.current = true;
       return;
     }
+    if (!schoolsData || schoolsData.length === 0) return;
 
-    if (!schoolsData || schoolsData.length === 0) {
-      // Schools data not available yet
-      return;
-    }
-
-    console.log(
-      "SchoolSelector: Attempting auto-selection for Iskolai user..."
-    );
-
-    // Check if correct school is already selected
     if (selectedSchool?.id === userSchoolId) {
-      console.log(
-        "SchoolSelector: Correct school already selected, marking complete"
-      );
       hasAutoSelectedSchool.current = true;
       return;
     }
 
-    // Find and select the user's assigned school
     const assignedSchool = schoolsData.find(
       (school) => school.id === userSchoolId
     );
 
-    console.log(
-      "SchoolSelector: User's assigned school ID:",
-      userSchoolId,
-      "Found in data:",
-      assignedSchool
-    );
-
     if (assignedSchool) {
-      console.log(
-        "SchoolSelector: Auto-selecting school:",
-        assignedSchool.iskola_neve
-      );
       hasAutoSelectedSchool.current = true;
       dispatch(setSelectedSchool(assignedSchool) || null);
     } else {
-      console.warn("SchoolSelector: User's assigned school not found in data");
       hasAutoSelectedSchool.current = true;
     }
   }, [
@@ -127,77 +122,95 @@ const SchoolSelector = () => {
 
   const handleChange = (event) => {
     // Only allow school selection for Superadmin and HSZC users
-    if (!canSelectSchool) {
-      console.warn("User does not have permission to select schools");
-      return;
-    }
+    if (!canSelectSchool) return;
 
     const selectedValue = event.target.value;
     const selectedSchoolData = schoolsData?.find(
       (school) => school.id.toString() === selectedValue
     );
 
-    // Debug logging
-    console.log("SchoolSelector: School selection change:");
-    console.log("- Selected value:", selectedValue);
-    console.log("- Available schools:", schools.items);
-    console.log("- Found school data:", selectedSchoolData);
-
     // Clear all cached API data when switching schools to prevent stale data
     if (selectedSchoolData?.id !== selectedSchool?.id) {
-      console.log("SchoolSelector: Clearing API cache due to school change");
       dispatch(indicatorApi.util.resetApiState());
     }
 
     // Dispatch the selected school to Redux store
     dispatch(setSelectedSchool(selectedSchoolData || null));
-
-    console.log("SchoolSelector: Selected school:", selectedSchoolData);
   };
 
   // If user cannot select schools, show read-only display or nothing
   if (!canSelectSchool) {
-    // Only show something if there's a selected school
     if (selectedSchool) {
       return (
-        <HStack spacing={2} alignItems="center">
-          <Text fontSize="sm" color="gray.600" fontWeight="medium">
-            Kiválasztott iskola: {selectedSchool.iskola_neve}
-          </Text>
-        </HStack>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, py: 1, bgcolor: "grey.50", borderRadius: 3, border: "1px solid", borderColor: "grey.200" }}>
+          <MdSchool style={{ color: "#757575", fontSize: 20 }} />
+          <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 600 }}>
+            {selectedSchool.iskola_neve}
+          </Typography>
+        </Box>
       );
     }
-    // Return null if user can't select and no school is selected
     return null;
   }
 
   // Render the school selector for users who can select schools
   return (
-    <HStack spacing={2} alignItems="center">
-      <FormControl variant="filled" size="small" width="200px">
-        <Select
-          value={selectedSchool?.id?.toString() || ""}
-          onChange={handleChange}
-          displayEmpty
-          input={<OutlinedInput />}
-          renderValue={(value) => {
-            if (!value) return "Válassz iskolát";
-            const found = schools.items.find((item) => item.value === value);
-            return found ? found.label : "Ismeretlen iskola";
-          }}
-        >
-          <MenuItem value="">Válassz iskolát</MenuItem>
-          {schools.items.map((school) => (
-            <MenuItem key={school.value} value={school.value}>
-              {school.label}
-            </MenuItem>
-          ))}
-          {schools.items.length === 0 && (
-            <MenuItem disabled>Nincs elérhető iskola</MenuItem>
-          )}
-        </Select>
-      </FormControl>
-    </HStack>
+    <Box sx={{ minWidth: 260, maxWidth: 350 }}>
+      <Select
+        value={selectedSchool?.id?.toString() || ""}
+        onChange={handleChange}
+        displayEmpty
+        fullWidth
+        input={<StyledInput />}
+        MenuProps={{
+          PaperProps: {
+            elevation: 3,
+            sx: { mt: 1, borderRadius: 3, minWidth: 260 },
+          },
+        }}
+        renderValue={(value) => {
+          if (!value) {
+            return (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
+                <MdSchool size={18} />
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>Válassz iskolát</Typography>
+              </Box>
+            );
+          }
+          const found = schools.items.find((item) => item.value === value);
+          return (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <MdSchool size={18} style={{ color: "#1976d2" }} />
+              <Typography variant="body2" sx={{ fontWeight: 600, color: "primary.main", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {found ? found.label : "Ismeretlen iskola"}
+              </Typography>
+            </Box>
+          );
+        }}
+      >
+        <MenuItem value="">
+          <em>Válassz iskolát</em>
+        </MenuItem>
+        {schools.items.map((school) => (
+          <MenuItem 
+            key={school.value} 
+            value={school.value}
+            sx={{ 
+              borderRadius: 2, 
+              mx: 1, 
+              my: 0.5,
+              fontSize: 14,
+              fontWeight: 500
+            }}
+          >
+            {school.label}
+          </MenuItem>
+        ))}
+        {schools.items.length === 0 && (
+          <MenuItem disabled>Nincs elérhető iskola</MenuItem>
+        )}
+      </Select>
+    </Box>
   );
 };
 
