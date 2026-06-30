@@ -89,6 +89,13 @@ export const indicatorApi = createApi({
         body: { refreshToken },
       }),
     }),
+    forgotPassword: build.mutation({
+      query: ({ email }) => ({
+        url: "auth/forgot-password",
+        method: "POST",
+        body: { email },
+      }),
+    }),
     // User management endpoints
     getUsers: build.query({
       query: () => "users/",
@@ -1801,6 +1808,7 @@ export const {
   useLoginMutation,
   useLogoutMutation,
   useRefreshTokenMutation,
+  useForgotPasswordMutation,
   useGetTableListQuery,
   useCreateTableMutation,
   useUpdateTableMutation,

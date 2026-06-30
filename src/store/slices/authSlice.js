@@ -83,6 +83,7 @@ const initialState = {
   loading: false,
   error: null,
   selectedSchool: null, // Add selected school to state
+  mustChangePassword: false, // Force password change after temp password login
   // Alias mode state
   aliasMode: false, // Whether alias mode is active
   originalUser: null, // The actual logged-in superadmin
@@ -115,6 +116,7 @@ const authSlice = createSlice({
       };
       state.accessToken = action.payload.accessToken;
       state.refreshToken = action.payload.refreshToken;
+      state.mustChangePassword = action.payload.mustChangePassword || false;
       state.error = null;
     },
     loginFailure: (state, action) => {
@@ -133,6 +135,7 @@ const authSlice = createSlice({
       state.error = null;
       state.loading = false;
       state.selectedSchool = null; // Clear selected school on logout
+      state.mustChangePassword = false; // Clear forced password change on logout
       // Clear alias mode state on logout
       state.aliasMode = false;
       state.originalUser = null;
@@ -140,6 +143,9 @@ const authSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
+    },
+    clearMustChangePassword: (state) => {
+      state.mustChangePassword = false;
     },
     refreshTokenSuccess: (state, action) => {
       // console.log("Refresh token payload received:", action.payload);
@@ -225,6 +231,7 @@ export const {
   loginFailure,
   logout,
   clearError,
+  clearMustChangePassword,
   refreshTokenSuccess,
   checkTokenValidity,
   setSelectedSchool,
@@ -248,6 +255,7 @@ export const selectAccessToken = (state) => state.auth.accessToken;
 export const selectRefreshToken = (state) => state.auth.refreshToken;
 export const selectAuthLoading = (state) => state.auth.loading;
 export const selectAuthError = (state) => state.auth.error;
+export const selectMustChangePassword = (state) => state.auth.mustChangePassword;
 export const selectSelectedSchool = (state) => state.auth.selectedSchool;
 
 // Token validation selectors

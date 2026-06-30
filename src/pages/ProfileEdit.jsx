@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import {
   Box,
   Button,
@@ -15,6 +15,7 @@ import {
   Chip,
   CircularProgress,
 } from "@mui/material";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   TABLE_ACCESS_LEVELS,
   formatAccessLevel,
@@ -28,6 +29,8 @@ import {
   selectUserRole,
   selectUserPermissions,
   selectUserTableAccess,
+  selectMustChangePassword,
+  clearMustChangePassword,
 } from "../store/slices/authSlice";
 
 function ProfileEdit() {
@@ -35,6 +38,14 @@ function ProfileEdit() {
   const role = useSelector(selectUserRole);
   const permissions = useSelector(selectUserPermissions);
   const tableAccess = useSelector(selectUserTableAccess);
+  const mustChangePassword = useSelector(selectMustChangePassword);
+
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const isForcedPasswordChange =
+    searchParams.get("mustChangePassword") === "true" || mustChangePassword;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -105,6 +116,14 @@ function ProfileEdit() {
       });
       setNewPassword("");
       setConfirmPassword("");
+
+      // If forced password change, clear the flag and redirect to dashboard
+      if (isForcedPasswordChange) {
+        dispatch(clearMustChangePassword());
+        setTimeout(() => {
+          navigate("/dashboard", { replace: true });
+        }, 1500); // Brief delay to show success message
+      }
     } catch (error) {
       setPasswordMessage({
         type: "error",
@@ -153,10 +172,19 @@ function ProfileEdit() {
     <Container maxWidth="md" sx={{ mt: 4, mb: 8 }}>
       <Stack spacing={4}>
         <Typography variant="h4" component="h1">
-          Profil Szerkesztése
+          {isForcedPasswordChange ? "Jelszó Módosítása Kötelező" : "Profil Szerkesztése"}
         </Typography>
 
-        {/* Profile Information Card */}
+        {isForcedPasswordChange && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Az ideiglenes jelszóval történő belépés után kötelező új jelszót
+            beállítani. Kérjük, adjon meg egy új, biztonságos jelszót a
+            továbblépéshez.
+          </Alert>
+        )}
+
+        {/* Profile Information Card - hidden in forced password change mode */}
+        {!isForcedPasswordChange && (
         <Card elevation={2}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
@@ -200,8 +228,10 @@ function ProfileEdit() {
             </Box>
           </CardContent>
         </Card>
+        )}
 
-        {/* Roles and Permissions Card */}
+        {/* Roles and Permissions Card - hidden in forced password change mode */}
+        {!isForcedPasswordChange && (
         <Card elevation={2}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
@@ -253,6 +283,7 @@ function ProfileEdit() {
             </Grid>
           </CardContent>
         </Card>
+        )}
 
         {/* Password Change Card */}
         <Card elevation={2}>
@@ -306,7 +337,8 @@ function ProfileEdit() {
           </CardContent>
         </Card>
 
-        {/* Table Access Permissions Card */}
+        {/* Table Access Permissions Card - hidden in forced password change mode */}
+        {!isForcedPasswordChange && (
         <Card elevation={2}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
@@ -370,6 +402,7 @@ function ProfileEdit() {
             )}
           </CardContent>
         </Card>
+        )}
       </Stack>
     </Container>
   );

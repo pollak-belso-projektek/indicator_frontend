@@ -7,6 +7,7 @@ import {
   selectUserPermissions,
   selectIsTokenExpired,
   selectUser,
+  selectMustChangePassword,
 } from "../store/slices/authSlice";
 import { getTableNameFromRoute, hasTableAccess } from "../utils/tableValues";
 import { useTokenRefresh } from "../hooks/useTokenRefresh";
@@ -20,6 +21,7 @@ export default function ProtectedRoute({
   const tableAccess = useSelector(selectUserTableAccess);
   const userPermissions = useSelector(selectUserPermissions);
   const isTokenExpired = useSelector(selectIsTokenExpired);
+  const mustChangePassword = useSelector(selectMustChangePassword);
 
   const user = useSelector(selectUser);
   const location = useLocation();
@@ -90,6 +92,13 @@ export default function ProtectedRoute({
 
   // Superadmin bypasses all permission checks
   const isSuperadmin = userPermissions?.isSuperadmin || false;
+
+  // If user must change password, redirect to profile page
+  // (except if already on the profile page)
+  if (mustChangePassword && location.pathname !== "/profile") {
+    return <Navigate to="/profile?mustChangePassword=true" replace />;
+  }
+
   if (isSuperadmin) {
     return children;
   }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
@@ -14,6 +14,7 @@ import {
   IconButton,
   InputAdornment,
   CircularProgress,
+  Link,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useLoginMutation } from "../store/api/apiSlice";
@@ -25,18 +26,23 @@ import {
   selectIsAuthenticated,
   selectAuthLoading,
   selectAuthError,
+  selectMustChangePassword,
 } from "../store/slices/authSlice";
 import { parseApiError } from "../utils/tableAccessUtils";
 import { Image } from "@chakra-ui/react";
+import ForgotPasswordDialog from "../components/ForgotPasswordDialog";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const loading = useSelector(selectAuthLoading);
   const error = useSelector(selectAuthError);
+  const mustChangePassword = useSelector(selectMustChangePassword);
   const [errorMessage, setErrorMessage] = useState("");
 
   // Clear any stale error/loading state on mount
@@ -70,6 +76,10 @@ export default function Login() {
 
   // Redirect if already authenticated
   if (isAuthenticated) {
+    // If must change password, redirect to profile with flag
+    if (mustChangePassword) {
+      return <Navigate to="/profile?mustChangePassword=true" replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -89,6 +99,11 @@ export default function Login() {
       }).unwrap();
 
       dispatch(loginSuccess(result));
+
+      // If must change password, navigate to profile
+      if (result.mustChangePassword) {
+        navigate("/profile?mustChangePassword=true", { replace: true });
+      }
     } catch (err) {
       const errorMsg = parseApiError(err);
       dispatch(
@@ -188,11 +203,29 @@ export default function Login() {
                     "Bejelentkezés"
                   )}
                 </Button>
+
+                <Box sx={{ textAlign: "center" }}>
+                  <Link
+                    component="button"
+                    type="button"
+                    variant="body2"
+                    onClick={() => setForgotPasswordOpen(true)}
+                    sx={{ cursor: "pointer" }}
+                  >
+                    Elfelejtett jelszó?
+                  </Link>
+                </Box>
               </Stack>
             </Box>
           </Stack>
         </CardContent>
       </Card>
+
+      <ForgotPasswordDialog
+        open={forgotPasswordOpen}
+        onClose={() => setForgotPasswordOpen(false)}
+      />
     </Container>
   );
 }
+
