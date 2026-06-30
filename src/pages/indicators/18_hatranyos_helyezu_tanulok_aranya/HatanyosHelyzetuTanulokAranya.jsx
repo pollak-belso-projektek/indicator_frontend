@@ -88,9 +88,10 @@ export default function HatanyosHelyzetuTanulokAranya() {
   const [updateHHData, { isLoading: isUpdating }] =
     useUpdateHHesHHHNevelesuTanulokMutation();
 
+  const [historyOpen, setHistoryOpen] = useState(false);
+
   // HH Students count - this is what users will input
   const [hhStudentsCount, setHhStudentsCount] = useState(() => {
-    const [historyOpen, setHistoryOpen] = useState(false);
     const initialData = {};
 
     // Initialize for daytime students (tanulói jogviszony)
