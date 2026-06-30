@@ -26,13 +26,32 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 export default function HistoryDialog({ open, onClose, alapadatokId, tableName, onRollbackSuccess }) {
   const dispatch = useDispatch();
-  const { data: historyList, isLoading, isError, refetch } = useGetFormHistoryQuery(
+  const { data: historyList, isLoading, isFetching, isError, refetch } = useGetFormHistoryQuery(
     { alapadatok_id: alapadatokId, table_name: tableName },
     { skip: !open || !alapadatokId || !tableName, refetchOnMountOrArgChange: true }
   );
 
   const [rollbackFormHistory, { isLoading: isRollingBack }] = useRollbackFormHistoryMutation();
   const [errorMsg, setErrorMsg] = React.useState("");
+  
+  const [activeHistoryId, setActiveHistoryId] = React.useState(null);
+  const [lastSeenLatestId, setLastSeenLatestId] = React.useState(null);
+
+  const storageKeyActive = alapadatokId && tableName ? `history_active_${alapadatokId}_${tableName}` : null;
+  const storageKeyLatest = alapadatokId && tableName ? `history_latest_${alapadatokId}_${tableName}` : null;
+
+  // Reset states if table changes (reading from localStorage to persist across reloads)
+  useEffect(() => {
+    if (storageKeyActive && storageKeyLatest) {
+      const savedActive = localStorage.getItem(storageKeyActive);
+      const savedLatest = localStorage.getItem(storageKeyLatest);
+      setActiveHistoryId(savedActive || null);
+      setLastSeenLatestId(savedLatest || null);
+    } else {
+      setActiveHistoryId(null);
+      setLastSeenLatestId(null);
+    }
+  }, [storageKeyActive, storageKeyLatest]);
 
   // Refetch when dialog opens
   useEffect(() => {
@@ -47,6 +66,23 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
     return [...historyList].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [historyList]);
 
+  // Smart active state management
+  useEffect(() => {
+    if (sortedHistoryList.length > 0 && storageKeyActive && storageKeyLatest) {
+      const currentLatestId = String(sortedHistoryList[0].id);
+      
+      // If we see a BRAND NEW record (or it's the first load for this table and we have nothing in localStorage),
+      // we reset the active state to this newest record.
+      if (currentLatestId !== String(lastSeenLatestId)) {
+        setLastSeenLatestId(currentLatestId);
+        localStorage.setItem(storageKeyLatest, currentLatestId);
+        
+        setActiveHistoryId(currentLatestId);
+        localStorage.setItem(storageKeyActive, currentLatestId);
+      }
+    }
+  }, [sortedHistoryList, lastSeenLatestId, storageKeyActive, storageKeyLatest]);
+
   const handleRollback = async (historyId) => {
     if (!window.confirm("Biztosan visszaállítod az adatokat erre az állapotra? A jelenlegi adatok felülíródnak!")) {
       return;
@@ -55,6 +91,10 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
     try {
       setErrorMsg("");
       await rollbackFormHistory(historyId).unwrap();
+      setActiveHistoryId(String(historyId)); // Update the active history to the restored one
+      if (alapadatokId && tableName) {
+        localStorage.setItem(`history_active_${alapadatokId}_${tableName}`, String(historyId));
+      }
       
       // Invalidate all relevant tags so the UI automatically updates without a page reload
       dispatch(indicatorApi.util.invalidateTags([
@@ -69,7 +109,7 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
         'NyelvvizsgakSzama'
       ]));
 
-      // Optionally refetch history list so the new rollback state appears at the top
+      // Optionally refetch history list
       refetch();
 
       if (onRollbackSuccess) onRollbackSuccess();
@@ -143,7 +183,7 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
           <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{errorMsg}</Alert>
         )}
 
-        {isLoading ? (
+        {isLoading || isFetching ? (
           <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={6} gap={2}>
             <CircularProgress size={48} thickness={4} />
             <Typography color="text.secondary">Előzmények betöltése...</Typography>
@@ -162,8 +202,9 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
           </Box>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {sortedHistoryList.map((item) => {
-              const isActive = item.is_active;
+            {sortedHistoryList.map((item, index) => {
+              const isActive = String(item.id) === String(activeHistoryId);
+              const isFirst = index === 0;
 
               return (
                 <Box
@@ -206,7 +247,7 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
                   <Box sx={{ pl: isActive ? 2 : 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
                     <Box display="flex" alignItems="center" gap={1.5} flexWrap="wrap">
                       <Typography variant="h6" sx={{ 
-                        fontWeight: isActive ? 700 : 500,
+                        fontWeight: isActive || isFirst ? 700 : 500,
                         color: isActive ? 'success.dark' : 'text.primary',
                         fontSize: '1.1rem'
                       }}>
@@ -216,15 +257,28 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
                         <Chip 
                           size="small" 
                           color="success" 
-                          label="Aktív Állapot (Legújabb)" 
+                          label={isFirst ? "Aktív Állapot (Legújabb)" : "Aktív Állapot (Visszaállított)"} 
                           sx={{ fontWeight: 'bold' }} 
+                        />
+                      )}
+                      {!isActive && isFirst && (
+                        <Chip 
+                          size="small" 
+                          color="primary" 
+                          variant="outlined" 
+                          label="Legújabb Verzió" 
+                          sx={{ fontWeight: 'bold', bgcolor: 'primary.50' }} 
                         />
                       )}
                     </Box>
                     <Typography variant="body2" color="text.secondary">
                       {isActive 
-                        ? "Ezt az állapotot látod jelenleg, ez a legutoljára mentett verzió." 
-                        : "Egy korábbi mentés az adatbázisból."}
+                        ? isFirst 
+                          ? "Ezt az állapotot látod jelenleg, ez a legutoljára mentett verzió."
+                          : "Ezt az állapotot látod jelenleg, mert visszaállítottad erre."
+                        : isFirst 
+                          ? "Ez a legutoljára mentett változat a rendszerben (de nem ez az aktív)." 
+                          : "Egy korábbi mentés az adatbázisból."}
                     </Typography>
                   </Box>
                   
