@@ -147,6 +147,13 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: "User", id }],
     }),
+    disable2FAForUser: build.mutation({
+      query: (id) => ({
+        url: `users/${id}/disable-2fa`,
+        method: "POST",
+      }),
+      invalidatesTags: ["User"],
+    }),
     updateMe: build.mutation({
       query: (userData) => ({
         url: `me/personal`,
@@ -1824,6 +1831,7 @@ export const {
   useUpdateUserMutation,
   useDeleteUserMutation,
   useChangeUserPasswordMutation,
+  useDisable2FAForUserMutation,
   useUpdateMeMutation,
   useChangeMePasswordMutation,
   useLoginMutation,
