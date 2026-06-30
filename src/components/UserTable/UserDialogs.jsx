@@ -925,3 +925,32 @@ export const DeleteUserDialog = ({ open, onClose, user, onDelete }) => (
     </DialogActions>
   </Dialog>
 );
+
+export const Disable2FADialog = ({ open, onClose, user, onDisable2FA, isLoading }) => (
+  <Dialog open={open} onClose={onClose}>
+    <DialogTitle>2FA kikapcsolása</DialogTitle>
+    <DialogContent>
+      <DialogContentText>
+        Biztos benne, hogy ki szeretné kapcsolni a kétlépcsős azonosítást a következő felhasználónál: <br />
+        <strong>{user?.name}</strong>?
+      </DialogContentText>
+      <DialogContentText sx={{ mt: 2, color: 'warning.main', fontWeight: 'bold' }}>
+        A művelet után a felhasználó csak a jelszavával fog tudni bejelentkezni.
+      </DialogContentText>
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={onClose} variant="outlined" disabled={isLoading}>
+        Mégse
+      </Button>
+      <Button 
+        onClick={onDisable2FA} 
+        color="warning" 
+        variant="contained"
+        disabled={isLoading}
+        startIcon={isLoading ? <CircularProgress size={20} /> : null}
+      >
+        {isLoading ? "Kikapcsolás..." : "Kikapcsolás"}
+      </Button>
+    </DialogActions>
+  </Dialog>
+);

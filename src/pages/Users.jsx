@@ -21,6 +21,7 @@ import {
   TableResizeControls,
   UserTable,
   TablePagination,
+  Disable2FADialog,
 } from "../components/UserTable";
 import CreateUserDialog from "../components/CreateUserDialog";
 
@@ -63,6 +64,11 @@ const Users = () => {
     handleDeactivateConfirm,
     handleClose,
     handleResetColumnSizing,
+    openDisable2FA,
+    setOpenDisable2FA,
+    selectedUserFor2FA,
+    handleDisable2FAConfirm,
+    isDisabling2FA,
   } = useUserManagement();
 
   // Wrapped handlers with notification
@@ -97,6 +103,15 @@ const Users = () => {
       showNotification(result.error, "error");
     } else if (result.success) {
       showNotification(result.message || "Felhasználó sikeresen inaktiválva!");
+    }
+  };
+
+  const handleDisable2FAConfirmWithNotification = async () => {
+    const result = await handleDisable2FAConfirm();
+    if (result.error) {
+      showNotification(result.error, "error");
+    } else if (result.success) {
+      showNotification(result.message || "2FA sikeresen kikapcsolva!");
     }
   };
 
@@ -177,6 +192,14 @@ const Users = () => {
         user={selectedUser}
         onDelete={handleDeactivateConfirmWithNotification}
         isDeactivation={true}
+      />
+
+      <Disable2FADialog
+        open={openDisable2FA}
+        onClose={() => setOpenDisable2FA(false)}
+        user={selectedUserFor2FA}
+        onDisable2FA={handleDisable2FAConfirmWithNotification}
+        isLoading={isDisabling2FA}
       />
 
       {/* Main Content Card */}
