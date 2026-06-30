@@ -96,6 +96,13 @@ export const indicatorApi = createApi({
         body: { email },
       }),
     }),
+    submitBugReport: build.mutation({
+      query: (reportData) => ({
+        url: "bug-report",
+        method: "POST",
+        body: reportData,
+      }),
+    }),
     // User management endpoints
     getUsers: build.query({
       query: () => "users/",
@@ -2024,4 +2031,6 @@ export const {
   // FormHistory hooks
   useGetFormHistoryQuery,
   useRollbackFormHistoryMutation,
+  // Bug report hook
+  useSubmitBugReportMutation,
 } = indicatorApi;
