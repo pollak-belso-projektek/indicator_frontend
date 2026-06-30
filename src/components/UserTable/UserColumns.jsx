@@ -1,9 +1,8 @@
 import { createColumnHelper } from "@tanstack/react-table";
-import { HStack, Badge, Button, VStack, Text } from "@chakra-ui/react";
 import { FiEdit2 } from "react-icons/fi";
 import { TbHandStop } from "react-icons/tb";
 import { formatAccessLevel } from "../../utils/tableAccessUtils";
-import { Grid, Tooltip } from "@mui/material";
+import { Grid, Tooltip, Box, Typography, Stack, Chip, IconButton, alpha } from "@mui/material";
 const columnHelper = createColumnHelper();
 
 export const createUserColumns = (onEdit, onDelete) => [
@@ -28,23 +27,23 @@ export const createUserColumns = (onEdit, onDelete) => [
       const schoolData = info.row.original.alapadatok;
 
       if (!schoolId) {
-        return <Text color="gray.500">Nincs hozzárendelve</Text>;
+        return <Typography variant="body2" color="text.secondary">Nincs hozzárendelve</Typography>;
       }
 
       if (schoolData) {
         return (
-          <VStack spacing={0} align="start">
-            <Text fontWeight="medium" fontSize="sm">
+          <Stack spacing={0.5} alignItems="flex-start">
+            <Typography variant="body2" fontWeight="600">
               {schoolData.iskola_neve}
-            </Text>
-            <Text fontSize="xs" color="gray.500">
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
               {schoolData.intezmeny_tipus}
-            </Text>
-          </VStack>
+            </Typography>
+          </Stack>
         );
       }
 
-      return <Text color="gray.500">ID: {schoolId}</Text>;
+      return <Typography variant="body2" color="text.secondary">ID: {schoolId}</Typography>;
     },
     size: 250,
     minSize: 150,
@@ -82,27 +81,23 @@ export const createUserColumns = (onEdit, onDelete) => [
         >
           {access.map((item, index) => {
             const permissions = formatAccessLevel(item.access);
+            const colorMap = ["primary", "success", "secondary", "info", "warning"];
+            const color = colorMap[index % colorMap.length];
 
             return (
-              <HStack key={item.tableName || item.id} spacing={2} align="start">
+              <Stack key={item.tableName || item.id} direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                 {permissions.length > 0 && (
                   <Tooltip title={permissions.join(", ")}>
-                    <Badge
-                      size="sm"
-                      variant="solid"
-                      colorPalette={
-                        index % 2 === 0
-                          ? "blue"
-                          : index % 3 === 0
-                          ? "green"
-                          : "purple"
-                      }
-                    >
-                      {item.table.alias}
-                    </Badge>
+                    <Chip
+                      size="small"
+                      label={item.table.alias}
+                      color={color}
+                      variant="outlined"
+                      sx={{ fontWeight: 600, fontSize: "0.75rem" }}
+                    />
                   </Tooltip>
                 )}
-              </HStack>
+              </Stack>
             );
           })}
         </Grid>
@@ -118,43 +113,39 @@ export const createUserColumns = (onEdit, onDelete) => [
       const details = info.getValue();
 
       const roles = [];
-      if (!details) return <Text>Nincs szerepkör</Text>;
+      if (!details) return <Typography variant="body2">Nincs szerepkör</Typography>;
       if (details.isHSZC) roles.push("HSZC");
       if (details.isSuperadmin) roles.push("Fejlesztő");
       if (details.isAdmin) roles.push("Admin");
-      if (details.isPrivileged) roles.push("Privileged");
-      if (details.isStandard) roles.push("Standard");
+      if (details.isPrivileged) roles.push("Privilegizált");
+      if (details.isStandard) roles.push("Iskolai");
 
       return (
-        <HStack spacing={1} flexWrap="wrap">
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
           {roles.map((role) => (
-            <Badge
+            <Chip
               key={role}
-              size="sm"
-              colorPalette={
-                role === "HSZC"
-                  ? "purple"
-                  : role === "Fejlesztő"
-                  ? "red"
-                  : role === "Admin"
-                  ? "blue"
-                  : role === "Privileged"
-                  ? "green"
-                  : "gray"
-              }
-            >
-              {role === "HSZC"
-                ? "HSZC"
-                : role === "Fejlesztő"
-                ? "Fejlesztő"
-                : role === "Admin"
-                ? "Admin"
-                : role === "Privileged"
-                ? "Privilegizált"
-                : "Iskolai"}
-            </Badge>
+              size="small"
+              label={role}
+              sx={{
+                fontWeight: 600,
+                fontSize: "0.7rem",
+                bgcolor: 
+                  role === "HSZC" ? alpha("#9c27b0", 0.1) :
+                  role === "Fejlesztő" ? alpha("#d32f2f", 0.1) :
+                  role === "Admin" ? alpha("#1976d2", 0.1) :
+                  role === "Privilegizált" ? alpha("#2e7d32", 0.1) :
+                  alpha("#757575", 0.1),
+                color:
+                  role === "HSZC" ? "#7b1fa2" :
+                  role === "Fejlesztő" ? "#c62828" :
+                  role === "Admin" ? "#1565c0" :
+                  role === "Privilegizált" ? "#1b5e20" :
+                  "#616161"
+              }}
+            />
           ))}
-        </HStack>
+        </Box>
       );
     },
     size: 180,
@@ -166,13 +157,13 @@ export const createUserColumns = (onEdit, onDelete) => [
     cell: (info) => {
       const isActive = info.getValue();
       return (
-        <Badge
-          colorPalette={isActive ? "green" : "red"}
-          variant="solid"
-          size="sm"
-        >
-          {isActive ? "Igen" : "Nem"}
-        </Badge>
+        <Chip
+          label={isActive ? "Igen" : "Nem"}
+          size="small"
+          color={isActive ? "success" : "error"}
+          variant="filled"
+          sx={{ fontWeight: 600 }}
+        />
       );
     },
     size: 80,
@@ -183,23 +174,24 @@ export const createUserColumns = (onEdit, onDelete) => [
     id: "actions",
     header: "Műveletek",
     cell: ({ row }) => (
-      <HStack spacing={2}>
-        <Button
-          variant="outline"
-          size="sm"
+      <Stack direction="row" spacing={1}>
+        <IconButton
+          size="small"
           onClick={() => onEdit(row.original)}
+          color="primary"
+          sx={{ bgcolor: alpha("#1976d2", 0.1) }}
         >
-          <FiEdit2 />
-        </Button>
-        <Button
-          variant="subtle"
-          size="sm"
-          colorPalette={"red"}
+          <FiEdit2 size={16} />
+        </IconButton>
+        <IconButton
+          size="small"
+          color="error"
           onClick={() => onDelete(row.original)}
+          sx={{ bgcolor: alpha("#d32f2f", 0.1) }}
         >
-          <TbHandStop />
-        </Button>
-      </HStack>
+          <TbHandStop size={16} />
+        </IconButton>
+      </Stack>
     ),
     size: 120,
     minSize: 100,
