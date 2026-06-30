@@ -14,7 +14,8 @@ import {
   MenuItem,
   Stack,
 } from "@mui/material";
-import { Close as CloseIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
+
+import { Close as CloseIcon, CheckCircle as CheckCircleIcon, AttachFile as AttachFileIcon } from "@mui/icons-material";
 import { useSubmitBugReportMutation } from "../store/api/apiSlice";
 
 const SEVERITY_OPTIONS = [
@@ -28,6 +29,7 @@ export default function BugReportDialog({ open, onClose }) {
   const [description, setDescription] = useState("");
   const [severity, setSeverity] = useState("medium");
   const [stepsToReproduce, setStepsToReproduce] = useState("");
+  const [attachment, setAttachment] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -40,6 +42,7 @@ export default function BugReportDialog({ open, onClose }) {
       setDescription("");
       setSeverity("medium");
       setStepsToReproduce("");
+      setAttachment(null);
       setSubmitted(false);
       setErrorMessage("");
     }, 200);
@@ -61,14 +64,21 @@ export default function BugReportDialog({ open, onClose }) {
     }
 
     try {
-      await submitBugReport({
-        title: title.trim(),
-        description: description.trim(),
-        severity,
-        stepsToReproduce: stepsToReproduce.trim() || undefined,
-        pageUrl: window.location.href,
-        userAgent: navigator.userAgent,
-      }).unwrap();
+      const formData = new FormData();
+      formData.append("title", title.trim());
+      formData.append("description", description.trim());
+      formData.append("severity", severity);
+      if (stepsToReproduce.trim()) {
+        formData.append("stepsToReproduce", stepsToReproduce.trim());
+      }
+      formData.append("pageUrl", window.location.href);
+      formData.append("userAgent", navigator.userAgent);
+
+      if (attachment) {
+        formData.append("attachment", attachment);
+      }
+
+      await submitBugReport(formData).unwrap();
       setSubmitted(true);
     } catch (err) {
       const message =
@@ -192,6 +202,37 @@ export default function BugReportDialog({ open, onClose }) {
                   variant="outlined"
                   disabled={isLoading}
                 />
+
+                <Box>
+                  <Button
+                    component="label"
+                    variant="outlined"
+                    startIcon={<AttachFileIcon />}
+                    disabled={isLoading}
+                  >
+                    Kép / Videó csatolása
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*, video/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          setAttachment(e.target.files[0]);
+                        }
+                      }}
+                    />
+                  </Button>
+                  {attachment && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                      <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 300 }}>
+                        Kiválasztva: {attachment.name}
+                      </Typography>
+                      <IconButton size="small" onClick={() => setAttachment(null)} disabled={isLoading} color="error">
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  )}
+                </Box>
               </Stack>
             </Box>
           </>
