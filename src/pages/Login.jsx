@@ -18,6 +18,8 @@ import {
   alpha,
   keyframes,
   styled,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useLoginMutation } from "../store/api/apiSlice";
@@ -70,6 +72,7 @@ export default function Login() {
   const [twoFactorCode, setTwoFactorCode] = useState("");
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const otpRefs = useRef([]);
+  const [trustDevice, setTrustDevice] = useState(false);
   const [requires2FA, setRequires2FA] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
@@ -110,7 +113,7 @@ export default function Login() {
     });
     setOtp(newOtp);
     setTwoFactorCode(newOtp.join(""));
-    
+
     const lastIndex = Math.min(pasteData.length, 5);
     if (otpRefs.current[lastIndex]) {
       otpRefs.current[lastIndex].focus();
@@ -166,8 +169,15 @@ export default function Login() {
     dispatch(loginStart());
     try {
       const payload = { email, password };
+
+      const trustedDeviceToken = localStorage.getItem("trustedDeviceToken");
+      if (trustedDeviceToken) {
+        payload.trustedDeviceToken = trustedDeviceToken;
+      }
+
       if (requires2FA) {
         payload.twoFactorCode = twoFactorCode;
+        payload.trustDevice = trustDevice;
       }
 
       const result = await loginMutation(payload).unwrap();
@@ -177,6 +187,10 @@ export default function Login() {
         dispatch(clearError()); // Clear loading and error state without failing
         dispatch(loginFailure(null)); // Specifically setting to null to stop loading indicator
         return;
+      }
+
+      if (result.trustedDeviceToken) {
+        localStorage.setItem("trustedDeviceToken", result.trustedDeviceToken);
       }
 
       dispatch(loginSuccess(result));
@@ -303,6 +317,16 @@ export default function Login() {
                           />
                         ))}
                       </Stack>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={trustDevice}
+                            onChange={(e) => setTrustDevice(e.target.checked)}
+                            color="primary"
+                          />
+                        }
+                        label="Megbízható eszköz (nem kér kódot 30 napig)"
+                      />
                     </>
                   )}
 
@@ -313,9 +337,9 @@ export default function Login() {
                     color="primary"
                     fullWidth
                     disabled={loading}
-                    sx={{ 
-                      mt: 2, 
-                      borderRadius: "12px", 
+                    sx={{
+                      mt: 2,
+                      borderRadius: "12px",
                       py: 1.5,
                       textTransform: "none",
                       fontSize: "1.05rem",
@@ -337,7 +361,7 @@ export default function Login() {
                       "Bejelentkezés"
                     )}
                   </Button>
-                  
+
                   {requires2FA && (
                     <Button
                       variant="text"
@@ -361,7 +385,7 @@ export default function Login() {
                         type="button"
                         variant="body2"
                         onClick={() => setForgotPasswordOpen(true)}
-                        sx={{ 
+                        sx={{
                           fontWeight: 500,
                           textDecoration: "none",
                           "&:hover": { textDecoration: "underline" }
