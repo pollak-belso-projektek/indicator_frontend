@@ -12,7 +12,9 @@ const InfoPalyazatok = () => {
       </Typography>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 0 }}>
-        Az indikátor az egy-egy tanévben megnyert pályázatok összegyűjtését, felsorolását teszi szükségessé. Fontos, hogy az egymást követő tanévek összeállított listáit az Intézmény tanévről tanévre összehasonlítsa.
+        Az indikátor az egy-egy tanévben megnyert pályázatok összegyűjtését,
+        felsorolását teszi szükségessé. Fontos, hogy az egymást követő tanévek
+        összeállított listáit az Intézmény tanévről tanévre összehasonlítsa.
       </Typography>
 
       <Box component="ul" sx={{ m: 0, pl: 2 }}>

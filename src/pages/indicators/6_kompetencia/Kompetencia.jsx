@@ -34,10 +34,12 @@ import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 export default function Kompetencia() {
   const selectedSchool = useSelector(selectSelectedSchool);
-  const years = generateSchoolYears().map(y => parseInt(y.split('/')[0]));
+  const years = generateSchoolYears().map((y) => parseInt(y.split("/")[0]));
 
   // Queries
   const {
@@ -46,16 +48,18 @@ export default function Kompetencia() {
     error,
   } = useGetKompetenciaQuery(
     { id: selectedSchool?.id },
-    { skip: !selectedSchool?.id }
+    { skip: !selectedSchool?.id },
   );
 
   const [addKompetencia, { isLoading: isAdding }] = useAddKompetenciaMutation();
-  const [updateKompetencia, { isLoading: isUpdating }] = useUpdateKompetenciaMutation();
+  const [updateKompetencia, { isLoading: isUpdating }] =
+    useUpdateKompetenciaMutation();
   const isSaving = isAdding || isUpdating;
 
   // Local state for the grid
   // Structure: { [year]: { technikum: { id: null, ... }, szakkepzo: { id: null, ... } } }
   const [tableData, setTableData] = useState({});
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [isModified, setIsModified] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -65,25 +69,38 @@ export default function Kompetencia() {
       const initialData = {};
 
       // Pre-fill structure to ensure all cells exist
-      years.forEach(year => {
+      years.forEach((year) => {
         initialData[year] = {
-          technikum: { id: null, mat_orsz: "", mat_int: "", szoveg_orsz: "", szoveg_int: "" },
-          szakkepzo: { id: null, mat_orsz: "", mat_int: "", szoveg_orsz: "", szoveg_int: "" }
+          technikum: {
+            id: null,
+            mat_orsz: "",
+            mat_int: "",
+            szoveg_orsz: "",
+            szoveg_int: "",
+          },
+          szakkepzo: {
+            id: null,
+            mat_orsz: "",
+            mat_int: "",
+            szoveg_orsz: "",
+            szoveg_int: "",
+          },
         };
       });
 
       // Fill with API data
-      apiData.forEach(item => {
+      apiData.forEach((item) => {
         // Parse year from date string (e.g. "2024-09-01" -> 2024)
         let year = item.tanev_kezdete;
-        if (typeof year === 'string') {
-          year = parseInt(year.split('-')[0]);
+        if (typeof year === "string") {
+          year = parseInt(year.split("-")[0]);
         }
 
         // Map backend form values to local state keys
         let form = item.kepzes_forma; // "Technikum" or "Szakképző"
         if (form === "Technikum") form = "technikum";
-        else if (form === "Szakképző" || form === "Szakkepzo") form = "szakkepzo";
+        else if (form === "Szakképző" || form === "Szakkepzo")
+          form = "szakkepzo";
 
         if (initialData[year] && initialData[year][form]) {
           initialData[year][form] = {
@@ -99,10 +116,22 @@ export default function Kompetencia() {
     } else if (!isLoading) {
       // Initialize empty if no data yet
       const emptyData = {};
-      years.forEach(year => {
+      years.forEach((year) => {
         emptyData[year] = {
-          technikum: { id: null, mat_orsz: "", mat_int: "", szoveg_orsz: "", szoveg_int: "" },
-          szakkepzo: { id: null, mat_orsz: "", mat_int: "", szoveg_orsz: "", szoveg_int: "" }
+          technikum: {
+            id: null,
+            mat_orsz: "",
+            mat_int: "",
+            szoveg_orsz: "",
+            szoveg_int: "",
+          },
+          szakkepzo: {
+            id: null,
+            mat_orsz: "",
+            mat_int: "",
+            szoveg_orsz: "",
+            szoveg_int: "",
+          },
         };
       });
       setTableData(emptyData);
@@ -115,15 +144,15 @@ export default function Kompetencia() {
     // Prevent negative numbers
     if (value < 0) return;
 
-    setTableData(prev => ({
+    setTableData((prev) => ({
       ...prev,
       [year]: {
         ...prev[year],
         [form]: {
           ...prev[year][form],
-          [field]: value
-        }
-      }
+          [field]: value,
+        },
+      },
     }));
     setIsModified(true);
     setSaveSuccess(false);
@@ -135,8 +164,8 @@ export default function Kompetencia() {
     const promises = [];
 
     // Iterate over years and forms
-    Object.keys(tableData).forEach(year => {
-      ["technikum", "szakkepzo"].forEach(form => {
+    Object.keys(tableData).forEach((year) => {
+      ["technikum", "szakkepzo"].forEach((form) => {
         const record = tableData[year][form];
 
         const payload = {
@@ -145,8 +174,10 @@ export default function Kompetencia() {
           kepzes_forma: form === "technikum" ? "Technikum" : "Szakképző",
           mat_orsz_p: record.mat_orsz === "" ? 0 : parseFloat(record.mat_orsz),
           mat_int_p: record.mat_int === "" ? 0 : parseFloat(record.mat_int),
-          szoveg_orsz_p: record.szoveg_orsz === "" ? 0 : parseFloat(record.szoveg_orsz),
-          szoveg_int_p: record.szoveg_int === "" ? 0 : parseFloat(record.szoveg_int),
+          szoveg_orsz_p:
+            record.szoveg_orsz === "" ? 0 : parseFloat(record.szoveg_orsz),
+          szoveg_int_p:
+            record.szoveg_int === "" ? 0 : parseFloat(record.szoveg_int),
           id: record.id,
         };
 
@@ -157,7 +188,11 @@ export default function Kompetencia() {
         } else {
           // Create new record only if it has meaningful data (optional check, but good practice)
           // Check if any field has data
-          const hasData = record.mat_orsz !== "" || record.mat_int !== "" || record.szoveg_orsz !== "" || record.szoveg_int !== "";
+          const hasData =
+            record.mat_orsz !== "" ||
+            record.mat_int !== "" ||
+            record.szoveg_orsz !== "" ||
+            record.szoveg_int !== "";
           if (hasData) {
             console.log("Saving new payload:", payload);
             promises.push(addKompetencia(payload).unwrap());
@@ -180,23 +215,36 @@ export default function Kompetencia() {
   const handleReset = () => {
     if (apiData && Array.isArray(apiData)) {
       const initialData = {};
-      years.forEach(year => {
+      years.forEach((year) => {
         initialData[year] = {
-          technikum: { id: null, mat_orsz: "", mat_int: "", szoveg_orsz: "", szoveg_int: "" },
-          szakkepzo: { id: null, mat_orsz: "", mat_int: "", szoveg_orsz: "", szoveg_int: "" }
+          technikum: {
+            id: null,
+            mat_orsz: "",
+            mat_int: "",
+            szoveg_orsz: "",
+            szoveg_int: "",
+          },
+          szakkepzo: {
+            id: null,
+            mat_orsz: "",
+            mat_int: "",
+            szoveg_orsz: "",
+            szoveg_int: "",
+          },
         };
       });
-      apiData.forEach(item => {
+      apiData.forEach((item) => {
         // Parse year from date string (e.g. "2024-09-01" -> 2024)
         let year = item.tanev_kezdete;
-        if (typeof year === 'string') {
-          year = parseInt(year.split('-')[0]);
+        if (typeof year === "string") {
+          year = parseInt(year.split("-")[0]);
         }
 
         // Map backend form values to local state keys
         let form = item.kepzes_forma; // "Technikum" or "Szakképző"
         if (form === "Technikum") form = "technikum";
-        else if (form === "Szakképző" || form === "Szakkepzo") form = "szakkepzo";
+        else if (form === "Szakképző" || form === "Szakkepzo")
+          form = "szakkepzo";
 
         if (initialData[year] && initialData[year][form]) {
           initialData[year][form] = {
@@ -219,8 +267,13 @@ export default function Kompetencia() {
 
   if (error) {
     return (
-      <PageWrapper titleContent={<TitleKompetencia />} infoContent={<InfoKompetencia />}>
-        <Alert severity="error">Hiba történt az adatok betöltésekor: {JSON.stringify(error)}</Alert>
+      <PageWrapper
+        titleContent={<TitleKompetencia />}
+        infoContent={<InfoKompetencia />}
+      >
+        <Alert severity="error">
+          Hiba történt az adatok betöltésekor: {JSON.stringify(error)}
+        </Alert>
       </PageWrapper>
     );
   }
@@ -236,8 +289,11 @@ export default function Kompetencia() {
         <Card>
           <CardContent>
             <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
-                  <LockedTableWrapper tableName="kompetencia">
+              <ExportDOMTableToExcel
+                tableId=".MuiTable-root"
+                fileName="export_adatok"
+              />
+              <LockedTableWrapper tableName="kompetencia">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}
@@ -245,6 +301,15 @@ export default function Kompetencia() {
                   disabled={!isModified || isSaving}
                 >
                   {isSaving ? "Mentés..." : "Mentés"}
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => setHistoryOpen(true)}
+                  startIcon={<HistoryIcon />}
+                  sx={{ ml: 2 }}
+                >
+                  Előzmények
                 </Button>
                 <Button
                   variant="outlined"
@@ -263,19 +328,31 @@ export default function Kompetencia() {
               </Alert>
             )}
 
-            <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+            <TableContainer
+              component={Paper}
+              variant="outlined"
+              sx={{ overflowX: "auto" }}
+            >
               <Table size="small">
                 <TableHead>
                   <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                     <TableCell
                       rowSpan={2}
-                      sx={{ fontWeight: "bold", verticalAlign: "middle", textAlign: "center" }}
+                      sx={{
+                        fontWeight: "bold",
+                        verticalAlign: "middle",
+                        textAlign: "center",
+                      }}
                     >
                       Mérési terület
                     </TableCell>
                     <TableCell
                       rowSpan={2}
-                      sx={{ fontWeight: "bold", verticalAlign: "middle", textAlign: "center" }}
+                      sx={{
+                        fontWeight: "bold",
+                        verticalAlign: "middle",
+                        textAlign: "center",
+                      }}
                     >
                       Képzési forma
                     </TableCell>
@@ -295,13 +372,21 @@ export default function Kompetencia() {
                       <React.Fragment key={year}>
                         <TableCell
                           align="center"
-                          sx={{ fontWeight: "bold", minWidth: 80, borderLeft: "1px solid #e0e0e0" }}
+                          sx={{
+                            fontWeight: "bold",
+                            minWidth: 80,
+                            borderLeft: "1px solid #e0e0e0",
+                          }}
                         >
                           országos
                         </TableCell>
                         <TableCell
                           align="center"
-                          sx={{ fontWeight: "bold", minWidth: 80, color: "red" }}
+                          sx={{
+                            fontWeight: "bold",
+                            minWidth: 80,
+                            color: "red",
+                          }}
                         >
                           intézményi
                         </TableCell>
@@ -312,21 +397,43 @@ export default function Kompetencia() {
                 <TableBody>
                   {/* Technikum Rows */}
                   <TableRow sx={{ "&:hover": { backgroundColor: "#f5f5f5" } }}>
-                    <TableCell sx={{ fontWeight: "medium" }}>matematika</TableCell>
-                    <TableCell rowSpan={2} sx={{ verticalAlign: "middle", fontWeight: "bold", backgroundColor: "#fff2cc" }}>
+                    <TableCell sx={{ fontWeight: "medium" }}>
+                      matematika
+                    </TableCell>
+                    <TableCell
+                      rowSpan={2}
+                      sx={{
+                        verticalAlign: "middle",
+                        fontWeight: "bold",
+                        backgroundColor: "#fff2cc",
+                      }}
+                    >
                       Technikum
                     </TableCell>
-                    {years.map(year => (
+                    {years.map((year) => (
                       <React.Fragment key={`tech-mat-${year}`}>
-                        <TableCell align="center" sx={{ borderLeft: "1px solid #e0e0e0" }}>
+                        <TableCell
+                          align="center"
+                          sx={{ borderLeft: "1px solid #e0e0e0" }}
+                        >
                           <TextField
                             type="number"
                             size="small"
                             variant="outlined"
                             value={tableData[year]?.technikum.mat_orsz ?? ""}
-                            onChange={(e) => handleDataChange(year, "technikum", "mat_orsz", e.target.value)}
+                            onChange={(e) =>
+                              handleDataChange(
+                                year,
+                                "technikum",
+                                "mat_orsz",
+                                e.target.value,
+                              )
+                            }
                             sx={{ width: "100px" }}
-                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
+                            inputProps={{
+                              style: { textAlign: "center" },
+                              min: 0,
+                            }}
                           />
                         </TableCell>
                         <TableCell align="center">
@@ -335,28 +442,56 @@ export default function Kompetencia() {
                             size="small"
                             variant="outlined"
                             value={tableData[year]?.technikum.mat_int ?? ""}
-                            onChange={(e) => handleDataChange(year, "technikum", "mat_int", e.target.value)}
-                            sx={{ width: "100px", "& .MuiInputBase-input": { color: "red" } }}
-                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
+                            onChange={(e) =>
+                              handleDataChange(
+                                year,
+                                "technikum",
+                                "mat_int",
+                                e.target.value,
+                              )
+                            }
+                            sx={{
+                              width: "100px",
+                              "& .MuiInputBase-input": { color: "red" },
+                            }}
+                            inputProps={{
+                              style: { textAlign: "center" },
+                              min: 0,
+                            }}
                           />
                         </TableCell>
                       </React.Fragment>
                     ))}
                   </TableRow>
                   <TableRow sx={{ "&:hover": { backgroundColor: "#f5f5f5" } }}>
-                    <TableCell sx={{ fontWeight: "medium" }}>szövegértés</TableCell>
+                    <TableCell sx={{ fontWeight: "medium" }}>
+                      szövegértés
+                    </TableCell>
                     {/* Technikum rowSpan handled above */}
-                    {years.map(year => (
+                    {years.map((year) => (
                       <React.Fragment key={`tech-szov-${year}`}>
-                        <TableCell align="center" sx={{ borderLeft: "1px solid #e0e0e0" }}>
+                        <TableCell
+                          align="center"
+                          sx={{ borderLeft: "1px solid #e0e0e0" }}
+                        >
                           <TextField
                             type="number"
                             size="small"
                             variant="outlined"
                             value={tableData[year]?.technikum.szoveg_orsz ?? ""}
-                            onChange={(e) => handleDataChange(year, "technikum", "szoveg_orsz", e.target.value)}
+                            onChange={(e) =>
+                              handleDataChange(
+                                year,
+                                "technikum",
+                                "szoveg_orsz",
+                                e.target.value,
+                              )
+                            }
                             sx={{ width: "100px" }}
-                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
+                            inputProps={{
+                              style: { textAlign: "center" },
+                              min: 0,
+                            }}
                           />
                         </TableCell>
                         <TableCell align="center">
@@ -365,9 +500,22 @@ export default function Kompetencia() {
                             size="small"
                             variant="outlined"
                             value={tableData[year]?.technikum.szoveg_int ?? ""}
-                            onChange={(e) => handleDataChange(year, "technikum", "szoveg_int", e.target.value)}
-                            sx={{ width: "100px", "& .MuiInputBase-input": { color: "red" } }}
-                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
+                            onChange={(e) =>
+                              handleDataChange(
+                                year,
+                                "technikum",
+                                "szoveg_int",
+                                e.target.value,
+                              )
+                            }
+                            sx={{
+                              width: "100px",
+                              "& .MuiInputBase-input": { color: "red" },
+                            }}
+                            inputProps={{
+                              style: { textAlign: "center" },
+                              min: 0,
+                            }}
                           />
                         </TableCell>
                       </React.Fragment>
@@ -375,22 +523,49 @@ export default function Kompetencia() {
                   </TableRow>
 
                   {/* Szakképző Rows */}
-                  <TableRow sx={{ borderTop: "2px solid #e0e0e0", "&:hover": { backgroundColor: "#f5f5f5" } }}>
-                    <TableCell sx={{ fontWeight: "medium" }}>matematika</TableCell>
-                    <TableCell rowSpan={2} sx={{ verticalAlign: "middle", fontWeight: "bold", backgroundColor: "#e8f4fd" }}>
+                  <TableRow
+                    sx={{
+                      borderTop: "2px solid #e0e0e0",
+                      "&:hover": { backgroundColor: "#f5f5f5" },
+                    }}
+                  >
+                    <TableCell sx={{ fontWeight: "medium" }}>
+                      matematika
+                    </TableCell>
+                    <TableCell
+                      rowSpan={2}
+                      sx={{
+                        verticalAlign: "middle",
+                        fontWeight: "bold",
+                        backgroundColor: "#e8f4fd",
+                      }}
+                    >
                       Szakképző
                     </TableCell>
-                    {years.map(year => (
+                    {years.map((year) => (
                       <React.Fragment key={`szak-mat-${year}`}>
-                        <TableCell align="center" sx={{ borderLeft: "1px solid #e0e0e0" }}>
+                        <TableCell
+                          align="center"
+                          sx={{ borderLeft: "1px solid #e0e0e0" }}
+                        >
                           <TextField
                             type="number"
                             size="small"
                             variant="outlined"
                             value={tableData[year]?.szakkepzo.mat_orsz ?? ""}
-                            onChange={(e) => handleDataChange(year, "szakkepzo", "mat_orsz", e.target.value)}
+                            onChange={(e) =>
+                              handleDataChange(
+                                year,
+                                "szakkepzo",
+                                "mat_orsz",
+                                e.target.value,
+                              )
+                            }
                             sx={{ width: "100px" }}
-                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
+                            inputProps={{
+                              style: { textAlign: "center" },
+                              min: 0,
+                            }}
                           />
                         </TableCell>
                         <TableCell align="center">
@@ -399,28 +574,56 @@ export default function Kompetencia() {
                             size="small"
                             variant="outlined"
                             value={tableData[year]?.szakkepzo.mat_int ?? ""}
-                            onChange={(e) => handleDataChange(year, "szakkepzo", "mat_int", e.target.value)}
-                            sx={{ width: "100px", "& .MuiInputBase-input": { color: "red" } }}
-                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
+                            onChange={(e) =>
+                              handleDataChange(
+                                year,
+                                "szakkepzo",
+                                "mat_int",
+                                e.target.value,
+                              )
+                            }
+                            sx={{
+                              width: "100px",
+                              "& .MuiInputBase-input": { color: "red" },
+                            }}
+                            inputProps={{
+                              style: { textAlign: "center" },
+                              min: 0,
+                            }}
                           />
                         </TableCell>
                       </React.Fragment>
                     ))}
                   </TableRow>
                   <TableRow sx={{ "&:hover": { backgroundColor: "#f5f5f5" } }}>
-                    <TableCell sx={{ fontWeight: "medium" }}>szövegértés</TableCell>
+                    <TableCell sx={{ fontWeight: "medium" }}>
+                      szövegértés
+                    </TableCell>
                     {/* Szakképző rowSpan handled above */}
-                    {years.map(year => (
+                    {years.map((year) => (
                       <React.Fragment key={`szak-szov-${year}`}>
-                        <TableCell align="center" sx={{ borderLeft: "1px solid #e0e0e0" }}>
+                        <TableCell
+                          align="center"
+                          sx={{ borderLeft: "1px solid #e0e0e0" }}
+                        >
                           <TextField
                             type="number"
                             size="small"
                             variant="outlined"
                             value={tableData[year]?.szakkepzo.szoveg_orsz ?? ""}
-                            onChange={(e) => handleDataChange(year, "szakkepzo", "szoveg_orsz", e.target.value)}
+                            onChange={(e) =>
+                              handleDataChange(
+                                year,
+                                "szakkepzo",
+                                "szoveg_orsz",
+                                e.target.value,
+                              )
+                            }
                             sx={{ width: "100px" }}
-                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
+                            inputProps={{
+                              style: { textAlign: "center" },
+                              min: 0,
+                            }}
                           />
                         </TableCell>
                         <TableCell align="center">
@@ -429,9 +632,22 @@ export default function Kompetencia() {
                             size="small"
                             variant="outlined"
                             value={tableData[year]?.szakkepzo.szoveg_int ?? ""}
-                            onChange={(e) => handleDataChange(year, "szakkepzo", "szoveg_int", e.target.value)}
-                            sx={{ width: "100px", "& .MuiInputBase-input": { color: "red" } }}
-                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
+                            onChange={(e) =>
+                              handleDataChange(
+                                year,
+                                "szakkepzo",
+                                "szoveg_int",
+                                e.target.value,
+                              )
+                            }
+                            sx={{
+                              width: "100px",
+                              "& .MuiInputBase-input": { color: "red" },
+                            }}
+                            inputProps={{
+                              style: { textAlign: "center" },
+                              min: 0,
+                            }}
                           />
                         </TableCell>
                       </React.Fragment>
@@ -441,25 +657,57 @@ export default function Kompetencia() {
               </Table>
             </TableContainer>
 
-            <Box sx={{ mt: 3, p: 2, backgroundColor: "#fff9e6", borderRadius: 1 }}>
+            <Box
+              sx={{ mt: 3, p: 2, backgroundColor: "#fff9e6", borderRadius: 1 }}
+            >
               <Typography variant="subtitle2" gutterBottom>
                 Jelmagyarázat:
               </Typography>
               <Stack direction="row" spacing={2} alignItems="center">
                 <Box display="flex" alignItems="center">
-                  <Box sx={{ width: 16, height: 16, borderRadius: "50%", border: "1px solid grey", mr: 1 }}></Box>
+                  <Box
+                    sx={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: "50%",
+                      border: "1px solid grey",
+                      mr: 1,
+                    }}
+                  ></Box>
                   <Typography variant="body2">Országos átlag</Typography>
                 </Box>
                 <Box display="flex" alignItems="center">
-                  <Box sx={{ width: 16, height: 16, borderRadius: "50%", border: "1px solid red", mr: 1, backgroundColor: "rgba(255,0,0,0.1)" }}></Box>
-                  <Typography variant="body2" color="error">Intézményi eredmény</Typography>
+                  <Box
+                    sx={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: "50%",
+                      border: "1px solid red",
+                      mr: 1,
+                      backgroundColor: "rgba(255,0,0,0.1)",
+                    }}
+                  ></Box>
+                  <Typography variant="body2" color="error">
+                    Intézményi eredmény
+                  </Typography>
                 </Box>
               </Stack>
             </Box>
-
           </CardContent>
         </Card>
       </Box>
+
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        alapadatokId={selectedSchool?.id}
+        tableName="kompetencia"
+        onRollbackSuccess={() => {
+          setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+        }}
+      />
     </PageWrapper>
   );
 }

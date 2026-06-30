@@ -36,6 +36,8 @@ import InfoVizsgaeredmenyek from "./info_vizsgaeredmenyek";
 import TitleVizsgaeredmenyek from "./title_vizsgaeredmenyek";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 export default function Vizsgaeredmenyek() {
   const selectedSchool = useSelector(selectSelectedSchool);
@@ -45,9 +47,13 @@ export default function Vizsgaeredmenyek() {
   const schoolYear = new Date().getMonth() >= 8 ? currentYear : currentYear - 1;
 
   // API hooks
-  const { data: apiData, isLoading, error } = useGetVizsgaeredmenyekBySchoolAndYearQuery(
+  const {
+    data: apiData,
+    isLoading,
+    error,
+  } = useGetVizsgaeredmenyekBySchoolAndYearQuery(
     { alapadatokId: selectedSchool?.id, tanev: schoolYear },
-    { skip: !selectedSchool?.id }
+    { skip: !selectedSchool?.id },
   );
   const [addVizsgaeredmenyek] = useAddVizsgaeredmenyekMutation();
   const [updateVizsgaeredmenyek] = useUpdateVizsgaeredmenyekMutation();
@@ -55,10 +61,11 @@ export default function Vizsgaeredmenyek() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
 
   const dynamicCategories = useMemo(() => {
-    if (!schoolsData || !Array.isArray(schoolsData) || !selectedSchool) return [];
+    if (!schoolsData || !Array.isArray(schoolsData) || !selectedSchool)
+      return [];
 
     let relevantSchool = schoolsData.find(
-      (school) => school.id === selectedSchool.id
+      (school) => school.id === selectedSchool.id,
     );
     if (!relevantSchool) return [];
 
@@ -73,13 +80,13 @@ export default function Vizsgaeredmenyek() {
         const szakirany = szakiranyData.szakirany;
         if (szakirany && szakirany.nev) {
           // Add to szakiranySubjects
-          if (!szakiranySubjects.some(s => s.key === szakirany.id)) {
+          if (!szakiranySubjects.some((s) => s.key === szakirany.id)) {
             szakiranySubjects.push({
               key: szakirany.id,
               label: szakirany.nev,
               szakirany_id: szakirany.id,
               szakirany_nev: szakirany.nev,
-              isSzakirany: true
+              isSzakirany: true,
             });
           }
 
@@ -87,14 +94,16 @@ export default function Vizsgaeredmenyek() {
             szakirany.szakma.forEach((szakmaData) => {
               if (szakmaData.szakma?.nev) {
                 // Check if already added
-                if (!szakmaSubjects.some(s => s.key === szakmaData.szakma.id)) {
+                if (
+                  !szakmaSubjects.some((s) => s.key === szakmaData.szakma.id)
+                ) {
                   szakmaSubjects.push({
                     key: szakmaData.szakma.id,
                     label: szakmaData.szakma.nev,
                     szakirany_id: szakirany.id,
                     szakma_id: szakmaData.szakma.id,
                     szakirany_nev: szakirany.nev,
-                    isSzakirany: false
+                    isSzakirany: false,
                   });
                 }
               }
@@ -152,6 +161,7 @@ export default function Vizsgaeredmenyek() {
 
   // Initialize data structure
   const [examData, setExamData] = useState({});
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
@@ -183,16 +193,23 @@ export default function Vizsgaeredmenyek() {
         if (year) {
           dynamicCategories.forEach((category) => {
             const categoryKey = category.category;
-            const isSzakiranyCategory = category.subjects.length > 0 && category.subjects[0].isSzakirany;
-            const subjectKey = isSzakiranyCategory ? item.szakirany_id : item.szakma_id;
+            const isSzakiranyCategory =
+              category.subjects.length > 0 && category.subjects[0].isSzakirany;
+            const subjectKey = isSzakiranyCategory
+              ? item.szakirany_id
+              : item.szakma_id;
 
             if (
               transformedData[categoryKey] &&
               transformedData[categoryKey][subjectKey]
             ) {
               // Only overwrite if it's "0" or if the new item has a non-zero value
-              if (transformedData[categoryKey][subjectKey][year] === "0" || (item[categoryKey] && item[categoryKey].toString() !== "0")) {
-                transformedData[categoryKey][subjectKey][year] = item[categoryKey]?.toString() || "0";
+              if (
+                transformedData[categoryKey][subjectKey][year] === "0" ||
+                (item[categoryKey] && item[categoryKey].toString() !== "0")
+              ) {
+                transformedData[categoryKey][subjectKey][year] =
+                  item[categoryKey]?.toString() || "0";
               }
             }
           });
@@ -245,21 +262,28 @@ export default function Vizsgaeredmenyek() {
               // Find the subject definition
               let subjectDef = null;
               for (const cat of dynamicCategories) {
-                const found = cat.subjects.find(s => s.key === subjectKey);
-                if (found) { subjectDef = found; break; }
+                const found = cat.subjects.find((s) => s.key === subjectKey);
+                if (found) {
+                  subjectDef = found;
+                  break;
+                }
               }
 
               if (subjectDef) {
                 let szakmaIdsToUpdate = [];
                 if (subjectDef.isSzakirany) {
                   // Get all szakma_ids for this szakirany
-                  const szakmaSubjects = dynamicCategories[0].subjects.filter(s => !s.isSzakirany && s.szakirany_id === subjectDef.szakirany_id);
-                  szakmaIdsToUpdate = szakmaSubjects.map(s => s.szakma_id);
+                  const szakmaSubjects = dynamicCategories[0].subjects.filter(
+                    (s) =>
+                      !s.isSzakirany &&
+                      s.szakirany_id === subjectDef.szakirany_id,
+                  );
+                  szakmaIdsToUpdate = szakmaSubjects.map((s) => s.szakma_id);
                 } else {
                   szakmaIdsToUpdate = [subjectDef.szakma_id];
                 }
 
-                szakmaIdsToUpdate.forEach(szakmaId => {
+                szakmaIdsToUpdate.forEach((szakmaId) => {
                   const recordKey = `${year}_${szakmaId}`;
                   if (!recordsToSave[recordKey]) {
                     recordsToSave[recordKey] = {
@@ -277,15 +301,53 @@ export default function Vizsgaeredmenyek() {
                     };
 
                     // Populate with existing DB values so we don't overwrite them with 0
-                    const existingRecord = apiData?.find(r => r.tanev_kezdete === year && r.szakma_id === szakmaId);
+                    const existingRecord = apiData?.find(
+                      (r) =>
+                        r.tanev_kezdete === year && r.szakma_id === szakmaId,
+                    );
                     if (existingRecord) {
-                      recordsToSave[recordKey].szakmai_vizsga_eredmeny = existingRecord.szakmai_vizsga_eredmeny ? parseFloat(existingRecord.szakmai_vizsga_eredmeny) : 0;
-                      recordsToSave[recordKey].agazati_alapvizsga_eredmeny = existingRecord.agazati_alapvizsga_eredmeny ? parseFloat(existingRecord.agazati_alapvizsga_eredmeny) : 0;
-                      recordsToSave[recordKey].magyar_nyelv_eretsegi_eredmeny = existingRecord.magyar_nyelv_eretsegi_eredmeny ? parseFloat(existingRecord.magyar_nyelv_eretsegi_eredmeny) : 0;
-                      recordsToSave[recordKey].matematika_eretsegi_eredmeny = existingRecord.matematika_eretsegi_eredmeny ? parseFloat(existingRecord.matematika_eretsegi_eredmeny) : 0;
-                      recordsToSave[recordKey].tortenelem_eretsegi_eredmeny = existingRecord.tortenelem_eretsegi_eredmeny ? parseFloat(existingRecord.tortenelem_eretsegi_eredmeny) : 0;
-                      recordsToSave[recordKey].angol_nyelv_eretsegi_eredmeny = existingRecord.angol_nyelv_eretsegi_eredmeny ? parseFloat(existingRecord.angol_nyelv_eretsegi_eredmeny) : 0;
-                      recordsToSave[recordKey].agazati_szakmai_eretsegi_eredmeny = existingRecord.agazati_szakmai_eretsegi_eredmeny ? parseFloat(existingRecord.agazati_szakmai_eretsegi_eredmeny) : 0;
+                      recordsToSave[recordKey].szakmai_vizsga_eredmeny =
+                        existingRecord.szakmai_vizsga_eredmeny
+                          ? parseFloat(existingRecord.szakmai_vizsga_eredmeny)
+                          : 0;
+                      recordsToSave[recordKey].agazati_alapvizsga_eredmeny =
+                        existingRecord.agazati_alapvizsga_eredmeny
+                          ? parseFloat(
+                              existingRecord.agazati_alapvizsga_eredmeny,
+                            )
+                          : 0;
+                      recordsToSave[recordKey].magyar_nyelv_eretsegi_eredmeny =
+                        existingRecord.magyar_nyelv_eretsegi_eredmeny
+                          ? parseFloat(
+                              existingRecord.magyar_nyelv_eretsegi_eredmeny,
+                            )
+                          : 0;
+                      recordsToSave[recordKey].matematika_eretsegi_eredmeny =
+                        existingRecord.matematika_eretsegi_eredmeny
+                          ? parseFloat(
+                              existingRecord.matematika_eretsegi_eredmeny,
+                            )
+                          : 0;
+                      recordsToSave[recordKey].tortenelem_eretsegi_eredmeny =
+                        existingRecord.tortenelem_eretsegi_eredmeny
+                          ? parseFloat(
+                              existingRecord.tortenelem_eretsegi_eredmeny,
+                            )
+                          : 0;
+                      recordsToSave[recordKey].angol_nyelv_eretsegi_eredmeny =
+                        existingRecord.angol_nyelv_eretsegi_eredmeny
+                          ? parseFloat(
+                              existingRecord.angol_nyelv_eretsegi_eredmeny,
+                            )
+                          : 0;
+                      recordsToSave[
+                        recordKey
+                      ].agazati_szakmai_eretsegi_eredmeny =
+                        existingRecord.agazati_szakmai_eretsegi_eredmeny
+                          ? parseFloat(
+                              existingRecord.agazati_szakmai_eretsegi_eredmeny,
+                            )
+                          : 0;
                     }
                   }
 
@@ -310,13 +372,13 @@ export default function Vizsgaeredmenyek() {
       let updatedCount = 0;
 
       // Update or create operations
-      const promises = dataToSave.map(item => {
+      const promises = dataToSave.map((item) => {
         if (!item.szakirany_id) return Promise.resolve();
 
         const existingRecord = apiData?.find(
           (record) =>
             record.tanev_kezdete === item.tanev_kezdete &&
-            record.szakma_id === item.szakma_id
+            record.szakma_id === item.szakma_id,
         );
 
         if (existingRecord && existingRecord.id) {
@@ -349,7 +411,9 @@ export default function Vizsgaeredmenyek() {
       setSavedData(JSON.parse(JSON.stringify(examData)));
       setIsModified(false);
 
-      setSnackbarMessage(`Sikeresen mentve: ${savedCount} új és ${updatedCount} frissített rekord.`);
+      setSnackbarMessage(
+        `Sikeresen mentve: ${savedCount} új és ${updatedCount} frissített rekord.`,
+      );
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
     } catch (error) {
@@ -411,7 +475,10 @@ export default function Vizsgaeredmenyek() {
 
             {/* Action Buttons */}
             <Stack direction="row" spacing={2} sx={{ mb: 3, ml: 2 }}>
-              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+              <ExportDOMTableToExcel
+                tableId=".MuiTable-root"
+                fileName="export_adatok"
+              />
               <LockedTableWrapper tableName="vizsgaeredmenyek">
                 <Button
                   variant="contained"
@@ -420,6 +487,15 @@ export default function Vizsgaeredmenyek() {
                   disabled={!isModified || isSaving}
                 >
                   {isSaving ? "Mentés..." : "Mentés"}
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => setHistoryOpen(true)}
+                  startIcon={<HistoryIcon />}
+                  sx={{ ml: 2 }}
+                >
+                  Előzmények
                 </Button>
 
                 <Button
@@ -486,7 +562,9 @@ export default function Vizsgaeredmenyek() {
                 </TableHead>
                 <TableBody>
                   {dynamicCategories.map((categoryData, categoryIndex) => (
-                    <React.Fragment key={`category-${categoryData.category}-${categoryIndex}`}>
+                    <React.Fragment
+                      key={`category-${categoryData.category}-${categoryIndex}`}
+                    >
                       {/* Category header row */}
                       <TableRow key={`header-${categoryData.category}`}>
                         <TableCell
@@ -517,7 +595,9 @@ export default function Vizsgaeredmenyek() {
 
                       {/* Subject rows */}
                       {categoryData.subjects.map((subject) => (
-                        <TableRow key={`${categoryData.category}-${subject.key}`}>
+                        <TableRow
+                          key={`${categoryData.category}-${subject.key}`}
+                        >
                           <TableCell
                             sx={{
                               fontWeight: "normal",
@@ -535,7 +615,10 @@ export default function Vizsgaeredmenyek() {
                           </TableCell>
 
                           {schoolYears.map((yearStr, yearIdx) => {
-                            const startYear = parseInt(yearStr.split("/")[0], 10).toString();
+                            const startYear = parseInt(
+                              yearStr.split("/")[0],
+                              10,
+                            ).toString();
                             return (
                               <TableCell
                                 key={`${subject.key}-${yearStr}`}
@@ -552,21 +635,29 @@ export default function Vizsgaeredmenyek() {
                                 <TextField
                                   size="small"
                                   value={
-                                    examData[categoryData.category]?.[subject.key]?.[startYear] ?? "0"
+                                    examData[categoryData.category]?.[
+                                      subject.key
+                                    ]?.[startYear] ?? "0"
                                   }
                                   onChange={(e) =>
                                     handleDataChange(
                                       categoryData.category,
                                       subject.key,
                                       startYear,
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   inputProps={{
                                     min: 0,
-                                    style: { textAlign: "center", padding: "4px" },
+                                    style: {
+                                      textAlign: "center",
+                                      padding: "4px",
+                                    },
                                   }}
-                                  sx={{ width: "60px", backgroundColor: "#fff" }}
+                                  sx={{
+                                    width: "60px",
+                                    backgroundColor: "#fff",
+                                  }}
                                 />
                               </TableCell>
                             );
@@ -618,6 +709,18 @@ export default function Vizsgaeredmenyek() {
             </Snackbar>
           </Box>
         </Fade>
+
+        <HistoryDialog
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          alapadatokId={selectedSchool?.id}
+          tableName="vizsgaEredmenyek"
+          onRollbackSuccess={() => {
+            setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+          }}
+        />
       </PageWrapper>
     </Container>
   );

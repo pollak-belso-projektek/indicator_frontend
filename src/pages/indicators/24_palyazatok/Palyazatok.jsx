@@ -49,6 +49,8 @@ import InfoPalyazatok from "./info_palyazatok";
 import TitlePalyazatok from "./title_palyazatok";
 import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 const formatMoney = (val) => {
   if (val === undefined || val === null) return "0";
@@ -69,13 +71,33 @@ export default function Palyazatok() {
   ];
 
   const defaultPalyazatok = {
-    "Szakmai fejlesztést támogató pályázatok": ["Apáczai", "Erasmus-tanulói", "Erasmus-oktatói", "NTP", "Határon átnyúló-nemzeti", "Hazai forrásból", "EU forrásból"],
-    "Infrastrukturális fejlesztést támogató": ["Hazai forrásból", "EU forrásból"],
-    "Energetikai megújulást, zöldátállást támogató": ["Hazai forrásból", "EU forrásból"],
-    "Digitális fejlesztést támogató pályázatok": ["Hazai forrásból", "EU forrásból"],
-    "Konzorciumi partnerként megvalósuló pályázat": ["Hazai forrásból", "EU forrásból"],
+    "Szakmai fejlesztést támogató pályázatok": [
+      "Apáczai",
+      "Erasmus-tanulói",
+      "Erasmus-oktatói",
+      "NTP",
+      "Határon átnyúló-nemzeti",
+      "Hazai forrásból",
+      "EU forrásból",
+    ],
+    "Infrastrukturális fejlesztést támogató": [
+      "Hazai forrásból",
+      "EU forrásból",
+    ],
+    "Energetikai megújulást, zöldátállást támogató": [
+      "Hazai forrásból",
+      "EU forrásból",
+    ],
+    "Digitális fejlesztést támogató pályázatok": [
+      "Hazai forrásból",
+      "EU forrásból",
+    ],
+    "Konzorciumi partnerként megvalósuló pályázat": [
+      "Hazai forrásból",
+      "EU forrásból",
+    ],
     "Kiemelt projekt intézményi megvalósulása": ["NSZFH", "IKK", "Egyéb"],
-    "Egyéb": ["Egyéb"]
+    Egyéb: ["Egyéb"],
   };
 
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -90,6 +112,7 @@ export default function Palyazatok() {
 
   const selectedSchool = useSelector(selectSelectedSchool);
   const [palyazatokData, setPalyazatokData] = useState(createInitialData());
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [originalData, setOriginalData] = useState(createInitialData());
   const [eloiranyzatData, setEloiranyzatData] = useState({});
   const [originalEloiranyzatData, setOriginalEloiranyzatData] = useState({});
@@ -103,7 +126,8 @@ export default function Palyazatok() {
 
   // States for "Add Dialog"
   const [newPalyazatCategory, setNewPalyazatCategory] = useState("");
-  const [newPalyazatSelectionType, setNewPalyazatSelectionType] = useState("existing");
+  const [newPalyazatSelectionType, setNewPalyazatSelectionType] =
+    useState("existing");
   const [newPalyazatName, setNewPalyazatName] = useState("");
   const [customPalyazatName, setCustomPalyazatName] = useState("");
 
@@ -114,13 +138,16 @@ export default function Palyazatok() {
   const {
     data: palyazatokDbDataRaw,
     isLoading,
-    isFetching
+    isFetching,
   } = useGetPalyazatokQuery(
     { alapadatokId: selectedSchool?.id },
-    { skip: !selectedSchool }
+    { skip: !selectedSchool },
   );
 
-  const palyazatokDbData = useMemo(() => palyazatokDbDataRaw || [], [palyazatokDbDataRaw]);
+  const palyazatokDbData = useMemo(
+    () => palyazatokDbDataRaw || [],
+    [palyazatokDbDataRaw],
+  );
 
   const [addPalyazatok] = useAddPalyazatokMutation();
   const [updatePalyazatok] = useUpdatePalyazatokMutation();
@@ -142,7 +169,7 @@ export default function Palyazatok() {
       const origEloiranyzat = {};
 
       if (Array.isArray(palyazatokDbData)) {
-        palyazatokDbData.forEach(item => {
+        palyazatokDbData.forEach((item) => {
           const category = item.kategoria || "Egyéb";
           const name = item.palyazat_neve || "Ismeretlen";
           const yearRange = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
@@ -163,9 +190,12 @@ export default function Palyazatok() {
           if (!newData[category]) newData[category] = {};
           if (!newData[category][name]) {
             newData[category][name] = {};
-            schoolYears.forEach(year => {
+            schoolYears.forEach((year) => {
               newData[category][name][year] = {
-                beadott_db: "0", elnyert_db: "0", osszeg_ft: "0", erintett: "0"
+                beadott_db: "0",
+                elnyert_db: "0",
+                osszeg_ft: "0",
+                erintett: "0",
               };
             });
           }
@@ -175,7 +205,7 @@ export default function Palyazatok() {
             beadott_db: item.beadott_db?.toString() || "0",
             elnyert_db: item.elnyert_db?.toString() || "0",
             osszeg_ft: item.osszeg_ft?.toString() || "0",
-            erintett: item.erintett?.toString() || "0"
+            erintett: item.erintett?.toString() || "0",
           };
 
           newData[category][name][yearRange] = { ...yearData };
@@ -194,22 +224,25 @@ export default function Palyazatok() {
     }
   }, [palyazatokDbData, isFetching, schoolYears]);
 
-  const handleDataChange = useCallback((category, name, year, metric, value) => {
-    setPalyazatokData((prev) => ({
-      ...prev,
-      [category]: {
-        ...prev[category],
-        [name]: {
-          ...prev[category][name],
-          [year]: {
-            ...prev[category][name][year],
-            [metric]: value,
+  const handleDataChange = useCallback(
+    (category, name, year, metric, value) => {
+      setPalyazatokData((prev) => ({
+        ...prev,
+        [category]: {
+          ...prev[category],
+          [name]: {
+            ...prev[category][name],
+            [year]: {
+              ...prev[category][name][year],
+              [metric]: value,
+            },
           },
         },
-      },
-    }));
-    setIsModified(true);
-  }, []);
+      }));
+      setIsModified(true);
+    },
+    [],
+  );
 
   const handleEloiranyzatChange = useCallback((year, value) => {
     setEloiranyzatData((prev) => ({
@@ -217,22 +250,26 @@ export default function Palyazatok() {
       [year]: {
         ...prev[year],
         osszeg_ft: value,
-      }
+      },
     }));
     setIsModified(true);
   }, []);
 
   const handleAddPalyazat = useCallback(async () => {
-    const nameToUse = newPalyazatSelectionType === "existing" ? newPalyazatName : customPalyazatName;
+    const nameToUse =
+      newPalyazatSelectionType === "existing"
+        ? newPalyazatName
+        : customPalyazatName;
     if (!newPalyazatCategory || !nameToUse || !selectedSchool) return;
 
     try {
       const availableYears = schoolYears
         .map((year) => parseInt(year.split("/")[0], 10))
         .filter((year) => !Number.isNaN(year));
-      const defaultStartYear = availableYears.length > 0
-        ? Math.max(...availableYears)
-        : new Date().getFullYear();
+      const defaultStartYear =
+        availableYears.length > 0
+          ? Math.max(...availableYears)
+          : new Date().getFullYear();
 
       const recordData = {
         alapadatok_id: selectedSchool.id,
@@ -261,7 +298,15 @@ export default function Palyazatok() {
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
-  }, [newPalyazatCategory, newPalyazatName, customPalyazatName, newPalyazatSelectionType, selectedSchool, addPalyazatok, schoolYears]);
+  }, [
+    newPalyazatCategory,
+    newPalyazatName,
+    customPalyazatName,
+    newPalyazatSelectionType,
+    selectedSchool,
+    addPalyazatok,
+    schoolYears,
+  ]);
 
   const handleRemovePalyazat = useCallback((category, name) => {
     setPalyazatToDelete({ category, name });
@@ -275,7 +320,7 @@ export default function Palyazatok() {
 
     try {
       const promises = [];
-      schoolYears.forEach(year => {
+      schoolYears.forEach((year) => {
         const id = originalData[category]?.[name]?.[year]?.id;
         if (id) promises.push(deletePalyazatok(id).unwrap());
       });
@@ -300,7 +345,13 @@ export default function Palyazatok() {
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
-  }, [palyazatokData, originalData, deletePalyazatok, schoolYears, palyazatToDelete]);
+  }, [
+    palyazatokData,
+    originalData,
+    deletePalyazatok,
+    schoolYears,
+    palyazatToDelete,
+  ]);
 
   const isFieldModified = (category, name, year, metric) => {
     const orig = originalData[category]?.[name]?.[year]?.[metric] || "0";
@@ -331,7 +382,8 @@ export default function Palyazatok() {
 
             if (!isNew) {
               metrics.forEach((metric) => {
-                if (isFieldModified(category, name, year, metric.key)) rowModified = true;
+                if (isFieldModified(category, name, year, metric.key))
+                  rowModified = true;
               });
             }
 
@@ -349,13 +401,25 @@ export default function Palyazatok() {
               };
 
               if (id) {
-                promises.push(updatePalyazatok({ id, ...recordData }).unwrap().then(() => { updatedCount++; }));
+                promises.push(
+                  updatePalyazatok({ id, ...recordData })
+                    .unwrap()
+                    .then(() => {
+                      updatedCount++;
+                    }),
+                );
               } else {
-                promises.push(addPalyazatok({
-                  ...recordData,
-                  palyazat_neve: name,
-                  kategoria: category,
-                }).unwrap().then(() => { savedCount++; }));
+                promises.push(
+                  addPalyazatok({
+                    ...recordData,
+                    palyazat_neve: name,
+                    kategoria: category,
+                  })
+                    .unwrap()
+                    .then(() => {
+                      savedCount++;
+                    }),
+                );
               }
             }
           });
@@ -375,19 +439,33 @@ export default function Palyazatok() {
             osszeg_ft: parseInt(val || 0),
             erintett: 0,
             palyazat_neve: "Előirányzat",
-            kategoria: "Költségvetés"
+            kategoria: "Költségvetés",
           };
           if (id) {
-            promises.push(updatePalyazatok({ id, ...recordData }).unwrap().then(() => { updatedCount++; }));
+            promises.push(
+              updatePalyazatok({ id, ...recordData })
+                .unwrap()
+                .then(() => {
+                  updatedCount++;
+                }),
+            );
           } else {
-            promises.push(addPalyazatok(recordData).unwrap().then(() => { savedCount++; }));
+            promises.push(
+              addPalyazatok(recordData)
+                .unwrap()
+                .then(() => {
+                  savedCount++;
+                }),
+            );
           }
         }
       });
 
       if (promises.length > 0) {
         await Promise.all(promises);
-        setSnackbarMessage(`Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`);
+        setSnackbarMessage(
+          `Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`,
+        );
         setSnackbarSeverity("success");
       } else {
         setSnackbarMessage("Nem történt módosítás!");
@@ -419,7 +497,10 @@ export default function Palyazatok() {
         let sum = 0;
         Object.keys(palyazatokData).forEach((category) => {
           Object.keys(palyazatokData[category]).forEach((name) => {
-            sum += parseInt(palyazatokData[category][name][year]?.[metric.key] || 0, 10);
+            sum += parseInt(
+              palyazatokData[category][name][year]?.[metric.key] || 0,
+              10,
+            );
           });
         });
         calculatedTotals[year][metric.key] = sum;
@@ -440,13 +521,17 @@ export default function Palyazatok() {
     });
 
     // Adat sorok
-    sortedCategories.forEach(category => {
-      const names = Object.keys(palyazatokData[category]).sort((a, b) => a.localeCompare(b, "hu"));
-      names.forEach(name => {
+    sortedCategories.forEach((category) => {
+      const names = Object.keys(palyazatokData[category]).sort((a, b) =>
+        a.localeCompare(b, "hu"),
+      );
+      names.forEach((name) => {
         const row = { kategoria: category, palyazat: name };
-        schoolYears.forEach(year => {
-          metrics.forEach(m => {
-            row[`${year}__${m.key}`] = Number(palyazatokData[category][name][year]?.[m.key] || 0);
+        schoolYears.forEach((year) => {
+          metrics.forEach((m) => {
+            row[`${year}__${m.key}`] = Number(
+              palyazatokData[category][name][year]?.[m.key] || 0,
+            );
           });
         });
         rows.push(row);
@@ -455,26 +540,35 @@ export default function Palyazatok() {
 
     // Összesítő sor
     const totalRow = { kategoria: "Összes pályázat, projekt", palyazat: "" };
-    schoolYears.forEach(year => {
-      metrics.forEach(m => {
+    schoolYears.forEach((year) => {
+      metrics.forEach((m) => {
         totalRow[`${year}__${m.key}`] = Number(totals[year]?.[m.key] || 0);
       });
     });
     rows.push(totalRow);
 
     // Előirányzat sor
-    const eloiranyzatRow = { kategoria: "Az iskola eredeti előirányzata (Ft)", palyazat: "" };
-    schoolYears.forEach(year => {
-      metrics.forEach(m => {
-        eloiranyzatRow[`${year}__${m.key}`] = m.key === "osszeg_ft" ? Number(eloiranyzatData[year]?.osszeg_ft || 0) : null;
+    const eloiranyzatRow = {
+      kategoria: "Az iskola eredeti előirányzata (Ft)",
+      palyazat: "",
+    };
+    schoolYears.forEach((year) => {
+      metrics.forEach((m) => {
+        eloiranyzatRow[`${year}__${m.key}`] =
+          m.key === "osszeg_ft"
+            ? Number(eloiranyzatData[year]?.osszeg_ft || 0)
+            : null;
       });
     });
     rows.push(eloiranyzatRow);
 
     // Arány sor
-    const aranyRow = { kategoria: "Elnyert forrás aránya az előirányzathoz (%)", palyazat: "" };
-    schoolYears.forEach(year => {
-      metrics.forEach(m => {
+    const aranyRow = {
+      kategoria: "Elnyert forrás aránya az előirányzathoz (%)",
+      palyazat: "",
+    };
+    schoolYears.forEach((year) => {
+      metrics.forEach((m) => {
         if (m.key === "osszeg_ft") {
           const elnyertOsszeg = Number(totals[year]?.osszeg_ft || 0);
           const eloiranyzat = Number(eloiranyzatData[year]?.osszeg_ft || 0);
@@ -491,7 +585,14 @@ export default function Palyazatok() {
     rows.push(aranyRow);
 
     return rows;
-  }, [palyazatokData, categoryOrderMap, schoolYears, metrics, totals, eloiranyzatData]);
+  }, [
+    palyazatokData,
+    categoryOrderMap,
+    schoolYears,
+    metrics,
+    totals,
+    eloiranyzatData,
+  ]);
 
   if (isLoading) {
     return <PageLoadingOverlay isLoading={true} />;
@@ -512,8 +613,6 @@ export default function Palyazatok() {
           </Alert>
         )}
 
-
-
         <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
           <LockedTableWrapper tableName="palyazatok">
             <Button
@@ -530,6 +629,15 @@ export default function Palyazatok() {
               disabled={!isModified || isSaving || !selectedSchool}
             >
               Mentés
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => setHistoryOpen(true)}
+              startIcon={<HistoryIcon />}
+              sx={{ ml: 2 }}
+            >
+              Előzmények
             </Button>
             <Button
               variant="outlined"
@@ -551,7 +659,7 @@ export default function Palyazatok() {
                   header: `${year} – ${m.label}`,
                   key: `${year}__${m.key}`,
                   width: 20,
-                }))
+                })),
               ),
             ]}
             rows={exportRows}
@@ -559,19 +667,59 @@ export default function Palyazatok() {
           />
         </Stack>
 
-        <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
+        <TableContainer
+          component={Paper}
+          sx={{ maxWidth: "100%", overflowX: "auto" }}
+        >
           <Table size="small" sx={{ minWidth: 1000, border: "2px solid #ccc" }}>
             <TableHead>
               <TableRow>
-                <TableCell rowSpan={2} sx={{ fontWeight: "bold", minWidth: 300, borderRight: "2px solid #ccc", borderBottom: "2px solid #ccc", backgroundColor: "#fff", position: "sticky", left: 0, zIndex: 3 }}>
+                <TableCell
+                  rowSpan={2}
+                  sx={{
+                    fontWeight: "bold",
+                    minWidth: 300,
+                    borderRight: "2px solid #ccc",
+                    borderBottom: "2px solid #ccc",
+                    backgroundColor: "#fff",
+                    position: "sticky",
+                    left: 0,
+                    zIndex: 3,
+                  }}
+                >
                   Kategória / Pályázat
                 </TableCell>
                 {schoolYears.map((year, i) => (
-                  <TableCell key={`${year}-header`} align="center" colSpan={4} sx={{ fontWeight: "bold", backgroundColor: "#fff2cc", borderBottom: "1px solid #ccc", borderRight: i === schoolYears.length - 1 ? "none" : "2px solid #ccc" }}>
+                  <TableCell
+                    key={`${year}-header`}
+                    align="center"
+                    colSpan={4}
+                    sx={{
+                      fontWeight: "bold",
+                      backgroundColor: "#fff2cc",
+                      borderBottom: "1px solid #ccc",
+                      borderRight:
+                        i === schoolYears.length - 1
+                          ? "none"
+                          : "2px solid #ccc",
+                    }}
+                  >
                     {year}
                   </TableCell>
                 ))}
-                <TableCell rowSpan={2} sx={{ fontWeight: "bold", width: 60, borderBottom: "2px solid #ccc", position: "sticky", right: 0, backgroundColor: "#f5f5f5", zIndex: 3, boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)" }}>
+                <TableCell
+                  rowSpan={2}
+                  sx={{
+                    fontWeight: "bold",
+                    width: 60,
+                    borderBottom: "2px solid #ccc",
+                    position: "sticky",
+                    right: 0,
+                    backgroundColor: "#f5f5f5",
+                    zIndex: 3,
+                    boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                  }}
+                >
                   Művelet
                 </TableCell>
               </TableRow>
@@ -579,7 +727,22 @@ export default function Palyazatok() {
                 {schoolYears.map((year, i) => (
                   <React.Fragment key={`${year}-metric-head`}>
                     {metrics.map((m, j) => (
-                      <TableCell key={`head-${year}-${m.key}`} align="center" sx={{ fontWeight: 600, backgroundColor: m.color, borderBottom: "2px solid #ccc", borderRight: (j === metrics.length - 1 && i !== schoolYears.length - 1) ? "2px solid #ccc" : "1px solid #ddd", minWidth: 90, fontSize: "0.8rem" }}>
+                      <TableCell
+                        key={`head-${year}-${m.key}`}
+                        align="center"
+                        sx={{
+                          fontWeight: 600,
+                          backgroundColor: m.color,
+                          borderBottom: "2px solid #ccc",
+                          borderRight:
+                            j === metrics.length - 1 &&
+                            i !== schoolYears.length - 1
+                              ? "2px solid #ccc"
+                              : "1px solid #ddd",
+                          minWidth: 90,
+                          fontSize: "0.8rem",
+                        }}
+                      >
                         {m.label}
                       </TableCell>
                     ))}
@@ -596,12 +759,26 @@ export default function Palyazatok() {
                   return a.localeCompare(b, "hu");
                 })
                 .map((category) => {
-                  const names = Object.keys(palyazatokData[category]).sort((a, b) => a.localeCompare(b, "hu"));
+                  const names = Object.keys(palyazatokData[category]).sort(
+                    (a, b) => a.localeCompare(b, "hu"),
+                  );
                   return names.map((name, index) => (
                     <TableRow key={`${category}-${name}`} hover>
-                      <TableCell sx={{ borderRight: "2px solid #ccc", borderBottom: "1px solid #ddd", position: "sticky", left: 0, backgroundColor: "#fff", zIndex: 1 }}>
+                      <TableCell
+                        sx={{
+                          borderRight: "2px solid #ccc",
+                          borderBottom: "1px solid #ddd",
+                          position: "sticky",
+                          left: 0,
+                          backgroundColor: "#fff",
+                          zIndex: 1,
+                        }}
+                      >
                         {index === 0 && (
-                          <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 0.5 }}>
+                          <Typography
+                            variant="subtitle2"
+                            sx={{ fontWeight: "bold", mb: 0.5 }}
+                          >
                             {category}
                           </Typography>
                         )}
@@ -610,29 +787,75 @@ export default function Palyazatok() {
                       {schoolYears.map((year, i) =>
                         metrics.map((m, j) => {
                           const isMoney = m.key === "osszeg_ft";
-                          const rawVal = palyazatokData[category][name][year]?.[m.key] || "0";
-                          const displayVal = isMoney ? formatMoney(rawVal) : rawVal;
+                          const rawVal =
+                            palyazatokData[category][name][year]?.[m.key] ||
+                            "0";
+                          const displayVal = isMoney
+                            ? formatMoney(rawVal)
+                            : rawVal;
 
                           return (
-                            <TableCell key={`${year}-${m.key}`} align="center" sx={{ borderBottom: "1px solid #ddd", borderRight: (j === metrics.length - 1 && i !== schoolYears.length - 1) ? "2px solid #ccc" : "1px solid #eee", backgroundColor: isFieldModified(category, name, year, m.key) ? "#fef08a" : "inherit" }}>
+                            <TableCell
+                              key={`${year}-${m.key}`}
+                              align="center"
+                              sx={{
+                                borderBottom: "1px solid #ddd",
+                                borderRight:
+                                  j === metrics.length - 1 &&
+                                  i !== schoolYears.length - 1
+                                    ? "2px solid #ccc"
+                                    : "1px solid #eee",
+                                backgroundColor: isFieldModified(
+                                  category,
+                                  name,
+                                  year,
+                                  m.key,
+                                )
+                                  ? "#fef08a"
+                                  : "inherit",
+                              }}
+                            >
                               <TextField
                                 type={isMoney ? "text" : "number"}
                                 value={displayVal}
                                 onChange={(e) => {
                                   let val = e.target.value;
                                   if (isMoney) val = val.replace(/\s/g, "");
-                                  handleDataChange(category, name, year, m.key, val);
+                                  handleDataChange(
+                                    category,
+                                    name,
+                                    year,
+                                    m.key,
+                                    val,
+                                  );
                                 }}
                                 size="small"
-                                inputProps={{ min: 0, style: { textAlign: "center" } }}
+                                inputProps={{
+                                  min: 0,
+                                  style: { textAlign: "center" },
+                                }}
                                 sx={{ width: isMoney ? "110px" : "70px" }}
                               />
                             </TableCell>
                           );
-                        })
+                        }),
                       )}
-                      <TableCell align="center" sx={{ position: "sticky", right: 0, backgroundColor: "#fff", boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)", zIndex: 1 }}>
-                        <IconButton size="small" color="error" onClick={() => handleRemovePalyazat(category, name)} disabled={!selectedSchool}>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          position: "sticky",
+                          right: 0,
+                          backgroundColor: "#fff",
+                          boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                          zIndex: 1,
+                        }}
+                      >
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleRemovePalyazat(category, name)}
+                          disabled={!selectedSchool}
+                        >
                           <DeleteIcon />
                         </IconButton>
                       </TableCell>
@@ -642,7 +865,16 @@ export default function Palyazatok() {
 
               {/* Összes pályázat */}
               <TableRow sx={{ backgroundColor: "#fff2cc", fontWeight: "bold" }}>
-                <TableCell sx={{ fontWeight: "bold", borderRight: "2px solid #ccc", position: "sticky", left: 0, backgroundColor: "#fff2cc", zIndex: 1 }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    borderRight: "2px solid #ccc",
+                    position: "sticky",
+                    left: 0,
+                    backgroundColor: "#fff2cc",
+                    zIndex: 1,
+                  }}
+                >
                   Összes pályázat, projekt
                 </TableCell>
                 {schoolYears.map((year, i) =>
@@ -650,73 +882,176 @@ export default function Palyazatok() {
                     const isMoney = m.key === "osszeg_ft";
                     const val = totals[year]?.[m.key] || 0;
                     return (
-                      <TableCell key={`total-${year}-${m.key}`} align="center" sx={{ fontWeight: "bold", borderRight: (j === metrics.length - 1 && i !== schoolYears.length - 1) ? "2px solid #ccc" : "1px solid #ddd" }}>
+                      <TableCell
+                        key={`total-${year}-${m.key}`}
+                        align="center"
+                        sx={{
+                          fontWeight: "bold",
+                          borderRight:
+                            j === metrics.length - 1 &&
+                            i !== schoolYears.length - 1
+                              ? "2px solid #ccc"
+                              : "1px solid #ddd",
+                        }}
+                      >
                         {isMoney ? formatMoney(val) : val}
                       </TableCell>
                     );
-                  })
+                  }),
                 )}
-                <TableCell sx={{ position: "sticky", right: 0, backgroundColor: "#fff2cc", zIndex: 1 }}></TableCell>
+                <TableCell
+                  sx={{
+                    position: "sticky",
+                    right: 0,
+                    backgroundColor: "#fff2cc",
+                    zIndex: 1,
+                  }}
+                ></TableCell>
               </TableRow>
 
               {/* Előirányzat */}
               <TableRow sx={{ backgroundColor: "#e0e0e0", fontWeight: "bold" }}>
-                <TableCell sx={{ fontWeight: "bold", borderRight: "2px solid #ccc", position: "sticky", left: 0, backgroundColor: "#e0e0e0", zIndex: 1 }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    borderRight: "2px solid #ccc",
+                    position: "sticky",
+                    left: 0,
+                    backgroundColor: "#e0e0e0",
+                    zIndex: 1,
+                  }}
+                >
                   Az iskola eredeti előirányzata (Ft)
                 </TableCell>
                 {schoolYears.map((year, i) => (
                   <React.Fragment key={`elo-${year}`}>
-                    <TableCell colSpan={2} sx={{ backgroundColor: "gray" }}></TableCell>
-                    <TableCell align="center" sx={{ backgroundColor: isEloiranyzatModified(year) ? "#fef08a" : "inherit" }}>
+                    <TableCell
+                      colSpan={2}
+                      sx={{ backgroundColor: "gray" }}
+                    ></TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        backgroundColor: isEloiranyzatModified(year)
+                          ? "#fef08a"
+                          : "inherit",
+                      }}
+                    >
                       <TextField
                         type="text"
-                        value={formatMoney(eloiranyzatData[year]?.osszeg_ft || "0")}
-                        onChange={(e) => handleEloiranyzatChange(year, e.target.value.replace(/\s/g, ""))}
+                        value={formatMoney(
+                          eloiranyzatData[year]?.osszeg_ft || "0",
+                        )}
+                        onChange={(e) =>
+                          handleEloiranyzatChange(
+                            year,
+                            e.target.value.replace(/\s/g, ""),
+                          )
+                        }
                         size="small"
-                        inputProps={{ min: 0, style: { textAlign: "center", fontWeight: "bold" } }}
+                        inputProps={{
+                          min: 0,
+                          style: { textAlign: "center", fontWeight: "bold" },
+                        }}
                         sx={{ width: "110px" }}
                       />
                     </TableCell>
-                    <TableCell sx={{ borderRight: i !== schoolYears.length - 1 ? "2px solid #ccc" : "none", backgroundColor: "gray" }}></TableCell>
+                    <TableCell
+                      sx={{
+                        borderRight:
+                          i !== schoolYears.length - 1
+                            ? "2px solid #ccc"
+                            : "none",
+                        backgroundColor: "gray",
+                      }}
+                    ></TableCell>
                   </React.Fragment>
                 ))}
-                <TableCell sx={{ position: "sticky", right: 0, backgroundColor: "#e0e0e0", zIndex: 1 }}></TableCell>
+                <TableCell
+                  sx={{
+                    position: "sticky",
+                    right: 0,
+                    backgroundColor: "#e0e0e0",
+                    zIndex: 1,
+                  }}
+                ></TableCell>
               </TableRow>
 
               {/* Arány */}
               <TableRow sx={{ backgroundColor: "#fff", fontWeight: "bold" }}>
-                <TableCell sx={{ fontWeight: "bold", borderRight: "2px solid #ccc", position: "sticky", left: 0, backgroundColor: "#fff", zIndex: 1 }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    borderRight: "2px solid #ccc",
+                    position: "sticky",
+                    left: 0,
+                    backgroundColor: "#fff",
+                    zIndex: 1,
+                  }}
+                >
                   A pályázaton elnyert forrás költségvetéshez kapcsolódó aránya
                 </TableCell>
                 {schoolYears.map((year, i) => {
-                  const elnyertOsszeg = parseInt(totals[year]?.osszeg_ft || 0, 10);
-                  const eloiranyzat = parseInt(eloiranyzatData[year]?.osszeg_ft || 0, 10);
+                  const elnyertOsszeg = parseInt(
+                    totals[year]?.osszeg_ft || 0,
+                    10,
+                  );
+                  const eloiranyzat = parseInt(
+                    eloiranyzatData[year]?.osszeg_ft || 0,
+                    10,
+                  );
                   let arany = 0;
                   if (eloiranyzat > 0) {
                     arany = ((elnyertOsszeg / eloiranyzat) * 100).toFixed(2);
                   }
                   return (
                     <React.Fragment key={`arany-${year}`}>
-                      <TableCell colSpan={2} sx={{ backgroundColor: "#fff" }}></TableCell>
-                      <TableCell align="center" sx={{ backgroundColor: "#ffcc00", fontWeight: "bold" }}>
+                      <TableCell
+                        colSpan={2}
+                        sx={{ backgroundColor: "#fff" }}
+                      ></TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ backgroundColor: "#ffcc00", fontWeight: "bold" }}
+                      >
                         {arany} %
                       </TableCell>
-                      <TableCell sx={{ borderRight: i !== schoolYears.length - 1 ? "2px solid #ccc" : "none" }}></TableCell>
+                      <TableCell
+                        sx={{
+                          borderRight:
+                            i !== schoolYears.length - 1
+                              ? "2px solid #ccc"
+                              : "none",
+                        }}
+                      ></TableCell>
                     </React.Fragment>
                   );
                 })}
-                <TableCell sx={{ position: "sticky", right: 0, backgroundColor: "#fff", zIndex: 1 }}></TableCell>
+                <TableCell
+                  sx={{
+                    position: "sticky",
+                    right: 0,
+                    backgroundColor: "#fff",
+                    zIndex: 1,
+                  }}
+                ></TableCell>
               </TableRow>
-
             </TableBody>
           </Table>
         </TableContainer>
 
         {/* Új pályázat Dialog */}
-        <Dialog open={openAddDialog} onClose={() => setOpenAddDialog(false)} maxWidth="sm" fullWidth>
+        <Dialog
+          open={openAddDialog}
+          onClose={() => setOpenAddDialog(false)}
+          maxWidth="sm"
+          fullWidth
+        >
           <DialogTitle>Új pályázat hozzáadása</DialogTitle>
           <DialogContent>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+            <Box
+              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
+            >
               <FormControl fullWidth>
                 <InputLabel>Kategória</InputLabel>
                 <Select
@@ -741,31 +1076,36 @@ export default function Palyazatok() {
                   <InputLabel>Megadás módja</InputLabel>
                   <Select
                     value={newPalyazatSelectionType}
-                    onChange={(e) => setNewPalyazatSelectionType(e.target.value)}
+                    onChange={(e) =>
+                      setNewPalyazatSelectionType(e.target.value)
+                    }
                     label="Megadás módja"
                   >
                     <MenuItem value="existing">Választás a listából</MenuItem>
-                    <MenuItem value="custom">Egyéni megnevezés megadása</MenuItem>
+                    <MenuItem value="custom">
+                      Egyéni megnevezés megadása
+                    </MenuItem>
                   </Select>
                 </FormControl>
               )}
 
-              {newPalyazatCategory && newPalyazatSelectionType === "existing" && (
-                <FormControl fullWidth>
-                  <InputLabel>Pályázat megnevezése</InputLabel>
-                  <Select
-                    value={newPalyazatName}
-                    onChange={(e) => setNewPalyazatName(e.target.value)}
-                    label="Pályázat megnevezése"
-                  >
-                    {defaultPalyazatok[newPalyazatCategory]?.map((name) => (
-                      <MenuItem key={name} value={name}>
-                        {name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
+              {newPalyazatCategory &&
+                newPalyazatSelectionType === "existing" && (
+                  <FormControl fullWidth>
+                    <InputLabel>Pályázat megnevezése</InputLabel>
+                    <Select
+                      value={newPalyazatName}
+                      onChange={(e) => setNewPalyazatName(e.target.value)}
+                      label="Pályázat megnevezése"
+                    >
+                      {defaultPalyazatok[newPalyazatCategory]?.map((name) => (
+                        <MenuItem key={name} value={name}>
+                          {name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
 
               {newPalyazatCategory && newPalyazatSelectionType === "custom" && (
                 <TextField
@@ -794,7 +1134,10 @@ export default function Palyazatok() {
         </Dialog>
 
         {/* Törlés megerősítő dialog */}
-        <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+        <Dialog
+          open={openDeleteDialog}
+          onClose={() => setOpenDeleteDialog(false)}
+        >
           <DialogTitle>Törlés megerősítése</DialogTitle>
           <DialogContent>
             Biztosan törölni szeretné ezt a pályázatot minden tanévből?
@@ -803,7 +1146,11 @@ export default function Palyazatok() {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenDeleteDialog(false)}>Mégse</Button>
-            <Button color="error" variant="contained" onClick={handleConfirmDelete}>
+            <Button
+              color="error"
+              variant="contained"
+              onClick={handleConfirmDelete}
+            >
               Törlés
             </Button>
           </DialogActions>
@@ -815,11 +1162,27 @@ export default function Palyazatok() {
           onClose={() => setSnackbarOpen(false)}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
-          <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: "100%" }}>
+          <Alert
+            onClose={() => setSnackbarOpen(false)}
+            severity={snackbarSeverity}
+            sx={{ width: "100%" }}
+          >
             {snackbarMessage}
           </Alert>
         </Snackbar>
       </Box>
+
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        alapadatokId={selectedSchool?.id}
+        tableName="palyazatok"
+        onRollbackSuccess={() => {
+          setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+        }}
+      />
     </PageWrapper>
   );
 }

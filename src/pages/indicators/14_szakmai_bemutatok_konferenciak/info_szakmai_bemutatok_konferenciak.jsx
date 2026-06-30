@@ -24,15 +24,15 @@ const InfoSzakmaiBemutatok = () => {
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
         Ilyen lehet például: szakmai konferencia, országos vagy regionális
-        szakmai verseny, új technológiákat és piaci szerepeket bemutató
-        szakmai nap vagy vásár.
+        szakmai verseny, új technológiákat és piaci szerepeket bemutató szakmai
+        nap vagy vásár.
       </Typography>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Az indikátor egy-egy tanévben megszervezett alkalmak összegyűjtését,
-        felsorolását teszi szükségessé. Fontos, hogy az egymást követő
-        tanévek összeállított listáin szerepelő alkalmat intézmény tanévről
-        tanévről összehasonlítsa.
+        felsorolását teszi szükségessé. Fontos, hogy az egymást követő tanévek
+        összeállított listáin szerepelő alkalmat intézmény tanévről tanévről
+        összehasonlítsa.
       </Typography>
 
       <Box
@@ -43,10 +43,14 @@ const InfoSzakmaiBemutatok = () => {
           border: "1px solid #90caf9",
         }}
       >
-        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
-          <strong>Megjegyzés:</strong> A kizárólag PR-tevékenységhez
-          kapcsolódó rendezvényeket (pl. nyílt nap) nem kell szerepeltetnie
-          az intézménynek az általa szervezett szakmai bemutatók között.
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ fontStyle: "italic" }}
+        >
+          <strong>Megjegyzés:</strong> A kizárólag PR-tevékenységhez kapcsolódó
+          rendezvényeket (pl. nyílt nap) nem kell szerepeltetnie az intézménynek
+          az általa szervezett szakmai bemutatók között.
         </Typography>
       </Box>
     </Box>

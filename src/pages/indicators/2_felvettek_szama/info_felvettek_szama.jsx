@@ -12,16 +12,19 @@ const InfoFelvettekSzama = () => {
         felvettek számához képest.
         <br />
         <strong>
-          A mutató számítása: Jelentkezések és felvettek aránya = (9. évfolyamra jelentkezők
-          száma / 9. évfolyamra felvettek száma) * 100
+          A mutató számítása: Jelentkezések és felvettek aránya = (9. évfolyamra
+          jelentkezők száma / 9. évfolyamra felvettek száma) * 100
         </strong>
       </Typography>
 
       <Typography variant="body2" color="text.secondary">
-        Az arány évről évre történő vizsgálata segíti az intézményeket annak eldöntésében, hogy melyik szakmára vonatkozóan kell nagyobb intenzitású pályaorientációs tevékenységet folytatniuk annak 
-        érdekében, hogy az adott szakma osztályszinten indítható legyen.
+        Az arány évről évre történő vizsgálata segíti az intézményeket annak
+        eldöntésében, hogy melyik szakmára vonatkozóan kell nagyobb intenzitású
+        pályaorientációs tevékenységet folytatniuk annak érdekében, hogy az
+        adott szakma osztályszinten indítható legyen.
         <br />
-        Adatforrás: A szakképző intézmény 9. évfolyamára jelentkezők száma és a szakképző intézmény 9. évfolyamára felvettek száma: KIFIR.
+        Adatforrás: A szakképző intézmény 9. évfolyamára jelentkezők száma és a
+        szakképző intézmény 9. évfolyamára felvettek száma: KIFIR.
       </Typography>
     </Box>
   );

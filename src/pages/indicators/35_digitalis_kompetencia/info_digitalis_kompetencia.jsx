@@ -4,7 +4,8 @@ const InfoDigitalisKompetencia = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
       <Typography variant="body2" color="text.secondary">
-        Ezen a felületen rögzítheti a digitális tananyagot fejlesztő és használó oktatók számát tanévenként.
+        Ezen a felületen rögzítheti a digitális tananyagot fejlesztő és használó
+        oktatók számát tanévenként.
       </Typography>
       <Box component="ul" sx={{ m: 0, pl: 2 }}>
         <Typography component="li" variant="body2" color="text.secondary">
@@ -17,7 +18,8 @@ const InfoDigitalisKompetencia = () => {
           A "Mentés" gombbal rögzítheti az adatokat az adatbázisban.
         </Typography>
         <Typography component="li" variant="body2" color="text.secondary">
-          Mivel ezek fix mérőszámok, új sorokat nem lehet hozzáadni, csak az értékeket szerkeszteni.
+          Mivel ezek fix mérőszámok, új sorokat nem lehet hozzáadni, csak az
+          értékeket szerkeszteni.
         </Typography>
       </Box>
     </Box>

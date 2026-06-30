@@ -40,7 +40,7 @@ import TitleTanuloLetszam from "./title_tanulo_letszam";
 import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
-import HistoryIcon from '@mui/icons-material/History';
+import HistoryIcon from "@mui/icons-material/History";
 
 const evszamok = generateSchoolYears();
 
@@ -615,7 +615,7 @@ export default function TanuloLetszam() {
 
       const result = await addTanuloLetszamBulk({
         alapadatok_id: selectedSchool?.id,
-        records: bulkRecords
+        records: bulkRecords,
       }).unwrap();
 
       setSavedData(JSON.parse(JSON.stringify(tableData)));
@@ -670,7 +670,6 @@ export default function TanuloLetszam() {
     }
 
     const calculatedData = {};
-
 
     // Process tanugyi data by szakirany and szakma
     tanugyiData.forEach((student) => {
@@ -904,17 +903,25 @@ export default function TanuloLetszam() {
 
   const exportRows = useMemo(() => {
     const rows = [];
-    
+
     // Létszámváltozás
     const changeRowTotal = { megnevezes: "Létszámváltozás (%) - Összesen" };
     const changeRowStudent = { megnevezes: "Létszámváltozás (%) - Tanulói" };
-    const changeRowAdult = { megnevezes: "Létszámváltozás (%) - Felnőttképzési" };
-    
-    evszamok.forEach(schoolYear => {
+    const changeRowAdult = {
+      megnevezes: "Létszámváltozás (%) - Felnőttképzési",
+    };
+
+    evszamok.forEach((schoolYear) => {
       const startYear = parseInt(schoolYear.split("/")[0]);
-      changeRowTotal[`${schoolYear}_osszesen`] = calculateGrandTotalPercentageChange(startYear, "total");
-      changeRowStudent[`${schoolYear}_tanuloi`] = calculateGrandTotalPercentageChange(startYear, "tanuloi_jogviszony");
-      changeRowAdult[`${schoolYear}_felnott`] = calculateGrandTotalPercentageChange(startYear, "felnottkepzesi_jogviszony");
+      changeRowTotal[`${schoolYear}_osszesen`] =
+        calculateGrandTotalPercentageChange(startYear, "total");
+      changeRowStudent[`${schoolYear}_tanuloi`] =
+        calculateGrandTotalPercentageChange(startYear, "tanuloi_jogviszony");
+      changeRowAdult[`${schoolYear}_felnott`] =
+        calculateGrandTotalPercentageChange(
+          startYear,
+          "felnottkepzesi_jogviszony",
+        );
     });
     rows.push(changeRowTotal);
     rows.push(changeRowStudent);
@@ -925,29 +932,36 @@ export default function TanuloLetszam() {
       if (category.isSzakirany) {
         rows.push({ megnevezes: category.category });
         const subcatRow = { megnevezes: `  ${category.subcategory}` };
-        evszamok.forEach(schoolYear => {
+        evszamok.forEach((schoolYear) => {
           const startYear = parseInt(schoolYear.split("/")[0]);
           let subcategoryTotal = 0;
           let subcategoryTanuloi = 0;
           let subcategoryFelnottkepzesi = 0;
           category.subTypes.forEach((subType) => {
             subcategoryTotal += calculateTotal(subType, startYear);
-            subcategoryTanuloi += tableData[subType]?.[startYear]?.tanuloi_jogviszony || 0;
-            subcategoryFelnottkepzesi += tableData[subType]?.[startYear]?.felnottkepzesi_jogviszony || 0;
+            subcategoryTanuloi +=
+              tableData[subType]?.[startYear]?.tanuloi_jogviszony || 0;
+            subcategoryFelnottkepzesi +=
+              tableData[subType]?.[startYear]?.felnottkepzesi_jogviszony || 0;
           });
           subcatRow[`${schoolYear}_osszesen`] = subcategoryTotal;
           subcatRow[`${schoolYear}_tanuloi`] = subcategoryTanuloi;
           subcatRow[`${schoolYear}_felnott`] = subcategoryFelnottkepzesi;
         });
         rows.push(subcatRow);
-        
+
         category.subTypes.forEach((subType) => {
           const dataRow = { megnevezes: `    ${subType}` };
-          evszamok.forEach(schoolYear => {
+          evszamok.forEach((schoolYear) => {
             const startYear = parseInt(schoolYear.split("/")[0]);
-            dataRow[`${schoolYear}_osszesen`] = calculateTotal(subType, startYear);
-            dataRow[`${schoolYear}_tanuloi`] = tableData[subType]?.[startYear]?.tanuloi_jogviszony || 0;
-            dataRow[`${schoolYear}_felnott`] = tableData[subType]?.[startYear]?.felnottkepzesi_jogviszony || 0;
+            dataRow[`${schoolYear}_osszesen`] = calculateTotal(
+              subType,
+              startYear,
+            );
+            dataRow[`${schoolYear}_tanuloi`] =
+              tableData[subType]?.[startYear]?.tanuloi_jogviszony || 0;
+            dataRow[`${schoolYear}_felnott`] =
+              tableData[subType]?.[startYear]?.felnottkepzesi_jogviszony || 0;
           });
           rows.push(dataRow);
         });
@@ -955,15 +969,27 @@ export default function TanuloLetszam() {
     });
 
     return rows;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [programTypes, tableData]);
 
   const exportColumns = useMemo(() => {
     const columns = [{ header: "Megnevezés", key: "megnevezes", width: 50 }];
-    evszamok.forEach(year => {
-      columns.push({ header: `${year} Összesen`, key: `${year}_osszesen`, width: 15 });
-      columns.push({ header: `${year} Tanulói`, key: `${year}_tanuloi`, width: 15 });
-      columns.push({ header: `${year} Felnőtt`, key: `${year}_felnott`, width: 15 });
+    evszamok.forEach((year) => {
+      columns.push({
+        header: `${year} Összesen`,
+        key: `${year}_osszesen`,
+        width: 15,
+      });
+      columns.push({
+        header: `${year} Tanulói`,
+        key: `${year}_tanuloi`,
+        width: 15,
+      });
+      columns.push({
+        header: `${year} Felnőtt`,
+        key: `${year}_felnott`,
+        width: 15,
+      });
     });
     return columns;
   }, []);
@@ -1016,8 +1042,6 @@ export default function TanuloLetszam() {
               </Box>
             )}
 
-       
-
             {activeTab === 0 && (
               <>
                 {" "}
@@ -1032,7 +1056,7 @@ export default function TanuloLetszam() {
                     >
                       {isUpdating || isSaving ? "Mentés..." : "Mentés"}
                     </Button>
-                    
+
                     <Button
                       variant="outlined"
                       color="info"
@@ -1054,7 +1078,7 @@ export default function TanuloLetszam() {
                       Visszaállítás
                     </Button>
                   </LockedTableWrapper>
-                  <ExportToExcel 
+                  <ExportToExcel
                     fileName="tanulo_letszam"
                     sheetName="Tanulólétszám"
                     columns={exportColumns}
@@ -1940,7 +1964,7 @@ export default function TanuloLetszam() {
             </Snackbar>
           </Box>
         </Fade>
-        
+
         <HistoryDialog
           open={historyOpen}
           onClose={() => setHistoryOpen(false)}

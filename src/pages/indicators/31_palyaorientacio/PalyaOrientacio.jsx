@@ -47,6 +47,8 @@ import InfoPalyaorientacio from "./info_palyaorientacio";
 import TitlePalyaorientacio from "./title_palyaorientacio";
 import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 const CATEGORIES = [
   "Pályaorientációs rendezvény megnevezése",
@@ -67,6 +69,7 @@ export default function PalyaOrientacio() {
 
   const selectedSchool = useSelector(selectSelectedSchool);
   const [tableData, setTableData] = useState(createInitialData());
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [originalData, setOriginalData] = useState(createInitialData());
 
   const [isModified, setIsModified] = useState(false);
@@ -87,7 +90,7 @@ export default function PalyaOrientacio() {
     const startYear = parseInt(yearRange.split("/")[0]);
     return useGetPalyaOrientacioQuery(
       { alapadatokId: selectedSchool?.id, tanev: startYear },
-      { skip: !selectedSchool }
+      { skip: !selectedSchool },
     );
   });
 
@@ -96,12 +99,16 @@ export default function PalyaOrientacio() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queries.map((q) => q.fulfilledTimeStamp).join(","), selectedSchool?.id]);
 
-  const isLoading = useMemo(() => queries.some((q) => q.isLoading),
+  const isLoading = useMemo(
+    () => queries.some((q) => q.isLoading),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queries.map((q) => q.isLoading).join(",")]);
-  const isFetching = useMemo(() => queries.some((q) => q.isFetching),
+    [queries.map((q) => q.isLoading).join(",")],
+  );
+  const isFetching = useMemo(
+    () => queries.some((q) => q.isFetching),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queries.map((q) => q.isFetching).join(",")]);
+    [queries.map((q) => q.isFetching).join(",")],
+  );
 
   const [addData] = useAddPalyaOrientacioMutation();
   const [updateData] = useUpdatePalyaOrientacioMutation();
@@ -113,7 +120,7 @@ export default function PalyaOrientacio() {
       const origData = createInitialData();
 
       if (Array.isArray(dbData)) {
-        dbData.forEach(item => {
+        dbData.forEach((item) => {
           const category = item.kategoria || CATEGORIES[0];
           const name = item.tevekenyseg_neve || "Ismeretlen";
           const key = `${category}::${name}`;
@@ -121,14 +128,14 @@ export default function PalyaOrientacio() {
 
           if (!newData[key]) {
             newData[key] = {};
-            schoolYears.forEach(year => {
+            schoolYears.forEach((year) => {
               newData[key][year] = { resztvevok_szama: "" };
             });
           }
 
           const yearData = {
             id: item.id,
-            resztvevok_szama: item.resztvevok_szama || ""
+            resztvevok_szama: item.resztvevok_szama || "",
           };
 
           newData[key][yearRange] = { ...yearData };
@@ -165,9 +172,10 @@ export default function PalyaOrientacio() {
       const availableYears = schoolYears
         .map((year) => parseInt(year.split("/")[0], 10))
         .filter((year) => !Number.isNaN(year));
-      const defaultStartYear = availableYears.length > 0
-        ? Math.max(...availableYears)
-        : new Date().getFullYear();
+      const defaultStartYear =
+        availableYears.length > 0
+          ? Math.max(...availableYears)
+          : new Date().getFullYear();
 
       const recordData = {
         alapadatok_id: selectedSchool.id,
@@ -191,7 +199,13 @@ export default function PalyaOrientacio() {
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
-  }, [newActivityCategory, newActivityName, selectedSchool, addData, schoolYears]);
+  }, [
+    newActivityCategory,
+    newActivityName,
+    selectedSchool,
+    addData,
+    schoolYears,
+  ]);
 
   const handleRemoveActivity = useCallback((key) => {
     setItemToDelete(key);
@@ -203,7 +217,7 @@ export default function PalyaOrientacio() {
 
     try {
       const promises = [];
-      schoolYears.forEach(year => {
+      schoolYears.forEach((year) => {
         const id = originalData[itemToDelete]?.[year]?.id;
         if (id) promises.push(deleteData(id).unwrap());
       });
@@ -271,9 +285,21 @@ export default function PalyaOrientacio() {
             };
 
             if (id) {
-              promises.push(updateData({ id, ...recordData }).unwrap().then(() => { updatedCount++; }));
+              promises.push(
+                updateData({ id, ...recordData })
+                  .unwrap()
+                  .then(() => {
+                    updatedCount++;
+                  }),
+              );
             } else {
-              promises.push(addData(recordData).unwrap().then(() => { savedCount++; }));
+              promises.push(
+                addData(recordData)
+                  .unwrap()
+                  .then(() => {
+                    savedCount++;
+                  }),
+              );
             }
           }
         });
@@ -281,7 +307,9 @@ export default function PalyaOrientacio() {
 
       if (promises.length > 0) {
         await Promise.all(promises);
-        setSnackbarMessage(`Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`);
+        setSnackbarMessage(
+          `Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`,
+        );
         setSnackbarSeverity("success");
       } else {
         setSnackbarMessage("Nem történt módosítás!");
@@ -318,7 +346,7 @@ export default function PalyaOrientacio() {
 
   const categoryCounts = useMemo(() => {
     const counts = {};
-    sortedKeys.forEach(key => {
+    sortedKeys.forEach((key) => {
       const cat = key.split("::")[0];
       counts[cat] = (counts[cat] || 0) + 1;
     });
@@ -327,11 +355,12 @@ export default function PalyaOrientacio() {
 
   const exportRows = useMemo(() => {
     const rows = [];
-    sortedKeys.forEach(key => {
+    sortedKeys.forEach((key) => {
       const [category, name] = key.split("::");
       const row = { kategoria: category, tevekenyseg: name };
-      schoolYears.forEach(year => {
-        row[`${year}__resztvevok`] = tableData[key][year]?.resztvevok_szama || "";
+      schoolYears.forEach((year) => {
+        row[`${year}__resztvevok`] =
+          tableData[key][year]?.resztvevok_szama || "";
       });
       rows.push(row);
     });
@@ -379,6 +408,15 @@ export default function PalyaOrientacio() {
             </Button>
             <Button
               variant="outlined"
+              color="primary"
+              onClick={() => setHistoryOpen(true)}
+              startIcon={<HistoryIcon />}
+              sx={{ ml: 2 }}
+            >
+              Előzmények
+            </Button>
+            <Button
+              variant="outlined"
               startIcon={<RefreshIcon />}
               onClick={handleReset}
               disabled={!isModified || isSaving}
@@ -391,7 +429,11 @@ export default function PalyaOrientacio() {
             sheetName="Pályaorientáció"
             columns={[
               { header: "Kategória", key: "kategoria", width: 40 },
-              { header: "Tevékenység/rendezvény megnevezése", key: "tevekenyseg", width: 50 },
+              {
+                header: "Tevékenység/rendezvény megnevezése",
+                key: "tevekenyseg",
+                width: 50,
+              },
               ...schoolYears.map((year) => ({
                 header: `${year} - Résztvevők száma`,
                 key: `${year}__resztvevok`,
@@ -403,25 +445,81 @@ export default function PalyaOrientacio() {
           />
         </Stack>
 
-        <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
+        <TableContainer
+          component={Paper}
+          sx={{ maxWidth: "100%", overflowX: "auto" }}
+        >
           <Table size="medium" sx={{ minWidth: 900, border: "2px solid #ccc" }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: "bold", minWidth: 200, borderRight: "2px solid #ccc", borderBottom: "2px solid #ccc", backgroundColor: "#fff", position: "sticky", left: 0, zIndex: 3 }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    minWidth: 200,
+                    borderRight: "2px solid #ccc",
+                    borderBottom: "2px solid #ccc",
+                    backgroundColor: "#fff",
+                    position: "sticky",
+                    left: 0,
+                    zIndex: 3,
+                  }}
+                >
                   Kategória
                 </TableCell>
-                <TableCell sx={{ fontWeight: "bold", minWidth: 280, borderRight: "2px solid #ccc", borderBottom: "2px solid #ccc", backgroundColor: "#fff", zIndex: 2 }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    minWidth: 280,
+                    borderRight: "2px solid #ccc",
+                    borderBottom: "2px solid #ccc",
+                    backgroundColor: "#fff",
+                    zIndex: 2,
+                  }}
+                >
                   Tevékenység/rendezvény megnevezése
                 </TableCell>
                 {schoolYears.map((year, i) => (
-                  <TableCell key={`${year}-header`} align="center" sx={{ fontWeight: "bold", backgroundColor: "#fff2cc", borderBottom: "2px solid #ccc", borderRight: i === schoolYears.length - 1 ? "none" : "1px solid #ccc", minWidth: 150 }}>
+                  <TableCell
+                    key={`${year}-header`}
+                    align="center"
+                    sx={{
+                      fontWeight: "bold",
+                      backgroundColor: "#fff2cc",
+                      borderBottom: "2px solid #ccc",
+                      borderRight:
+                        i === schoolYears.length - 1
+                          ? "none"
+                          : "1px solid #ccc",
+                      minWidth: 150,
+                    }}
+                  >
                     <Box>{year}</Box>
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: "text.secondary", mt: 0.5, display: "block" }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontWeight: 600,
+                        color: "text.secondary",
+                        mt: 0.5,
+                        display: "block",
+                      }}
+                    >
                       Résztvevők száma (fő)
                     </Typography>
                   </TableCell>
                 ))}
-                <TableCell sx={{ fontWeight: "bold", width: 60, borderBottom: "2px solid #ccc", borderLeft: "2px solid #ccc", position: "sticky", right: 0, backgroundColor: "#f5f5f5", zIndex: 3, boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)" }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    width: 60,
+                    borderBottom: "2px solid #ccc",
+                    borderLeft: "2px solid #ccc",
+                    position: "sticky",
+                    right: 0,
+                    backgroundColor: "#f5f5f5",
+                    zIndex: 3,
+                    boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                  }}
+                >
                   Művelet
                 </TableCell>
               </TableRow>
@@ -429,8 +527,13 @@ export default function PalyaOrientacio() {
             <TableBody>
               {sortedKeys.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={schoolYears.length + 3} align="center" sx={{ py: 3, fontStyle: "italic", color: "text.secondary" }}>
-                    Nincs rögzített adat. Kattintson az "Új tevékenység hozzáadása" gombra!
+                  <TableCell
+                    colSpan={schoolYears.length + 3}
+                    align="center"
+                    sx={{ py: 3, fontStyle: "italic", color: "text.secondary" }}
+                  >
+                    Nincs rögzített adat. Kattintson az "Új tevékenység
+                    hozzáadása" gombra!
                   </TableCell>
                 </TableRow>
               ) : (
@@ -463,18 +566,42 @@ export default function PalyaOrientacio() {
                           {category}
                         </TableCell>
                       )}
-                      <TableCell sx={{ borderRight: "2px solid #ccc", borderBottom: "1px solid #ddd", backgroundColor: "#fff", zIndex: 1, width: "30%" }}>
+                      <TableCell
+                        sx={{
+                          borderRight: "2px solid #ccc",
+                          borderBottom: "1px solid #ddd",
+                          backgroundColor: "#fff",
+                          zIndex: 1,
+                          width: "30%",
+                        }}
+                      >
                         {name}
                       </TableCell>
                       {schoolYears.map((year, i) => {
-                        const rawVal = tableData[key][year]?.resztvevok_szama || "";
+                        const rawVal =
+                          tableData[key][year]?.resztvevok_szama || "";
 
                         return (
-                          <TableCell key={`${year}-val`} align="center" sx={{ borderBottom: "1px solid #ddd", borderRight: i === schoolYears.length - 1 ? "none" : "1px solid #eee", backgroundColor: isFieldModified(key, year) ? "#fef08a" : "inherit" }}>
+                          <TableCell
+                            key={`${year}-val`}
+                            align="center"
+                            sx={{
+                              borderBottom: "1px solid #ddd",
+                              borderRight:
+                                i === schoolYears.length - 1
+                                  ? "none"
+                                  : "1px solid #eee",
+                              backgroundColor: isFieldModified(key, year)
+                                ? "#fef08a"
+                                : "inherit",
+                            }}
+                          >
                             <TextField
                               type="text"
                               value={rawVal}
-                              onChange={(e) => handleDataChange(key, year, e.target.value)}
+                              onChange={(e) =>
+                                handleDataChange(key, year, e.target.value)
+                              }
                               size="small"
                               placeholder="pl. 100"
                               inputProps={{ style: { textAlign: "center" } }}
@@ -483,8 +610,24 @@ export default function PalyaOrientacio() {
                           </TableCell>
                         );
                       })}
-                      <TableCell align="center" sx={{ borderLeft: "2px solid #ccc", borderBottom: "1px solid #ddd", position: "sticky", right: 0, backgroundColor: "#fff", boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)", zIndex: 1 }}>
-                        <IconButton size="small" color="error" onClick={() => handleRemoveActivity(key)} disabled={!selectedSchool}>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          borderLeft: "2px solid #ccc",
+                          borderBottom: "1px solid #ddd",
+                          position: "sticky",
+                          right: 0,
+                          backgroundColor: "#fff",
+                          boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                          zIndex: 1,
+                        }}
+                      >
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleRemoveActivity(key)}
+                          disabled={!selectedSchool}
+                        >
                           <DeleteIcon />
                         </IconButton>
                       </TableCell>
@@ -497,10 +640,17 @@ export default function PalyaOrientacio() {
         </TableContainer>
 
         {/* Új tevékenység Dialog */}
-        <Dialog open={openAddDialog} onClose={() => setOpenAddDialog(false)} maxWidth="sm" fullWidth>
+        <Dialog
+          open={openAddDialog}
+          onClose={() => setOpenAddDialog(false)}
+          maxWidth="sm"
+          fullWidth
+        >
           <DialogTitle>Új pályaorientációs tevékenység hozzáadása</DialogTitle>
           <DialogContent>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 2 }}>
+            <Box
+              sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 2 }}
+            >
               <FormControl fullWidth>
                 <InputLabel>Kategória</InputLabel>
                 <Select
@@ -539,7 +689,10 @@ export default function PalyaOrientacio() {
         </Dialog>
 
         {/* Törlés Dialog */}
-        <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+        <Dialog
+          open={openDeleteDialog}
+          onClose={() => setOpenDeleteDialog(false)}
+        >
           <DialogTitle>Törlés megerősítése</DialogTitle>
           <DialogContent>
             <Typography>
@@ -548,12 +701,17 @@ export default function PalyaOrientacio() {
               <strong>{itemToDelete?.split("::")[1]}</strong>?
             </Typography>
             <Typography variant="body2" color="error" sx={{ mt: 1 }}>
-              Ez a művelet nem vonható vissza, és azonnal törlődik az adatbázisból!
+              Ez a művelet nem vonható vissza, és azonnal törlődik az
+              adatbázisból!
             </Typography>
           </DialogContent>
           <DialogActions sx={{ p: 2 }}>
             <Button onClick={() => setOpenDeleteDialog(false)}>Mégse</Button>
-            <Button variant="contained" color="error" onClick={handleConfirmDelete}>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleConfirmDelete}
+            >
               Törlés
             </Button>
           </DialogActions>
@@ -565,11 +723,27 @@ export default function PalyaOrientacio() {
           onClose={() => setSnackbarOpen(false)}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
-          <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: "100%" }}>
+          <Alert
+            onClose={() => setSnackbarOpen(false)}
+            severity={snackbarSeverity}
+            sx={{ width: "100%" }}
+          >
             {snackbarMessage}
           </Alert>
         </Snackbar>
       </Box>
+
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        alapadatokId={selectedSchool?.id}
+        tableName="palya_orientacio"
+        onRollbackSuccess={() => {
+          setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+        }}
+      />
     </PageWrapper>
   );
 }

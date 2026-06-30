@@ -19,17 +19,28 @@ const InfoTanuloLetszam = () => {
         [%]
       </Typography>
       <Typography variant="body2" sx={{ mt: 1 }}>
-        <strong>A mutató számítása: (az adott tanév létszámadata / az előző tanév létszámadata) * 100</strong>
+        <strong>
+          A mutató számítása: (az adott tanév létszámadata / az előző tanév
+          létszámadata) * 100
+        </strong>
       </Typography>
       <Typography variant="body2" sx={{ mt: 1 }}>
-        A trendvizsgálat az intézmények figyelmét ráirányítja az egyes évek „kiugró” adatain túlmutató tényezőkre.
-        Példa: Egy szakmában az elmúlt 5 évben a létszámadatok (fő) alakulása rendre: 73, 86, 94, 45, 98. A trendvizsgálat alapján egy növekedési tendencia mutatkozik az adott szakma esetén. 
-        Célszerű a 45 fős adat okát megvizsgálni, de általánosságban elmondható, hogy ha az eddigi tevékenységét hasonlóan folytatja az intézmény, akkor ezzel a szakmával nem lesz problémája.
+        A trendvizsgálat az intézmények figyelmét ráirányítja az egyes évek
+        „kiugró” adatain túlmutató tényezőkre. Példa: Egy szakmában az elmúlt 5
+        évben a létszámadatok (fő) alakulása rendre: 73, 86, 94, 45, 98. A
+        trendvizsgálat alapján egy növekedési tendencia mutatkozik az adott
+        szakma esetén. Célszerű a 45 fős adat okát megvizsgálni, de
+        általánosságban elmondható, hogy ha az eddigi tevékenységét hasonlóan
+        folytatja az intézmény, akkor ezzel a szakmával nem lesz problémája.
       </Typography>
       <Typography variant="body2" sx={{ mt: 1 }}>
-        Adatforrás: A szakképző intézményben adott tanév október 1-jén szakmai oktatásban tanulók száma: KRÉTA.
+        Adatforrás: A szakképző intézményben adott tanév október 1-jén szakmai
+        oktatásban tanulók száma: KRÉTA.
         <br />
-        Az aktuális tanév tanulólétszám adatainak feltöltéséhez először használja az Adatok importálása / Tanügyi adatok menüpontot, ahová töltse fel az intézmény Kréta "Tanuló tanügy adatai" Excel export fájlját!
+        Az aktuális tanév tanulólétszám adatainak feltöltéséhez először
+        használja az Adatok importálása / Tanügyi adatok menüpontot, ahová
+        töltse fel az intézmény Kréta "Tanuló tanügy adatai" Excel export
+        fájlját!
       </Typography>
     </Box>
   );

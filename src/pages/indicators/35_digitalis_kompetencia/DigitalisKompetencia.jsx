@@ -23,10 +23,7 @@ import {
   CircularProgress,
   Snackbar,
 } from "@mui/material";
-import {
-  Save as SaveIcon,
-  Refresh as RefreshIcon,
-} from "@mui/icons-material";
+import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
@@ -35,17 +32,19 @@ import InfoDigitalisKompetencia from "./info_digitalis_kompetencia";
 import TitleDigitalisKompetencia from "./title_digitalis_kompetencia";
 import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 export default function DigitalisKompetencia() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
 
   const createInitialData = () => {
     const data = {};
-    schoolYears.forEach(year => {
+    schoolYears.forEach((year) => {
       data[year] = {
         id: null,
         fejleszto: "",
-        hasznalo: ""
+        hasznalo: "",
       };
     });
     return data;
@@ -53,6 +52,7 @@ export default function DigitalisKompetencia() {
 
   const selectedSchool = useSelector(selectSelectedSchool);
   const [tableData, setTableData] = useState(createInitialData());
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [originalData, setOriginalData] = useState(createInitialData());
 
   const [isModified, setIsModified] = useState(false);
@@ -66,7 +66,7 @@ export default function DigitalisKompetencia() {
     const startYear = parseInt(yearRange.split("/")[0]);
     return useGetDigitalisKompetenciaQuery(
       { alapadatokId: selectedSchool?.id, tanev: startYear },
-      { skip: !selectedSchool }
+      { skip: !selectedSchool },
     );
   });
 
@@ -75,12 +75,16 @@ export default function DigitalisKompetencia() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queries.map((q) => q.fulfilledTimeStamp).join(","), selectedSchool?.id]);
 
-  const isLoading = useMemo(() => queries.some((q) => q.isLoading),
+  const isLoading = useMemo(
+    () => queries.some((q) => q.isLoading),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queries.map((q) => q.isLoading).join(",")]);
-  const isFetching = useMemo(() => queries.some((q) => q.isFetching),
+    [queries.map((q) => q.isLoading).join(",")],
+  );
+  const isFetching = useMemo(
+    () => queries.some((q) => q.isFetching),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queries.map((q) => q.isFetching).join(",")]);
+    [queries.map((q) => q.isFetching).join(",")],
+  );
 
   const [addData] = useAddDigitalisKompetenciaMutation();
   const [updateData] = useUpdateDigitalisKompetenciaMutation();
@@ -91,7 +95,7 @@ export default function DigitalisKompetencia() {
       const origData = createInitialData();
 
       if (Array.isArray(dbData)) {
-        dbData.forEach(item => {
+        dbData.forEach((item) => {
           const yearRange = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
           if (newData[yearRange]) {
             const yearData = {
@@ -140,7 +144,10 @@ export default function DigitalisKompetencia() {
 
       schoolYears.forEach((year) => {
         let rowModified = false;
-        if (isFieldModified(year, "fejleszto") || isFieldModified(year, "hasznalo")) {
+        if (
+          isFieldModified(year, "fejleszto") ||
+          isFieldModified(year, "hasznalo")
+        ) {
           rowModified = true;
         }
 
@@ -156,16 +163,30 @@ export default function DigitalisKompetencia() {
           };
 
           if (id) {
-            promises.push(updateData({ id, ...recordData }).unwrap().then(() => { updatedCount++; }));
+            promises.push(
+              updateData({ id, ...recordData })
+                .unwrap()
+                .then(() => {
+                  updatedCount++;
+                }),
+            );
           } else {
-            promises.push(addData(recordData).unwrap().then(() => { savedCount++; }));
+            promises.push(
+              addData(recordData)
+                .unwrap()
+                .then(() => {
+                  savedCount++;
+                }),
+            );
           }
         }
       });
 
       if (promises.length > 0) {
         await Promise.all(promises);
-        setSnackbarMessage(`Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`);
+        setSnackbarMessage(
+          `Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`,
+        );
         setSnackbarSeverity("success");
       } else {
         setSnackbarMessage("Nem történt módosítás!");
@@ -193,8 +214,8 @@ export default function DigitalisKompetencia() {
       { megnevezes: "Digitális tananyagot fejlesztő oktatók száma (fő)" },
       { megnevezes: "Digitális tananyagot használó oktatók száma (fő)" },
     ];
-    
-    schoolYears.forEach(year => {
+
+    schoolYears.forEach((year) => {
       rows[0][year] = tableData[year]?.fejleszto || "";
       rows[1][year] = tableData[year]?.hasznalo || "";
     });
@@ -233,6 +254,15 @@ export default function DigitalisKompetencia() {
             </Button>
             <Button
               variant="outlined"
+              color="primary"
+              onClick={() => setHistoryOpen(true)}
+              startIcon={<HistoryIcon />}
+              sx={{ ml: 2 }}
+            >
+              Előzmények
+            </Button>
+            <Button
+              variant="outlined"
               startIcon={<RefreshIcon />}
               onClick={handleReset}
               disabled={!isModified || isSaving}
@@ -256,15 +286,39 @@ export default function DigitalisKompetencia() {
           />
         </Stack>
 
-        <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
+        <TableContainer
+          component={Paper}
+          sx={{ maxWidth: "100%", overflowX: "auto" }}
+        >
           <Table size="medium" sx={{ minWidth: 800, border: "2px solid #ccc" }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: "bold", minWidth: 350, borderRight: "2px solid #ccc", borderBottom: "2px solid #ccc", backgroundColor: "#f5f5f5" }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    minWidth: 350,
+                    borderRight: "2px solid #ccc",
+                    borderBottom: "2px solid #ccc",
+                    backgroundColor: "#f5f5f5",
+                  }}
+                >
                   Megnevezés
                 </TableCell>
                 {schoolYears.map((year, i) => (
-                  <TableCell key={`${year}-header`} align="center" sx={{ fontWeight: "bold", backgroundColor: "#fff2cc", borderBottom: "2px solid #ccc", borderRight: i === schoolYears.length - 1 ? "none" : "1px solid #ccc", minWidth: 150 }}>
+                  <TableCell
+                    key={`${year}-header`}
+                    align="center"
+                    sx={{
+                      fontWeight: "bold",
+                      backgroundColor: "#fff2cc",
+                      borderBottom: "2px solid #ccc",
+                      borderRight:
+                        i === schoolYears.length - 1
+                          ? "none"
+                          : "1px solid #ccc",
+                      minWidth: 150,
+                    }}
+                  >
                     {year}
                   </TableCell>
                 ))}
@@ -272,15 +326,36 @@ export default function DigitalisKompetencia() {
             </TableHead>
             <TableBody>
               <TableRow hover>
-                <TableCell sx={{ borderRight: "2px solid #ccc", borderBottom: "1px solid #ddd", fontWeight: 500 }}>
+                <TableCell
+                  sx={{
+                    borderRight: "2px solid #ccc",
+                    borderBottom: "1px solid #ddd",
+                    fontWeight: 500,
+                  }}
+                >
                   Digitális tananyagot fejlesztő oktatók száma (fő)
                 </TableCell>
                 {schoolYears.map((year, i) => (
-                  <TableCell key={`${year}-fejleszto`} align="center" sx={{ borderBottom: "1px solid #ddd", borderRight: i === schoolYears.length - 1 ? "none" : "1px solid #eee", backgroundColor: isFieldModified(year, "fejleszto") ? "#fef08a" : "inherit" }}>
+                  <TableCell
+                    key={`${year}-fejleszto`}
+                    align="center"
+                    sx={{
+                      borderBottom: "1px solid #ddd",
+                      borderRight:
+                        i === schoolYears.length - 1
+                          ? "none"
+                          : "1px solid #eee",
+                      backgroundColor: isFieldModified(year, "fejleszto")
+                        ? "#fef08a"
+                        : "inherit",
+                    }}
+                  >
                     <TextField
                       type="number"
                       value={tableData[year]?.fejleszto || ""}
-                      onChange={(e) => handleDataChange(year, "fejleszto", e.target.value)}
+                      onChange={(e) =>
+                        handleDataChange(year, "fejleszto", e.target.value)
+                      }
                       size="small"
                       inputProps={{ style: { textAlign: "center" }, min: 0 }}
                       sx={{ width: "100px" }}
@@ -289,15 +364,36 @@ export default function DigitalisKompetencia() {
                 ))}
               </TableRow>
               <TableRow hover>
-                <TableCell sx={{ borderRight: "2px solid #ccc", borderBottom: "1px solid #ddd", fontWeight: 500 }}>
+                <TableCell
+                  sx={{
+                    borderRight: "2px solid #ccc",
+                    borderBottom: "1px solid #ddd",
+                    fontWeight: 500,
+                  }}
+                >
                   Digitális tananyagot használó oktatók száma (fő)
                 </TableCell>
                 {schoolYears.map((year, i) => (
-                  <TableCell key={`${year}-hasznalo`} align="center" sx={{ borderBottom: "1px solid #ddd", borderRight: i === schoolYears.length - 1 ? "none" : "1px solid #eee", backgroundColor: isFieldModified(year, "hasznalo") ? "#fef08a" : "inherit" }}>
+                  <TableCell
+                    key={`${year}-hasznalo`}
+                    align="center"
+                    sx={{
+                      borderBottom: "1px solid #ddd",
+                      borderRight:
+                        i === schoolYears.length - 1
+                          ? "none"
+                          : "1px solid #eee",
+                      backgroundColor: isFieldModified(year, "hasznalo")
+                        ? "#fef08a"
+                        : "inherit",
+                    }}
+                  >
                     <TextField
                       type="number"
                       value={tableData[year]?.hasznalo || ""}
-                      onChange={(e) => handleDataChange(year, "hasznalo", e.target.value)}
+                      onChange={(e) =>
+                        handleDataChange(year, "hasznalo", e.target.value)
+                      }
                       size="small"
                       inputProps={{ style: { textAlign: "center" }, min: 0 }}
                       sx={{ width: "100px" }}
@@ -315,11 +411,27 @@ export default function DigitalisKompetencia() {
           onClose={() => setSnackbarOpen(false)}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
-          <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: "100%" }}>
+          <Alert
+            onClose={() => setSnackbarOpen(false)}
+            severity={snackbarSeverity}
+            sx={{ width: "100%" }}
+          >
             {snackbarMessage}
           </Alert>
         </Snackbar>
       </Box>
+
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        alapadatokId={selectedSchool?.id}
+        tableName="digitalisKompetencia"
+        onRollbackSuccess={() => {
+          setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+        }}
+      />
     </PageWrapper>
   );
 }

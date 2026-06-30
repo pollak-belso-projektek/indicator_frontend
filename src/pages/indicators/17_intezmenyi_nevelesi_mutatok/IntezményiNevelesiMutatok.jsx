@@ -21,7 +21,10 @@ import {
   FormControl,
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
-import { getCurrentSchoolYear, generateSchoolYears } from "../../../utils/schoolYears";
+import {
+  getCurrentSchoolYear,
+  generateSchoolYears,
+} from "../../../utils/schoolYears";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
@@ -37,6 +40,8 @@ import {
   useGetTanugyiAdatokQuery,
   useUpdateIntezmenyiNeveltsegiMutatokMutation,
 } from "../../../store/api/apiSlice";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 const categories = [
   {
@@ -273,6 +278,7 @@ const schoolYears = generateSchoolYears();
 export default function IntezményiNevelesiMutatok() {
   const selectedSchool = useSelector(selectSelectedSchool);
   const [selectedYear, setSelectedYear] = useState(getCurrentSchoolYear());
+  const [historyOpen, setHistoryOpen] = useState(false);
   const currentSchoolYearStart = Number.parseInt(
     selectedYear.split("/")[0],
     10,
@@ -373,7 +379,7 @@ export default function IntezményiNevelesiMutatok() {
 
       summary.igazolatlanOra = String(
         toNonNegativeInt(summary.igazolatlanOra) +
-        toNonNegativeInt(row.igazolatlanOra),
+          toNonNegativeInt(row.igazolatlanOra),
       );
 
       categories.forEach((category) => {
@@ -490,7 +496,9 @@ export default function IntezményiNevelesiMutatok() {
             // Az "Összesen" mezők csak frontend-összesítők, nincs DB mezőjük
             if (subcategory === "Összesen") return;
             const apiKey = apiFieldMap[category.name][subcategory];
-            payload[apiKey] = toNonNegativeInt(row?.[category.name]?.[subcategory]);
+            payload[apiKey] = toNonNegativeInt(
+              row?.[category.name]?.[subcategory],
+            );
           });
         });
 
@@ -540,7 +548,7 @@ export default function IntezményiNevelesiMutatok() {
     >
       <Box>
         <LockStatusIndicator tableName="intezmenyi_nevelesi_mutatok" />
-            <PageLoadingOverlay isLoading={isRefreshing || isFetchingTanugyi} />
+        <PageLoadingOverlay isLoading={isRefreshing || isFetchingTanugyi} />
 
         {isInitialLoading && (
           <Card sx={{ mt: 2, mb: 3 }}>
@@ -587,7 +595,10 @@ export default function IntezményiNevelesiMutatok() {
               </Alert>
             )}
             <Card sx={{ mb: 3, p: 2 }}>
-              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+              <ExportDOMTableToExcel
+                tableId=".MuiTable-root"
+                fileName="export_adatok"
+              />
               <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
                 <Button
                   variant="contained"
@@ -596,6 +607,15 @@ export default function IntezményiNevelesiMutatok() {
                   disabled={!isModified || isSaving || isRefreshing}
                 >
                   {isSaving ? "Mentés..." : "Mentés"}
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => setHistoryOpen(true)}
+                  startIcon={<HistoryIcon />}
+                  sx={{ ml: 2 }}
+                >
+                  Előzmények
                 </Button>
                 <Button
                   variant="outlined"
@@ -622,7 +642,10 @@ export default function IntezményiNevelesiMutatok() {
                     mb: 3,
                   }}
                 >
-                  <FormControl size="small" sx={{ position: "absolute", left: 0, minWidth: 140 }}>
+                  <FormControl
+                    size="small"
+                    sx={{ position: "absolute", left: 0, minWidth: 140 }}
+                  >
                     <Select
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(e.target.value)}
@@ -774,25 +797,25 @@ export default function IntezményiNevelesiMutatok() {
                                     value={
                                       isTotalCell
                                         ? String(
-                                          getCategoryTotal(
-                                            classRows[className],
-                                            category.name,
-                                          ),
-                                        )
+                                            getCategoryTotal(
+                                              classRows[className],
+                                              category.name,
+                                            ),
+                                          )
                                         : classRows[className]?.[
-                                        category.name
-                                        ]?.[subcategory] || "0"
+                                            category.name
+                                          ]?.[subcategory] || "0"
                                     }
                                     onChange={
                                       isTotalCell
                                         ? undefined
                                         : (e) =>
-                                          handleDataChange(
-                                            className,
-                                            category.name,
-                                            subcategory,
-                                            e.target.value,
-                                          )
+                                            handleDataChange(
+                                              className,
+                                              category.name,
+                                              subcategory,
+                                              e.target.value,
+                                            )
                                     }
                                     size="small"
                                     inputProps={{
@@ -873,6 +896,18 @@ export default function IntezményiNevelesiMutatok() {
           </>
         )}
       </Box>
+
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        alapadatokId={selectedSchool?.id}
+        tableName="IntezmenyiNeveltsegiMutatok"
+        onRollbackSuccess={() => {
+          setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+        }}
+      />
     </PageWrapper>
   );
 }

@@ -40,7 +40,8 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoDobbantoProgramAranya from "./info_dobbanto_program_aranya";
 import TitleDobbantoProgramAranya from "./title_dobbanto_program_aranya";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
-
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 export default function DobbantoProgramAránya() {
   const schoolYears = generateSchoolYears();
@@ -50,7 +51,7 @@ export default function DobbantoProgramAránya() {
   const { data: apiStudentData, isLoading: isFetching } =
     useGetTanuloLetszamQuery(
       { alapadatok_id: selectedSchool?.id },
-      { skip: !selectedSchool?.id } // Skip the query if no school is selected
+      { skip: !selectedSchool?.id }, // Skip the query if no school is selected
     );
 
   // Fetch existing dobbanto data from API for all years
@@ -61,7 +62,7 @@ export default function DobbantoProgramAránya() {
         alapadatok_id: selectedSchool?.id,
         tanev: startYear,
       },
-      { skip: !selectedSchool?.id }
+      { skip: !selectedSchool?.id },
     );
   });
 
@@ -88,6 +89,7 @@ export default function DobbantoProgramAránya() {
 
   // Data structure for the three main sections
   const [dobbantoData, setDobbantoData] = useState(() => {
+    const [historyOpen, setHistoryOpen] = useState(false);
     const initialData = {
       percentage_overall: {},
       dobbanto_students: {},
@@ -122,7 +124,7 @@ export default function DobbantoProgramAránya() {
       if (apiData && Array.isArray(apiData)) {
         // Find all records for this year (all jogv_tipus)
         const yearRecords = apiData.filter(
-          (record) => record.tanev_kezdete === startYear
+          (record) => record.tanev_kezdete === startYear,
         );
 
         // Sum up all the student counts
@@ -141,7 +143,7 @@ export default function DobbantoProgramAránya() {
     if (apiStudentData && Array.isArray(apiStudentData)) {
       console.log(
         "Loading student data from API for Dobbantó:",
-        apiStudentData
+        apiStudentData,
       );
 
       // Extract total student data (all jogv_tipus combined)
@@ -217,7 +219,7 @@ export default function DobbantoProgramAránya() {
 
     if (numericValue > totalStudents && totalStudents > 0) {
       setSnackbarMessage(
-        `A Dobbantó programban résztvevők száma (${numericValue}) nem lehet több, mint a tanulói összlétszám (${totalStudents}) a ${year} tanévben!`
+        `A Dobbantó programban résztvevők száma (${numericValue}) nem lehet több, mint a tanulói összlétszám (${totalStudents}) a ${year} tanévben!`,
       );
       setSnackbarSeverity("warning");
       setSnackbarOpen(true);
@@ -237,7 +239,7 @@ export default function DobbantoProgramAránya() {
   // Calculate percentage automatically
   const calculatePercentage = (year) => {
     const dobbantoStudents = parseFloat(
-      dobbantoData.dobbanto_students[year] || 0
+      dobbantoData.dobbanto_students[year] || 0,
     );
     const total = parseFloat(dobbantoData.total_students[year] || 0);
 
@@ -252,7 +254,7 @@ export default function DobbantoProgramAránya() {
   const hasValidationErrors = () => {
     return schoolYears.some((year) => {
       const percentage = parseFloat(
-        dobbantoData.percentage_overall[year] || "0.0"
+        dobbantoData.percentage_overall[year] || "0.0",
       );
       return percentage > 100;
     });
@@ -285,7 +287,7 @@ export default function DobbantoProgramAránya() {
     // Check for validation errors before saving
     if (hasValidationErrors()) {
       setSnackbarMessage(
-        "A mentés nem lehetséges, mert vannak validációs hibák. Javítsa ki a hibákat a mentés előtt!"
+        "A mentés nem lehetséges, mert vannak validációs hibák. Javítsa ki a hibákat a mentés előtt!",
       );
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
@@ -297,10 +299,10 @@ export default function DobbantoProgramAránya() {
       const savePromises = schoolYears.map(async (yearRange) => {
         const startYear = parseInt(yearRange.split("/")[0]);
         const dobbantoStudents = parseInt(
-          dobbantoData.dobbanto_students[yearRange] || 0
+          dobbantoData.dobbanto_students[yearRange] || 0,
         );
         const totalStudents = parseInt(
-          dobbantoData.total_students[yearRange] || 0
+          dobbantoData.total_students[yearRange] || 0,
         );
 
         // Ensure we're sending valid numbers, not NaN
@@ -310,12 +312,12 @@ export default function DobbantoProgramAránya() {
         const validTotalStudents = isNaN(totalStudents) ? 0 : totalStudents;
 
         console.log(
-          `Mentés ${yearRange}: dobbanto=${validDobbantoStudents}, total=${validTotalStudents}`
+          `Mentés ${yearRange}: dobbanto=${validDobbantoStudents}, total=${validTotalStudents}`,
         );
 
         // Check if data already exists for this year
         const existingRecord = existingDobbantoData?.find(
-          (record) => record.tanev_kezdete === startYear
+          (record) => record.tanev_kezdete === startYear,
         );
 
         const payload = {
@@ -328,7 +330,7 @@ export default function DobbantoProgramAránya() {
         if (existingRecord) {
           // Update existing record (PUT)
           console.log(
-            `Updating existing record for ${yearRange}, ID: ${existingRecord.id}`
+            `Updating existing record for ${yearRange}, ID: ${existingRecord.id}`,
           );
           return await updateDobbanto({
             id: existingRecord.id,
@@ -418,20 +420,25 @@ export default function DobbantoProgramAránya() {
                 {/* Selected School Alert */}
                 {!selectedSchool && (
                   <Alert severity="warning" sx={{ mb: 2 }}>
-                    Nincs iskola kiválasztva - válasszon ki egy iskolát a mentéshez!
+                    Nincs iskola kiválasztva - válasszon ki egy iskolát a
+                    mentéshez!
                   </Alert>
                 )}
 
                 {selectedSchool && (
                   <Alert severity="info" sx={{ mb: 2 }}>
-                    Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
+                    Kiválasztott iskola:{" "}
+                    <strong>{selectedSchool.iskola_neve}</strong>
                   </Alert>
                 )}
 
                 {/* Main Data Tables */}
                 {/* Action Buttons */}
                 <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 2 }}>
-                  <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+                  <ExportDOMTableToExcel
+                    tableId=".MuiTable-root"
+                    fileName="export_adatok"
+                  />
                   <LockedTableWrapper tableName="dobbanto">
                     <Button
                       variant="contained"
@@ -448,6 +455,15 @@ export default function DobbantoProgramAránya() {
                     </Button>
                     <Button
                       variant="outlined"
+                      color="primary"
+                      onClick={() => setHistoryOpen(true)}
+                      startIcon={<HistoryIcon />}
+                      sx={{ ml: 2 }}
+                    >
+                      Előzmények
+                    </Button>
+                    <Button
+                      variant="outlined"
                       startIcon={<RefreshIcon />}
                       onClick={handleReset}
                       disabled={!isModified || !savedData || isSaving}
@@ -456,7 +472,6 @@ export default function DobbantoProgramAránya() {
                     </Button>
                   </LockedTableWrapper>
                 </Stack>
-
 
                 {/* Status Messages */}
                 {isModified && (
@@ -469,10 +484,10 @@ export default function DobbantoProgramAránya() {
                 {/* Percentage over 100% warning */}
                 {hasValidationErrors() && (
                   <Alert severity="error" sx={{ mt: 2 }}>
-                    ⚠️ Figyelem: Egy vagy több tanévben a Dobbantó programban résztvevők
-                    aránya meghaladja a 100%-ot! Ellenőrizze, hogy a résztvevők száma nem
-                    haladja meg a tanulói összlétszámot. A mentés le van tiltva, amíg a
-                    hibák fennállnak.
+                    ⚠️ Figyelem: Egy vagy több tanévben a Dobbantó programban
+                    résztvevők aránya meghaladja a 100%-ot! Ellenőrizze, hogy a
+                    résztvevők száma nem haladja meg a tanulói összlétszámot. A
+                    mentés le van tiltva, amíg a hibák fennállnak.
                   </Alert>
                 )}
                 {/* Percentage Overview Table */}
@@ -495,7 +510,8 @@ export default function DobbantoProgramAránya() {
                       color="text.secondary"
                       sx={{ mb: 2, textAlign: "center" }}
                     >
-                      Tanulói és felnőttképzési jogviszony (%) - Automatikusan kalkulált
+                      Tanulói és felnőttképzési jogviszony (%) - Automatikusan
+                      kalkulált
                     </Typography>
 
                     <TableContainer
@@ -529,7 +545,7 @@ export default function DobbantoProgramAránya() {
                           <TableRow sx={{ backgroundColor: "#fff3e0" }}>
                             {schoolYears.map((year) => {
                               const percentage = parseFloat(
-                                dobbantoData.percentage_overall[year] || "0.0"
+                                dobbantoData.percentage_overall[year] || "0.0",
                               );
                               const isOver100 = percentage > 100;
 
@@ -538,14 +554,17 @@ export default function DobbantoProgramAránya() {
                                   key={year}
                                   align="center"
                                   sx={{
-                                    backgroundColor: isOver100 ? "#ffebee" : "#f8fdf8",
+                                    backgroundColor: isOver100
+                                      ? "#ffebee"
+                                      : "#f8fdf8",
                                     fontWeight: "medium",
                                     fontSize: "1.1rem",
                                     color: isOver100 ? "#d32f2f" : "inherit",
                                   }}
                                 >
-                                  {dobbantoData.percentage_overall[year] || "0.0"}%
-                                  {isOver100 && " ⚠️"}
+                                  {dobbantoData.percentage_overall[year] ||
+                                    "0.0"}
+                                  %{isOver100 && " ⚠️"}
                                 </TableCell>
                               );
                             })}
@@ -612,12 +631,14 @@ export default function DobbantoProgramAránya() {
                               <TableCell key={year} align="center">
                                 <TextField
                                   type="number"
-                                  value={dobbantoData.dobbanto_students[year] || "0"}
+                                  value={
+                                    dobbantoData.dobbanto_students[year] || "0"
+                                  }
                                   onChange={(e) =>
                                     handleDataChange(
                                       "dobbanto_students",
                                       year,
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   size="small"
@@ -723,8 +744,19 @@ export default function DobbantoProgramAránya() {
             )}
           </Box>
         </Fade>
+
+        <HistoryDialog
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          alapadatokId={selectedSchool?.id}
+          tableName="dobbanto"
+          onRollbackSuccess={() => {
+            setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+          }}
+        />
       </PageWrapper>
     </Container>
   );
 }
-

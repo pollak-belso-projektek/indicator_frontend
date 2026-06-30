@@ -24,7 +24,6 @@ import {
   Stack,
   Alert,
   CircularProgress,
-
   Container,
   Fade,
   Dialog,
@@ -55,6 +54,8 @@ import InfoSzakmaiEredmenyek from "./info_szakmai_eredmenyek";
 import TitleSzakmaiEredmenyek from "./title_szakmai_eredmenyek";
 import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 export default function SzakmaiEredmenyek() {
   // Predefined competition categories
@@ -93,6 +94,7 @@ export default function SzakmaiEredmenyek() {
 
   const selectedSchool = useSelector(selectSelectedSchool);
   const [competitionData, setCompetitionData] = useState(createInitialData());
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [originalData, setOriginalData] = useState(createInitialData());
   const [competitionCreatedAtMap, setCompetitionCreatedAtMap] = useState({});
   const [isModified, setIsModified] = useState(false);
@@ -101,7 +103,10 @@ export default function SzakmaiEredmenyek() {
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [competitionToDelete, setCompetitionToDelete] = useState(null);
-  const [newCompetition, setNewCompetition] = useState({ category: "", name: "" });
+  const [newCompetition, setNewCompetition] = useState({
+    category: "",
+    name: "",
+  });
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
@@ -109,10 +114,10 @@ export default function SzakmaiEredmenyek() {
   const {
     data: rawDbData,
     isLoading,
-    isFetching
+    isFetching,
   } = useGetVersenyekQuery(
     { alapadatok_id: selectedSchool?.id },
-    { skip: !selectedSchool }
+    { skip: !selectedSchool },
   );
 
   const dbData = useMemo(() => rawDbData || [], [rawDbData]);
@@ -124,7 +129,7 @@ export default function SzakmaiEredmenyek() {
   const { data: kategoriak } = useGetVersenyKategoriakQuery();
   const { data: tanuloLetszamData } = useGetTanuloLetszamQuery(
     { alapadatok_id: selectedSchool?.id },
-    { skip: !selectedSchool?.id }
+    { skip: !selectedSchool?.id },
   );
 
   const categoryOrderMap = useMemo(() => {
@@ -139,7 +144,9 @@ export default function SzakmaiEredmenyek() {
   const kategoriaMap = useMemo(() => {
     if (!kategoriak) return {};
     const map = {};
-    kategoriak.forEach((k) => { map[k.id] = k.nev; });
+    kategoriak.forEach((k) => {
+      map[k.id] = k.nev;
+    });
     return map;
   }, [kategoriak]);
 
@@ -150,17 +157,24 @@ export default function SzakmaiEredmenyek() {
       const createdAtMap = {};
 
       if (Array.isArray(dbData)) {
-        dbData.forEach(item => {
-          const categoryKey = kategoriaMap[item.versenyNev?.kategoria_id] || item.versenyNev?.kategoria_id || "Ismeretlen kategória";
+        dbData.forEach((item) => {
+          const categoryKey =
+            kategoriaMap[item.versenyNev?.kategoria_id] ||
+            item.versenyNev?.kategoria_id ||
+            "Ismeretlen kategória";
           const competitionName = item.versenyNev?.nev || "Ismeretlen verseny";
-          const competitionCreatedAt = item.versenyNev?.createAt || item.createAt || "";
+          const competitionCreatedAt =
+            item.versenyNev?.createAt || item.createAt || "";
 
           if (!newCompData[categoryKey]) newCompData[categoryKey] = {};
           if (!newCompData[categoryKey][competitionName]) {
             newCompData[categoryKey][competitionName] = {};
-            schoolYears.forEach(year => {
+            schoolYears.forEach((year) => {
               newCompData[categoryKey][competitionName][year] = {
-                "1_helyezett": "0", "1-3_helyezett": "0", "dontobeJutott": "0", "versenyre_nevezettek": "0"
+                "1_helyezett": "0",
+                "1-3_helyezett": "0",
+                dontobeJutott: "0",
+                versenyre_nevezettek: "0",
               };
             });
           }
@@ -175,16 +189,22 @@ export default function SzakmaiEredmenyek() {
             versenyNev_id: item.versenyNev?.id,
             "1_helyezett": item.helyezett_1?.toString() || "0",
             "1-3_helyezett": item.helyezett_1_3?.toString() || "0",
-            "dontobeJutott": item.dontobeJutott?.toString() || "0",
-            "versenyre_nevezettek": item.nevezettekSzama?.toString() || "0"
+            dontobeJutott: item.dontobeJutott?.toString() || "0",
+            versenyre_nevezettek: item.nevezettekSzama?.toString() || "0",
           };
 
           const yearRange = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
-          newCompData[categoryKey][competitionName][yearRange] = { ...yearData };
+          newCompData[categoryKey][competitionName][yearRange] = {
+            ...yearData,
+          };
 
-          if (!originalCompData[categoryKey]) originalCompData[categoryKey] = {};
-          if (!originalCompData[categoryKey][competitionName]) originalCompData[categoryKey][competitionName] = {};
-          originalCompData[categoryKey][competitionName][yearRange] = { ...yearData };
+          if (!originalCompData[categoryKey])
+            originalCompData[categoryKey] = {};
+          if (!originalCompData[categoryKey][competitionName])
+            originalCompData[categoryKey][competitionName] = {};
+          originalCompData[categoryKey][competitionName][yearRange] = {
+            ...yearData,
+          };
         });
       }
 
@@ -212,19 +232,21 @@ export default function SzakmaiEredmenyek() {
       }));
       setIsModified(true);
     },
-    []
+    [],
   );
 
   const handleAddCompetition = useCallback(async () => {
-    if (!newCompetition.category || !newCompetition.name || !selectedSchool) return;
+    if (!newCompetition.category || !newCompetition.name || !selectedSchool)
+      return;
 
     try {
       const availableYears = schoolYears
         .map((year) => parseInt(year.split("/")[0], 10))
         .filter((year) => !Number.isNaN(year));
-      const defaultStartYear = availableYears.length > 0
-        ? Math.max(...availableYears)
-        : new Date().getFullYear();
+      const defaultStartYear =
+        availableYears.length > 0
+          ? Math.max(...availableYears)
+          : new Date().getFullYear();
 
       const recordData = {
         alapadatok_id: selectedSchool.id,
@@ -265,7 +287,7 @@ export default function SzakmaiEredmenyek() {
     try {
       // Delete from backend if they have an ID
       const promises = [];
-      schoolYears.forEach(year => {
+      schoolYears.forEach((year) => {
         const id = originalData[category]?.[competition]?.[year]?.id;
         if (id) {
           promises.push(deleteVersenyek(id).unwrap());
@@ -300,11 +322,20 @@ export default function SzakmaiEredmenyek() {
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
-  }, [competitionData, originalData, deleteVersenyek, schoolYears, competitionToDelete, competitionCreatedAtMap]);
+  }, [
+    competitionData,
+    originalData,
+    deleteVersenyek,
+    schoolYears,
+    competitionToDelete,
+    competitionCreatedAtMap,
+  ]);
 
   const isFieldModified = (category, competition, year, placement) => {
-    const orig = originalData[category]?.[competition]?.[year]?.[placement] || "0";
-    const curr = competitionData[category]?.[competition]?.[year]?.[placement] || "0";
+    const orig =
+      originalData[category]?.[competition]?.[year]?.[placement] || "0";
+    const curr =
+      competitionData[category]?.[competition]?.[year]?.[placement] || "0";
     return orig !== curr;
   };
 
@@ -314,7 +345,10 @@ export default function SzakmaiEredmenyek() {
     let updatedCount = 0;
     let savedCount = 0;
 
-    console.log("[handleSave] competitionData keys:", Object.keys(competitionData));
+    console.log(
+      "[handleSave] competitionData keys:",
+      Object.keys(competitionData),
+    );
     console.log("[handleSave] originalData keys:", Object.keys(originalData));
 
     try {
@@ -332,11 +366,14 @@ export default function SzakmaiEredmenyek() {
               rowModified = false; // Már elmentettük a dialógnál, skip
             } else {
               placementTypes.forEach((placement) => {
-                if (isFieldModified(category, competition, year, placement.key)) rowModified = true;
+                if (isFieldModified(category, competition, year, placement.key))
+                  rowModified = true;
               });
             }
 
-            console.log(`[handleSave] ${category} / ${competition} / ${year}: isNewCompetition=${isNewCompetition}, rowModified=${rowModified}`);
+            console.log(
+              `[handleSave] ${category} / ${competition} / ${year}: isNewCompetition=${isNewCompetition}, rowModified=${rowModified}`,
+            );
 
             if (rowModified) {
               const yearData = competitionData[category][competition][year];
@@ -348,17 +385,31 @@ export default function SzakmaiEredmenyek() {
                 helyezett_1: parseInt(yearData["1_helyezett"] || 0),
                 helyezett_1_3: parseInt(yearData["1-3_helyezett"] || 0),
                 dontobeJutott: parseInt(yearData["dontobeJutott"] || 0),
-                nevezettekSzama: parseInt(yearData["versenyre_nevezettek"] || 0),
+                nevezettekSzama: parseInt(
+                  yearData["versenyre_nevezettek"] || 0,
+                ),
               };
 
               if (id) {
-                promises.push(updateVersenyek({ id, ...recordData }).unwrap().then(() => { updatedCount++; }));
+                promises.push(
+                  updateVersenyek({ id, ...recordData })
+                    .unwrap()
+                    .then(() => {
+                      updatedCount++;
+                    }),
+                );
               } else {
-                promises.push(addVersenyek({
-                  ...recordData,
-                  verseny_neve: competition,
-                  kategoria: category,
-                }).unwrap().then(() => { savedCount++; }));
+                promises.push(
+                  addVersenyek({
+                    ...recordData,
+                    verseny_neve: competition,
+                    kategoria: category,
+                  })
+                    .unwrap()
+                    .then(() => {
+                      savedCount++;
+                    }),
+                );
               }
             }
           });
@@ -368,7 +419,9 @@ export default function SzakmaiEredmenyek() {
       if (promises.length > 0) {
         console.log("[handleSave] sending", promises.length, "requests");
         await Promise.all(promises);
-        setSnackbarMessage(`Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`);
+        setSnackbarMessage(
+          `Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`,
+        );
         setSnackbarSeverity("success");
       } else {
         setSnackbarMessage("Nem történt módosítás!");
@@ -376,7 +429,7 @@ export default function SzakmaiEredmenyek() {
       }
       setSnackbarOpen(true);
 
-      // We don't manually setOriginalData here because useGetVersenyekQuery will refetch 
+      // We don't manually setOriginalData here because useGetVersenyekQuery will refetch
       // due to invalidatesTags in RTK Query, which will update originalData automatically.
       setIsModified(false);
     } catch (error) {
@@ -404,7 +457,11 @@ export default function SzakmaiEredmenyek() {
         let sum = 0;
         Object.keys(competitionData).forEach((category) => {
           Object.keys(competitionData[category]).forEach((competition) => {
-            sum += parseInt(competitionData[category][competition][year]?.[placement.key] || 0, 10);
+            sum += parseInt(
+              competitionData[category][competition][year]?.[placement.key] ||
+                0,
+              10,
+            );
           });
         });
         calculatedTotals[startYear][placement.key] = sum;
@@ -456,8 +513,6 @@ export default function SzakmaiEredmenyek() {
           </Alert>
         )}
 
-
-
         {/* Add Competition Button */}
         <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 3 }}>
           <LockedTableWrapper tableName="versenyek">
@@ -475,6 +530,15 @@ export default function SzakmaiEredmenyek() {
               disabled={!isModified || isSaving || !selectedSchool}
             >
               Mentés
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => setHistoryOpen(true)}
+              startIcon={<HistoryIcon />}
+              sx={{ ml: 2 }}
+            >
+              Előzmények
             </Button>
             <Button
               variant="outlined"
@@ -496,7 +560,7 @@ export default function SzakmaiEredmenyek() {
                   header: `${year} – ${p.label}`,
                   key: `${year}__${p.key}`,
                   width: 20,
-                }))
+                })),
               ),
             ]}
             rows={Object.keys(competitionData).flatMap((category) =>
@@ -505,11 +569,12 @@ export default function SzakmaiEredmenyek() {
                 schoolYears.forEach((year) => {
                   placementTypes.forEach((p) => {
                     row[`${year}__${p.key}`] =
-                      competitionData[category][competition][year]?.[p.key] ?? 0;
+                      competitionData[category][competition][year]?.[p.key] ??
+                      0;
                   });
                 });
                 return row;
-              })
+              }),
             )}
             groups={[
               [
@@ -528,7 +593,10 @@ export default function SzakmaiEredmenyek() {
           Szakmai és Közismereti Versenyek Eredményei
         </Typography>
 
-        <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
+        <TableContainer
+          component={Paper}
+          sx={{ maxWidth: "100%", overflowX: "auto" }}
+        >
           <Table size="small" sx={{ minWidth: 1000 }}>
             <TableHead>
               <TableRow>
@@ -556,7 +624,10 @@ export default function SzakmaiEredmenyek() {
                       fontWeight: "bold",
                       backgroundColor: "#fff2cc",
                       borderBottom: "1px solid #ddd",
-                      borderRight: i === schoolYears.length - 1 ? "none" : "2px solid #ddd",
+                      borderRight:
+                        i === schoolYears.length - 1
+                          ? "none"
+                          : "2px solid #ddd",
                     }}
                   >
                     {year}
@@ -576,7 +647,7 @@ export default function SzakmaiEredmenyek() {
                     right: 0,
                     backgroundColor: "#f5f5f5",
                     zIndex: 2,
-                    boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)"
+                    boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
                   }}
                 >
                   Művelet
@@ -593,10 +664,14 @@ export default function SzakmaiEredmenyek() {
                           fontWeight: 600,
                           backgroundColor: placement.color,
                           borderBottom: "2px solid #ddd",
-                          borderRight: (j === placementTypes.length - 1 && i !== schoolYears.length - 1) ? "2px solid #ddd" : "1px solid #ddd",
+                          borderRight:
+                            j === placementTypes.length - 1 &&
+                            i !== schoolYears.length - 1
+                              ? "2px solid #ddd"
+                              : "1px solid #ddd",
                           minWidth: 90,
                           fontSize: "0.75rem",
-                          lineHeight: 1.2
+                          lineHeight: 1.2,
                         }}
                       >
                         {placement.label}
@@ -631,7 +706,11 @@ export default function SzakmaiEredmenyek() {
                           align="center"
                           sx={{
                             fontWeight: "bold",
-                            borderRight: (j === placementTypes.length - 1 && i !== schoolYears.length - 1) ? "2px solid #ddd" : "1px solid #ddd",
+                            borderRight:
+                              j === placementTypes.length - 1 &&
+                              i !== schoolYears.length - 1
+                                ? "2px solid #ddd"
+                                : "1px solid #ddd",
                           }}
                         >
                           {totals[startYear]?.[placement.key] || 0}
@@ -652,9 +731,13 @@ export default function SzakmaiEredmenyek() {
                   return a.localeCompare(b, "hu");
                 })
                 .map((category) => {
-                  const competitions = Object.keys(competitionData[category]).sort((a, b) => {
-                    const aCreatedAt = competitionCreatedAtMap[category]?.[a] || "";
-                    const bCreatedAt = competitionCreatedAtMap[category]?.[b] || "";
+                  const competitions = Object.keys(
+                    competitionData[category],
+                  ).sort((a, b) => {
+                    const aCreatedAt =
+                      competitionCreatedAtMap[category]?.[a] || "";
+                    const bCreatedAt =
+                      competitionCreatedAtMap[category]?.[b] || "";
                     const aTs = Date.parse(aCreatedAt);
                     const bTs = Date.parse(bCreatedAt);
                     const aHasDate = !Number.isNaN(aTs);
@@ -665,10 +748,7 @@ export default function SzakmaiEredmenyek() {
                     return a.localeCompare(b, "hu");
                   });
                   return competitions.map((competition, index) => (
-                    <TableRow
-                      key={`${category}-${competition}`}
-                      hover
-                    >
+                    <TableRow key={`${category}-${competition}`} hover>
                       <TableCell
                         sx={{
                           borderRight: "2px solid #ddd",
@@ -679,11 +759,17 @@ export default function SzakmaiEredmenyek() {
                         }}
                       >
                         {index === 0 && (
-                          <Typography variant="subtitle2" color="primary" sx={{ fontWeight: "bold", mb: 0.5 }}>
+                          <Typography
+                            variant="subtitle2"
+                            color="primary"
+                            sx={{ fontWeight: "bold", mb: 0.5 }}
+                          >
                             {category}
                           </Typography>
                         )}
-                        <Box sx={{ pl: 2, fontSize: "0.875rem" }}>{competition}</Box>
+                        <Box sx={{ pl: 2, fontSize: "0.875rem" }}>
+                          {competition}
+                        </Box>
                       </TableCell>
                       {schoolYears.map((year) =>
                         placementTypes.map((placement) => (
@@ -694,9 +780,9 @@ export default function SzakmaiEredmenyek() {
                             <TextField
                               type="number"
                               value={
-                                competitionData[category][competition][
-                                year
-                                ]?.[placement.key] || "0"
+                                competitionData[category][competition][year]?.[
+                                  placement.key
+                                ] || "0"
                               }
                               onChange={(e) =>
                                 handleDataChange(
@@ -704,7 +790,7 @@ export default function SzakmaiEredmenyek() {
                                   competition,
                                   year,
                                   placement.key,
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               size="small"
@@ -714,23 +800,35 @@ export default function SzakmaiEredmenyek() {
                               }}
                               sx={{
                                 width: "60px",
-                                backgroundColor: isFieldModified(category, competition, year, placement.key) ? "#fef08a" : "inherit"
+                                backgroundColor: isFieldModified(
+                                  category,
+                                  competition,
+                                  year,
+                                  placement.key,
+                                )
+                                  ? "#fef08a"
+                                  : "inherit",
                               }}
                             />
                           </TableCell>
-                        ))
+                        )),
                       )}
-                      <TableCell align="center" sx={{
-                        position: "sticky",
-                        right: 0,
-                        backgroundColor: "#fff",
-                        boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
-                        zIndex: 1
-                      }}>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          position: "sticky",
+                          right: 0,
+                          backgroundColor: "#fff",
+                          boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                          zIndex: 1,
+                        }}
+                      >
                         <IconButton
                           size="small"
                           color="error"
-                          onClick={() => handleRemoveCompetition(category, competition)}
+                          onClick={() =>
+                            handleRemoveCompetition(category, competition)
+                          }
                           disabled={!selectedSchool}
                         >
                           <DeleteIcon />
@@ -741,18 +839,18 @@ export default function SzakmaiEredmenyek() {
                 })}
 
               {/* Totals Row */}
-              <TableRow
-                sx={{ backgroundColor: "#fff2cc", fontWeight: "bold" }}
-              >
-                <TableCell sx={{
-                  position: "sticky",
-                  left: 0,
-                  fontWeight: "bold",
+              <TableRow sx={{ backgroundColor: "#fff2cc", fontWeight: "bold" }}>
+                <TableCell
+                  sx={{
+                    position: "sticky",
+                    left: 0,
+                    fontWeight: "bold",
 
-                  backgroundColor: "#fff2cc",
-                  boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
-                  zIndex: 10
-                }}>
+                    backgroundColor: "#fff2cc",
+                    boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                    zIndex: 10,
+                  }}
+                >
                   Összesen
                 </TableCell>
                 {schoolYears.map((year) =>
@@ -762,28 +860,35 @@ export default function SzakmaiEredmenyek() {
                       align="center"
                       sx={{ fontWeight: "bold" }}
                     >
-                      {totals[parseInt(year.split("/")[0], 10)]?.[placement.key] || 0}
+                      {totals[parseInt(year.split("/")[0], 10)]?.[
+                        placement.key
+                      ] || 0}
                     </TableCell>
-                  ))
+                  )),
                 )}
-                <TableCell sx={{
-                  position: "sticky",
-                  right: 0,
-                  backgroundColor: "#fff2cc",
-                  boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
-                  zIndex: 1000
-                }}></TableCell>
+                <TableCell
+                  sx={{
+                    position: "sticky",
+                    right: 0,
+                    backgroundColor: "#fff2cc",
+                    boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                    zIndex: 1000,
+                  }}
+                ></TableCell>
               </TableRow>
 
               {/* Summary Row */}
               <TableRow sx={{ backgroundColor: "#e8f4fd" }}>
-                <TableCell sx={{
-                  fontWeight: "bold", position: "sticky",
-                  left: 0,
-                  backgroundColor: "#e8f4fd",
-                  boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
-                  zIndex: 1
-                }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    position: "sticky",
+                    left: 0,
+                    backgroundColor: "#e8f4fd",
+                    boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                    zIndex: 1,
+                  }}
+                >
                   Tanulói jogviszonyban álló tanulók száma (fő)
                 </TableCell>
                 {schoolYears.map((year, i) => {
@@ -794,7 +899,10 @@ export default function SzakmaiEredmenyek() {
                       align="center"
                       colSpan={placementTypes.length}
                       sx={{
-                        borderRight: i === schoolYears.length - 1 ? "none" : "2px solid #ddd",
+                        borderRight:
+                          i === schoolYears.length - 1
+                            ? "none"
+                            : "2px solid #ddd",
                       }}
                     >
                       <TextField
@@ -810,13 +918,15 @@ export default function SzakmaiEredmenyek() {
                     </TableCell>
                   );
                 })}
-                <TableCell sx={{
-                  position: "sticky",
-                  right: 0,
-                  backgroundColor: "#e8f4fd",
-                  boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
-                  zIndex: 1
-                }}></TableCell>
+                <TableCell
+                  sx={{
+                    position: "sticky",
+                    right: 0,
+                    backgroundColor: "#e8f4fd",
+                    boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                    zIndex: 1,
+                  }}
+                ></TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -832,8 +942,6 @@ export default function SzakmaiEredmenyek() {
           </Alert>
         )}
 
-
-
         {/* Add Competition Dialog */}
         <Dialog
           open={openAddDialog}
@@ -844,7 +952,6 @@ export default function SzakmaiEredmenyek() {
           <DialogTitle>Új verseny hozzáadása</DialogTitle>
           <DialogContent>
             <Stack spacing={3} sx={{ mt: 1 }}>
-
               <FormControl fullWidth>
                 <InputLabel>Kategória</InputLabel>
                 <Select
@@ -873,8 +980,6 @@ export default function SzakmaiEredmenyek() {
                 }
                 placeholder="pl. Új verseny neve"
               />
-
-
             </Stack>
           </DialogContent>
           <DialogActions>
@@ -902,7 +1007,8 @@ export default function SzakmaiEredmenyek() {
           <DialogTitle>Verseny törlése</DialogTitle>
           <DialogContent>
             <Typography>
-              Biztosan törölni szeretnéd a(z) {competitionToDelete?.competition || ""} versenyt?
+              Biztosan törölni szeretnéd a(z){" "}
+              {competitionToDelete?.competition || ""} versenyt?
             </Typography>
           </DialogContent>
           <DialogActions>
@@ -955,10 +1061,26 @@ export default function SzakmaiEredmenyek() {
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        alapadatokId={selectedSchool?.id}
+        tableName="versenyek"
+        onRollbackSuccess={() => {
+          setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+        }}
+      />
     </PageWrapper>
   );
 }

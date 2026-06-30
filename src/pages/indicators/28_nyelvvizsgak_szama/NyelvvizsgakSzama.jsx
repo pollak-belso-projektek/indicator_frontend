@@ -22,27 +22,37 @@ import {
   CircularProgress,
   Snackbar,
 } from "@mui/material";
-import {
-  Save as SaveIcon,
-  Refresh as RefreshIcon,
-} from "@mui/icons-material";
+import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import PageWrapper from "../../PageWrapper";
 import InfoNyelvvizsgakSzama from "./info_nyelvvizsgak_szama";
 import TitleNyelvvizsgakSzama from "./title_nyelvvizsgak_szama";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 // Fixed class list
 const FIXED_CLASSES = [
-  "9.A", "9.B",
-  "10.A", "10.B",
-  "11.A", "11.B",
-  "12.A", "12.B",
-  "13.A", "13.B",
+  "9.A",
+  "9.B",
+  "10.A",
+  "10.B",
+  "11.A",
+  "11.B",
+  "12.A",
+  "12.B",
+  "13.A",
+  "13.B",
 ];
 
-const NUM_FIELDS = ["kozepfoku_angol", "felsofoku_angol", "kozepfoku_nemet", "felsofoku_nemet", "egyeb_fo"];
+const NUM_FIELDS = [
+  "kozepfoku_angol",
+  "felsofoku_angol",
+  "kozepfoku_nemet",
+  "felsofoku_nemet",
+  "egyeb_fo",
+];
 const ALL_FIELDS = [...NUM_FIELDS, "egyeb_nyelv"];
 
 export default function NyelvvizsgakSzama() {
@@ -57,7 +67,7 @@ export default function NyelvvizsgakSzama() {
     const startYear = parseInt(yearRange.split("/")[0]);
     return useGetNyelvvizsgakSzamaQuery(
       { alapadatok_id: selectedSchool?.id, tanev: startYear },
-      { skip: !selectedSchool }
+      { skip: !selectedSchool },
     );
   });
 
@@ -66,15 +76,20 @@ export default function NyelvvizsgakSzama() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queries.map((q) => q.fulfilledTimeStamp).join(","), selectedSchool?.id]);
 
-  const isLoading = useMemo(() => queries.some((q) => q.isLoading),
+  const isLoading = useMemo(
+    () => queries.some((q) => q.isLoading),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queries.map((q) => q.isLoading).join(",")]);
-  const isFetching = useMemo(() => queries.some((q) => q.isFetching),
+    [queries.map((q) => q.isLoading).join(",")],
+  );
+  const isFetching = useMemo(
+    () => queries.some((q) => q.isFetching),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queries.map((q) => q.isFetching).join(",")]);
+    [queries.map((q) => q.isFetching).join(",")],
+  );
 
   // State: { [osztaly]: { [yearRange]: { id, kozepfoku_angol, felsofoku_angol, kozepfoku_nemet, felsofoku_nemet, egyeb_nyelv, egyeb_fo } } }
   const [tableData, setTableData] = useState({});
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [originalData, setOriginalData] = useState({});
   const [isModified, setIsModified] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -98,10 +113,10 @@ export default function NyelvvizsgakSzama() {
       const newData = {};
       const origData = {};
 
-      FIXED_CLASSES.forEach(cls => {
+      FIXED_CLASSES.forEach((cls) => {
         newData[cls] = {};
         origData[cls] = {};
-        schoolYears.forEach(year => {
+        schoolYears.forEach((year) => {
           newData[cls][year] = createEmptyYearData();
           origData[cls][year] = createEmptyYearData();
         });
@@ -109,7 +124,7 @@ export default function NyelvvizsgakSzama() {
 
       // Populate with actual data from API
       if (Array.isArray(dbData)) {
-        dbData.forEach(item => {
+        dbData.forEach((item) => {
           const name = item.osztaly;
           if (!name || !FIXED_CLASSES.includes(name)) return;
           const yearRange = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
@@ -157,11 +172,11 @@ export default function NyelvvizsgakSzama() {
   };
 
   const isRowModified = (name, year) => {
-    return ALL_FIELDS.some(field => isFieldModified(name, year, field));
+    return ALL_FIELDS.some((field) => isFieldModified(name, year, field));
   };
 
   const hasData = (name, year) => {
-    return ALL_FIELDS.some(field => {
+    return ALL_FIELDS.some((field) => {
       const val = tableData[name]?.[year]?.[field];
       return val !== "" && val !== null && val !== undefined && val !== 0;
     });
@@ -175,15 +190,24 @@ export default function NyelvvizsgakSzama() {
   };
 
   const calculateRowTotal = (name, year) => {
-    return NUM_FIELDS.reduce((sum, f) => sum + getNumericValue(name, year, f), 0);
+    return NUM_FIELDS.reduce(
+      (sum, f) => sum + getNumericValue(name, year, f),
+      0,
+    );
   };
 
   const calculateColumnTotal = (year, field) => {
-    return FIXED_CLASSES.reduce((sum, cls) => sum + getNumericValue(cls, year, field), 0);
+    return FIXED_CLASSES.reduce(
+      (sum, cls) => sum + getNumericValue(cls, year, field),
+      0,
+    );
   };
 
   const calculateYearGrandTotal = (year) => {
-    return FIXED_CLASSES.reduce((sum, cls) => sum + calculateRowTotal(cls, year), 0);
+    return FIXED_CLASSES.reduce(
+      (sum, cls) => sum + calculateRowTotal(cls, year),
+      0,
+    );
   };
 
   const handleSave = async () => {
@@ -223,9 +247,21 @@ export default function NyelvvizsgakSzama() {
             };
 
             if (id) {
-              promises.push(updateData({ id, ...recordData }).unwrap().then(() => { updatedCount++; }));
+              promises.push(
+                updateData({ id, ...recordData })
+                  .unwrap()
+                  .then(() => {
+                    updatedCount++;
+                  }),
+              );
             } else {
-              promises.push(addData(recordData).unwrap().then(() => { savedCount++; }));
+              promises.push(
+                addData(recordData)
+                  .unwrap()
+                  .then(() => {
+                    savedCount++;
+                  }),
+              );
             }
           }
         });
@@ -233,7 +269,9 @@ export default function NyelvvizsgakSzama() {
 
       if (promises.length > 0) {
         await Promise.all(promises);
-        setSnackbarMessage(`Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`);
+        setSnackbarMessage(
+          `Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`,
+        );
         setSnackbarSeverity("success");
       } else {
         setSnackbarMessage("Nem történt módosítás!");
@@ -285,10 +323,12 @@ export default function NyelvvizsgakSzama() {
   };
 
   const getFieldSx = (name, year, field) => ({
-    '& .MuiOutlinedInput-root': {
-      backgroundColor: isFieldModified(name, year, field) ? '#fff9c4' : 'inherit',
-      transition: 'background-color 0.3s ease',
-    }
+    "& .MuiOutlinedInput-root": {
+      backgroundColor: isFieldModified(name, year, field)
+        ? "#fff9c4"
+        : "inherit",
+      transition: "background-color 0.3s ease",
+    },
   });
 
   return (
@@ -304,9 +344,18 @@ export default function NyelvvizsgakSzama() {
           </Alert>
         )}
 
-        <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center" mb={3}>
+        <Stack
+          direction="row"
+          spacing={2}
+          justifyContent="space-between"
+          alignItems="center"
+          mb={3}
+        >
           <Box>
-            <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="nyelvvizsgak_szama_export" />
+            <ExportDOMTableToExcel
+              tableId=".MuiTable-root"
+              fileName="nyelvvizsgak_szama_export"
+            />
           </Box>
           <Stack direction="row" spacing={2}>
             <Button
@@ -327,19 +376,42 @@ export default function NyelvvizsgakSzama() {
             >
               Mentés
             </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => setHistoryOpen(true)}
+              startIcon={<HistoryIcon />}
+              sx={{ ml: 2 }}
+            >
+              Előzmények
+            </Button>
           </Stack>
         </Stack>
 
         {schoolYears.map((year) => {
-          const shortYear = `${year.split('/')[0]}/${year.split('/')[1].slice(2)}`;
+          const shortYear = `${year.split("/")[0]}/${year.split("/")[1].slice(2)}`;
 
           return (
-            <TableContainer key={year} component={Paper} sx={{ maxWidth: "100%", overflowX: "auto", mb: 4 }}>
-              <Table size="small" sx={{ minWidth: 1000, border: "2px solid #ccc" }}>
+            <TableContainer
+              key={year}
+              component={Paper}
+              sx={{ maxWidth: "100%", overflowX: "auto", mb: 4 }}
+            >
+              <Table
+                size="small"
+                sx={{ minWidth: 1000, border: "2px solid #ccc" }}
+              >
                 <TableHead>
                   {/* Row 1: Year spanning all data columns */}
                   <TableRow>
-                    <TableCell rowSpan={3} sx={{ ...tableHeaderSx, minWidth: 140, verticalAlign: "middle" }}>
+                    <TableCell
+                      rowSpan={3}
+                      sx={{
+                        ...tableHeaderSx,
+                        minWidth: 140,
+                        verticalAlign: "middle",
+                      }}
+                    >
                       Osztály megnevezése
                     </TableCell>
                     <TableCell colSpan={7} sx={yearHeaderSx}>
@@ -348,31 +420,82 @@ export default function NyelvvizsgakSzama() {
                   </TableRow>
                   {/* Row 2: Main column headers */}
                   <TableRow>
-                    <TableCell rowSpan={2} sx={{ ...tableHeaderSx, minWidth: 100 }}>
-                      Középfokú angol<br />nyelvvizsgával rendelkezők<br />száma (fő)
+                    <TableCell
+                      rowSpan={2}
+                      sx={{ ...tableHeaderSx, minWidth: 100 }}
+                    >
+                      Középfokú angol
+                      <br />
+                      nyelvvizsgával rendelkezők
+                      <br />
+                      száma (fő)
                     </TableCell>
-                    <TableCell rowSpan={2} sx={{ ...tableHeaderSx, minWidth: 100 }}>
-                      Felsőfokú angol<br />nyelvvizsgával rendelkezők<br />száma (fő)
+                    <TableCell
+                      rowSpan={2}
+                      sx={{ ...tableHeaderSx, minWidth: 100 }}
+                    >
+                      Felsőfokú angol
+                      <br />
+                      nyelvvizsgával rendelkezők
+                      <br />
+                      száma (fő)
                     </TableCell>
-                    <TableCell rowSpan={2} sx={{ ...tableHeaderSx, minWidth: 100 }}>
-                      Középfokú német<br />nyelvvizsgával rendelkezők<br />száma (fő)
+                    <TableCell
+                      rowSpan={2}
+                      sx={{ ...tableHeaderSx, minWidth: 100 }}
+                    >
+                      Középfokú német
+                      <br />
+                      nyelvvizsgával rendelkezők
+                      <br />
+                      száma (fő)
                     </TableCell>
-                    <TableCell rowSpan={2} sx={{ ...tableHeaderSx, minWidth: 100 }}>
-                      Felsőfokú német<br />nyelvvizsgával rendelkezők<br />száma (fő)
+                    <TableCell
+                      rowSpan={2}
+                      sx={{ ...tableHeaderSx, minWidth: 100 }}
+                    >
+                      Felsőfokú német
+                      <br />
+                      nyelvvizsgával rendelkezők
+                      <br />
+                      száma (fő)
                     </TableCell>
                     <TableCell colSpan={2} sx={tableHeaderSx}>
                       Egyéb
                     </TableCell>
-                    <TableCell rowSpan={2} sx={{ ...tableHeaderSx, backgroundColor: "#c8e6c9", minWidth: 100 }}>
-                      Osztályban nyelvvizsgával<br />rendelkezők száma összesen
+                    <TableCell
+                      rowSpan={2}
+                      sx={{
+                        ...tableHeaderSx,
+                        backgroundColor: "#c8e6c9",
+                        minWidth: 100,
+                      }}
+                    >
+                      Osztályban nyelvvizsgával
+                      <br />
+                      rendelkezők száma összesen
                     </TableCell>
                   </TableRow>
                   {/* Row 3: Egyéb sub-headers */}
                   <TableRow>
-                    <TableCell sx={{ ...tableHeaderSx, minWidth: 140, fontSize: "0.8rem" }}>
-                      nyelv és fokozat<br />megnevezéssel
+                    <TableCell
+                      sx={{
+                        ...tableHeaderSx,
+                        minWidth: 140,
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      nyelv és fokozat
+                      <br />
+                      megnevezéssel
                     </TableCell>
-                    <TableCell sx={{ ...tableHeaderSx, minWidth: 60, fontSize: "0.8rem" }}>
+                    <TableCell
+                      sx={{
+                        ...tableHeaderSx,
+                        minWidth: 60,
+                        fontSize: "0.8rem",
+                      }}
+                    >
                       fő
                     </TableCell>
                   </TableRow>
@@ -380,7 +503,14 @@ export default function NyelvvizsgakSzama() {
                 <TableBody>
                   {FIXED_CLASSES.map((cls) => (
                     <TableRow key={cls} hover>
-                      <TableCell sx={{ ...cellSx, fontWeight: 500, backgroundColor: "#f9f9f9", textAlign: "center" }}>
+                      <TableCell
+                        sx={{
+                          ...cellSx,
+                          fontWeight: 500,
+                          backgroundColor: "#f9f9f9",
+                          textAlign: "center",
+                        }}
+                      >
                         {cls}
                       </TableCell>
 
@@ -391,8 +521,18 @@ export default function NyelvvizsgakSzama() {
                           type="number"
                           fullWidth
                           value={tableData[cls]?.[year]?.kozepfoku_angol ?? ""}
-                          onChange={(e) => handleDataChange(cls, year, "kozepfoku_angol", e.target.value)}
-                          inputProps={{ min: 0, style: { textAlign: "center" } }}
+                          onChange={(e) =>
+                            handleDataChange(
+                              cls,
+                              year,
+                              "kozepfoku_angol",
+                              e.target.value,
+                            )
+                          }
+                          inputProps={{
+                            min: 0,
+                            style: { textAlign: "center" },
+                          }}
                           disabled={!selectedSchool}
                           sx={getFieldSx(cls, year, "kozepfoku_angol")}
                         />
@@ -405,8 +545,18 @@ export default function NyelvvizsgakSzama() {
                           type="number"
                           fullWidth
                           value={tableData[cls]?.[year]?.felsofoku_angol ?? ""}
-                          onChange={(e) => handleDataChange(cls, year, "felsofoku_angol", e.target.value)}
-                          inputProps={{ min: 0, style: { textAlign: "center" } }}
+                          onChange={(e) =>
+                            handleDataChange(
+                              cls,
+                              year,
+                              "felsofoku_angol",
+                              e.target.value,
+                            )
+                          }
+                          inputProps={{
+                            min: 0,
+                            style: { textAlign: "center" },
+                          }}
                           disabled={!selectedSchool}
                           sx={getFieldSx(cls, year, "felsofoku_angol")}
                         />
@@ -419,8 +569,18 @@ export default function NyelvvizsgakSzama() {
                           type="number"
                           fullWidth
                           value={tableData[cls]?.[year]?.kozepfoku_nemet ?? ""}
-                          onChange={(e) => handleDataChange(cls, year, "kozepfoku_nemet", e.target.value)}
-                          inputProps={{ min: 0, style: { textAlign: "center" } }}
+                          onChange={(e) =>
+                            handleDataChange(
+                              cls,
+                              year,
+                              "kozepfoku_nemet",
+                              e.target.value,
+                            )
+                          }
+                          inputProps={{
+                            min: 0,
+                            style: { textAlign: "center" },
+                          }}
                           disabled={!selectedSchool}
                           sx={getFieldSx(cls, year, "kozepfoku_nemet")}
                         />
@@ -433,8 +593,18 @@ export default function NyelvvizsgakSzama() {
                           type="number"
                           fullWidth
                           value={tableData[cls]?.[year]?.felsofoku_nemet ?? ""}
-                          onChange={(e) => handleDataChange(cls, year, "felsofoku_nemet", e.target.value)}
-                          inputProps={{ min: 0, style: { textAlign: "center" } }}
+                          onChange={(e) =>
+                            handleDataChange(
+                              cls,
+                              year,
+                              "felsofoku_nemet",
+                              e.target.value,
+                            )
+                          }
+                          inputProps={{
+                            min: 0,
+                            style: { textAlign: "center" },
+                          }}
                           disabled={!selectedSchool}
                           sx={getFieldSx(cls, year, "felsofoku_nemet")}
                         />
@@ -447,7 +617,14 @@ export default function NyelvvizsgakSzama() {
                           type="text"
                           fullWidth
                           value={tableData[cls]?.[year]?.egyeb_nyelv ?? ""}
-                          onChange={(e) => handleDataChange(cls, year, "egyeb_nyelv", e.target.value)}
+                          onChange={(e) =>
+                            handleDataChange(
+                              cls,
+                              year,
+                              "egyeb_nyelv",
+                              e.target.value,
+                            )
+                          }
                           disabled={!selectedSchool}
                           inputProps={{ style: { textAlign: "center" } }}
                           sx={getFieldSx(cls, year, "egyeb_nyelv")}
@@ -461,15 +638,32 @@ export default function NyelvvizsgakSzama() {
                           type="number"
                           fullWidth
                           value={tableData[cls]?.[year]?.egyeb_fo ?? ""}
-                          onChange={(e) => handleDataChange(cls, year, "egyeb_fo", e.target.value)}
-                          inputProps={{ min: 0, style: { textAlign: "center" } }}
+                          onChange={(e) =>
+                            handleDataChange(
+                              cls,
+                              year,
+                              "egyeb_fo",
+                              e.target.value,
+                            )
+                          }
+                          inputProps={{
+                            min: 0,
+                            style: { textAlign: "center" },
+                          }}
                           disabled={!selectedSchool}
                           sx={getFieldSx(cls, year, "egyeb_fo")}
                         />
                       </TableCell>
 
                       {/* Row total */}
-                      <TableCell sx={{ ...cellSx, textAlign: "center", fontWeight: "bold", backgroundColor: "#e8f5e9" }}>
+                      <TableCell
+                        sx={{
+                          ...cellSx,
+                          textAlign: "center",
+                          fontWeight: "bold",
+                          backgroundColor: "#e8f5e9",
+                        }}
+                      >
                         {calculateRowTotal(cls, year)}
                       </TableCell>
                     </TableRow>
@@ -477,10 +671,24 @@ export default function NyelvvizsgakSzama() {
 
                   {/* Total row */}
                   <TableRow sx={{ backgroundColor: "#ffcdd2" }}>
-                    <TableCell colSpan={7} sx={{ fontWeight: "bold", textAlign: "center", borderBottom: "2px solid #ccc" }}>
+                    <TableCell
+                      colSpan={7}
+                      sx={{
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        borderBottom: "2px solid #ccc",
+                      }}
+                    >
                       Iskolában nyelvvizsgával rendelkezők összesen
                     </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", textAlign: "center", borderBottom: "2px solid #ccc", fontSize: "1.1rem" }}>
+                    <TableCell
+                      sx={{
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        borderBottom: "2px solid #ccc",
+                        fontSize: "1.1rem",
+                      }}
+                    >
                       {calculateYearGrandTotal(year)}
                     </TableCell>
                   </TableRow>
@@ -496,11 +704,27 @@ export default function NyelvvizsgakSzama() {
           onClose={() => setSnackbarOpen(false)}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
-          <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: "100%" }}>
+          <Alert
+            onClose={() => setSnackbarOpen(false)}
+            severity={snackbarSeverity}
+            sx={{ width: "100%" }}
+          >
             {snackbarMessage}
           </Alert>
         </Snackbar>
       </Box>
+
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        alapadatokId={selectedSchool?.id}
+        tableName="nyelvvizsgak_szama"
+        onRollbackSuccess={() => {
+          setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+        }}
+      />
     </PageWrapper>
   );
 }

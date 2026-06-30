@@ -38,7 +38,7 @@ import {
   Radio,
   Checkbox,
   ListItemText,
-  OutlinedInput
+  OutlinedInput,
 } from "@mui/material";
 import {
   Save as SaveIcon,
@@ -54,25 +54,28 @@ import InfoProjektek from "./info_projektek";
 import TitleProjektek from "./title_projektek";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 export default function Projektek() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
   const selectedSchool = useSelector(selectSelectedSchool);
 
   // Alapadatok for szakirany/szakma
-  const { data: schoolsData, isLoading: isLoadingSchools } = useGetAllAlapadatokQuery();
-  
+  const { data: schoolsData, isLoading: isLoadingSchools } =
+    useGetAllAlapadatokQuery();
+
   const szakmaOptions = useMemo(() => {
     if (!schoolsData || !selectedSchool) return [];
-    const relevantSchool = schoolsData.find(s => s.id === selectedSchool.id);
+    const relevantSchool = schoolsData.find((s) => s.id === selectedSchool.id);
     if (!relevantSchool || !relevantSchool.alapadatok_szakirany) return [];
 
     const options = [];
-    relevantSchool.alapadatok_szakirany.forEach(sz => {
+    relevantSchool.alapadatok_szakirany.forEach((sz) => {
       const szakiranyNev = sz.szakirany?.nev;
       if (!szakiranyNev) return;
       if (sz.szakirany?.szakma && Array.isArray(sz.szakirany.szakma)) {
-        sz.szakirany.szakma.forEach(szakmaData => {
+        sz.szakirany.szakma.forEach((szakmaData) => {
           const szakmaNev = szakmaData.szakma?.nev;
           if (szakmaNev) {
             const combined = `${szakiranyNev}: ${szakmaNev}`;
@@ -94,16 +97,17 @@ export default function Projektek() {
   const {
     data: dbDataRaw,
     isLoading,
-    isFetching
+    isFetching,
   } = useGetProjektekQuery(
     { alapadatok_id: selectedSchool?.id },
-    { skip: !selectedSchool }
+    { skip: !selectedSchool },
   );
 
   const dbData = useMemo(() => dbDataRaw || [], [dbDataRaw]);
 
   // State structure: { [yearRange]: [ { id, agazat_szakma, projekthetek_neve, projekthetek_ora, projektnapok_neve, projektnapok_ora }, ... ] }
   const [tableData, setTableData] = useState({});
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [originalData, setOriginalData] = useState({});
   const [isModified, setIsModified] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -125,10 +129,12 @@ export default function Projektek() {
   useEffect(() => {
     if (dbData && !isFetching) {
       const newData = {};
-      schoolYears.forEach(y => { newData[y] = []; });
+      schoolYears.forEach((y) => {
+        newData[y] = [];
+      });
 
       if (Array.isArray(dbData)) {
-        dbData.forEach(item => {
+        dbData.forEach((item) => {
           const yearRange = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
           if (newData[yearRange]) {
             newData[yearRange].push({
@@ -137,7 +143,7 @@ export default function Projektek() {
               projekthetek_neve: item.projekthetek_neve || "",
               projekthetek_ora: item.projekthetek_ora?.toString() || "",
               projektnapok_neve: item.projektnapok_neve || "",
-              projektnapok_ora: item.projektnapok_ora?.toString() || ""
+              projektnapok_ora: item.projektnapok_ora?.toString() || "",
             });
           }
         });
@@ -150,7 +156,7 @@ export default function Projektek() {
   }, [dbData, isFetching, schoolYears]);
 
   const handleDataChange = (year, rowIndex, field, value) => {
-    setTableData(prev => {
+    setTableData((prev) => {
       const newYearData = [...prev[year]];
       newYearData[rowIndex] = { ...newYearData[rowIndex], [field]: value };
       return { ...prev, [year]: newYearData };
@@ -166,7 +172,7 @@ export default function Projektek() {
 
   const handleAddRow = async () => {
     if (!selectedSchool) return;
-    
+
     let agazat = "";
     if (selectionType === "egy") {
       agazat = selectedSzakmaSingle;
@@ -178,7 +184,7 @@ export default function Projektek() {
 
     try {
       const promises = [];
-      schoolYears.forEach(yearRange => {
+      schoolYears.forEach((yearRange) => {
         const startYear = parseInt(yearRange.split("/")[0], 10);
         const recordData = {
           alapadatok_id: selectedSchool.id,
@@ -187,13 +193,13 @@ export default function Projektek() {
           projekthetek_neve: "",
           projekthetek_ora: "",
           projektnapok_neve: "",
-          projektnapok_ora: ""
+          projektnapok_ora: "",
         };
         promises.push(addProjekt(recordData).unwrap());
       });
 
       await Promise.all(promises);
-      
+
       setSnackbarMessage("Sor sikeresen hozzáadva!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
@@ -246,9 +252,14 @@ export default function Projektek() {
         if (!tableData[year]) return;
         tableData[year].forEach((row, index) => {
           if (row.id) {
-            const isRowModified = ['agazat_szakma', 'projekthetek_neve', 'projekthetek_ora', 'projektnapok_neve', 'projektnapok_ora']
-              .some(field => isFieldModified(year, index, field));
-              
+            const isRowModified = [
+              "agazat_szakma",
+              "projekthetek_neve",
+              "projekthetek_ora",
+              "projektnapok_neve",
+              "projektnapok_ora",
+            ].some((field) => isFieldModified(year, index, field));
+
             if (isRowModified) {
               const recordData = {
                 id: row.id,
@@ -260,7 +271,13 @@ export default function Projektek() {
                 projektnapok_neve: row.projektnapok_neve,
                 projektnapok_ora: row.projektnapok_ora,
               };
-              promises.push(updateProjekt(recordData).unwrap().then(() => { updatedCount++; }));
+              promises.push(
+                updateProjekt(recordData)
+                  .unwrap()
+                  .then(() => {
+                    updatedCount++;
+                  }),
+              );
             }
           }
         });
@@ -276,7 +293,7 @@ export default function Projektek() {
       }
       setSnackbarOpen(true);
       setIsModified(false);
-      
+
       // Update originalData locally to reflect save
       setOriginalData(JSON.parse(JSON.stringify(tableData)));
     } catch (error) {
@@ -303,7 +320,11 @@ export default function Projektek() {
   const calculateTotal = (year) => {
     if (!tableData[year]) return 0;
     return tableData[year].reduce((sum, row) => {
-      return sum + parseNumber(row.projekthetek_ora) + parseNumber(row.projektnapok_ora);
+      return (
+        sum +
+        parseNumber(row.projekthetek_ora) +
+        parseNumber(row.projektnapok_ora)
+      );
     }, 0);
   };
 
@@ -311,7 +332,11 @@ export default function Projektek() {
     return <PageLoadingOverlay isLoading={true} />;
   }
 
-  const tableHeaderSx = { fontWeight: "bold", backgroundColor: "#e1f5fe", borderBottom: "2px solid #ccc" };
+  const tableHeaderSx = {
+    fontWeight: "bold",
+    backgroundColor: "#e1f5fe",
+    borderBottom: "2px solid #ccc",
+  };
 
   return (
     <PageWrapper
@@ -328,9 +353,18 @@ export default function Projektek() {
           </Alert>
         )}
 
-        <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center" mb={3}>
+        <Stack
+          direction="row"
+          spacing={2}
+          justifyContent="space-between"
+          alignItems="center"
+          mb={3}
+        >
           <Box>
-            <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="projektek_export" />
+            <ExportDOMTableToExcel
+              tableId=".MuiTable-root"
+              fileName="projektek_export"
+            />
           </Box>
           <Stack direction="row" spacing={2}>
             <LockedTableWrapper tableName="projektek">
@@ -361,42 +395,100 @@ export default function Projektek() {
               >
                 Mentés
               </Button>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={() => setHistoryOpen(true)}
+                startIcon={<HistoryIcon />}
+                sx={{ ml: 2 }}
+              >
+                Előzmények
+              </Button>
             </LockedTableWrapper>
           </Stack>
         </Stack>
 
-        <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
-          <Table size="small" sx={{ minWidth: 1000, border: "2px solid #ccc" }} className="MuiTable-root">
+        <TableContainer
+          component={Paper}
+          sx={{ maxWidth: "100%", overflowX: "auto" }}
+        >
+          <Table
+            size="small"
+            sx={{ minWidth: 1000, border: "2px solid #ccc" }}
+            className="MuiTable-root"
+          >
             {schoolYears.map((year) => {
               const rows = tableData[year] || [];
               return (
                 <React.Fragment key={year}>
                   <TableHead>
                     <TableRow>
-                      <TableCell colSpan={6} align="center" sx={{ fontWeight: "bold", backgroundColor: "#fff2cc", borderBottom: "2px solid #ccc", fontSize: "1.1rem", py: 1 }}>
+                      <TableCell
+                        colSpan={6}
+                        align="center"
+                        sx={{
+                          fontWeight: "bold",
+                          backgroundColor: "#fff2cc",
+                          borderBottom: "2px solid #ccc",
+                          fontSize: "1.1rem",
+                          py: 1,
+                        }}
+                      >
                         {year}
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell sx={{ ...tableHeaderSx, width: "30%" }}>Projektet érintő ágazat/szakma</TableCell>
-                      <TableCell sx={{ ...tableHeaderSx, width: "20%" }}>Projekthetek megnevezése</TableCell>
-                      <TableCell sx={{ ...tableHeaderSx, width: "15%" }}>Projektben eltöltött órák száma</TableCell>
-                      <TableCell sx={{ ...tableHeaderSx, width: "20%" }}>Projektnapok megnevezése</TableCell>
-                      <TableCell sx={{ ...tableHeaderSx, width: "15%" }}>Projektben eltöltött órák száma</TableCell>
-                      <TableCell sx={{ ...tableHeaderSx, width: "60px", textAlign: "center" }}>Művelet</TableCell>
+                      <TableCell sx={{ ...tableHeaderSx, width: "30%" }}>
+                        Projektet érintő ágazat/szakma
+                      </TableCell>
+                      <TableCell sx={{ ...tableHeaderSx, width: "20%" }}>
+                        Projekthetek megnevezése
+                      </TableCell>
+                      <TableCell sx={{ ...tableHeaderSx, width: "15%" }}>
+                        Projektben eltöltött órák száma
+                      </TableCell>
+                      <TableCell sx={{ ...tableHeaderSx, width: "20%" }}>
+                        Projektnapok megnevezése
+                      </TableCell>
+                      <TableCell sx={{ ...tableHeaderSx, width: "15%" }}>
+                        Projektben eltöltött órák száma
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          ...tableHeaderSx,
+                          width: "60px",
+                          textAlign: "center",
+                        }}
+                      >
+                        Művelet
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {rows.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} align="center" sx={{ py: 3, fontStyle: "italic", color: "text.secondary" }}>
-                          Nincsenek rögzített projektek a {year} tanévben. Kattintson az "Új sor hozzáadása" gombra.
+                        <TableCell
+                          colSpan={6}
+                          align="center"
+                          sx={{
+                            py: 3,
+                            fontStyle: "italic",
+                            color: "text.secondary",
+                          }}
+                        >
+                          Nincsenek rögzített projektek a {year} tanévben.
+                          Kattintson az "Új sor hozzáadása" gombra.
                         </TableCell>
                       </TableRow>
                     ) : (
                       rows.map((row, index) => (
                         <TableRow key={row.id || index} hover>
-                          <TableCell sx={{ borderBottom: "1px solid #eee", backgroundColor: "#f9f9f9" }}>
+                          <TableCell
+                            sx={{
+                              borderBottom: "1px solid #eee",
+                              backgroundColor: "#f9f9f9",
+                            }}
+                          >
                             {row.agazat_szakma}
                           </TableCell>
                           <TableCell sx={{ borderBottom: "1px solid #eee" }}>
@@ -404,13 +496,26 @@ export default function Projektek() {
                               fullWidth
                               size="small"
                               value={row.projekthetek_neve}
-                              onChange={(e) => handleDataChange(year, index, 'projekthetek_neve', e.target.value)}
+                              onChange={(e) =>
+                                handleDataChange(
+                                  year,
+                                  index,
+                                  "projekthetek_neve",
+                                  e.target.value,
+                                )
+                              }
                               disabled={!selectedSchool}
                               sx={{
-                                '& .MuiOutlinedInput-root': {
-                                  backgroundColor: isFieldModified(year, index, 'projekthetek_neve') ? '#fff9c4' : 'inherit',
-                                  transition: 'background-color 0.3s ease',
-                                }
+                                "& .MuiOutlinedInput-root": {
+                                  backgroundColor: isFieldModified(
+                                    year,
+                                    index,
+                                    "projekthetek_neve",
+                                  )
+                                    ? "#fff9c4"
+                                    : "inherit",
+                                  transition: "background-color 0.3s ease",
+                                },
                               }}
                             />
                           </TableCell>
@@ -419,14 +524,27 @@ export default function Projektek() {
                               fullWidth
                               size="small"
                               value={row.projekthetek_ora}
-                              onChange={(e) => handleDataChange(year, index, 'projekthetek_ora', e.target.value)}
+                              onChange={(e) =>
+                                handleDataChange(
+                                  year,
+                                  index,
+                                  "projekthetek_ora",
+                                  e.target.value,
+                                )
+                              }
                               disabled={!selectedSchool}
                               placeholder="Pl. 40"
                               sx={{
-                                '& .MuiOutlinedInput-root': {
-                                  backgroundColor: isFieldModified(year, index, 'projekthetek_ora') ? '#fff9c4' : 'inherit',
-                                  transition: 'background-color 0.3s ease',
-                                }
+                                "& .MuiOutlinedInput-root": {
+                                  backgroundColor: isFieldModified(
+                                    year,
+                                    index,
+                                    "projekthetek_ora",
+                                  )
+                                    ? "#fff9c4"
+                                    : "inherit",
+                                  transition: "background-color 0.3s ease",
+                                },
                               }}
                             />
                           </TableCell>
@@ -435,13 +553,26 @@ export default function Projektek() {
                               fullWidth
                               size="small"
                               value={row.projektnapok_neve}
-                              onChange={(e) => handleDataChange(year, index, 'projektnapok_neve', e.target.value)}
+                              onChange={(e) =>
+                                handleDataChange(
+                                  year,
+                                  index,
+                                  "projektnapok_neve",
+                                  e.target.value,
+                                )
+                              }
                               disabled={!selectedSchool}
                               sx={{
-                                '& .MuiOutlinedInput-root': {
-                                  backgroundColor: isFieldModified(year, index, 'projektnapok_neve') ? '#fff9c4' : 'inherit',
-                                  transition: 'background-color 0.3s ease',
-                                }
+                                "& .MuiOutlinedInput-root": {
+                                  backgroundColor: isFieldModified(
+                                    year,
+                                    index,
+                                    "projektnapok_neve",
+                                  )
+                                    ? "#fff9c4"
+                                    : "inherit",
+                                  transition: "background-color 0.3s ease",
+                                },
                               }}
                             />
                           </TableCell>
@@ -450,19 +581,40 @@ export default function Projektek() {
                               fullWidth
                               size="small"
                               value={row.projektnapok_ora}
-                              onChange={(e) => handleDataChange(year, index, 'projektnapok_ora', e.target.value)}
+                              onChange={(e) =>
+                                handleDataChange(
+                                  year,
+                                  index,
+                                  "projektnapok_ora",
+                                  e.target.value,
+                                )
+                              }
                               disabled={!selectedSchool}
                               placeholder="Pl. 16"
                               sx={{
-                                '& .MuiOutlinedInput-root': {
-                                  backgroundColor: isFieldModified(year, index, 'projektnapok_ora') ? '#fff9c4' : 'inherit',
-                                  transition: 'background-color 0.3s ease',
-                                }
+                                "& .MuiOutlinedInput-root": {
+                                  backgroundColor: isFieldModified(
+                                    year,
+                                    index,
+                                    "projektnapok_ora",
+                                  )
+                                    ? "#fff9c4"
+                                    : "inherit",
+                                  transition: "background-color 0.3s ease",
+                                },
                               }}
                             />
                           </TableCell>
-                          <TableCell align="center" sx={{ borderBottom: "1px solid #eee" }}>
-                            <IconButton size="small" color="error" onClick={() => handleRemoveRow(year, index)} disabled={!selectedSchool}>
+                          <TableCell
+                            align="center"
+                            sx={{ borderBottom: "1px solid #eee" }}
+                          >
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleRemoveRow(year, index)}
+                              disabled={!selectedSchool}
+                            >
                               <DeleteIcon />
                             </IconButton>
                           </TableCell>
@@ -471,13 +623,28 @@ export default function Projektek() {
                     )}
                     {/* Összesítő sor tanévenként */}
                     <TableRow sx={{ backgroundColor: "#ffcdd2" }}>
-                      <TableCell colSpan={4} sx={{ fontWeight: "bold", textAlign: "right", borderBottom: "2px solid #ccc" }}>
+                      <TableCell
+                        colSpan={4}
+                        sx={{
+                          fontWeight: "bold",
+                          textAlign: "right",
+                          borderBottom: "2px solid #ccc",
+                        }}
+                      >
                         Projektekben eltöltött órák száma összesen
                       </TableCell>
-                      <TableCell sx={{ fontWeight: "bold", borderBottom: "2px solid #ccc", fontSize: "1.1rem" }}>
+                      <TableCell
+                        sx={{
+                          fontWeight: "bold",
+                          borderBottom: "2px solid #ccc",
+                          fontSize: "1.1rem",
+                        }}
+                      >
                         {calculateTotal(year)}
                       </TableCell>
-                      <TableCell sx={{ borderBottom: "2px solid #ccc" }}></TableCell>
+                      <TableCell
+                        sx={{ borderBottom: "2px solid #ccc" }}
+                      ></TableCell>
                     </TableRow>
                   </TableBody>
                 </React.Fragment>
@@ -487,7 +654,12 @@ export default function Projektek() {
         </TableContainer>
 
         {/* Új sor Dialog */}
-        <Dialog open={openAddDialog} onClose={() => setOpenAddDialog(false)} maxWidth="sm" fullWidth>
+        <Dialog
+          open={openAddDialog}
+          onClose={() => setOpenAddDialog(false)}
+          maxWidth="sm"
+          fullWidth
+        >
           <DialogTitle>Új projekt sor felvétele</DialogTitle>
           <DialogContent>
             <Box sx={{ mt: 2 }}>
@@ -503,8 +675,16 @@ export default function Projektek() {
                   setSelectedSzakmaMultiple([]);
                 }}
               >
-                <FormControlLabel value="egy" control={<Radio />} label="Egyet" />
-                <FormControlLabel value="több" control={<Radio />} label="Többet" />
+                <FormControlLabel
+                  value="egy"
+                  control={<Radio />}
+                  label="Egyet"
+                />
+                <FormControlLabel
+                  value="több"
+                  control={<Radio />}
+                  label="Többet"
+                />
               </RadioGroup>
 
               {selectionType === "egy" ? (
@@ -516,7 +696,9 @@ export default function Projektek() {
                     label="Szakirány/Szakma"
                   >
                     {szakmaOptions.map((opt) => (
-                      <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                      <MenuItem key={opt} value={opt}>
+                        {opt}
+                      </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -528,14 +710,18 @@ export default function Projektek() {
                     value={selectedSzakmaMultiple}
                     onChange={(e) => {
                       const { value } = e.target;
-                      setSelectedSzakmaMultiple(typeof value === 'string' ? value.split(',') : value);
+                      setSelectedSzakmaMultiple(
+                        typeof value === "string" ? value.split(",") : value,
+                      );
                     }}
                     input={<OutlinedInput label="Szakirány/Szakma" />}
-                    renderValue={(selected) => selected.join(', ')}
+                    renderValue={(selected) => selected.join(", ")}
                   >
                     {szakmaOptions.map((opt) => (
                       <MenuItem key={opt} value={opt}>
-                        <Checkbox checked={selectedSzakmaMultiple.indexOf(opt) > -1} />
+                        <Checkbox
+                          checked={selectedSzakmaMultiple.indexOf(opt) > -1}
+                        />
                         <ListItemText primary={opt} />
                       </MenuItem>
                     ))}
@@ -551,7 +737,8 @@ export default function Projektek() {
               onClick={handleAddRow}
               disabled={
                 (selectionType === "egy" && !selectedSzakmaSingle) ||
-                (selectionType === "több" && selectedSzakmaMultiple.length === 0)
+                (selectionType === "több" &&
+                  selectedSzakmaMultiple.length === 0)
               }
             >
               Hozzáadás
@@ -560,14 +747,23 @@ export default function Projektek() {
         </Dialog>
 
         {/* Törlés megerősítő Dialog */}
-        <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+        <Dialog
+          open={openDeleteDialog}
+          onClose={() => setOpenDeleteDialog(false)}
+        >
           <DialogTitle>Sor törlése</DialogTitle>
           <DialogContent>
             <Typography>Biztosan törölni szeretné ezt a sort?</Typography>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenDeleteDialog(false)}>Mégse</Button>
-            <Button variant="contained" color="error" onClick={handleConfirmDelete}>Törlés</Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleConfirmDelete}
+            >
+              Törlés
+            </Button>
           </DialogActions>
         </Dialog>
 
@@ -577,11 +773,27 @@ export default function Projektek() {
           onClose={() => setSnackbarOpen(false)}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
-          <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: "100%" }}>
+          <Alert
+            onClose={() => setSnackbarOpen(false)}
+            severity={snackbarSeverity}
+            sx={{ width: "100%" }}
+          >
             {snackbarMessage}
           </Alert>
         </Snackbar>
       </Box>
+
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        alapadatokId={selectedSchool?.id}
+        tableName="projektek"
+        onRollbackSuccess={() => {
+          setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+        }}
+      />
     </PageWrapper>
   );
 }

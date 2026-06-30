@@ -38,6 +38,8 @@ import InfoSzakmaiVizsga from "./info_szakmai_vizsga";
 import TitleSzakmaiVizsga from "./title_szakmai_vizsga";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 const evszamok = generateSchoolYears();
 const numberFormatter = new Intl.NumberFormat("hu-HU");
@@ -46,13 +48,22 @@ export default function SzakmaiVizsga() {
   const selectedSchool = useSelector(selectSelectedSchool);
 
   // API Hooks
-  const { data: schoolsData, isLoading: isLoadingSchools } = useGetAllAlapadatokQuery();
-  const { data: apiData, error: fetchError, isLoading: isFetching, refetch } = useGetAllSzakmaiVizsgaEredmenyekQuery();
-  const [addData, { isLoading: isAdding }] = useAddSzakmaiVizsgaEredmenyekMutation();
-  const [updateData, { isLoading: isUpdating }] = useUpdateSzakmaiVizsgaEredmenyekMutation();
+  const { data: schoolsData, isLoading: isLoadingSchools } =
+    useGetAllAlapadatokQuery();
+  const {
+    data: apiData,
+    error: fetchError,
+    isLoading: isFetching,
+    refetch,
+  } = useGetAllSzakmaiVizsgaEredmenyekQuery();
+  const [addData, { isLoading: isAdding }] =
+    useAddSzakmaiVizsgaEredmenyekMutation();
+  const [updateData, { isLoading: isUpdating }] =
+    useUpdateSzakmaiVizsgaEredmenyekMutation();
 
   // Component State
   const [tableData, setTableData] = useState({});
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -66,19 +77,26 @@ export default function SzakmaiVizsga() {
     if (!schoolsData) return { szakmaRows: [], programMap: {} };
 
     const relevantSchools = selectedSchool
-      ? schoolsData.filter(s => s.id === selectedSchool.id)
+      ? schoolsData.filter((s) => s.id === selectedSchool.id)
       : schoolsData;
 
     const rows = [];
     const map = {};
 
-    relevantSchools.forEach(school => {
-      if (school.alapadatok_szakirany && Array.isArray(school.alapadatok_szakirany)) {
-        school.alapadatok_szakirany.forEach(sz => {
+    relevantSchools.forEach((school) => {
+      if (
+        school.alapadatok_szakirany &&
+        Array.isArray(school.alapadatok_szakirany)
+      ) {
+        school.alapadatok_szakirany.forEach((sz) => {
           const szakiranyId = sz.szakirany_id || sz.szakirany?.id;
 
-          if (sz.szakirany?.szakma && Array.isArray(sz.szakirany.szakma) && sz.szakirany.szakma.length > 0) {
-            sz.szakirany.szakma.forEach(szm => {
+          if (
+            sz.szakirany?.szakma &&
+            Array.isArray(sz.szakirany.szakma) &&
+            sz.szakirany.szakma.length > 0
+          ) {
+            sz.szakirany.szakma.forEach((szm) => {
               const szakmaId = szm.szakma_id || szm.szakma?.id;
               const szakmaNev = szm.szakma?.nev || szm.szakma?.megnevezes;
               if (szakmaNev) {
@@ -96,7 +114,10 @@ export default function SzakmaiVizsga() {
           } else if (szakiranyId) {
             const key = `szakirany_${szakiranyId}`;
             if (!map[key]) {
-              rows.push({ key, label: `Szakirány: ${sz.szakirany?.nev || 'Ismeretlen'}` });
+              rows.push({
+                key,
+                label: `Szakirány: ${sz.szakirany?.nev || "Ismeretlen"}`,
+              });
               map[key] = {
                 szakirany_id: szakiranyId,
                 szakma_id: null,
@@ -118,14 +139,16 @@ export default function SzakmaiVizsga() {
       const initialData = {};
 
       const relevantData = selectedSchool
-        ? apiData.filter(item => item.alapadatok_id === selectedSchool.id)
+        ? apiData.filter((item) => item.alapadatok_id === selectedSchool.id)
         : apiData;
 
-      relevantData.forEach(item => {
+      relevantData.forEach((item) => {
         const year = item.tanev_kezdete;
         const szakmaId = item.szakma_id || item.szakma?.id;
         const szakiranyId = item.szakirany_id || item.szakirany?.id;
-        const key = szakmaId ? `szakma_${szakmaId}_${szakiranyId}` : `szakirany_${szakiranyId}`;
+        const key = szakmaId
+          ? `szakma_${szakmaId}_${szakiranyId}`
+          : `szakirany_${szakiranyId}`;
 
         if (!initialData[key]) initialData[key] = {};
         initialData[key][year] = {
@@ -147,7 +170,7 @@ export default function SzakmaiVizsga() {
     const parsed = parseInt(value, 10);
     const numValue = isNaN(parsed) ? "" : Math.max(0, parsed);
 
-    setTableData(prev => ({
+    setTableData((prev) => ({
       ...prev,
       [key]: {
         ...(prev[key] || {}),
@@ -181,19 +204,23 @@ export default function SzakmaiVizsga() {
       const parsed = parseInt(rawValue, 10);
       return isNaN(parsed) ? 0 : parsed;
     },
-    [szakmaRows, tableData]
+    [szakmaRows, tableData],
   );
 
   const getRatio = useCallback(
     (key, year) => {
       const success = getNumericValue(key, year, "sikeres_vizsgazok_szama");
-      const eligible = getNumericValue(key, year, "vizsgara_bocsathatoak_szama");
+      const eligible = getNumericValue(
+        key,
+        year,
+        "vizsgara_bocsathatoak_szama",
+      );
       if (!eligible) {
         return "0.00";
       }
       return ((success / eligible) * 100).toFixed(2);
     },
-    [getNumericValue]
+    [getNumericValue],
   );
 
   const formatCount = (value) => numberFormatter.format(Math.round(value) || 0);
@@ -211,22 +238,26 @@ export default function SzakmaiVizsga() {
         for (const [yearStr, fields] of Object.entries(yearData)) {
           const year = parseInt(yearStr, 10);
 
-          const savedFields = savedData?.[key]?.[yearStr] || { 
-            vizsgara_bocsathatoak_szama: "", 
-            sikeres_vizsgazok_szama: "" 
+          const savedFields = savedData?.[key]?.[yearStr] || {
+            vizsgara_bocsathatoak_szama: "",
+            sikeres_vizsgazok_szama: "",
           };
 
           if (
-            fields.vizsgara_bocsathatoak_szama !== savedFields.vizsgara_bocsathatoak_szama ||
-            fields.sikeres_vizsgazok_szama !== savedFields.sikeres_vizsgazok_szama
+            fields.vizsgara_bocsathatoak_szama !==
+              savedFields.vizsgara_bocsathatoak_szama ||
+            fields.sikeres_vizsgazok_szama !==
+              savedFields.sikeres_vizsgazok_szama
           ) {
             const payload = {
               alapadatok_id: programMap[key].alapadatok_id,
               szakirany_id: programMap[key].szakirany_id,
               szakma_id: programMap[key].szakma_id,
               tanev_kezdete: year,
-              vizsgara_bocsathatoak_szama: parseInt(fields.vizsgara_bocsathatoak_szama) || 0,
-              sikeres_vizsgazok_szama: parseInt(fields.sikeres_vizsgazok_szama) || 0,
+              vizsgara_bocsathatoak_szama:
+                parseInt(fields.vizsgara_bocsathatoak_szama) || 0,
+              sikeres_vizsgazok_szama:
+                parseInt(fields.sikeres_vizsgazok_szama) || 0,
             };
 
             if (fields.id) {
@@ -244,7 +275,9 @@ export default function SzakmaiVizsga() {
       setIsModified(false);
       refetch();
 
-      setSnackbarMessage(`Sikeresen mentve: ${savedCount} új rekord és ${updatedCount} frissített rekord`);
+      setSnackbarMessage(
+        `Sikeresen mentve: ${savedCount} új rekord és ${updatedCount} frissített rekord`,
+      );
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
     } catch (error) {
@@ -274,31 +307,36 @@ export default function SzakmaiVizsga() {
       >
         <Fade in={true} timeout={800}>
           <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
-
             <LockStatusIndicator tableName="szakmai_vizsga_eredmenyek" />
 
             {fetchError && (
               <Alert severity="error" sx={{ mb: 2 }}>
-                Hiba történt az adatok betöltése során: {fetchError.message || "Ismeretlen hiba"}
+                Hiba történt az adatok betöltése során:{" "}
+                {fetchError.message || "Ismeretlen hiba"}
               </Alert>
             )}
 
             {!selectedSchool && (
               <Alert severity="info" sx={{ mb: 2 }}>
-                Nincs iskola kiválasztva - az összes iskola adatait összegzi a rendszer.
+                Nincs iskola kiválasztva - az összes iskola adatait összegzi a
+                rendszer.
               </Alert>
             )}
 
             {isModified && (
               <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
-                Mentetlen módosítások vannak. Ne felejtsd el menteni a változtatásokat!
+                Mentetlen módosítások vannak. Ne felejtsd el menteni a
+                változtatásokat!
               </Alert>
             )}
 
             {/* Action Buttons */}
             <Stack direction="row" spacing={2} sx={{ mb: 3, ml: 2 }}>
-              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
-                  <LockedTableWrapper tableName="szakmai_vizsga_eredmenyek">
+              <ExportDOMTableToExcel
+                tableId=".MuiTable-root"
+                fileName="export_adatok"
+              />
+              <LockedTableWrapper tableName="szakmai_vizsga_eredmenyek">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}
@@ -309,9 +347,24 @@ export default function SzakmaiVizsga() {
                 </Button>
                 <Button
                   variant="outlined"
+                  color="primary"
+                  onClick={() => setHistoryOpen(true)}
+                  startIcon={<HistoryIcon />}
+                  sx={{ ml: 2 }}
+                >
+                  Előzmények
+                </Button>
+                <Button
+                  variant="outlined"
                   startIcon={<RefreshIcon />}
                   onClick={handleResetData}
-                  disabled={!isModified || !savedData || isSaving || isAdding || isUpdating}
+                  disabled={
+                    !isModified ||
+                    !savedData ||
+                    isSaving ||
+                    isAdding ||
+                    isUpdating
+                  }
                 >
                   Visszaállítás
                 </Button>
@@ -324,10 +377,14 @@ export default function SzakmaiVizsga() {
 
             {szakmaRows.length === 0 ? (
               <Alert severity="warning" sx={{ m: 2 }}>
-                Nincsenek megjeleníthető szakmák. Kérjük válasszon intézményt vagy rendeljen hozzá szakmákat az intézményekhez.
+                Nincsenek megjeleníthető szakmák. Kérjük válasszon intézményt
+                vagy rendeljen hozzá szakmákat az intézményekhez.
               </Alert>
             ) : (
-              <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
+              <TableContainer
+                component={Paper}
+                sx={{ maxWidth: "100%", overflowX: "auto" }}
+              >
                 <Table size="small" sx={{ minWidth: 1000 }}>
                   <TableHead>
                     <TableRow>
@@ -355,7 +412,10 @@ export default function SzakmaiVizsga() {
                             fontWeight: "bold",
                             backgroundColor: "#fff2cc",
                             borderBottom: "1px solid #ddd",
-                            borderRight: i === evszamok.length - 1 ? "none" : "2px solid #ddd",
+                            borderRight:
+                              i === evszamok.length - 1
+                                ? "none"
+                                : "2px solid #ddd",
                           }}
                         >
                           {year}
@@ -393,7 +453,10 @@ export default function SzakmaiVizsga() {
                               fontWeight: 600,
                               backgroundColor: "#fff2cc",
                               borderBottom: "2px solid #ddd",
-                              borderRight: i === evszamok.length - 1 ? "none" : "2px solid #ddd",
+                              borderRight:
+                                i === evszamok.length - 1
+                                  ? "none"
+                                  : "2px solid #ddd",
                               minWidth: 110,
                             }}
                           >
@@ -426,18 +489,39 @@ export default function SzakmaiVizsga() {
                               {getRatio("Összesen", startYear)}%
                             </TableCell>
                             <TableCell align="center">
-                              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                {formatCount(getNumericValue("Összesen", startYear, "sikeres_vizsgazok_szama"))}
+                              <Typography
+                                variant="body2"
+                                sx={{ fontWeight: 600 }}
+                              >
+                                {formatCount(
+                                  getNumericValue(
+                                    "Összesen",
+                                    startYear,
+                                    "sikeres_vizsgazok_szama",
+                                  ),
+                                )}
                               </Typography>
                             </TableCell>
                             <TableCell
                               align="center"
                               sx={{
-                                borderRight: i === evszamok.length - 1 ? "none" : "2px solid #ddd",
+                                borderRight:
+                                  i === evszamok.length - 1
+                                    ? "none"
+                                    : "2px solid #ddd",
                               }}
                             >
-                              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                {formatCount(getNumericValue("Összesen", startYear, "vizsgara_bocsathatoak_szama"))}
+                              <Typography
+                                variant="body2"
+                                sx={{ fontWeight: 600 }}
+                              >
+                                {formatCount(
+                                  getNumericValue(
+                                    "Összesen",
+                                    startYear,
+                                    "vizsgara_bocsathatoak_szama",
+                                  ),
+                                )}
                               </Typography>
                             </TableCell>
                           </React.Fragment>
@@ -460,7 +544,8 @@ export default function SzakmaiVizsga() {
                             borderRight: "2px solid #ddd",
                             position: "sticky",
                             left: 0,
-                            backgroundColor: index % 2 === 0 ? "#fff" : "#f9f9f9",
+                            backgroundColor:
+                              index % 2 === 0 ? "#fff" : "#f9f9f9",
                             zIndex: 1,
                           }}
                         >
@@ -470,41 +555,79 @@ export default function SzakmaiVizsga() {
                           const startYear = parseInt(year.split("/")[0], 10);
                           return (
                             <React.Fragment key={`${row.key}-${year}-metrics`}>
-                              <TableCell align="center" sx={{ fontWeight: 500 }}>
+                              <TableCell
+                                align="center"
+                                sx={{ fontWeight: 500 }}
+                              >
                                 {getRatio(row.key, startYear)}%
                               </TableCell>
                               <TableCell align="center">
                                 <TextField
                                   type="number"
                                   size="small"
-                                  value={tableData[row.key]?.[startYear]?.sikeres_vizsgazok_szama ?? ""}
-                                  onChange={(e) => handleDataChange(row.key, startYear, "sikeres_vizsgazok_szama", e.target.value)}
+                                  value={
+                                    tableData[row.key]?.[startYear]
+                                      ?.sikeres_vizsgazok_szama ?? ""
+                                  }
+                                  onChange={(e) =>
+                                    handleDataChange(
+                                      row.key,
+                                      startYear,
+                                      "sikeres_vizsgazok_szama",
+                                      e.target.value,
+                                    )
+                                  }
                                   inputProps={{
                                     min: 0,
                                     step: 1,
-                                    style: { textAlign: "center", padding: "4px" },
+                                    style: {
+                                      textAlign: "center",
+                                      padding: "4px",
+                                    },
                                   }}
-                                  sx={{ width: "80px", backgroundColor: "#fff" }}
+                                  sx={{
+                                    width: "80px",
+                                    backgroundColor: "#fff",
+                                  }}
                                   placeholder=""
                                 />
                               </TableCell>
                               <TableCell
                                 align="center"
                                 sx={{
-                                  borderRight: i === evszamok.length - 1 ? "none" : "2px solid #ddd",
+                                  borderRight:
+                                    i === evszamok.length - 1
+                                      ? "none"
+                                      : "2px solid #ddd",
                                 }}
                               >
                                 <TextField
                                   type="number"
                                   size="small"
-                                  value={tableData[row.key]?.[startYear]?.vizsgara_bocsathatoak_szama ?? ""}
-                                  onChange={(e) => handleDataChange(row.key, startYear, "vizsgara_bocsathatoak_szama", e.target.value)}
+                                  value={
+                                    tableData[row.key]?.[startYear]
+                                      ?.vizsgara_bocsathatoak_szama ?? ""
+                                  }
+                                  onChange={(e) =>
+                                    handleDataChange(
+                                      row.key,
+                                      startYear,
+                                      "vizsgara_bocsathatoak_szama",
+                                      e.target.value,
+                                    )
+                                  }
                                   inputProps={{
                                     min: 0,
                                     step: 1,
-                                    style: { textAlign: "center", padding: "4px" },
+                                    style: {
+                                      textAlign: "center",
+                                      padding: "4px",
+                                    },
                                   }}
-                                  sx={{ width: "80px", backgroundColor: "#fff" }}
+                                  sx={{
+                                    width: "80px",
+                                    backgroundColor: "#fff",
+                                  }}
                                   placeholder=""
                                 />
                               </TableCell>
@@ -524,12 +647,28 @@ export default function SzakmaiVizsga() {
               onClose={handleSnackbarClose}
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
             >
-              <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} variant="filled">
+              <Alert
+                onClose={handleSnackbarClose}
+                severity={snackbarSeverity}
+                variant="filled"
+              >
                 {snackbarMessage}
               </Alert>
             </Snackbar>
           </Box>
         </Fade>
+
+        <HistoryDialog
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          alapadatokId={selectedSchool?.id}
+          tableName="szakmaiVizsgaEredmenyek"
+          onRollbackSuccess={() => {
+            setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+          }}
+        />
       </PageWrapper>
     </Container>
   );

@@ -44,6 +44,8 @@ import InfoEgyuttmukodesekSzama from "./info_egyuttmukudesek_szama";
 import TitleEgyuttmukodesekSzama from "./title_egyuttmukudesek_szama";
 import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 // Táblázat 1 mezői: felsőoktatási intézménnyel való együttműködések
 // Táblázat 2 mezői: felsőoktatásba továbbtanulók
@@ -56,6 +58,7 @@ export default function EgyuttmukodesekSzama() {
   // === Table 1: Együttműködések ===
   // Structure: { [intezmenynev]: { [year]: { id, egyuttmukodes_formaja, erintett_evfolyam, erintett_tanulok_szama } } }
   const [table1Data, setTable1Data] = useState({});
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [originalTable1Data, setOriginalTable1Data] = useState({});
 
   // === Table 2: Felsőoktatásba lépők ===
@@ -81,7 +84,7 @@ export default function EgyuttmukodesekSzama() {
     const startYear = parseInt(yearRange.split("/")[0]);
     return useGetEgyuttmukodesekSzamaQuery(
       { alapadatokId: selectedSchool?.id, tanev: startYear },
-      { skip: !selectedSchool }
+      { skip: !selectedSchool },
     );
   });
 
@@ -90,12 +93,16 @@ export default function EgyuttmukodesekSzama() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queries.map((q) => q.fulfilledTimeStamp).join(","), selectedSchool?.id]);
 
-  const isLoading = useMemo(() => queries.some((q) => q.isLoading),
+  const isLoading = useMemo(
+    () => queries.some((q) => q.isLoading),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queries.map((q) => q.isLoading).join(",")]);
-  const isFetching = useMemo(() => queries.some((q) => q.isFetching),
+    [queries.map((q) => q.isLoading).join(",")],
+  );
+  const isFetching = useMemo(
+    () => queries.some((q) => q.isFetching),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queries.map((q) => q.isFetching).join(",")]);
+    [queries.map((q) => q.isFetching).join(",")],
+  );
 
   const [addData] = useAddEgyuttmukodesekSzamaMutation();
   const [updateData] = useUpdateEgyuttmukodesekSzamaMutation();
@@ -117,7 +124,14 @@ export default function EgyuttmukodesekSzama() {
           if (tableno === 1) {
             if (!newTable1[name]) {
               newTable1[name] = {};
-              schoolYears.forEach((y) => { newTable1[name][y] = { id: null, egyuttmukodes_formaja: "", erintett_evfolyam: "", erintett_tanulok_szama: "" }; });
+              schoolYears.forEach((y) => {
+                newTable1[name][y] = {
+                  id: null,
+                  egyuttmukodes_formaja: "",
+                  erintett_evfolyam: "",
+                  erintett_tanulok_szama: "",
+                };
+              });
             }
             const yearData = {
               id: item.id,
@@ -131,7 +145,14 @@ export default function EgyuttmukodesekSzama() {
           } else {
             if (!newTable2[name]) {
               newTable2[name] = {};
-              schoolYears.forEach((y) => { newTable2[name][y] = { id: null, felsooktataba_lepo_szama: "", vegzos_technikumi_szama: "", tovabbtanulok_aranya: "" }; });
+              schoolYears.forEach((y) => {
+                newTable2[name][y] = {
+                  id: null,
+                  felsooktataba_lepo_szama: "",
+                  vegzos_technikumi_szama: "",
+                  tovabbtanulok_aranya: "",
+                };
+              });
             }
             const yearData2 = {
               id: item.id,
@@ -210,8 +231,13 @@ export default function EgyuttmukodesekSzama() {
   const handleAddRow = useCallback(async () => {
     if (!newRowName.trim() || !selectedSchool) return;
 
-    const availableYears = schoolYears.map((y) => parseInt(y.split("/")[0], 10)).filter((y) => !Number.isNaN(y));
-    const defaultStartYear = availableYears.length > 0 ? Math.max(...availableYears) : new Date().getFullYear();
+    const availableYears = schoolYears
+      .map((y) => parseInt(y.split("/")[0], 10))
+      .filter((y) => !Number.isNaN(y));
+    const defaultStartYear =
+      availableYears.length > 0
+        ? Math.max(...availableYears)
+        : new Date().getFullYear();
 
     try {
       const recordData = {
@@ -291,7 +317,15 @@ export default function EgyuttmukodesekSzama() {
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
-  }, [deleteTarget, originalTable1Data, originalTable2Data, table1Data, table2Data, deleteData, schoolYears]);
+  }, [
+    deleteTarget,
+    originalTable1Data,
+    originalTable2Data,
+    table1Data,
+    table2Data,
+    deleteData,
+    schoolYears,
+  ]);
 
   // ─── Save ─────────────────────────────────────────────────────────────────
   const handleSave = async () => {
@@ -319,9 +353,21 @@ export default function EgyuttmukodesekSzama() {
               erintett_tanulok_szama: yearData.erintett_tanulok_szama || "",
             };
             if (id) {
-              promises.push(updateData({ id, ...recordData }).unwrap().then(() => { updatedCount++; }));
+              promises.push(
+                updateData({ id, ...recordData })
+                  .unwrap()
+                  .then(() => {
+                    updatedCount++;
+                  }),
+              );
             } else {
-              promises.push(addData(recordData).unwrap().then(() => { savedCount++; }));
+              promises.push(
+                addData(recordData)
+                  .unwrap()
+                  .then(() => {
+                    savedCount++;
+                  }),
+              );
             }
           }
         });
@@ -343,9 +389,21 @@ export default function EgyuttmukodesekSzama() {
               tovabbtanulok_aranya: yearData.tovabbtanulok_aranya || "",
             };
             if (id) {
-              promises.push(updateData({ id, ...recordData }).unwrap().then(() => { updatedCount++; }));
+              promises.push(
+                updateData({ id, ...recordData })
+                  .unwrap()
+                  .then(() => {
+                    updatedCount++;
+                  }),
+              );
             } else {
-              promises.push(addData(recordData).unwrap().then(() => { savedCount++; }));
+              promises.push(
+                addData(recordData)
+                  .unwrap()
+                  .then(() => {
+                    savedCount++;
+                  }),
+              );
             }
           }
         });
@@ -353,7 +411,9 @@ export default function EgyuttmukodesekSzama() {
 
       if (promises.length > 0) {
         await Promise.all(promises);
-        setSnackbarMessage(`Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`);
+        setSnackbarMessage(
+          `Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`,
+        );
         setSnackbarSeverity("success");
       } else {
         setSnackbarMessage("Nem történt módosítás!");
@@ -381,25 +441,35 @@ export default function EgyuttmukodesekSzama() {
   const exportRows = useMemo(() => {
     const rows = [];
     rows.push({ intezmeny: "--- 1. táblázat: Együttműködések ---" });
-    Object.keys(table1Data).sort((a, b) => a.localeCompare(b, "hu")).forEach((name) => {
-      const row = { intezmeny: name };
-      schoolYears.forEach((year) => {
-        row[`${year}__formaja`] = table1Data[name][year]?.egyuttmukodes_formaja || "";
-        row[`${year}__evfolyam`] = table1Data[name][year]?.erintett_evfolyam || "";
-        row[`${year}__tanulok`] = table1Data[name][year]?.erintett_tanulok_szama || "";
+    Object.keys(table1Data)
+      .sort((a, b) => a.localeCompare(b, "hu"))
+      .forEach((name) => {
+        const row = { intezmeny: name };
+        schoolYears.forEach((year) => {
+          row[`${year}__formaja`] =
+            table1Data[name][year]?.egyuttmukodes_formaja || "";
+          row[`${year}__evfolyam`] =
+            table1Data[name][year]?.erintett_evfolyam || "";
+          row[`${year}__tanulok`] =
+            table1Data[name][year]?.erintett_tanulok_szama || "";
+        });
+        rows.push(row);
       });
-      rows.push(row);
-    });
     rows.push({ intezmeny: "--- 2. táblázat: Felsőoktatásba lépők ---" });
-    Object.keys(table2Data).sort((a, b) => a.localeCompare(b, "hu")).forEach((name) => {
-      const row = { intezmeny: name };
-      schoolYears.forEach((year) => {
-        row[`${year}__lepo`] = table2Data[name][year]?.felsooktataba_lepo_szama || "";
-        row[`${year}__vegzos`] = table2Data[name][year]?.vegzos_technikumi_szama || "";
-        row[`${year}__arany`] = table2Data[name][year]?.tovabbtanulok_aranya || "";
+    Object.keys(table2Data)
+      .sort((a, b) => a.localeCompare(b, "hu"))
+      .forEach((name) => {
+        const row = { intezmeny: name };
+        schoolYears.forEach((year) => {
+          row[`${year}__lepo`] =
+            table2Data[name][year]?.felsooktataba_lepo_szama || "";
+          row[`${year}__vegzos`] =
+            table2Data[name][year]?.vegzos_technikumi_szama || "";
+          row[`${year}__arany`] =
+            table2Data[name][year]?.tovabbtanulok_aranya || "";
+        });
+        rows.push(row);
       });
-      rows.push(row);
-    });
     return rows;
   }, [table1Data, table2Data, schoolYears]);
 
@@ -408,7 +478,16 @@ export default function EgyuttmukodesekSzama() {
   }
 
   const commonHeaderCell = (label, extraSx = {}) => (
-    <TableCell sx={{ fontWeight: "bold", backgroundColor: "#fff2cc", borderBottom: "2px solid #ccc", borderRight: "1px solid #ccc", minWidth: 140, ...extraSx }}>
+    <TableCell
+      sx={{
+        fontWeight: "bold",
+        backgroundColor: "#fff2cc",
+        borderBottom: "2px solid #ccc",
+        borderRight: "1px solid #ccc",
+        minWidth: 140,
+        ...extraSx,
+      }}
+    >
       {label}
     </TableCell>
   );
@@ -440,6 +519,15 @@ export default function EgyuttmukodesekSzama() {
             </Button>
             <Button
               variant="outlined"
+              color="primary"
+              onClick={() => setHistoryOpen(true)}
+              startIcon={<HistoryIcon />}
+              sx={{ ml: 2 }}
+            >
+              Előzmények
+            </Button>
+            <Button
+              variant="outlined"
               startIcon={<RefreshIcon />}
               onClick={handleReset}
               disabled={!isModified || isSaving}
@@ -451,14 +539,42 @@ export default function EgyuttmukodesekSzama() {
             fileName="egyuttmukudesek_szama"
             sheetName="Együttműködések száma"
             columns={[
-              { header: "Felsőoktatási intézmény", key: "intezmeny", width: 45 },
+              {
+                header: "Felsőoktatási intézmény",
+                key: "intezmeny",
+                width: 45,
+              },
               ...schoolYears.flatMap((year) => [
-                { header: `${year} - Együttműk. formája`, key: `${year}__formaja`, width: 30 },
-                { header: `${year} - Érintett évfolyam`, key: `${year}__evfolyam`, width: 22 },
-                { header: `${year} - Érintett tanulók száma`, key: `${year}__tanulok`, width: 22 },
-                { header: `${year} - Felsőokt. lépő`, key: `${year}__lepo`, width: 20 },
-                { header: `${year} - Végzős technikumi`, key: `${year}__vegzos`, width: 22 },
-                { header: `${year} - Továbbtanulók aránya`, key: `${year}__arany`, width: 22 },
+                {
+                  header: `${year} - Együttműk. formája`,
+                  key: `${year}__formaja`,
+                  width: 30,
+                },
+                {
+                  header: `${year} - Érintett évfolyam`,
+                  key: `${year}__evfolyam`,
+                  width: 22,
+                },
+                {
+                  header: `${year} - Érintett tanulók száma`,
+                  key: `${year}__tanulok`,
+                  width: 22,
+                },
+                {
+                  header: `${year} - Felsőokt. lépő`,
+                  key: `${year}__lepo`,
+                  width: 20,
+                },
+                {
+                  header: `${year} - Végzős technikumi`,
+                  key: `${year}__vegzos`,
+                  width: 22,
+                },
+                {
+                  header: `${year} - Továbbtanulók aránya`,
+                  key: `${year}__arany`,
+                  width: 22,
+                },
               ]),
             ]}
             rows={exportRows}
@@ -485,11 +601,25 @@ export default function EgyuttmukodesekSzama() {
           </Button>
         </LockedTableWrapper>
 
-        <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto", mb: 4 }}>
+        <TableContainer
+          component={Paper}
+          sx={{ maxWidth: "100%", overflowX: "auto", mb: 4 }}
+        >
           <Table size="medium" sx={{ minWidth: 600, border: "2px solid #ccc" }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: "bold", minWidth: 260, borderRight: "2px solid #ccc", borderBottom: "2px solid #ccc", backgroundColor: "#f5f5f5", position: "sticky", left: 0, zIndex: 3 }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    minWidth: 260,
+                    borderRight: "2px solid #ccc",
+                    borderBottom: "2px solid #ccc",
+                    backgroundColor: "#f5f5f5",
+                    position: "sticky",
+                    left: 0,
+                    zIndex: 3,
+                  }}
+                >
                   Felsőoktatási intézmény megnevezése
                 </TableCell>
                 {schoolYears.map((year, i) => (
@@ -497,85 +627,239 @@ export default function EgyuttmukodesekSzama() {
                     key={`t1-${year}-header`}
                     colSpan={3}
                     align="center"
-                    sx={{ fontWeight: "bold", backgroundColor: "#fff2cc", borderBottom: "2px solid #ccc", borderRight: i === schoolYears.length - 1 ? "none" : "2px solid #ccc" }}
+                    sx={{
+                      fontWeight: "bold",
+                      backgroundColor: "#fff2cc",
+                      borderBottom: "2px solid #ccc",
+                      borderRight:
+                        i === schoolYears.length - 1
+                          ? "none"
+                          : "2px solid #ccc",
+                    }}
                   >
                     {year}
                   </TableCell>
                 ))}
-                <TableCell sx={{ fontWeight: "bold", width: 60, borderBottom: "2px solid #ccc", borderLeft: "2px solid #ccc", position: "sticky", right: 0, backgroundColor: "#f5f5f5", zIndex: 3 }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    width: 60,
+                    borderBottom: "2px solid #ccc",
+                    borderLeft: "2px solid #ccc",
+                    position: "sticky",
+                    right: 0,
+                    backgroundColor: "#f5f5f5",
+                    zIndex: 3,
+                  }}
+                >
                   Műv.
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell sx={{ borderRight: "2px solid #ccc", borderBottom: "2px solid #ccc", backgroundColor: "#f5f5f5", position: "sticky", left: 0, zIndex: 3 }} />
+                <TableCell
+                  sx={{
+                    borderRight: "2px solid #ccc",
+                    borderBottom: "2px solid #ccc",
+                    backgroundColor: "#f5f5f5",
+                    position: "sticky",
+                    left: 0,
+                    zIndex: 3,
+                  }}
+                />
                 {schoolYears.map((year, i) => (
                   <React.Fragment key={`t1-sub-${year}`}>
-                    {commonHeaderCell("Együttműködés formája (tevékenység megnevezése)", { minWidth: 200 })}
-                    {commonHeaderCell("Érintett tanulók évfolyama", { minWidth: 160 })}
-                    {commonHeaderCell("Érintett tanulók száma", { minWidth: 140, borderRight: i === schoolYears.length - 1 ? "none" : "2px solid #ccc" })}
+                    {commonHeaderCell(
+                      "Együttműködés formája (tevékenység megnevezése)",
+                      { minWidth: 200 },
+                    )}
+                    {commonHeaderCell("Érintett tanulók évfolyama", {
+                      minWidth: 160,
+                    })}
+                    {commonHeaderCell("Érintett tanulók száma", {
+                      minWidth: 140,
+                      borderRight:
+                        i === schoolYears.length - 1
+                          ? "none"
+                          : "2px solid #ccc",
+                    })}
                   </React.Fragment>
                 ))}
-                <TableCell sx={{ borderLeft: "2px solid #ccc", borderBottom: "2px solid #ccc", backgroundColor: "#f5f5f5", position: "sticky", right: 0, zIndex: 3 }} />
+                <TableCell
+                  sx={{
+                    borderLeft: "2px solid #ccc",
+                    borderBottom: "2px solid #ccc",
+                    backgroundColor: "#f5f5f5",
+                    position: "sticky",
+                    right: 0,
+                    zIndex: 3,
+                  }}
+                />
               </TableRow>
             </TableHead>
             <TableBody>
               {Object.keys(table1Data).length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={schoolYears.length * 3 + 2} align="center" sx={{ py: 3, fontStyle: "italic", color: "text.secondary" }}>
-                    Nincs rögzített adat. Kattintson az „Új intézmény hozzáadása" gombra!
+                  <TableCell
+                    colSpan={schoolYears.length * 3 + 2}
+                    align="center"
+                    sx={{ py: 3, fontStyle: "italic", color: "text.secondary" }}
+                  >
+                    Nincs rögzített adat. Kattintson az „Új intézmény
+                    hozzáadása" gombra!
                   </TableCell>
                 </TableRow>
               ) : (
-                Object.keys(table1Data).sort((a, b) => a.localeCompare(b, "hu")).map((name) => (
-                  <TableRow key={`t1-${name}`} hover>
-                    <TableCell sx={{ borderRight: "2px solid #ccc", borderBottom: "1px solid #ddd", position: "sticky", left: 0, backgroundColor: "#fff", zIndex: 1, fontWeight: 500 }}>
-                      {name}
-                    </TableCell>
-                    {schoolYears.map((year, i) => (
-                      <React.Fragment key={`t1-${name}-${year}`}>
-                        <TableCell align="center" sx={{ borderBottom: "1px solid #ddd", borderRight: "1px solid #eee", backgroundColor: isTable1FieldModified(name, year, "egyuttmukodes_formaja") ? "#fef08a" : "inherit" }}>
-                          <TextField
-                            type="text"
-                            value={table1Data[name][year]?.egyuttmukodes_formaja || ""}
-                            onChange={(e) => handleTable1Change(name, year, "egyuttmukodes_formaja", e.target.value)}
-                            size="small"
-                            multiline
-                            minRows={1}
-                            placeholder="pl. közös képzés"
-                            inputProps={{ style: { textAlign: "center" } }}
-                            sx={{ width: "100%", maxWidth: "200px" }}
-                          />
-                        </TableCell>
-                        <TableCell align="center" sx={{ borderBottom: "1px solid #ddd", borderRight: "1px solid #eee", backgroundColor: isTable1FieldModified(name, year, "erintett_evfolyam") ? "#fef08a" : "inherit" }}>
-                          <TextField
-                            type="text"
-                            value={table1Data[name][year]?.erintett_evfolyam || ""}
-                            onChange={(e) => handleTable1Change(name, year, "erintett_evfolyam", e.target.value)}
-                            size="small"
-                            placeholder="pl. 9-10-11"
-                            inputProps={{ style: { textAlign: "center" } }}
-                            sx={{ width: "100%", maxWidth: "130px" }}
-                          />
-                        </TableCell>
-                        <TableCell align="center" sx={{ borderBottom: "1px solid #ddd", borderRight: i === schoolYears.length - 1 ? "none" : "2px solid #ccc", backgroundColor: isTable1FieldModified(name, year, "erintett_tanulok_szama") ? "#fef08a" : "inherit" }}>
-                          <TextField
-                            type="number"
-                            value={table1Data[name][year]?.erintett_tanulok_szama || ""}
-                            onChange={(e) => handleTable1Change(name, year, "erintett_tanulok_szama", e.target.value)}
-                            size="small"
-                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
-                            sx={{ width: "90px" }}
-                          />
-                        </TableCell>
-                      </React.Fragment>
-                    ))}
-                    <TableCell align="center" sx={{ borderLeft: "2px solid #ccc", borderBottom: "1px solid #ddd", position: "sticky", right: 0, backgroundColor: "#fff", zIndex: 1 }}>
-                      <IconButton size="small" color="error" onClick={() => handleRemoveRow(1, name)} disabled={!selectedSchool}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
+                Object.keys(table1Data)
+                  .sort((a, b) => a.localeCompare(b, "hu"))
+                  .map((name) => (
+                    <TableRow key={`t1-${name}`} hover>
+                      <TableCell
+                        sx={{
+                          borderRight: "2px solid #ccc",
+                          borderBottom: "1px solid #ddd",
+                          position: "sticky",
+                          left: 0,
+                          backgroundColor: "#fff",
+                          zIndex: 1,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {name}
+                      </TableCell>
+                      {schoolYears.map((year, i) => (
+                        <React.Fragment key={`t1-${name}-${year}`}>
+                          <TableCell
+                            align="center"
+                            sx={{
+                              borderBottom: "1px solid #ddd",
+                              borderRight: "1px solid #eee",
+                              backgroundColor: isTable1FieldModified(
+                                name,
+                                year,
+                                "egyuttmukodes_formaja",
+                              )
+                                ? "#fef08a"
+                                : "inherit",
+                            }}
+                          >
+                            <TextField
+                              type="text"
+                              value={
+                                table1Data[name][year]?.egyuttmukodes_formaja ||
+                                ""
+                              }
+                              onChange={(e) =>
+                                handleTable1Change(
+                                  name,
+                                  year,
+                                  "egyuttmukodes_formaja",
+                                  e.target.value,
+                                )
+                              }
+                              size="small"
+                              multiline
+                              minRows={1}
+                              placeholder="pl. közös képzés"
+                              inputProps={{ style: { textAlign: "center" } }}
+                              sx={{ width: "100%", maxWidth: "200px" }}
+                            />
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            sx={{
+                              borderBottom: "1px solid #ddd",
+                              borderRight: "1px solid #eee",
+                              backgroundColor: isTable1FieldModified(
+                                name,
+                                year,
+                                "erintett_evfolyam",
+                              )
+                                ? "#fef08a"
+                                : "inherit",
+                            }}
+                          >
+                            <TextField
+                              type="text"
+                              value={
+                                table1Data[name][year]?.erintett_evfolyam || ""
+                              }
+                              onChange={(e) =>
+                                handleTable1Change(
+                                  name,
+                                  year,
+                                  "erintett_evfolyam",
+                                  e.target.value,
+                                )
+                              }
+                              size="small"
+                              placeholder="pl. 9-10-11"
+                              inputProps={{ style: { textAlign: "center" } }}
+                              sx={{ width: "100%", maxWidth: "130px" }}
+                            />
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            sx={{
+                              borderBottom: "1px solid #ddd",
+                              borderRight:
+                                i === schoolYears.length - 1
+                                  ? "none"
+                                  : "2px solid #ccc",
+                              backgroundColor: isTable1FieldModified(
+                                name,
+                                year,
+                                "erintett_tanulok_szama",
+                              )
+                                ? "#fef08a"
+                                : "inherit",
+                            }}
+                          >
+                            <TextField
+                              type="number"
+                              value={
+                                table1Data[name][year]
+                                  ?.erintett_tanulok_szama || ""
+                              }
+                              onChange={(e) =>
+                                handleTable1Change(
+                                  name,
+                                  year,
+                                  "erintett_tanulok_szama",
+                                  e.target.value,
+                                )
+                              }
+                              size="small"
+                              inputProps={{
+                                style: { textAlign: "center" },
+                                min: 0,
+                              }}
+                              sx={{ width: "90px" }}
+                            />
+                          </TableCell>
+                        </React.Fragment>
+                      ))}
+                      <TableCell
+                        align="center"
+                        sx={{
+                          borderLeft: "2px solid #ccc",
+                          borderBottom: "1px solid #ddd",
+                          position: "sticky",
+                          right: 0,
+                          backgroundColor: "#fff",
+                          zIndex: 1,
+                        }}
+                      >
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleRemoveRow(1, name)}
+                          disabled={!selectedSchool}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
               )}
             </TableBody>
           </Table>
@@ -602,11 +886,25 @@ export default function EgyuttmukodesekSzama() {
           </Button>
         </LockedTableWrapper>
 
-        <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto", mb: 4 }}>
+        <TableContainer
+          component={Paper}
+          sx={{ maxWidth: "100%", overflowX: "auto", mb: 4 }}
+        >
           <Table size="medium" sx={{ minWidth: 900, border: "2px solid #ccc" }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: "bold", minWidth: 260, borderRight: "2px solid #ccc", borderBottom: "2px solid #ccc", backgroundColor: "#f5f5f5", position: "sticky", left: 0, zIndex: 3 }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    minWidth: 260,
+                    borderRight: "2px solid #ccc",
+                    borderBottom: "2px solid #ccc",
+                    backgroundColor: "#f5f5f5",
+                    position: "sticky",
+                    left: 0,
+                    zIndex: 3,
+                  }}
+                >
                   Felsőoktatási intézmények megnevezése
                 </TableCell>
                 {schoolYears.map((year, i) => (
@@ -614,94 +912,262 @@ export default function EgyuttmukodesekSzama() {
                     key={`t2-${year}-header`}
                     colSpan={3}
                     align="center"
-                    sx={{ fontWeight: "bold", backgroundColor: "#fff2cc", borderBottom: "2px solid #ccc", borderRight: i === schoolYears.length - 1 ? "none" : "2px solid #ccc" }}
+                    sx={{
+                      fontWeight: "bold",
+                      backgroundColor: "#fff2cc",
+                      borderBottom: "2px solid #ccc",
+                      borderRight:
+                        i === schoolYears.length - 1
+                          ? "none"
+                          : "2px solid #ccc",
+                    }}
                   >
                     {year}
                   </TableCell>
                 ))}
-                <TableCell sx={{ fontWeight: "bold", width: 60, borderBottom: "2px solid #ccc", borderLeft: "2px solid #ccc", position: "sticky", right: 0, backgroundColor: "#f5f5f5", zIndex: 3 }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    width: 60,
+                    borderBottom: "2px solid #ccc",
+                    borderLeft: "2px solid #ccc",
+                    position: "sticky",
+                    right: 0,
+                    backgroundColor: "#f5f5f5",
+                    zIndex: 3,
+                  }}
+                >
                   Műv.
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell sx={{ borderRight: "2px solid #ccc", borderBottom: "2px solid #ccc", backgroundColor: "#f5f5f5", position: "sticky", left: 0, zIndex: 3 }} />
+                <TableCell
+                  sx={{
+                    borderRight: "2px solid #ccc",
+                    borderBottom: "2px solid #ccc",
+                    backgroundColor: "#f5f5f5",
+                    position: "sticky",
+                    left: 0,
+                    zIndex: 3,
+                  }}
+                />
                 {schoolYears.map((year, i) => (
                   <React.Fragment key={`t2-sub-${year}`}>
-                    {commonHeaderCell("Felsőoktatásba lépő tanulók száma (fő)", { minWidth: 180 })}
-                    {commonHeaderCell("Végzős technikumi tanulók száma (fő)", { minWidth: 180 })}
-                    {commonHeaderCell("Felsőoktatásba továbbtanulók aránya az intézmény végzős technikumi tanulói létszámához viszonyítva", { minWidth: 220, borderRight: i === schoolYears.length - 1 ? "none" : "2px solid #ccc" })}
+                    {commonHeaderCell(
+                      "Felsőoktatásba lépő tanulók száma (fő)",
+                      { minWidth: 180 },
+                    )}
+                    {commonHeaderCell("Végzős technikumi tanulók száma (fő)", {
+                      minWidth: 180,
+                    })}
+                    {commonHeaderCell(
+                      "Felsőoktatásba továbbtanulók aránya az intézmény végzős technikumi tanulói létszámához viszonyítva",
+                      {
+                        minWidth: 220,
+                        borderRight:
+                          i === schoolYears.length - 1
+                            ? "none"
+                            : "2px solid #ccc",
+                      },
+                    )}
                   </React.Fragment>
                 ))}
-                <TableCell sx={{ borderLeft: "2px solid #ccc", borderBottom: "2px solid #ccc", backgroundColor: "#f5f5f5", position: "sticky", right: 0, zIndex: 3 }} />
+                <TableCell
+                  sx={{
+                    borderLeft: "2px solid #ccc",
+                    borderBottom: "2px solid #ccc",
+                    backgroundColor: "#f5f5f5",
+                    position: "sticky",
+                    right: 0,
+                    zIndex: 3,
+                  }}
+                />
               </TableRow>
             </TableHead>
             <TableBody>
               {Object.keys(table2Data).length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={schoolYears.length * 3 + 2} align="center" sx={{ py: 3, fontStyle: "italic", color: "text.secondary" }}>
-                    Nincs rögzített adat. Kattintson az „Új intézmény hozzáadása" gombra!
+                  <TableCell
+                    colSpan={schoolYears.length * 3 + 2}
+                    align="center"
+                    sx={{ py: 3, fontStyle: "italic", color: "text.secondary" }}
+                  >
+                    Nincs rögzített adat. Kattintson az „Új intézmény
+                    hozzáadása" gombra!
                   </TableCell>
                 </TableRow>
               ) : (
-                Object.keys(table2Data).sort((a, b) => a.localeCompare(b, "hu")).map((name) => (
-                  <TableRow key={`t2-${name}`} hover>
-                    <TableCell sx={{ borderRight: "2px solid #ccc", borderBottom: "1px solid #ddd", position: "sticky", left: 0, backgroundColor: "#fff", zIndex: 1, fontWeight: 500 }}>
-                      {name}
-                    </TableCell>
-                    {schoolYears.map((year, i) => (
-                      <React.Fragment key={`t2-${name}-${year}`}>
-                        <TableCell align="center" sx={{ borderBottom: "1px solid #ddd", borderRight: "1px solid #eee", backgroundColor: isTable2FieldModified(name, year, "felsooktataba_lepo_szama") ? "#fef08a" : "inherit" }}>
-                          <TextField
-                            type="number"
-                            value={table2Data[name][year]?.felsooktataba_lepo_szama || ""}
-                            onChange={(e) => handleTable2Change(name, year, "felsooktataba_lepo_szama", e.target.value)}
-                            size="small"
-                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
-                            sx={{ width: "90px" }}
-                          />
-                        </TableCell>
-                        <TableCell align="center" sx={{ borderBottom: "1px solid #ddd", borderRight: "1px solid #eee", backgroundColor: isTable2FieldModified(name, year, "vegzos_technikumi_szama") ? "#fef08a" : "inherit" }}>
-                          <TextField
-                            type="number"
-                            value={table2Data[name][year]?.vegzos_technikumi_szama || ""}
-                            onChange={(e) => handleTable2Change(name, year, "vegzos_technikumi_szama", e.target.value)}
-                            size="small"
-                            inputProps={{ style: { textAlign: "center" }, min: 0 }}
-                            sx={{ width: "90px" }}
-                          />
-                        </TableCell>
-                        <TableCell align="center" sx={{ borderBottom: "1px solid #ddd", borderRight: i === schoolYears.length - 1 ? "none" : "2px solid #ccc", backgroundColor: isTable2FieldModified(name, year, "tovabbtanulok_aranya") ? "#fef08a" : "inherit" }}>
-                          <TextField
-                            type="text"
-                            value={table2Data[name][year]?.tovabbtanulok_aranya || ""}
-                            onChange={(e) => handleTable2Change(name, year, "tovabbtanulok_aranya", e.target.value)}
-                            size="small"
-                            placeholder="pl. 49%"
-                            inputProps={{ style: { textAlign: "center" } }}
-                            sx={{ width: "90px" }}
-                          />
-                        </TableCell>
-                      </React.Fragment>
-                    ))}
-                    <TableCell align="center" sx={{ borderLeft: "2px solid #ccc", borderBottom: "1px solid #ddd", position: "sticky", right: 0, backgroundColor: "#fff", zIndex: 1 }}>
-                      <IconButton size="small" color="error" onClick={() => handleRemoveRow(2, name)} disabled={!selectedSchool}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
+                Object.keys(table2Data)
+                  .sort((a, b) => a.localeCompare(b, "hu"))
+                  .map((name) => (
+                    <TableRow key={`t2-${name}`} hover>
+                      <TableCell
+                        sx={{
+                          borderRight: "2px solid #ccc",
+                          borderBottom: "1px solid #ddd",
+                          position: "sticky",
+                          left: 0,
+                          backgroundColor: "#fff",
+                          zIndex: 1,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {name}
+                      </TableCell>
+                      {schoolYears.map((year, i) => (
+                        <React.Fragment key={`t2-${name}-${year}`}>
+                          <TableCell
+                            align="center"
+                            sx={{
+                              borderBottom: "1px solid #ddd",
+                              borderRight: "1px solid #eee",
+                              backgroundColor: isTable2FieldModified(
+                                name,
+                                year,
+                                "felsooktataba_lepo_szama",
+                              )
+                                ? "#fef08a"
+                                : "inherit",
+                            }}
+                          >
+                            <TextField
+                              type="number"
+                              value={
+                                table2Data[name][year]
+                                  ?.felsooktataba_lepo_szama || ""
+                              }
+                              onChange={(e) =>
+                                handleTable2Change(
+                                  name,
+                                  year,
+                                  "felsooktataba_lepo_szama",
+                                  e.target.value,
+                                )
+                              }
+                              size="small"
+                              inputProps={{
+                                style: { textAlign: "center" },
+                                min: 0,
+                              }}
+                              sx={{ width: "90px" }}
+                            />
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            sx={{
+                              borderBottom: "1px solid #ddd",
+                              borderRight: "1px solid #eee",
+                              backgroundColor: isTable2FieldModified(
+                                name,
+                                year,
+                                "vegzos_technikumi_szama",
+                              )
+                                ? "#fef08a"
+                                : "inherit",
+                            }}
+                          >
+                            <TextField
+                              type="number"
+                              value={
+                                table2Data[name][year]
+                                  ?.vegzos_technikumi_szama || ""
+                              }
+                              onChange={(e) =>
+                                handleTable2Change(
+                                  name,
+                                  year,
+                                  "vegzos_technikumi_szama",
+                                  e.target.value,
+                                )
+                              }
+                              size="small"
+                              inputProps={{
+                                style: { textAlign: "center" },
+                                min: 0,
+                              }}
+                              sx={{ width: "90px" }}
+                            />
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            sx={{
+                              borderBottom: "1px solid #ddd",
+                              borderRight:
+                                i === schoolYears.length - 1
+                                  ? "none"
+                                  : "2px solid #ccc",
+                              backgroundColor: isTable2FieldModified(
+                                name,
+                                year,
+                                "tovabbtanulok_aranya",
+                              )
+                                ? "#fef08a"
+                                : "inherit",
+                            }}
+                          >
+                            <TextField
+                              type="text"
+                              value={
+                                table2Data[name][year]?.tovabbtanulok_aranya ||
+                                ""
+                              }
+                              onChange={(e) =>
+                                handleTable2Change(
+                                  name,
+                                  year,
+                                  "tovabbtanulok_aranya",
+                                  e.target.value,
+                                )
+                              }
+                              size="small"
+                              placeholder="pl. 49%"
+                              inputProps={{ style: { textAlign: "center" } }}
+                              sx={{ width: "90px" }}
+                            />
+                          </TableCell>
+                        </React.Fragment>
+                      ))}
+                      <TableCell
+                        align="center"
+                        sx={{
+                          borderLeft: "2px solid #ccc",
+                          borderBottom: "1px solid #ddd",
+                          position: "sticky",
+                          right: 0,
+                          backgroundColor: "#fff",
+                          zIndex: 1,
+                        }}
+                      >
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleRemoveRow(2, name)}
+                          disabled={!selectedSchool}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
               )}
             </TableBody>
           </Table>
         </TableContainer>
 
         {/* ─── Add Dialog ─────────────────────────────────────────── */}
-        <Dialog open={openAddDialog} onClose={() => setOpenAddDialog(false)} maxWidth="sm" fullWidth>
+        <Dialog
+          open={openAddDialog}
+          onClose={() => setOpenAddDialog(false)}
+          maxWidth="sm"
+          fullWidth
+        >
           <DialogTitle>
             Új felsőoktatási intézmény hozzáadása – {addDialogTable}. táblázat
           </DialogTitle>
           <DialogContent>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+            <Box
+              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
+            >
               <TextField
                 fullWidth
                 label="Felsőoktatási intézmény megnevezése"
@@ -725,7 +1191,10 @@ export default function EgyuttmukodesekSzama() {
         </Dialog>
 
         {/* ─── Delete Dialog ───────────────────────────────────────── */}
-        <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+        <Dialog
+          open={openDeleteDialog}
+          onClose={() => setOpenDeleteDialog(false)}
+        >
           <DialogTitle>Törlés megerősítése</DialogTitle>
           <DialogContent>
             <Typography>
@@ -733,12 +1202,17 @@ export default function EgyuttmukodesekSzama() {
               <strong>{deleteTarget?.name}</strong>?
             </Typography>
             <Typography variant="body2" color="error" sx={{ mt: 1 }}>
-              Ez a művelet nem vonható vissza, és azonnal törlődik az adatbázisból!
+              Ez a művelet nem vonható vissza, és azonnal törlődik az
+              adatbázisból!
             </Typography>
           </DialogContent>
           <DialogActions sx={{ p: 2 }}>
             <Button onClick={() => setOpenDeleteDialog(false)}>Mégse</Button>
-            <Button variant="contained" color="error" onClick={handleConfirmDelete}>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleConfirmDelete}
+            >
               Törlés
             </Button>
           </DialogActions>
@@ -750,11 +1224,27 @@ export default function EgyuttmukodesekSzama() {
           onClose={() => setSnackbarOpen(false)}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
-          <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: "100%" }}>
+          <Alert
+            onClose={() => setSnackbarOpen(false)}
+            severity={snackbarSeverity}
+            sx={{ width: "100%" }}
+          >
             {snackbarMessage}
           </Alert>
         </Snackbar>
       </Box>
+
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        alapadatokId={selectedSchool?.id}
+        tableName="egyuttmukudesek_szama"
+        onRollbackSuccess={() => {
+          setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+        }}
+      />
     </PageWrapper>
   );
 }

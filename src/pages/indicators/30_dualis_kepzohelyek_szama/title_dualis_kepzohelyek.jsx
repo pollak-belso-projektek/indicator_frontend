@@ -8,7 +8,8 @@ const TitleDualisKepzohelyek = () => {
         30. Duális képzőhelyek száma
       </Typography>
       <Typography variant="subtitle1" color="text.secondary">
-        Az intézménnyel kapcsolatban álló duális képzőhelyek számának és adatainak rögzítése
+        Az intézménnyel kapcsolatban álló duális képzőhelyek számának és
+        adatainak rögzítése
       </Typography>
     </Box>
   );

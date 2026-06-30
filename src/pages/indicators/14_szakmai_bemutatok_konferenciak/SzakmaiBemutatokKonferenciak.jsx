@@ -33,6 +33,8 @@ import {
 } from "../../../store/api/apiSlice";
 import { getCurrentSchoolYearStart } from "../../../utils/dateUtils";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 export default function SzakmaiBemutatokKonferenciak() {
   const selectedSchool = useSelector((state) => state.auth.selectedSchool);
@@ -84,19 +86,19 @@ export default function SzakmaiBemutatokKonferenciak() {
   // Actually, let's fetch for all 4 years.
   const query1 = useGetSzakmaiRendezvenyekBySchoolAndYearQuery(
     { alapadatokId: selectedSchool?.id, tanev: yearNumbers[0] },
-    { skip: !selectedSchool }
+    { skip: !selectedSchool },
   );
   const query2 = useGetSzakmaiRendezvenyekBySchoolAndYearQuery(
     { alapadatokId: selectedSchool?.id, tanev: yearNumbers[1] },
-    { skip: !selectedSchool }
+    { skip: !selectedSchool },
   );
   const query3 = useGetSzakmaiRendezvenyekBySchoolAndYearQuery(
     { alapadatokId: selectedSchool?.id, tanev: yearNumbers[2] },
-    { skip: !selectedSchool }
+    { skip: !selectedSchool },
   );
   const query4 = useGetSzakmaiRendezvenyekBySchoolAndYearQuery(
     { alapadatokId: selectedSchool?.id, tanev: yearNumbers[3] },
-    { skip: !selectedSchool }
+    { skip: !selectedSchool },
   );
 
   const [addSzakmaiRendezvenyek] = useAddSzakmaiRendezvenyekMutation();
@@ -104,6 +106,7 @@ export default function SzakmaiBemutatokKonferenciak() {
 
   // Initialize data structure
   const [eventData, setEventData] = useState({});
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [savedData, setSavedData] = useState({});
   const [apiDataMap, setApiDataMap] = useState({}); // To keep track of IDs for updating
   const [isModified, setIsModified] = useState(false);
@@ -226,13 +229,15 @@ export default function SzakmaiBemutatokKonferenciak() {
         tanev_kezdete: year,
         szakmai_bemutatok_neve: eventData.szakmai_bemutatok.neve[year],
         szakmai_bemutatok_letszam: parseInt(
-          eventData.szakmai_bemutatok.letszam[year] || 0
+          eventData.szakmai_bemutatok.letszam[year] || 0,
         ),
         konferenciak_neve: eventData.konferenciak.neve[year],
-        konferenciak_letszam: parseInt(eventData.konferenciak.letszam[year] || 0),
+        konferenciak_letszam: parseInt(
+          eventData.konferenciak.letszam[year] || 0,
+        ),
         egyeb_rendezvenyek_neve: eventData.szakmai_rendezvenyek.neve[year],
         egyeb_rendezvenyek_letszam: parseInt(
-          eventData.szakmai_rendezvenyek.letszam[year] || 0
+          eventData.szakmai_rendezvenyek.letszam[year] || 0,
         ),
       };
 
@@ -279,11 +284,23 @@ export default function SzakmaiBemutatokKonferenciak() {
     >
       <Box>
         <LockStatusIndicator tableName="szakmai_bemutatok_konferenciak" />
-            <PageLoadingOverlay isLoading={query1?.isFetching || query2?.isFetching || query3?.isFetching || query4?.isFetching} />
+        <PageLoadingOverlay
+          isLoading={
+            query1?.isFetching ||
+            query2?.isFetching ||
+            query3?.isFetching ||
+            query4?.isFetching
+          }
+        />
 
-        <Card sx={{ mb: 3, p: 2, display: "flex", flexDirection: "row", gap: 2 }}>
-          <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
-                  <LockedTableWrapper tableName="szakmai_bemutatok_konferenciak">
+        <Card
+          sx={{ mb: 3, p: 2, display: "flex", flexDirection: "row", gap: 2 }}
+        >
+          <ExportDOMTableToExcel
+            tableId=".MuiTable-root"
+            fileName="export_adatok"
+          />
+          <LockedTableWrapper tableName="szakmai_bemutatok_konferenciak">
             <Button
               variant="contained"
               startIcon={<SaveIcon />}
@@ -294,9 +311,23 @@ export default function SzakmaiBemutatokKonferenciak() {
             </Button>
             <Button
               variant="outlined"
+              color="primary"
+              onClick={() => setHistoryOpen(true)}
+              startIcon={<HistoryIcon />}
+              sx={{ ml: 2 }}
+            >
+              Előzmények
+            </Button>
+            <Button
+              variant="outlined"
               startIcon={<RefreshIcon />}
               onClick={handleReset}
-              disabled={!isModified || isSaving || !savedData || Object.keys(savedData).length === 0}
+              disabled={
+                !isModified ||
+                isSaving ||
+                !savedData ||
+                Object.keys(savedData).length === 0
+              }
             >
               Visszaállítás
             </Button>
@@ -306,7 +337,8 @@ export default function SzakmaiBemutatokKonferenciak() {
         {/* Status Messages */}
         {isModified && (
           <Alert severity="warning" sx={{ mb: 3 }}>
-            Mentetlen módosítások vannak. Ne felejtsd el menteni a változtatásokat!
+            Mentetlen módosítások vannak. Ne felejtsd el menteni a
+            változtatásokat!
           </Alert>
         )}
 
@@ -405,14 +437,15 @@ export default function SzakmaiBemutatokKonferenciak() {
                             minRows={1}
                             maxRows={4}
                             value={
-                              eventData[categoryData.category]?.neve?.[year] || ""
+                              eventData[categoryData.category]?.neve?.[year] ||
+                              ""
                             }
                             onChange={(e) =>
                               handleDataChange(
                                 categoryData.category,
                                 "neve",
                                 year,
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             size="small"
@@ -449,7 +482,7 @@ export default function SzakmaiBemutatokKonferenciak() {
                                 categoryData.category,
                                 "letszam",
                                 year,
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             size="small"
@@ -472,8 +505,6 @@ export default function SzakmaiBemutatokKonferenciak() {
           </Card>
         ))}
 
-
-
         <Snackbar
           open={snackbarOpen}
           autoHideDuration={6000}
@@ -488,8 +519,19 @@ export default function SzakmaiBemutatokKonferenciak() {
             {snackbarMessage}
           </Alert>
         </Snackbar>
-
       </Box>
+
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        alapadatokId={selectedSchool?.id}
+        tableName="szakmaiRendezvenyek"
+        onRollbackSuccess={() => {
+          setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+        }}
+      />
     </PageWrapper>
   );
 }

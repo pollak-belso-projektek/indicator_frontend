@@ -45,6 +45,8 @@ import InfoSzervezetfejlesztes from "./info_szervezetfejlesztes";
 import TitleSzervezetfejlesztes from "./title_szervezetfejlesztes";
 import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 export default function Szervezetfejlesztes() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -53,6 +55,7 @@ export default function Szervezetfejlesztes() {
 
   const selectedSchool = useSelector(selectSelectedSchool);
   const [tableData, setTableData] = useState(createInitialData());
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [originalData, setOriginalData] = useState(createInitialData());
 
   const [isModified, setIsModified] = useState(false);
@@ -72,7 +75,7 @@ export default function Szervezetfejlesztes() {
     const startYear = parseInt(yearRange.split("/")[0]);
     return useGetSzervezetfejlesztesQuery(
       { alapadatokId: selectedSchool?.id, tanev: startYear },
-      { skip: !selectedSchool }
+      { skip: !selectedSchool },
     );
   });
 
@@ -81,12 +84,16 @@ export default function Szervezetfejlesztes() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queries.map((q) => q.fulfilledTimeStamp).join(","), selectedSchool?.id]);
 
-  const isLoading = useMemo(() => queries.some((q) => q.isLoading),
+  const isLoading = useMemo(
+    () => queries.some((q) => q.isLoading),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queries.map((q) => q.isLoading).join(",")]);
-  const isFetching = useMemo(() => queries.some((q) => q.isFetching),
+    [queries.map((q) => q.isLoading).join(",")],
+  );
+  const isFetching = useMemo(
+    () => queries.some((q) => q.isFetching),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queries.map((q) => q.isFetching).join(",")]);
+    [queries.map((q) => q.isFetching).join(",")],
+  );
 
   const [addData] = useAddSzervezetfejlesztesMutation();
   const [updateData] = useUpdateSzervezetfejlesztesMutation();
@@ -98,20 +105,20 @@ export default function Szervezetfejlesztes() {
       const origData = createInitialData();
 
       if (Array.isArray(dbData)) {
-        dbData.forEach(item => {
+        dbData.forEach((item) => {
           const name = item.tevekenyseg_neve || "Ismeretlen";
           const yearRange = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
 
           if (!newData[name]) {
             newData[name] = {};
-            schoolYears.forEach(year => {
+            schoolYears.forEach((year) => {
               newData[name][year] = { resztvevok_szama: "" };
             });
           }
 
           const yearData = {
             id: item.id,
-            resztvevok_szama: item.resztvevok_szama || ""
+            resztvevok_szama: item.resztvevok_szama || "",
           };
 
           newData[name][yearRange] = { ...yearData };
@@ -148,9 +155,10 @@ export default function Szervezetfejlesztes() {
       const availableYears = schoolYears
         .map((year) => parseInt(year.split("/")[0], 10))
         .filter((year) => !Number.isNaN(year));
-      const defaultStartYear = availableYears.length > 0
-        ? Math.max(...availableYears)
-        : new Date().getFullYear();
+      const defaultStartYear =
+        availableYears.length > 0
+          ? Math.max(...availableYears)
+          : new Date().getFullYear();
 
       const recordData = {
         alapadatok_id: selectedSchool.id,
@@ -184,7 +192,7 @@ export default function Szervezetfejlesztes() {
 
     try {
       const promises = [];
-      schoolYears.forEach(year => {
+      schoolYears.forEach((year) => {
         const id = originalData[itemToDelete]?.[year]?.id;
         if (id) promises.push(deleteData(id).unwrap());
       });
@@ -234,8 +242,8 @@ export default function Szervezetfejlesztes() {
           if (!isNew) {
             if (isFieldModified(name, year)) rowModified = true;
           } else {
-             // If new and has a value
-             if (tableData[name][year]?.resztvevok_szama) rowModified = true;
+            // If new and has a value
+            if (tableData[name][year]?.resztvevok_szama) rowModified = true;
           }
 
           if (rowModified) {
@@ -250,9 +258,21 @@ export default function Szervezetfejlesztes() {
             };
 
             if (id) {
-              promises.push(updateData({ id, ...recordData }).unwrap().then(() => { updatedCount++; }));
+              promises.push(
+                updateData({ id, ...recordData })
+                  .unwrap()
+                  .then(() => {
+                    updatedCount++;
+                  }),
+              );
             } else {
-              promises.push(addData(recordData).unwrap().then(() => { savedCount++; }));
+              promises.push(
+                addData(recordData)
+                  .unwrap()
+                  .then(() => {
+                    savedCount++;
+                  }),
+              );
             }
           }
         });
@@ -260,7 +280,9 @@ export default function Szervezetfejlesztes() {
 
       if (promises.length > 0) {
         await Promise.all(promises);
-        setSnackbarMessage(`Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`);
+        setSnackbarMessage(
+          `Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`,
+        );
         setSnackbarSeverity("success");
       } else {
         setSnackbarMessage("Nem történt módosítás!");
@@ -286,11 +308,14 @@ export default function Szervezetfejlesztes() {
   const exportRows = useMemo(() => {
     const rows = [];
 
-    const names = Object.keys(tableData).sort((a, b) => a.localeCompare(b, "hu"));
-    names.forEach(name => {
+    const names = Object.keys(tableData).sort((a, b) =>
+      a.localeCompare(b, "hu"),
+    );
+    names.forEach((name) => {
       const row = { tevekenyseg: name };
-      schoolYears.forEach(year => {
-        row[`${year}__resztvevok`] = tableData[name][year]?.resztvevok_szama || "";
+      schoolYears.forEach((year) => {
+        row[`${year}__resztvevok`] =
+          tableData[name][year]?.resztvevok_szama || "";
       });
       rows.push(row);
     });
@@ -337,6 +362,15 @@ export default function Szervezetfejlesztes() {
             </Button>
             <Button
               variant="outlined"
+              color="primary"
+              onClick={() => setHistoryOpen(true)}
+              startIcon={<HistoryIcon />}
+              sx={{ ml: 2 }}
+            >
+              Előzmények
+            </Button>
+            <Button
+              variant="outlined"
               startIcon={<RefreshIcon />}
               onClick={handleReset}
               disabled={!isModified || isSaving}
@@ -348,7 +382,11 @@ export default function Szervezetfejlesztes() {
             fileName="szervezetfejlesztes"
             sheetName="Szervezetfejlesztés"
             columns={[
-              { header: "Tevékenység megnevezése/formája", key: "tevekenyseg", width: 50 },
+              {
+                header: "Tevékenység megnevezése/formája",
+                key: "tevekenyseg",
+                width: 50,
+              },
               ...schoolYears.map((year) => ({
                 header: `${year} - Résztvevők száma`,
                 key: `${year}__resztvevok`,
@@ -360,22 +398,69 @@ export default function Szervezetfejlesztes() {
           />
         </Stack>
 
-        <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
+        <TableContainer
+          component={Paper}
+          sx={{ maxWidth: "100%", overflowX: "auto" }}
+        >
           <Table size="medium" sx={{ minWidth: 800, border: "2px solid #ccc" }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: "bold", minWidth: 300, borderRight: "2px solid #ccc", borderBottom: "2px solid #ccc", backgroundColor: "#fff", position: "sticky", left: 0, zIndex: 3 }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    minWidth: 300,
+                    borderRight: "2px solid #ccc",
+                    borderBottom: "2px solid #ccc",
+                    backgroundColor: "#fff",
+                    position: "sticky",
+                    left: 0,
+                    zIndex: 3,
+                  }}
+                >
                   Szervezetfejlesztést támogató tevékenység megnevezése/formája
                 </TableCell>
                 {schoolYears.map((year, i) => (
-                  <TableCell key={`${year}-header`} align="center" sx={{ fontWeight: "bold", backgroundColor: "#fff2cc", borderBottom: "2px solid #ccc", borderRight: i === schoolYears.length - 1 ? "none" : "1px solid #ccc", minWidth: 150 }}>
+                  <TableCell
+                    key={`${year}-header`}
+                    align="center"
+                    sx={{
+                      fontWeight: "bold",
+                      backgroundColor: "#fff2cc",
+                      borderBottom: "2px solid #ccc",
+                      borderRight:
+                        i === schoolYears.length - 1
+                          ? "none"
+                          : "1px solid #ccc",
+                      minWidth: 150,
+                    }}
+                  >
                     <Box>{year}</Box>
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: "text.secondary", mt: 0.5, display: "block" }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontWeight: 600,
+                        color: "text.secondary",
+                        mt: 0.5,
+                        display: "block",
+                      }}
+                    >
                       Résztvevők száma
                     </Typography>
                   </TableCell>
                 ))}
-                <TableCell sx={{ fontWeight: "bold", width: 60, borderBottom: "2px solid #ccc", borderLeft: "2px solid #ccc", position: "sticky", right: 0, backgroundColor: "#f5f5f5", zIndex: 3, boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)" }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    width: 60,
+                    borderBottom: "2px solid #ccc",
+                    borderLeft: "2px solid #ccc",
+                    position: "sticky",
+                    right: 0,
+                    backgroundColor: "#f5f5f5",
+                    zIndex: 3,
+                    boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                  }}
+                >
                   Művelet
                 </TableCell>
               </TableRow>
@@ -383,8 +468,13 @@ export default function Szervezetfejlesztes() {
             <TableBody>
               {Object.keys(tableData).length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={schoolYears.length + 2} align="center" sx={{ py: 3, fontStyle: "italic", color: "text.secondary" }}>
-                    Nincs rögzített adat. Kattintson az "Új tevékenység hozzáadása" gombra!
+                  <TableCell
+                    colSpan={schoolYears.length + 2}
+                    align="center"
+                    sx={{ py: 3, fontStyle: "italic", color: "text.secondary" }}
+                  >
+                    Nincs rögzített adat. Kattintson az "Új tevékenység
+                    hozzáadása" gombra!
                   </TableCell>
                 </TableRow>
               ) : (
@@ -392,18 +482,44 @@ export default function Szervezetfejlesztes() {
                   .sort((a, b) => a.localeCompare(b, "hu"))
                   .map((name) => (
                     <TableRow key={name} hover>
-                      <TableCell sx={{ borderRight: "2px solid #ccc", borderBottom: "1px solid #ddd", position: "sticky", left: 0, backgroundColor: "#fff", zIndex: 1, fontWeight: 500 }}>
+                      <TableCell
+                        sx={{
+                          borderRight: "2px solid #ccc",
+                          borderBottom: "1px solid #ddd",
+                          position: "sticky",
+                          left: 0,
+                          backgroundColor: "#fff",
+                          zIndex: 1,
+                          fontWeight: 500,
+                        }}
+                      >
                         {name}
                       </TableCell>
                       {schoolYears.map((year, i) => {
-                        const rawVal = tableData[name][year]?.resztvevok_szama || "";
+                        const rawVal =
+                          tableData[name][year]?.resztvevok_szama || "";
 
                         return (
-                          <TableCell key={`${year}-val`} align="center" sx={{ borderBottom: "1px solid #ddd", borderRight: i === schoolYears.length - 1 ? "none" : "1px solid #eee", backgroundColor: isFieldModified(name, year) ? "#fef08a" : "inherit" }}>
+                          <TableCell
+                            key={`${year}-val`}
+                            align="center"
+                            sx={{
+                              borderBottom: "1px solid #ddd",
+                              borderRight:
+                                i === schoolYears.length - 1
+                                  ? "none"
+                                  : "1px solid #eee",
+                              backgroundColor: isFieldModified(name, year)
+                                ? "#fef08a"
+                                : "inherit",
+                            }}
+                          >
                             <TextField
                               type="text"
                               value={rawVal}
-                              onChange={(e) => handleDataChange(name, year, e.target.value)}
+                              onChange={(e) =>
+                                handleDataChange(name, year, e.target.value)
+                              }
                               size="small"
                               placeholder="pl. 10 fő"
                               inputProps={{ style: { textAlign: "center" } }}
@@ -412,8 +528,24 @@ export default function Szervezetfejlesztes() {
                           </TableCell>
                         );
                       })}
-                      <TableCell align="center" sx={{ borderLeft: "2px solid #ccc", borderBottom: "1px solid #ddd", position: "sticky", right: 0, backgroundColor: "#fff", boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)", zIndex: 1 }}>
-                        <IconButton size="small" color="error" onClick={() => handleRemoveActivity(name)} disabled={!selectedSchool}>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          borderLeft: "2px solid #ccc",
+                          borderBottom: "1px solid #ddd",
+                          position: "sticky",
+                          right: 0,
+                          backgroundColor: "#fff",
+                          boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
+                          zIndex: 1,
+                        }}
+                      >
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleRemoveActivity(name)}
+                          disabled={!selectedSchool}
+                        >
                           <DeleteIcon />
                         </IconButton>
                       </TableCell>
@@ -425,10 +557,19 @@ export default function Szervezetfejlesztes() {
         </TableContainer>
 
         {/* Új tevékenység Dialog */}
-        <Dialog open={openAddDialog} onClose={() => setOpenAddDialog(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>Új szervezetfejlesztési tevékenység hozzáadása</DialogTitle>
+        <Dialog
+          open={openAddDialog}
+          onClose={() => setOpenAddDialog(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>
+            Új szervezetfejlesztési tevékenység hozzáadása
+          </DialogTitle>
           <DialogContent>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+            <Box
+              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
+            >
               <TextField
                 fullWidth
                 label="Tevékenység megnevezése/formája"
@@ -452,19 +593,28 @@ export default function Szervezetfejlesztes() {
         </Dialog>
 
         {/* Törlés Dialog */}
-        <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+        <Dialog
+          open={openDeleteDialog}
+          onClose={() => setOpenDeleteDialog(false)}
+        >
           <DialogTitle>Törlés megerősítése</DialogTitle>
           <DialogContent>
             <Typography>
-              Biztosan törölni szeretné a következő tevékenységet minden évből: <strong>{itemToDelete}</strong>?
+              Biztosan törölni szeretné a következő tevékenységet minden évből:{" "}
+              <strong>{itemToDelete}</strong>?
             </Typography>
             <Typography variant="body2" color="error" sx={{ mt: 1 }}>
-              Ez a művelet nem vonható vissza, és azonnal törlődik az adatbázisból!
+              Ez a művelet nem vonható vissza, és azonnal törlődik az
+              adatbázisból!
             </Typography>
           </DialogContent>
           <DialogActions sx={{ p: 2 }}>
             <Button onClick={() => setOpenDeleteDialog(false)}>Mégse</Button>
-            <Button variant="contained" color="error" onClick={handleConfirmDelete}>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleConfirmDelete}
+            >
               Törlés
             </Button>
           </DialogActions>
@@ -476,11 +626,27 @@ export default function Szervezetfejlesztes() {
           onClose={() => setSnackbarOpen(false)}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
-          <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: "100%" }}>
+          <Alert
+            onClose={() => setSnackbarOpen(false)}
+            severity={snackbarSeverity}
+            sx={{ width: "100%" }}
+          >
             {snackbarMessage}
           </Alert>
         </Snackbar>
       </Box>
+
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        alapadatokId={selectedSchool?.id}
+        tableName="szervezetfejlesztes"
+        onRollbackSuccess={() => {
+          setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+        }}
+      />
     </PageWrapper>
   );
 }

@@ -47,16 +47,21 @@ export default function Lemorzsolodas() {
   const schoolYear = new Date().getMonth() >= 8 ? currentYear : currentYear - 1;
 
   // API hooks
-  const { data: apiData, isLoading: isLemorzsolodasLoading, error } = useGetLemorzsolodasBySchoolAndYearQuery(
+  const {
+    data: apiData,
+    isLoading: isLemorzsolodasLoading,
+    error,
+  } = useGetLemorzsolodasBySchoolAndYearQuery(
     { alapadatokId: selectedSchool?.id, tanev: schoolYear },
-    { skip: !selectedSchool?.id }
+    { skip: !selectedSchool?.id },
   );
-  
-  const { data: tanuloData, isLoading: isTanuloLoading } = useGetTanuloLetszamQuery(
-    { alapadatok_id: selectedSchool?.id },
-    { skip: !selectedSchool?.id }
-  );
-  
+
+  const { data: tanuloData, isLoading: isTanuloLoading } =
+    useGetTanuloLetszamQuery(
+      { alapadatok_id: selectedSchool?.id },
+      { skip: !selectedSchool?.id },
+    );
+
   const isLoading = isLemorzsolodasLoading || isTanuloLoading;
 
   const [addLemorzsolodas] = useAddLemorzsolodasMutation();
@@ -66,10 +71,11 @@ export default function Lemorzsolodas() {
 
   // Structure: array of { szakirany_id, szakirany_nev, szakmak: [{ szakma_id, szakma_nev }] }
   const dynamicCategories = useMemo(() => {
-    if (!schoolsData || !Array.isArray(schoolsData) || !selectedSchool) return [];
+    if (!schoolsData || !Array.isArray(schoolsData) || !selectedSchool)
+      return [];
 
     let relevantSchool = schoolsData.find(
-      (school) => school.id === selectedSchool.id
+      (school) => school.id === selectedSchool.id,
     );
     if (!relevantSchool) return [];
 
@@ -85,7 +91,7 @@ export default function Lemorzsolodas() {
           const category = {
             szakirany_id: szakirany.id,
             szakirany_nev: szakirany.nev,
-            szakmak: []
+            szakmak: [],
           };
 
           if (szakirany.szakma && Array.isArray(szakirany.szakma)) {
@@ -93,7 +99,7 @@ export default function Lemorzsolodas() {
               if (szakmaData.szakma?.nev) {
                 category.szakmak.push({
                   szakma_id: szakmaData.szakma.id,
-                  szakma_nev: szakmaData.szakma.nev
+                  szakma_nev: szakmaData.szakma.nev,
                 });
               }
             });
@@ -116,7 +122,11 @@ export default function Lemorzsolodas() {
 
   // Load data
   useEffect(() => {
-    if (dynamicCategories.length > 0 && (!isLemorzsolodasLoading && !isTanuloLoading)) {
+    if (
+      dynamicCategories.length > 0 &&
+      !isLemorzsolodasLoading &&
+      !isTanuloLoading
+    ) {
       const transformedData = {};
 
       // Initialize structure for inputs only (szakma level)
@@ -139,8 +149,12 @@ export default function Lemorzsolodas() {
           // jogv_tipus 0 is "Tanulói jogviszony"
           if (item.jogv_tipus === 0 && item.szakma_id && item.tanev_kezdete) {
             const yearStr = item.tanev_kezdete.toString();
-            if (transformedData[item.szakma_id] && transformedData[item.szakma_id][yearStr]) {
-              transformedData[item.szakma_id][yearStr].oktober = item.letszam?.toString() || "0";
+            if (
+              transformedData[item.szakma_id] &&
+              transformedData[item.szakma_id][yearStr]
+            ) {
+              transformedData[item.szakma_id][yearStr].oktober =
+                item.letszam?.toString() || "0";
             }
           }
         });
@@ -151,14 +165,20 @@ export default function Lemorzsolodas() {
         apiData.forEach((item) => {
           const year = item.tanev_kezdete?.toString();
           const szakmaId = item.szakma_id;
-          
-          if (year && szakmaId && transformedData[szakmaId] && transformedData[szakmaId][year]) {
-             transformedData[szakmaId][year] = {
-               id: item.id,
-               szakirany_id: item.szakirany_id,
-               lemorzsolodo: item.lemorzsolodo_tanulok_szama?.toString() || "0",
-               oktober: item.oktober_es_belepett_tanulok_szama?.toString() || "0",
-             };
+
+          if (
+            year &&
+            szakmaId &&
+            transformedData[szakmaId] &&
+            transformedData[szakmaId][year]
+          ) {
+            transformedData[szakmaId][year] = {
+              id: item.id,
+              szakirany_id: item.szakirany_id,
+              lemorzsolodo: item.lemorzsolodo_tanulok_szama?.toString() || "0",
+              oktober:
+                item.oktober_es_belepett_tanulok_szama?.toString() || "0",
+            };
           }
         });
       }
@@ -167,7 +187,14 @@ export default function Lemorzsolodas() {
       setSavedData(JSON.parse(JSON.stringify(transformedData)));
       setIsModified(false);
     }
-  }, [apiData, tanuloData, dynamicCategories, schoolYears, isLemorzsolodasLoading, isTanuloLoading]);
+  }, [
+    apiData,
+    tanuloData,
+    dynamicCategories,
+    schoolYears,
+    isLemorzsolodasLoading,
+    isTanuloLoading,
+  ]);
 
   const handleDataChange = (szakmaId, startYear, field, value) => {
     setExamData((prev) => ({
@@ -198,40 +225,45 @@ export default function Lemorzsolodas() {
         Object.keys(examData[szakmaId]).forEach((yearStr) => {
           const current = examData[szakmaId][yearStr];
           const saved = savedData[szakmaId][yearStr];
-          
-          if (current.lemorzsolodo !== saved.lemorzsolodo || current.oktober !== saved.oktober) {
-             const year = parseInt(yearStr);
-             const lemorzsolodoVal = parseInt(current.lemorzsolodo) || 0;
-             const oktoberVal = parseInt(current.oktober) || 0;
 
-             // Find szakirany_id
-             let szakirany_id = null;
-             dynamicCategories.forEach(cat => {
-                if (cat.szakmak.find(s => s.szakma_id === szakmaId)) {
-                   szakirany_id = cat.szakirany_id;
+          if (
+            current.lemorzsolodo !== saved.lemorzsolodo ||
+            current.oktober !== saved.oktober
+          ) {
+            const year = parseInt(yearStr);
+            const lemorzsolodoVal = parseInt(current.lemorzsolodo) || 0;
+            const oktoberVal = parseInt(current.oktober) || 0;
+
+            // Find szakirany_id
+            let szakirany_id = null;
+            dynamicCategories.forEach((cat) => {
+              if (cat.szakmak.find((s) => s.szakma_id === szakmaId)) {
+                szakirany_id = cat.szakirany_id;
+              }
+            });
+
+            if (szakirany_id) {
+              const payload = {
+                alapadatok_id: selectedSchool.id,
+                tanev_kezdete: year,
+                szakma_id: szakmaId,
+                szakirany_id: szakirany_id,
+                lemorzsolodo_tanulok_szama: lemorzsolodoVal,
+                oktober_es_belepett_tanulok_szama: oktoberVal,
+              };
+
+              if (current.id) {
+                updatedCount++;
+                promises.push(
+                  updateLemorzsolodas({ id: current.id, ...payload }).unwrap(),
+                );
+              } else {
+                if (lemorzsolodoVal > 0 || oktoberVal > 0) {
+                  savedCount++;
+                  promises.push(addLemorzsolodas(payload).unwrap());
                 }
-             });
-
-             if (szakirany_id) {
-                const payload = {
-                   alapadatok_id: selectedSchool.id,
-                   tanev_kezdete: year,
-                   szakma_id: szakmaId,
-                   szakirany_id: szakirany_id,
-                   lemorzsolodo_tanulok_szama: lemorzsolodoVal,
-                   oktober_es_belepett_tanulok_szama: oktoberVal
-                };
-
-                if (current.id) {
-                   updatedCount++;
-                   promises.push(updateLemorzsolodas({ id: current.id, ...payload }).unwrap());
-                } else {
-                   if (lemorzsolodoVal > 0 || oktoberVal > 0) {
-                      savedCount++;
-                      promises.push(addLemorzsolodas(payload).unwrap());
-                   }
-                }
-             }
+              }
+            }
           }
         });
       });
@@ -249,12 +281,16 @@ export default function Lemorzsolodas() {
       setSavedData(JSON.parse(JSON.stringify(examData)));
       setIsModified(false);
 
-      setSnackbarMessage(`Sikeresen mentve: ${savedCount} új és ${updatedCount} frissített rekord.`);
+      setSnackbarMessage(
+        `Sikeresen mentve: ${savedCount} új és ${updatedCount} frissített rekord.`,
+      );
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
     } catch (error) {
       console.error("Error saving exam data:", error);
-      setSnackbarMessage(error.data?.message || error.message || "Hiba történt a mentés során");
+      setSnackbarMessage(
+        error.data?.message || error.message || "Hiba történt a mentés során",
+      );
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {
@@ -277,10 +313,10 @@ export default function Lemorzsolodas() {
   // Helper for computing sums
   const calculateTotal = (szakmaIds, yearStr, field) => {
     let sum = 0;
-    szakmaIds.forEach(id => {
-       if (examData[id] && examData[id][yearStr]) {
-          sum += parseInt(examData[id][yearStr][field]) || 0;
-       }
+    szakmaIds.forEach((id) => {
+      if (examData[id] && examData[id][yearStr]) {
+        sum += parseInt(examData[id][yearStr][field]) || 0;
+      }
     });
     return sum;
   };
@@ -294,7 +330,9 @@ export default function Lemorzsolodas() {
     return <PageLoadingOverlay isLoading={true} />;
   }
 
-  const allSzakmaIds = dynamicCategories.flatMap(c => c.szakmak.map(s => s.szakma_id));
+  const allSzakmaIds = dynamicCategories.flatMap((c) =>
+    c.szakmak.map((s) => s.szakma_id),
+  );
 
   return (
     <Container maxWidth="xl">
@@ -312,9 +350,20 @@ export default function Lemorzsolodas() {
               </Alert>
             )}
 
-            <Card sx={{ mb: 3, p: 2, display: "flex", flexDirection: "row", gap: 2 }}>
-              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
-                  <LockedTableWrapper tableName="lemorzsolodas">
+            <Card
+              sx={{
+                mb: 3,
+                p: 2,
+                display: "flex",
+                flexDirection: "row",
+                gap: 2,
+              }}
+            >
+              <ExportDOMTableToExcel
+                tableId=".MuiTable-root"
+                fileName="export_adatok"
+              />
+              <LockedTableWrapper tableName="lemorzsolodas">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}
@@ -337,30 +386,93 @@ export default function Lemorzsolodas() {
 
             {isModified && (
               <Alert severity="warning" sx={{ mb: 3 }}>
-                Mentetlen módosítások vannak. Ne felejtsd el menteni a változtatásokat!
+                Mentetlen módosítások vannak. Ne felejtsd el menteni a
+                változtatásokat!
               </Alert>
             )}
 
-            <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
-              <Table size="small" sx={{ minWidth: 1400, "& td, & th": { border: "1px solid #ddd" } }}>
+            <TableContainer
+              component={Paper}
+              sx={{ maxWidth: "100%", overflowX: "auto" }}
+            >
+              <Table
+                size="small"
+                sx={{
+                  minWidth: 1400,
+                  "& td, & th": { border: "1px solid #ddd" },
+                }}
+              >
                 <TableHead>
                   <TableRow sx={{ backgroundColor: "#fbe9e7" }}>
-                    <TableCell colSpan={2} sx={{ fontWeight: "bold", border: "1px solid #ddd" }}></TableCell>
-                    <TableCell colSpan={schoolYears.length} align="center" sx={{ fontWeight: "bold", color: "#d32f2f" }}>
-                      lemorzsolódás mértéke<br/>Tanulói jogviszony (%)
+                    <TableCell
+                      colSpan={2}
+                      sx={{ fontWeight: "bold", border: "1px solid #ddd" }}
+                    ></TableCell>
+                    <TableCell
+                      colSpan={schoolYears.length}
+                      align="center"
+                      sx={{ fontWeight: "bold", color: "#d32f2f" }}
+                    >
+                      lemorzsolódás mértéke
+                      <br />
+                      Tanulói jogviszony (%)
                     </TableCell>
-                    <TableCell colSpan={schoolYears.length} align="center" sx={{ fontWeight: "bold", backgroundColor: "#e8f5e9", color: "#2e7d32" }}>
-                      lemorzsolódó tanulók száma<br/>Tanulói jogviszony (fő)
+                    <TableCell
+                      colSpan={schoolYears.length}
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        backgroundColor: "#e8f5e9",
+                        color: "#2e7d32",
+                      }}
+                    >
+                      lemorzsolódó tanulók száma
+                      <br />
+                      Tanulói jogviszony (fő)
                     </TableCell>
-                    <TableCell colSpan={schoolYears.length} align="center" sx={{ fontWeight: "bold", backgroundColor: "#fce4ec", color: "#c2185b" }}>
-                      október 1-jei létszám + belépett tanulók száma<br/>Tanulói jogviszony (fő)
+                    <TableCell
+                      colSpan={schoolYears.length}
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        backgroundColor: "#fce4ec",
+                        color: "#c2185b",
+                      }}
+                    >
+                      október 1-jei létszám + belépett tanulók száma
+                      <br />
+                      Tanulói jogviszony (fő)
                     </TableCell>
                   </TableRow>
                   <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                     <TableCell colSpan={2}></TableCell>
-                    {schoolYears.map((year) => <TableCell key={`perc-${year}`} align="center" sx={{ fontWeight: "bold", fontSize: "0.8rem" }}>{year}</TableCell>)}
-                    {schoolYears.map((year) => <TableCell key={`lemorzsolodo-${year}`} align="center" sx={{ fontWeight: "bold", fontSize: "0.8rem" }}>{year}</TableCell>)}
-                    {schoolYears.map((year) => <TableCell key={`oktober-${year}`} align="center" sx={{ fontWeight: "bold", fontSize: "0.8rem" }}>{year}</TableCell>)}
+                    {schoolYears.map((year) => (
+                      <TableCell
+                        key={`perc-${year}`}
+                        align="center"
+                        sx={{ fontWeight: "bold", fontSize: "0.8rem" }}
+                      >
+                        {year}
+                      </TableCell>
+                    ))}
+                    {schoolYears.map((year) => (
+                      <TableCell
+                        key={`lemorzsolodo-${year}`}
+                        align="center"
+                        sx={{ fontWeight: "bold", fontSize: "0.8rem" }}
+                      >
+                        {year}
+                      </TableCell>
+                    ))}
+                    {schoolYears.map((year) => (
+                      <TableCell
+                        key={`oktober-${year}`}
+                        align="center"
+                        sx={{ fontWeight: "bold", fontSize: "0.8rem" }}
+                      >
+                        {year}
+                      </TableCell>
+                    ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -368,85 +480,186 @@ export default function Lemorzsolodas() {
                   <TableRow sx={{ backgroundColor: "#fff9c4" }}>
                     <TableCell sx={{ fontWeight: "bold" }}>összesen</TableCell>
                     <TableCell>technikum+szakképző iskola</TableCell>
-                    
+
                     {/* % */}
                     {schoolYears.map((yearStr) => {
                       const year = yearStr.split("/")[0];
-                      const lem = calculateTotal(allSzakmaIds, year, "lemorzsolodo");
+                      const lem = calculateTotal(
+                        allSzakmaIds,
+                        year,
+                        "lemorzsolodo",
+                      );
                       const okt = calculateTotal(allSzakmaIds, year, "oktober");
-                      return <TableCell key={`perc-osszesen-${year}`} align="center">{calculatePercentage(lem, okt)}</TableCell>;
+                      return (
+                        <TableCell key={`perc-osszesen-${year}`} align="center">
+                          {calculatePercentage(lem, okt)}
+                        </TableCell>
+                      );
                     })}
 
                     {/* Lemorzsolodo */}
                     {schoolYears.map((yearStr) => {
                       const year = yearStr.split("/")[0];
-                      return <TableCell key={`lem-osszesen-${year}`} align="center">{calculateTotal(allSzakmaIds, year, "lemorzsolodo")}</TableCell>;
+                      return (
+                        <TableCell key={`lem-osszesen-${year}`} align="center">
+                          {calculateTotal(allSzakmaIds, year, "lemorzsolodo")}
+                        </TableCell>
+                      );
                     })}
 
                     {/* Oktober */}
                     {schoolYears.map((yearStr) => {
                       const year = yearStr.split("/")[0];
-                      return <TableCell key={`okt-osszesen-${year}`} align="center">{calculateTotal(allSzakmaIds, year, "oktober")}</TableCell>;
+                      return (
+                        <TableCell key={`okt-osszesen-${year}`} align="center">
+                          {calculateTotal(allSzakmaIds, year, "oktober")}
+                        </TableCell>
+                      );
                     })}
                   </TableRow>
 
                   {/* Categories */}
                   {dynamicCategories.map((cat, catIdx) => {
-                    const catSzakmaIds = cat.szakmak.map(s => s.szakma_id);
+                    const catSzakmaIds = cat.szakmak.map((s) => s.szakma_id);
                     return (
                       <React.Fragment key={cat.szakirany_id}>
                         {/* Intézménytípusonként Row */}
-                        <TableRow sx={{ backgroundColor: catIdx % 2 === 0 ? "#ffe082" : "#a5d6a7" }}>
-                          <TableCell sx={{ fontWeight: "bold" }}>intézménytípusonként</TableCell>
-                          <TableCell sx={{ pl: 3 }}>ebből: {cat.szakirany_nev}</TableCell>
-                          
+                        <TableRow
+                          sx={{
+                            backgroundColor:
+                              catIdx % 2 === 0 ? "#ffe082" : "#a5d6a7",
+                          }}
+                        >
+                          <TableCell sx={{ fontWeight: "bold" }}>
+                            intézménytípusonként
+                          </TableCell>
+                          <TableCell sx={{ pl: 3 }}>
+                            ebből: {cat.szakirany_nev}
+                          </TableCell>
+
                           {/* % */}
                           {schoolYears.map((yearStr) => {
                             const year = yearStr.split("/")[0];
-                            const lem = calculateTotal(catSzakmaIds, year, "lemorzsolodo");
-                            const okt = calculateTotal(catSzakmaIds, year, "oktober");
-                            return <TableCell key={`perc-cat-${cat.szakirany_id}-${year}`} align="center">{calculatePercentage(lem, okt)}</TableCell>;
+                            const lem = calculateTotal(
+                              catSzakmaIds,
+                              year,
+                              "lemorzsolodo",
+                            );
+                            const okt = calculateTotal(
+                              catSzakmaIds,
+                              year,
+                              "oktober",
+                            );
+                            return (
+                              <TableCell
+                                key={`perc-cat-${cat.szakirany_id}-${year}`}
+                                align="center"
+                              >
+                                {calculatePercentage(lem, okt)}
+                              </TableCell>
+                            );
                           })}
 
                           {/* Lemorzsolodo */}
                           {schoolYears.map((yearStr) => {
                             const year = yearStr.split("/")[0];
-                            return <TableCell key={`lem-cat-${cat.szakirany_id}-${year}`} align="center">{calculateTotal(catSzakmaIds, year, "lemorzsolodo")}</TableCell>;
+                            return (
+                              <TableCell
+                                key={`lem-cat-${cat.szakirany_id}-${year}`}
+                                align="center"
+                              >
+                                {calculateTotal(
+                                  catSzakmaIds,
+                                  year,
+                                  "lemorzsolodo",
+                                )}
+                              </TableCell>
+                            );
                           })}
 
                           {/* Oktober */}
                           {schoolYears.map((yearStr) => {
                             const year = yearStr.split("/")[0];
-                            return <TableCell key={`okt-cat-${cat.szakirany_id}-${year}`} align="center">{calculateTotal(catSzakmaIds, year, "oktober")}</TableCell>;
+                            return (
+                              <TableCell
+                                key={`okt-cat-${cat.szakirany_id}-${year}`}
+                                align="center"
+                              >
+                                {calculateTotal(catSzakmaIds, year, "oktober")}
+                              </TableCell>
+                            );
                           })}
                         </TableRow>
 
                         {/* Szakmák Rows */}
                         {cat.szakmak.map((szakma) => (
-                          <TableRow key={szakma.szakma_id} sx={{ backgroundColor: "#ffffff" }}>
-                            <TableCell sx={{ fontWeight: "normal", pl: 3 }}>szakmánként</TableCell>
-                            <TableCell sx={{ fontWeight: "bold", pl: 4 }}>{szakma.szakma_nev}</TableCell>
-                            
+                          <TableRow
+                            key={szakma.szakma_id}
+                            sx={{ backgroundColor: "#ffffff" }}
+                          >
+                            <TableCell sx={{ fontWeight: "normal", pl: 3 }}>
+                              szakmánként
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: "bold", pl: 4 }}>
+                              {szakma.szakma_nev}
+                            </TableCell>
+
                             {/* % */}
                             {schoolYears.map((yearStr) => {
                               const year = yearStr.split("/")[0];
-                              const lem = parseInt(examData[szakma.szakma_id]?.[year]?.lemorzsolodo) || 0;
-                              const okt = parseInt(examData[szakma.szakma_id]?.[year]?.oktober) || 0;
-                              return <TableCell key={`perc-szakma-${szakma.szakma_id}-${year}`} align="center">{calculatePercentage(lem, okt)}</TableCell>;
+                              const lem =
+                                parseInt(
+                                  examData[szakma.szakma_id]?.[year]
+                                    ?.lemorzsolodo,
+                                ) || 0;
+                              const okt =
+                                parseInt(
+                                  examData[szakma.szakma_id]?.[year]?.oktober,
+                                ) || 0;
+                              return (
+                                <TableCell
+                                  key={`perc-szakma-${szakma.szakma_id}-${year}`}
+                                  align="center"
+                                >
+                                  {calculatePercentage(lem, okt)}
+                                </TableCell>
+                              );
                             })}
 
                             {/* Lemorzsolodo Inputs */}
                             {schoolYears.map((yearStr) => {
                               const year = yearStr.split("/")[0];
                               return (
-                                <TableCell key={`lem-szakma-${szakma.szakma_id}-${year}`} align="center">
+                                <TableCell
+                                  key={`lem-szakma-${szakma.szakma_id}-${year}`}
+                                  align="center"
+                                >
                                   <TextField
                                     size="small"
                                     type="number"
-                                    value={examData[szakma.szakma_id]?.[year]?.lemorzsolodo ?? "0"}
-                                    onChange={(e) => handleDataChange(szakma.szakma_id, year, "lemorzsolodo", e.target.value)}
-                                    inputProps={{ min: 0, style: { textAlign: "center", padding: "4px" } }}
-                                    sx={{ width: "70px", backgroundColor: "#f9fbe7" }}
+                                    value={
+                                      examData[szakma.szakma_id]?.[year]
+                                        ?.lemorzsolodo ?? "0"
+                                    }
+                                    onChange={(e) =>
+                                      handleDataChange(
+                                        szakma.szakma_id,
+                                        year,
+                                        "lemorzsolodo",
+                                        e.target.value,
+                                      )
+                                    }
+                                    inputProps={{
+                                      min: 0,
+                                      style: {
+                                        textAlign: "center",
+                                        padding: "4px",
+                                      },
+                                    }}
+                                    sx={{
+                                      width: "70px",
+                                      backgroundColor: "#f9fbe7",
+                                    }}
                                   />
                                 </TableCell>
                               );
@@ -456,14 +669,36 @@ export default function Lemorzsolodas() {
                             {schoolYears.map((yearStr) => {
                               const year = yearStr.split("/")[0];
                               return (
-                                <TableCell key={`okt-szakma-${szakma.szakma_id}-${year}`} align="center">
+                                <TableCell
+                                  key={`okt-szakma-${szakma.szakma_id}-${year}`}
+                                  align="center"
+                                >
                                   <TextField
                                     size="small"
                                     type="number"
-                                    value={examData[szakma.szakma_id]?.[year]?.oktober ?? "0"}
-                                    onChange={(e) => handleDataChange(szakma.szakma_id, year, "oktober", e.target.value)}
-                                    inputProps={{ min: 0, style: { textAlign: "center", padding: "4px" } }}
-                                    sx={{ width: "70px", backgroundColor: "#e0f2f1" }}
+                                    value={
+                                      examData[szakma.szakma_id]?.[year]
+                                        ?.oktober ?? "0"
+                                    }
+                                    onChange={(e) =>
+                                      handleDataChange(
+                                        szakma.szakma_id,
+                                        year,
+                                        "oktober",
+                                        e.target.value,
+                                      )
+                                    }
+                                    inputProps={{
+                                      min: 0,
+                                      style: {
+                                        textAlign: "center",
+                                        padding: "4px",
+                                      },
+                                    }}
+                                    sx={{
+                                      width: "70px",
+                                      backgroundColor: "#e0f2f1",
+                                    }}
                                   />
                                 </TableCell>
                               );
@@ -478,14 +713,35 @@ export default function Lemorzsolodas() {
             </TableContainer>
 
             {isSaving && (
-              <Backdrop sx={{ zIndex: 1300, backgroundColor: "rgba(255, 255, 255, 0.8)", flexDirection: "column", gap: 2 }} open={isSaving}>
+              <Backdrop
+                sx={{
+                  zIndex: 1300,
+                  backgroundColor: "rgba(255, 255, 255, 0.8)",
+                  flexDirection: "column",
+                  gap: 2,
+                }}
+                open={isSaving}
+              >
                 <CircularProgress size={50} />
-                <Box sx={{ fontWeight: "medium" }}>Adatok mentése folyamatban, kérjük várjon...</Box>
+                <Box sx={{ fontWeight: "medium" }}>
+                  Adatok mentése folyamatban, kérjük várjon...
+                </Box>
               </Backdrop>
             )}
 
-            <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose} anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
-              <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: "100%" }}>{snackbarMessage}</Alert>
+            <Snackbar
+              open={snackbarOpen}
+              autoHideDuration={6000}
+              onClose={handleSnackbarClose}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            >
+              <Alert
+                onClose={handleSnackbarClose}
+                severity={snackbarSeverity}
+                sx={{ width: "100%" }}
+              >
+                {snackbarMessage}
+              </Alert>
             </Snackbar>
           </Box>
         </Fade>

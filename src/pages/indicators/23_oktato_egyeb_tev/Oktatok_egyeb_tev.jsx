@@ -23,7 +23,10 @@ import {
 } from "@mui/material";
 import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../../../utils/schoolYears";
-import { selectSelectedSchool, selectUserId } from "../../../store/slices/authSlice";
+import {
+  selectSelectedSchool,
+  selectUserId,
+} from "../../../store/slices/authSlice";
 import TableLoadingOverlay from "../../../components/shared/TableLoadingOverlay";
 import {
   useGetOktatokEgyebTevByAlapadatokQuery,
@@ -39,7 +42,8 @@ import InfoOktatoEgyebTev from "./info_oktato_egyeb_tev";
 import TitleOktatoEgyebTev from "./title_oktato_egyeb_tev";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
-
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 export default function OktatokEgyebTev() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -49,6 +53,7 @@ export default function OktatokEgyebTev() {
 
   // State for the form data
   const [data, setData] = useState({});
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [isModified, setIsModified] = useState(false);
   const [error, setError] = useState(null);
   const [modifiedCells, setModifiedCells] = useState(new Set());
@@ -111,7 +116,7 @@ export default function OktatokEgyebTev() {
     },
     {
       skip: !selectedSchool?.id,
-    }
+    },
   );
 
   const query2 = useGetOktatokEgyebTevByAlapadatokQuery(
@@ -121,7 +126,7 @@ export default function OktatokEgyebTev() {
     },
     {
       skip: !selectedSchool?.id,
-    }
+    },
   );
 
   const query3 = useGetOktatokEgyebTevByAlapadatokQuery(
@@ -131,7 +136,7 @@ export default function OktatokEgyebTev() {
     },
     {
       skip: !selectedSchool?.id,
-    }
+    },
   );
 
   const query4 = useGetOktatokEgyebTevByAlapadatokQuery(
@@ -141,7 +146,7 @@ export default function OktatokEgyebTev() {
     },
     {
       skip: !selectedSchool?.id,
-    }
+    },
   );
 
   // Get alkalmazott data for each year to get oktatok_letszama
@@ -152,7 +157,7 @@ export default function OktatokEgyebTev() {
     },
     {
       skip: !selectedSchool?.id,
-    }
+    },
   );
 
   const alkalmazottQuery2 = useGetAlkalmazottAdatokQuery(
@@ -162,7 +167,7 @@ export default function OktatokEgyebTev() {
     },
     {
       skip: !selectedSchool?.id,
-    }
+    },
   );
 
   const alkalmazottQuery3 = useGetAlkalmazottAdatokQuery(
@@ -172,7 +177,7 @@ export default function OktatokEgyebTev() {
     },
     {
       skip: !selectedSchool?.id,
-    }
+    },
   );
 
   const alkalmazottQuery4 = useGetAlkalmazottAdatokQuery(
@@ -182,7 +187,7 @@ export default function OktatokEgyebTev() {
     },
     {
       skip: !selectedSchool?.id,
-    }
+    },
   );
 
   // Combine all API data
@@ -262,7 +267,8 @@ export default function OktatokEgyebTev() {
         parseInt(yearData?.szakertoi_tevekenyseg?.koznevelesi_szaktanacsado) ||
         0,
       // Vizsgák
-      szakmai_vizsga_mero_ertekelo: parseInt(yearData?.szakmai_vizsga?.szakmai_vizsga_mero_ertekelo) || 0,
+      szakmai_vizsga_mero_ertekelo:
+        parseInt(yearData?.szakmai_vizsga?.szakmai_vizsga_mero_ertekelo) || 0,
       vizsgafelugyelo: parseInt(yearData?.szakmai_vizsga?.vizsgafelugyelo) || 0,
       agazati_alapvizsgan_elnok:
         parseInt(yearData?.szakmai_vizsga?.agazati_alapvizsgan_elnok) || 0,
@@ -315,7 +321,8 @@ export default function OktatokEgyebTev() {
               record?.koznevelesi_szaktanacsado?.toString() || "",
           },
           szakmai_vizsga: {
-            szakmai_vizsga_mero_ertekelo: record?.szakmai_vizsga_mero_ertekelo?.toString() || "",
+            szakmai_vizsga_mero_ertekelo:
+              record?.szakmai_vizsga_mero_ertekelo?.toString() || "",
             vizsgafelugyelo: record?.vizsgafelugyelo?.toString() || "",
             agazati_alapvizsgan_elnok:
               record?.agazati_alapvizsgan_elnok?.toString() || "",
@@ -336,9 +343,12 @@ export default function OktatokEgyebTev() {
           tankonyv_jegyzetiro: record?.tankonyv_jegyzetiro?.toString() || "",
           szakmai_tisztsegviselo:
             record?.szakmai_tisztsegviselo?.toString() || "",
-          oktatok_letszama: oktatokLetszamaFromAlkalmazott > 0
-            ? oktatokLetszamaFromAlkalmazott.toString()
-            : (record?.oktatok_letszama || record?.oktatokLetszama)?.toString() || "",
+          oktatok_letszama:
+            oktatokLetszamaFromAlkalmazott > 0
+              ? oktatokLetszamaFromAlkalmazott.toString()
+              : (
+                  record?.oktatok_letszama || record?.oktatokLetszama
+                )?.toString() || "",
           _recordId: record?.id,
         };
       });
@@ -346,7 +356,14 @@ export default function OktatokEgyebTev() {
       setIsModified(false);
       setIsDataInitialized(true);
     }
-  }, [apiData, isDataInitialized, alkalmazottQuery1.data, alkalmazottQuery2.data, alkalmazottQuery3.data, alkalmazottQuery4.data]); // Added alkalmazott data deps
+  }, [
+    apiData,
+    isDataInitialized,
+    alkalmazottQuery1.data,
+    alkalmazottQuery2.data,
+    alkalmazottQuery3.data,
+    alkalmazottQuery4.data,
+  ]); // Added alkalmazott data deps
 
   // Initialize empty data structure once on mount if no API data
   useEffect(() => {
@@ -370,7 +387,15 @@ export default function OktatokEgyebTev() {
       setData(dataWithOktatok);
       setIsDataInitialized(true);
     }
-  }, [isLoadingData, isDataInitialized, apiData, alkalmazottQuery1.data, alkalmazottQuery2.data, alkalmazottQuery3.data, alkalmazottQuery4.data]); // Added alkalmazott data deps
+  }, [
+    isLoadingData,
+    isDataInitialized,
+    apiData,
+    alkalmazottQuery1.data,
+    alkalmazottQuery2.data,
+    alkalmazottQuery3.data,
+    alkalmazottQuery4.data,
+  ]); // Added alkalmazott data deps
 
   // Handle API errors
   useEffect(() => {
@@ -397,8 +422,11 @@ export default function OktatokEgyebTev() {
 
       schoolYearsRef.current.forEach((year) => {
         const oktatokLetszamaFromAlkalmazott = getOktatokLetszamaForYear(year);
-        if (oktatokLetszamaFromAlkalmazott > 0 &&
-          updatedData[year]?.oktatok_letszama !== oktatokLetszamaFromAlkalmazott.toString()) {
+        if (
+          oktatokLetszamaFromAlkalmazott > 0 &&
+          updatedData[year]?.oktatok_letszama !==
+            oktatokLetszamaFromAlkalmazott.toString()
+        ) {
           updatedData[year] = {
             ...updatedData[year],
             oktatok_letszama: oktatokLetszamaFromAlkalmazott.toString(),
@@ -411,7 +439,13 @@ export default function OktatokEgyebTev() {
         setData(updatedData);
       }
     }
-  }, [alkalmazottQuery1.data, alkalmazottQuery2.data, alkalmazottQuery3.data, alkalmazottQuery4.data, isDataInitialized]);
+  }, [
+    alkalmazottQuery1.data,
+    alkalmazottQuery2.data,
+    alkalmazottQuery3.data,
+    alkalmazottQuery4.data,
+    isDataInitialized,
+  ]);
 
   // Handle input changes
   const handleInputChange = (category, field, year, value) => {
@@ -616,7 +650,8 @@ export default function OktatokEgyebTev() {
               record?.koznevelesi_szaktanacsado?.toString() || "",
           },
           szakmai_vizsga: {
-            szakmai_vizsga_mero_ertekelo: record?.szakmai_vizsga_mero_ertekelo?.toString() || "",
+            szakmai_vizsga_mero_ertekelo:
+              record?.szakmai_vizsga_mero_ertekelo?.toString() || "",
             vizsgafelugyelo: record?.vizsgafelugyelo?.toString() || "",
             agazati_alapvizsgan_elnok:
               record?.agazati_alapvizsgan_elnok?.toString() || "",
@@ -637,9 +672,12 @@ export default function OktatokEgyebTev() {
           tankonyv_jegyzetiro: record?.tankonyv_jegyzetiro?.toString() || "",
           szakmai_tisztsegviselo:
             record?.szakmai_tisztsegviselo?.toString() || "",
-          oktatok_letszama: oktatokLetszamaFromAlkalmazott > 0
-            ? oktatokLetszamaFromAlkalmazott.toString()
-            : (record?.oktatok_letszama || record?.oktatokLetszama)?.toString() || "",
+          oktatok_letszama:
+            oktatokLetszamaFromAlkalmazott > 0
+              ? oktatokLetszamaFromAlkalmazott.toString()
+              : (
+                  record?.oktatok_letszama || record?.oktatokLetszama
+                )?.toString() || "",
           _recordId: record?.id,
         };
       });
@@ -710,23 +748,37 @@ export default function OktatokEgyebTev() {
             {!isLoading && (
               <>
                 <Typography variant="body2" color="text.secondary" paragraph>
-                  💡 A módosított cellák sárga háttérrel vannak jelölve. Csak a módosított
-                  adatok kerülnek mentésre. Csak nem-negatív egész számok adhatók meg.
-                  Az "Oktatók létszáma" mező automatikusan kitöltődik az alkalmazotti adatokból,
-                  vagy manuálisan szerkeszthető, ha nincs exportált adat.
+                  💡 A módosított cellák sárga háttérrel vannak jelölve. Csak a
+                  módosított adatok kerülnek mentésre. Csak nem-negatív egész
+                  számok adhatók meg. Az "Oktatók létszáma" mező automatikusan
+                  kitöltődik az alkalmazotti adatokból, vagy manuálisan
+                  szerkeszthető, ha nincs exportált adat.
                 </Typography>
 
                 {/* Action buttons */}
                 <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-                  <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+                  <ExportDOMTableToExcel
+                    tableId=".MuiTable-root"
+                    fileName="export_adatok"
+                  />
                   <LockedTableWrapper tableName="oktato-egyeb-tev">
                     <Button
                       variant="contained"
-                      startIcon={<SaveIcon />}
+                      color="primary"
                       onClick={handleSave}
-                      disabled={!isModified || isLoading}
+                      disabled={isLoading}
+                      sx={{ minWidth: 150 }}
                     >
                       {isLoading ? <CircularProgress size={20} /> : "Mentés"}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => setHistoryOpen(true)}
+                      startIcon={<HistoryIcon />}
+                      sx={{ ml: 2 }}
+                    >
+                      Előzmények
                     </Button>
                     <Button
                       variant="outlined"
@@ -745,7 +797,6 @@ export default function OktatokEgyebTev() {
                     />
                   )}
                 </Stack>
-
 
                 {error && (
                   <Alert severity="error" sx={{ mb: 3 }}>
@@ -768,7 +819,9 @@ export default function OktatokEgyebTev() {
                       <Table size="small">
                         <TableHead>
                           <TableRow>
-                            <TableCell sx={{ fontWeight: "bold", minWidth: 300 }}>
+                            <TableCell
+                              sx={{ fontWeight: "bold", minWidth: 300 }}
+                            >
                               Tevékenység típusa
                             </TableCell>
                             {schoolYears.map((year) => (
@@ -786,7 +839,8 @@ export default function OktatokEgyebTev() {
                           {Object.entries(categoryLabels).map(
                             ([categoryKey, categoryLabel]) => {
                               const isObjectCategory =
-                                typeof data[schoolYears[0]]?.[categoryKey] === "object" &&
+                                typeof data[schoolYears[0]]?.[categoryKey] ===
+                                  "object" &&
                                 data[schoolYears[0]]?.[categoryKey] !== null;
 
                               if (isObjectCategory) {
@@ -810,28 +864,34 @@ export default function OktatokEgyebTev() {
                                   ...Object.entries(fieldLabels)
                                     .filter(([fieldKey]) =>
                                       Object.prototype.hasOwnProperty.call(
-                                        data[schoolYears[0]]?.[categoryKey] || {},
-                                        fieldKey
-                                      )
+                                        data[schoolYears[0]]?.[categoryKey] ||
+                                          {},
+                                        fieldKey,
+                                      ),
                                     )
                                     .map(([fieldKey, fieldLabel]) => (
-                                      <TableRow key={`${categoryKey}-${fieldKey}`}>
-                                        <TableCell sx={{ pl: 3 }}>{fieldLabel}</TableCell>
+                                      <TableRow
+                                        key={`${categoryKey}-${fieldKey}`}
+                                      >
+                                        <TableCell sx={{ pl: 3 }}>
+                                          {fieldLabel}
+                                        </TableCell>
                                         {schoolYears.map((year) => (
                                           <TableCell key={year} align="center">
                                             <TextField
                                               size="small"
                                               type="number"
                                               value={
-                                                data[year]?.[categoryKey]?.[fieldKey] ||
-                                                ""
+                                                data[year]?.[categoryKey]?.[
+                                                  fieldKey
+                                                ] || ""
                                               }
                                               onChange={(e) =>
                                                 handleInputChange(
                                                   categoryKey,
                                                   fieldKey,
                                                   year,
-                                                  e.target.value
+                                                  e.target.value,
                                                 )
                                               }
                                               inputProps={{
@@ -845,7 +905,7 @@ export default function OktatokEgyebTev() {
                                                 border: isCellModified(
                                                   categoryKey,
                                                   fieldKey,
-                                                  year
+                                                  year,
                                                 )
                                                   ? "2px solid #ff9800"
                                                   : "1px solid transparent",
@@ -875,7 +935,10 @@ export default function OktatokEgyebTev() {
                                           backgroundColor: "grey.100",
                                         }}
                                       >
-                                        {calculateCategoryTotal(data[year], categoryKey)}
+                                        {calculateCategoryTotal(
+                                          data[year],
+                                          categoryKey,
+                                        )}
                                       </TableCell>
                                     ))}
                                   </TableRow>,
@@ -890,13 +953,15 @@ export default function OktatokEgyebTev() {
                                         <TextField
                                           size="small"
                                           type="number"
-                                          value={data[year]?.[categoryKey] || ""}
+                                          value={
+                                            data[year]?.[categoryKey] || ""
+                                          }
                                           onChange={(e) =>
                                             handleInputChange(
                                               categoryKey,
                                               null,
                                               year,
-                                              e.target.value
+                                              e.target.value,
                                             )
                                           }
                                           inputProps={{
@@ -910,7 +975,7 @@ export default function OktatokEgyebTev() {
                                             border: isCellModified(
                                               categoryKey,
                                               null,
-                                              year
+                                              year,
                                             )
                                               ? "2px solid #ff9800"
                                               : "1px solid transparent",
@@ -921,7 +986,7 @@ export default function OktatokEgyebTev() {
                                   </TableRow>
                                 );
                               }
-                            }
+                            },
                           )}
 
                           {/* Overall total row */}
@@ -973,8 +1038,10 @@ export default function OktatokEgyebTev() {
                                 }}
                               >
                                 {(() => {
-                                  const oktatokLetszamaFromAlkalmazott = getOktatokLetszamaForYear(year);
-                                  const isReadOnly = oktatokLetszamaFromAlkalmazott > 0;
+                                  const oktatokLetszamaFromAlkalmazott =
+                                    getOktatokLetszamaForYear(year);
+                                  const isReadOnly =
+                                    oktatokLetszamaFromAlkalmazott > 0;
 
                                   return (
                                     <TextField
@@ -986,7 +1053,7 @@ export default function OktatokEgyebTev() {
                                           "oktatok_letszama",
                                           null,
                                           year,
-                                          e.target.value
+                                          e.target.value,
                                         )
                                       }
                                       inputProps={{
@@ -1000,16 +1067,22 @@ export default function OktatokEgyebTev() {
                                         "& .MuiInputBase-input": {
                                           textAlign: "center",
                                           fontWeight: "bold",
-                                          backgroundColor: isReadOnly ? "#f5f5f5" : "white",
-                                          cursor: isReadOnly ? "not-allowed" : "text",
+                                          backgroundColor: isReadOnly
+                                            ? "#f5f5f5"
+                                            : "white",
+                                          cursor: isReadOnly
+                                            ? "not-allowed"
+                                            : "text",
                                         },
-                                        border: !isReadOnly && isCellModified(
-                                          "oktatok_letszama",
-                                          null,
-                                          year
-                                        )
-                                          ? "2px solid #ff9800"
-                                          : "1px solid transparent",
+                                        border:
+                                          !isReadOnly &&
+                                          isCellModified(
+                                            "oktatok_letszama",
+                                            null,
+                                            year,
+                                          )
+                                            ? "2px solid #ff9800"
+                                            : "1px solid transparent",
                                       }}
                                     />
                                   );
@@ -1030,7 +1103,8 @@ export default function OktatokEgyebTev() {
                                 fontWeight: "bold",
                               }}
                             >
-                              Szakértői tevékenységet folytató oktatók aránya (%)
+                              Szakértői tevékenységet folytató oktatók aránya
+                              (%)
                             </TableCell>
                             {schoolYears.map((year) => (
                               <TableCell
@@ -1061,8 +1135,19 @@ export default function OktatokEgyebTev() {
             )}
           </Box>
         </Fade>
+
+        <HistoryDialog
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          alapadatokId={selectedSchool?.id}
+          tableName="oktatoEgyebTev"
+          onRollbackSuccess={() => {
+            setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+          }}
+        />
       </PageWrapper>
     </Container>
-
   );
 }

@@ -29,7 +29,6 @@ import TitleFelnottkepzes from "./title_felnottkepzes";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
-
 export default function Felnottkepzes() {
   const years = generateSchoolYears();
   const selectedSchool = useSelector(selectSelectedSchool);
@@ -38,7 +37,7 @@ export default function Felnottkepzes() {
   const { data: apiStudentData, isLoading: isFetching } =
     useGetTanuloLetszamQuery(
       { alapadatok_id: selectedSchool?.id },
-      { skip: !selectedSchool?.id } // Skip the query if no school is selected
+      { skip: !selectedSchool?.id }, // Skip the query if no school is selected
     );
 
   // Initialize data objects with dynamic years
@@ -52,17 +51,17 @@ export default function Felnottkepzes() {
 
   // First table data (read-only) - calculated percentages
   const [felnottkepzesiArany, setFelnottkepzesiArany] = useState(() =>
-    initializeYearData(0)
+    initializeYearData(0),
   );
 
   // Second table data (editable) - absolute numbers
   const [szakmaiOktatás, setSzakmaiOktatás] = useState(() =>
-    initializeYearData(0)
+    initializeYearData(0),
   );
 
   // Adult education data from API (jogv_tipus = 1)
   const [felnottkepzesiJogviszony, setFelnottkepzesiJogviszony] = useState(() =>
-    initializeYearData(0)
+    initializeYearData(0),
   );
 
   // Extract adult education data from API response
@@ -76,14 +75,14 @@ export default function Felnottkepzes() {
         // Find records for this year with jogv_tipus = 1 (adult education)
         const yearRecords = apiData.filter(
           (record) =>
-            record.jogv_tipus === 1 && record.tanev_kezdete === startYear
+            record.jogv_tipus === 1 && record.tanev_kezdete === startYear,
         );
         // Sum up all the student counts for adult education
         const totalCount = yearRecords.reduce((sum, record) => {
           return sum + (record.letszam || 0);
         }, 0);
         console.log(
-          `Year: ${yearRange}, Start Year: ${startYear}, Adult Education Count: ${totalCount}, Records found: ${yearRecords.length}`
+          `Year: ${yearRange}, Start Year: ${startYear}, Adult Education Count: ${totalCount}, Records found: ${yearRecords.length}`,
         );
         adultEducationData[yearRange] = totalCount;
       }
@@ -101,7 +100,7 @@ export default function Felnottkepzes() {
       if (apiData && Array.isArray(apiData)) {
         // Find all records for this year
         const yearRecords = apiData.filter(
-          (record) => record.tanev_kezdete === startYear
+          (record) => record.tanev_kezdete === startYear,
         );
 
         // Sum up all the student counts
@@ -176,7 +175,10 @@ export default function Felnottkepzes() {
         <Fade in={true} timeout={800}>
           <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
             <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="felnottkepzes" />
+              <ExportDOMTableToExcel
+                tableId=".MuiTable-root"
+                fileName="felnottkepzes"
+              />
               <LockStatusIndicator tableName="felnottkepzes" />
             </Stack>
 
@@ -186,18 +188,18 @@ export default function Felnottkepzes() {
             {/* Content - only show when not loading */}
             {!isFetching && (
               <>
-
                 {/* Selected School Alert */}
                 {selectedSchool && (
                   <Alert severity="info" sx={{ mb: 2 }}>
-                    Kiválasztott iskola: <strong>{selectedSchool.iskola_neve}</strong>
+                    Kiválasztott iskola:{" "}
+                    <strong>{selectedSchool.iskola_neve}</strong>
                   </Alert>
                 )}
 
                 {!selectedSchool && (
                   <Alert severity="info" sx={{ mb: 2 }}>
-                    Nincs iskola kiválasztva - az összes iskola adatait összegzi a
-                    rendszer.
+                    Nincs iskola kiválasztva - az összes iskola adatait összegzi
+                    a rendszer.
                   </Alert>
                 )}
 
@@ -208,9 +210,13 @@ export default function Felnottkepzes() {
                       Felnőttképzési jogviszonyú tanulók aránya (%)
                     </Typography>
 
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Ez a táblázat automatikusan számított értékeket tartalmaz és nem
-                      módosítható.
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 2 }}
+                    >
+                      Ez a táblázat automatikusan számított értékeket tartalmaz
+                      és nem módosítható.
                     </Typography>
 
                     <TableContainer component={Paper} variant="outlined">
@@ -272,7 +278,10 @@ export default function Felnottkepzes() {
                               <TableCell
                                 key={year}
                                 align="center"
-                                sx={{ backgroundColor: "#f8fdf8", fontWeight: "medium" }}
+                                sx={{
+                                  backgroundColor: "#f8fdf8",
+                                  fontWeight: "medium",
+                                }}
                               >
                                 {felnottkepzesiJogviszony[year]}
                               </TableCell>
@@ -313,7 +322,10 @@ export default function Felnottkepzes() {
                               <TableCell
                                 key={year}
                                 align="center"
-                                sx={{ backgroundColor: "#fafafa", fontWeight: "medium" }}
+                                sx={{
+                                  backgroundColor: "#fafafa",
+                                  fontWeight: "medium",
+                                }}
                               >
                                 {szakmaiOktatás[year]}
                               </TableCell>
@@ -332,10 +344,12 @@ export default function Felnottkepzes() {
                       Számítási formula
                     </Typography>
                     <Typography variant="body2" component="div">
-                      <strong>Felnőttképzési jogviszonyú tanulók aránya =</strong>
+                      <strong>
+                        Felnőttképzési jogviszonyú tanulók aránya =
+                      </strong>
                       <br />
-                      (felnőttképzési jogviszonyú rendszerekben tanulók száma / szakmai
-                      oktatásban tanulók összlétszáma) × 100
+                      (felnőttképzési jogviszonyú rendszerekben tanulók száma /
+                      szakmai oktatásban tanulók összlétszáma) × 100
                     </Typography>
                   </CardContent>
                 </Card>
@@ -345,6 +359,5 @@ export default function Felnottkepzes() {
         </Fade>
       </PageWrapper>
     </Container>
-
   );
 }

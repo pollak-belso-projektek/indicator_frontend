@@ -48,6 +48,8 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoHatranyosHelyzetu from "../18_hatranyos_helyezu_tanulok_aranya/info_hatranyos_helyezu_tanulok_aranya";
 import TitleHatranyosHelyzetu from "../18_hatranyos_helyezu_tanulok_aranya/title_hatranyos_helyezu_tanulok_aranya";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 export default function HatanyosHelyzetuTanulokAranya() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -68,7 +70,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
     isLoading: isFetching,
   } = useGetTanuloLetszamQuery(
     { alapadatok_id: selectedSchool?.id },
-    { skip: !selectedSchool?.id }
+    { skip: !selectedSchool?.id },
   );
 
   // API hook to get existing HH data
@@ -88,6 +90,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
 
   // HH Students count - this is what users will input
   const [hhStudentsCount, setHhStudentsCount] = useState(() => {
+    const [historyOpen, setHistoryOpen] = useState(false);
     const initialData = {};
 
     // Initialize for daytime students (tanulói jogviszony)
@@ -327,7 +330,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
         const prevYear = schoolYears[index - 1];
         const prevCombined = parseFloat(getCombinedPercentage(prevYear));
         const prevDaytime = parseFloat(
-          calculatePercentage("daytime", prevYear)
+          calculatePercentage("daytime", prevYear),
         );
         const prevAdult = parseFloat(calculatePercentage("adult", prevYear));
 
@@ -444,18 +447,22 @@ export default function HatanyosHelyzetuTanulokAranya() {
           }
         }
 
-        setSavedData(JSON.parse(JSON.stringify({ hh: hhStudentsCount, hhh: hhhStudentsCount })));
+        setSavedData(
+          JSON.parse(
+            JSON.stringify({ hh: hhStudentsCount, hhh: hhhStudentsCount }),
+          ),
+        );
         setIsModified(false);
 
         showNotification(
-          "A hátrányos helyzetű tanulók adatai sikeresen mentve!"
+          "A hátrányos helyzetű tanulók adatai sikeresen mentve!",
         );
       }
     } catch (error) {
       console.error("Error saving HH data:", error);
       showNotification(
         "Hiba történt az adatok mentése során. Kérjük, próbálja újra!",
-        "error"
+        "error",
       );
     }
   };
@@ -586,7 +593,9 @@ export default function HatanyosHelyzetuTanulokAranya() {
 
       setHhStudentsCount(loadedHhData);
       setHhhStudentsCount(loadedHhhData);
-      setSavedData(JSON.parse(JSON.stringify({ hh: loadedHhData, hhh: loadedHhhData })));
+      setSavedData(
+        JSON.parse(JSON.stringify({ hh: loadedHhData, hhh: loadedHhhData })),
+      );
       setIsModified(false);
 
       // Debug log to check what was loaded
@@ -668,8 +677,11 @@ export default function HatanyosHelyzetuTanulokAranya() {
                         py: 1,
                       }}
                     >
-                      <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
-                  <LockedTableWrapper tableName="hh_es_hhh_nevelesu_tanulok">
+                      <ExportDOMTableToExcel
+                        tableId=".MuiTable-root"
+                        fileName="export_adatok"
+                      />
+                      <LockedTableWrapper tableName="hh_es_hhh_nevelesu_tanulok">
                         <Button
                           variant="contained"
                           startIcon={<SaveIcon />}
@@ -677,6 +689,15 @@ export default function HatanyosHelyzetuTanulokAranya() {
                           disabled={!isModified || isAdding || isUpdating}
                         >
                           {isAdding || isUpdating ? "Mentés..." : "Mentés"}
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          onClick={() => setHistoryOpen(true)}
+                          startIcon={<HistoryIcon />}
+                          sx={{ ml: 2 }}
+                        >
+                          Előzmények
                         </Button>
                         <Button
                           variant="outlined"
@@ -1071,7 +1092,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                         handleHhStudentsChange(
                                           "daytime",
                                           year,
-                                          e.target.value
+                                          e.target.value,
                                         )
                                       }
                                       size="small"
@@ -1115,7 +1136,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                         handleHhStudentsChange(
                                           "adult",
                                           year,
-                                          e.target.value
+                                          e.target.value,
                                         )
                                       }
                                       size="small"
@@ -1725,7 +1746,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                         handleHhhStudentsChange(
                                           "daytime",
                                           year,
-                                          e.target.value
+                                          e.target.value,
                                         )
                                       }
                                       size="small"
@@ -1769,7 +1790,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                         handleHhhStudentsChange(
                                           "adult",
                                           year,
-                                          e.target.value
+                                          e.target.value,
                                         )
                                       }
                                       size="small"
@@ -2268,13 +2289,13 @@ export default function HatanyosHelyzetuTanulokAranya() {
                             // Prepare chart data
                             const chartData = schoolYears.map((year) => {
                               const combinedPerc = parseFloat(
-                                calculatePercentage("combined", year)
+                                calculatePercentage("combined", year),
                               );
                               const daytimePerc = parseFloat(
-                                calculatePercentage("daytime", year)
+                                calculatePercentage("daytime", year),
                               );
                               const adultPerc = parseFloat(
-                                calculatePercentage("adult", year)
+                                calculatePercentage("adult", year),
                               );
 
                               return {
@@ -2325,6 +2346,18 @@ export default function HatanyosHelyzetuTanulokAranya() {
           message={notification.message}
           severity={notification.severity}
           onClose={closeNotification}
+        />
+
+        <HistoryDialog
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          alapadatokId={selectedSchool?.id}
+          tableName="hHEsHHHTanulok"
+          onRollbackSuccess={() => {
+            setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+          }}
         />
       </PageWrapper>
     </Container>

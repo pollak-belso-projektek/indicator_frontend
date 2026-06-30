@@ -30,10 +30,7 @@ import {
   Chip,
   InputAdornment,
 } from "@mui/material";
-import {
-  Save as SaveIcon,
-  Refresh as RefreshIcon,
-} from "@mui/icons-material";
+import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
@@ -41,6 +38,8 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoElegedettsegMeres from "./info_elegedettseg_meres_eredmenyei";
 import TitleElegedettsegMeres from "./title_elegedettseg_meres_eredmenyei";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 const evszamok = generateSchoolYears();
 
 // Mapping for the exact JSON properties the backend expects
@@ -89,10 +88,10 @@ export default function ElegedettsegMeresEredmenyei() {
   const {
     data: apiDataRaw,
     isLoading,
-    isFetching
+    isFetching,
   } = useGetElegedettsegMeresQuery(
     { alapadatok_id: selectedSchool?.id },
-    { skip: !selectedSchool }
+    { skip: !selectedSchool },
   );
 
   const apiData = useMemo(() => apiDataRaw || [], [apiDataRaw]);
@@ -114,6 +113,7 @@ export default function ElegedettsegMeresEredmenyei() {
   }, [schoolYears]);
 
   const [tableData, setTableData] = useState(createEmpty);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [originalData, setOriginalData] = useState(createEmpty);
   const [recordIds, setRecordIds] = useState({});
   const [savedData, setSavedData] = useState(null);
@@ -155,7 +155,6 @@ export default function ElegedettsegMeresEredmenyei() {
     setIsModified(false);
   }, [apiData, isFetching, createEmpty]);
 
-
   // Handle data changes
   const handleDataChange = useCallback((year, categoryKey, value) => {
     // Validate value to be between 0 and 100 (%).
@@ -168,12 +167,12 @@ export default function ElegedettsegMeresEredmenyei() {
       numValue = 100;
     }
 
-    setTableData(prev => ({
+    setTableData((prev) => ({
       ...prev,
       [year]: {
         ...prev[year],
-        [categoryKey]: numValue === "" ? "" : numValue
-      }
+        [categoryKey]: numValue === "" ? "" : numValue,
+      },
     }));
     setIsModified(true);
   }, []);
@@ -197,7 +196,7 @@ export default function ElegedettsegMeresEredmenyei() {
         const isChanged = categoryTypes.some(
           (category) =>
             Number(tableData[year]?.[category.key] || 0) !==
-            Number(originalData[year]?.[category.key] || 0)
+            Number(originalData[year]?.[category.key] || 0),
         );
 
         if (!isChanged) return;
@@ -215,19 +214,23 @@ export default function ElegedettsegMeresEredmenyei() {
         if (id) {
           setIsUpdating(true);
           operations.push(
-            updateElegedettseg({ id, ...payload }).unwrap().then(() => {
-              updateCount += 1;
-            })
+            updateElegedettseg({ id, ...payload })
+              .unwrap()
+              .then(() => {
+                updateCount += 1;
+              }),
           );
         } else {
           setIsAdding(true);
           operations.push(
-            addElegedettseg(payload).unwrap().then((created) => {
-              addCount += 1;
-              if (created?.id) {
-                nextRecordIds[year] = created.id;
-              }
-            })
+            addElegedettseg(payload)
+              .unwrap()
+              .then((created) => {
+                addCount += 1;
+                if (created?.id) {
+                  nextRecordIds[year] = created.id;
+                }
+              }),
           );
         }
       });
@@ -246,7 +249,9 @@ export default function ElegedettsegMeresEredmenyei() {
       setSavedData(snapshot);
       setRecordIds(nextRecordIds);
       setIsModified(false);
-      setSnackbarMessage(`Sikeres mentés: ${addCount} új, ${updateCount} frissített rekord.`);
+      setSnackbarMessage(
+        `Sikeres mentés: ${addCount} új, ${updateCount} frissített rekord.`,
+      );
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
     } catch (error) {
@@ -267,12 +272,12 @@ export default function ElegedettsegMeresEredmenyei() {
   };
   const calculateTotalAverages = useMemo(() => {
     const totals = {};
-    evszamok.forEach(yearStr => {
+    evszamok.forEach((yearStr) => {
       const year = parseInt(yearStr.split("/")[0], 10);
       let sum = 0;
       let count = 0;
 
-      categoryTypes.forEach(cat => {
+      categoryTypes.forEach((cat) => {
         const val = parseFloat(tableData[year]?.[cat.key]);
         if (!isNaN(val)) {
           sum += val;
@@ -334,9 +339,8 @@ export default function ElegedettsegMeresEredmenyei() {
       </Card>
 
       <Box>
-
         <LockStatusIndicator tableName="elegedettseg" sx={{ mb: 1 }} />
-            <PageLoadingOverlay isLoading={isFetching} />
+        <PageLoadingOverlay isLoading={isFetching} />
         {isModified && (
           <Alert severity="warning" sx={{ mb: 3 }}>
             Mentetlen módosítások vannak. Ne felejtsd el menteni a
@@ -344,14 +348,14 @@ export default function ElegedettsegMeresEredmenyei() {
           </Alert>
         )}
 
-
-
         {/* Main Data Table */}
         <Card>
           <CardContent>
-
             <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+              <ExportDOMTableToExcel
+                tableId=".MuiTable-root"
+                fileName="export_adatok"
+              />
               <LockedTableWrapper tableName="elegedettseg">
                 <Button
                   variant="contained"
@@ -360,6 +364,15 @@ export default function ElegedettsegMeresEredmenyei() {
                   disabled={!isModified || !selectedSchool || isSaving}
                 >
                   {isSaving || isAdding || isUpdating ? "Mentés..." : "Mentés"}
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => setHistoryOpen(true)}
+                  startIcon={<HistoryIcon />}
+                  sx={{ ml: 2 }}
+                >
+                  Előzmények
                 </Button>
                 <Button
                   variant="outlined"
@@ -376,7 +389,10 @@ export default function ElegedettsegMeresEredmenyei() {
               Célcsoportok elégedettségének mérése (%)
             </Typography>
 
-            <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
+            <TableContainer
+              component={Paper}
+              sx={{ maxWidth: "100%", overflowX: "auto" }}
+            >
               <Table size="medium" sx={{ minWidth: 800 }}>
                 <TableHead>
                   <TableRow>
@@ -402,7 +418,10 @@ export default function ElegedettsegMeresEredmenyei() {
                           fontWeight: "bold",
                           backgroundColor: "#fff2cc",
                           borderBottom: "1px solid #ddd",
-                          borderRight: i === evszamok.length - 1 ? "none" : "1px solid #ddd",
+                          borderRight:
+                            i === evszamok.length - 1
+                              ? "none"
+                              : "1px solid #ddd",
                           minWidth: 120,
                         }}
                       >
@@ -422,7 +441,7 @@ export default function ElegedettsegMeresEredmenyei() {
                           left: 0,
                           backgroundColor: category.color,
                           zIndex: 1,
-                          fontWeight: "bold"
+                          fontWeight: "bold",
                         }}
                       >
                         {category.label}
@@ -434,24 +453,40 @@ export default function ElegedettsegMeresEredmenyei() {
                             key={`${category.key}-${year}`}
                             align="center"
                             sx={{
-                              borderRight: i === evszamok.length - 1 ? "none" : "1px solid #ddd",
+                              borderRight:
+                                i === evszamok.length - 1
+                                  ? "none"
+                                  : "1px solid #ddd",
                             }}
                           >
                             <TextField
                               type="number"
                               size="small"
                               value={tableData[year]?.[category.key] ?? ""}
-                              onChange={(e) => handleDataChange(year, category.key, e.target.value)}
+                              onChange={(e) =>
+                                handleDataChange(
+                                  year,
+                                  category.key,
+                                  e.target.value,
+                                )
+                              }
                               InputProps={{
-                                endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                                endAdornment: (
+                                  <InputAdornment position="end">
+                                    %
+                                  </InputAdornment>
+                                ),
                               }}
                               slotProps={{
                                 input: {
                                   min: 0,
 
                                   step: 0.1,
-                                  style: { textAlign: "center", padding: "8px" },
-                                }
+                                  style: {
+                                    textAlign: "center",
+                                    padding: "8px",
+                                  },
+                                },
                               }}
                               sx={{ width: "98px", backgroundColor: "#fff" }}
                               placeholder="0.0"
@@ -485,8 +520,11 @@ export default function ElegedettsegMeresEredmenyei() {
                           align="center"
                           sx={{
                             fontWeight: "bold",
-                            borderRight: i === evszamok.length - 1 ? "none" : "1px solid #ddd",
-                            fontSize: "1.1rem"
+                            borderRight:
+                              i === evszamok.length - 1
+                                ? "none"
+                                : "1px solid #ddd",
+                            fontSize: "1.1rem",
                           }}
                         >
                           {(calculateTotalAverages[year] || "0.0") + "%"}
@@ -504,7 +542,11 @@ export default function ElegedettsegMeresEredmenyei() {
               onClose={handleSnackbarClose}
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
             >
-              <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: "100%" }}>
+              <Alert
+                onClose={handleSnackbarClose}
+                severity={snackbarSeverity}
+                sx={{ width: "100%" }}
+              >
                 {snackbarMessage}
               </Alert>
             </Snackbar>
@@ -657,6 +699,18 @@ export default function ElegedettsegMeresEredmenyei() {
           </CardContent>
         </Card>
       </Box>
+
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        alapadatokId={selectedSchool?.id}
+        tableName="elegedettsegMeres"
+        onRollbackSuccess={() => {
+          setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+        }}
+      />
     </PageWrapper>
   );
 }

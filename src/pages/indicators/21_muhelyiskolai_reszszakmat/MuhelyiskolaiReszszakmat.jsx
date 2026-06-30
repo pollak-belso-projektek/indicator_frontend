@@ -40,7 +40,8 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import InfoMuhelyiskolaiReszszakmat from "./info_muhelyiskolai_reszszakmat";
 import TitleMuhelyiskolaiReszszakmat from "./title_muhelyiskolai_reszszakmat";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
-
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 export default function MuhelyiskolaiReszszakmat() {
   const schoolYears = generateSchoolYears();
@@ -50,7 +51,7 @@ export default function MuhelyiskolaiReszszakmat() {
   const { data: apiStudentData, isLoading: isFetching } =
     useGetTanuloLetszamQuery(
       { alapadatok_id: selectedSchool?.id },
-      { skip: !selectedSchool?.id } // Skip the query if no school is selected
+      { skip: !selectedSchool?.id }, // Skip the query if no school is selected
     );
 
   // Fetch existing workshop school data from API for all years
@@ -61,7 +62,7 @@ export default function MuhelyiskolaiReszszakmat() {
         alapadatok_id: selectedSchool?.id,
         tanev: startYear,
       },
-      { skip: !selectedSchool?.id }
+      { skip: !selectedSchool?.id },
     );
   });
 
@@ -88,6 +89,7 @@ export default function MuhelyiskolaiReszszakmat() {
 
   // Data structure for the three main sections
   const [workshopData, setWorkshopData] = useState(() => {
+    const [historyOpen, setHistoryOpen] = useState(false);
     const initialData = {
       percentage_overall: {},
       participants_count: {},
@@ -122,7 +124,7 @@ export default function MuhelyiskolaiReszszakmat() {
       if (apiData && Array.isArray(apiData)) {
         // Find all records for this year (all jogv_tipus)
         const yearRecords = apiData.filter(
-          (record) => record.tanev_kezdete === startYear
+          (record) => record.tanev_kezdete === startYear,
         );
 
         // Sum up all the student counts
@@ -141,7 +143,7 @@ export default function MuhelyiskolaiReszszakmat() {
     if (apiStudentData && Array.isArray(apiStudentData)) {
       console.log(
         "Loading student data from API for Workshop School:",
-        apiStudentData
+        apiStudentData,
       );
 
       // Extract total student data (all jogv_tipus combined)
@@ -208,7 +210,7 @@ export default function MuhelyiskolaiReszszakmat() {
 
     if (participantsValue > totalStudents && totalStudents > 0) {
       setSnackbarMessage(
-        `A részszakmát szerző tanulók száma (${participantsValue}) nem lehet nagyobb az összlétszámnál (${totalStudents}) a(z) ${year} tanévben!`
+        `A részszakmát szerző tanulók száma (${participantsValue}) nem lehet nagyobb az összlétszámnál (${totalStudents}) a(z) ${year} tanévben!`,
       );
       setSnackbarSeverity("warning");
       setSnackbarOpen(true);
@@ -274,10 +276,10 @@ export default function MuhelyiskolaiReszszakmat() {
       const savePromises = schoolYears.map(async (yearRange) => {
         const startYear = parseInt(yearRange.split("/")[0]);
         const participants = parseInt(
-          workshopData.participants_count[yearRange] || 0
+          workshopData.participants_count[yearRange] || 0,
         );
         const totalStudents = parseInt(
-          workshopData.total_students[yearRange] || 0
+          workshopData.total_students[yearRange] || 0,
         );
 
         // Ensure we're sending valid numbers, not NaN
@@ -293,17 +295,17 @@ export default function MuhelyiskolaiReszszakmat() {
         const finalTotalStudents = parseInt(validTotalStudents);
 
         console.log(
-          `Mentés ${yearRange}: participants=${finalParticipants}, total=${finalTotalStudents}`
+          `Mentés ${yearRange}: participants=${finalParticipants}, total=${finalTotalStudents}`,
         );
         console.log(
-          `Raw data - participants: "${workshopData.participants_count[yearRange]}", total: "${workshopData.total_students[yearRange]}"`
+          `Raw data - participants: "${workshopData.participants_count[yearRange]}", total: "${workshopData.total_students[yearRange]}"`,
         );
 
         // Always save the data, even if values are 0
 
         // Check if data already exists for this year
         const existingRecord = existingWorkshopData?.find(
-          (record) => record.tanev_kezdete === startYear
+          (record) => record.tanev_kezdete === startYear,
         );
 
         const payload = {
@@ -318,7 +320,7 @@ export default function MuhelyiskolaiReszszakmat() {
         if (existingRecord) {
           // Update existing record (PUT)
           console.log(
-            `Updating existing record for ${yearRange}, ID: ${existingRecord.id}`
+            `Updating existing record for ${yearRange}, ID: ${existingRecord.id}`,
           );
           return await updateWorkshop({
             id: existingRecord.id,
@@ -401,10 +403,25 @@ export default function MuhelyiskolaiReszszakmat() {
             {/* Content - only show when not loading */}
 
             <>
-
-              <Stack direction="row" spacing={2} sx={{ mt: 3, mb: 3, position: 'sticky', top: 2, zIndex: 10, backgroundColor: 'white', padding: 1, borderRadius: 1 }}>
-                <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
-                  <LockedTableWrapper tableName="muhelyiskola">
+              <Stack
+                direction="row"
+                spacing={2}
+                sx={{
+                  mt: 3,
+                  mb: 3,
+                  position: "sticky",
+                  top: 2,
+                  zIndex: 10,
+                  backgroundColor: "white",
+                  padding: 1,
+                  borderRadius: 1,
+                }}
+              >
+                <ExportDOMTableToExcel
+                  tableId=".MuiTable-root"
+                  fileName="export_adatok"
+                />
+                <LockedTableWrapper tableName="muhelyiskola">
                   <Button
                     variant="contained"
                     startIcon={<SaveIcon />}
@@ -412,6 +429,15 @@ export default function MuhelyiskolaiReszszakmat() {
                     disabled={!isModified || isSaving}
                   >
                     {isSaving ? "Mentés..." : "Mentés"}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={() => setHistoryOpen(true)}
+                    startIcon={<HistoryIcon />}
+                    sx={{ ml: 2 }}
+                  >
+                    Előzmények
                   </Button>
                   <Button
                     variant="outlined"
@@ -429,15 +455,16 @@ export default function MuhelyiskolaiReszszakmat() {
               {/* Status Messages */}
               {!selectedSchool && (
                 <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
-                  Kérjük, válasszon ki egy iskolát az adatok betöltéséhez és mentéséhez.
+                  Kérjük, válasszon ki egy iskolát az adatok betöltéséhez és
+                  mentéséhez.
                 </Alert>
               )}
 
               {hasPercentageWarning() && (
                 <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
                   Figyelem! A részszakmát szerző tanulók száma meghaladja az
-                  összlétszámot egy vagy több tanévben. Az arány 100% felett van!
-                  Kérjük, ellenőrizze az adatokat.
+                  összlétszámot egy vagy több tanévben. Az arány 100% felett
+                  van! Kérjük, ellenőrizze az adatokat.
                 </Alert>
               )}
 
@@ -492,14 +519,18 @@ export default function MuhelyiskolaiReszszakmat() {
                       <TableBody>
                         <TableRow sx={{ backgroundColor: "#fff3e0" }}>
                           {schoolYears.map((year) => {
-                            const percentage = parseFloat(calculatePercentage(year));
+                            const percentage = parseFloat(
+                              calculatePercentage(year),
+                            );
                             const isOverLimit = percentage > 100;
 
                             return (
                               <TableCell key={year} align="center">
                                 <TextField
                                   type="number"
-                                  value={workshopData.percentage_overall[year] || "0"}
+                                  value={
+                                    workshopData.percentage_overall[year] || "0"
+                                  }
                                   size="small"
                                   inputProps={{
                                     min: 0,
@@ -507,8 +538,12 @@ export default function MuhelyiskolaiReszszakmat() {
                                     step: 0.1,
                                     style: {
                                       textAlign: "center",
-                                      color: isOverLimit ? "#d32f2f" : "inherit",
-                                      fontWeight: isOverLimit ? "bold" : "normal",
+                                      color: isOverLimit
+                                        ? "#d32f2f"
+                                        : "inherit",
+                                      fontWeight: isOverLimit
+                                        ? "bold"
+                                        : "normal",
                                     },
                                   }}
                                   sx={{
@@ -560,7 +595,11 @@ export default function MuhelyiskolaiReszszakmat() {
                   >
                     Részszakmát szerző tanulók száma
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 2 }}
+                  >
                     Tanulói és felnőttképzési jogviszony (fő)
                   </Typography>
 
@@ -593,12 +632,14 @@ export default function MuhelyiskolaiReszszakmat() {
                             <TableCell key={year} align="center">
                               <TextField
                                 type="number"
-                                value={workshopData.participants_count[year] || "0"}
+                                value={
+                                  workshopData.participants_count[year] || "0"
+                                }
                                 onChange={(e) =>
                                   handleDataChange(
                                     "participants_count",
                                     year,
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 size="small"
@@ -633,7 +674,11 @@ export default function MuhelyiskolaiReszszakmat() {
                   >
                     Műhelyiskolai tanulói összlétszám
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 2 }}
+                  >
                     Tanulói és felnőttképzési jogviszony (fő)
                   </Typography>
 
@@ -698,12 +743,15 @@ export default function MuhelyiskolaiReszszakmat() {
                       gap: 2,
                     }}
                   >
-                    <Typography variant="body2" sx={{ fontStyle: "italic", flex: 1 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontStyle: "italic", flex: 1 }}
+                    >
                       <strong>Számítási képlet:</strong>
                       <br />
-                      (Részszakmát szerző tanulók és felnőttképzési jogviszonyú tanulók
-                      száma / Műhelyiskolai tanulói és felnőttképzési jogviszonyú
-                      tanulók összlétszáma) × 100
+                      (Részszakmát szerző tanulók és felnőttképzési jogviszonyú
+                      tanulók száma / Műhelyiskolai tanulói és felnőttképzési
+                      jogviszonyú tanulók összlétszáma) × 100
                     </Typography>
                     <Box
                       sx={{
@@ -729,11 +777,21 @@ export default function MuhelyiskolaiReszszakmat() {
                 onClose={() => setSnackbarOpen(false)}
               />
             </>
-
           </Box>
         </Fade>
+
+        <HistoryDialog
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          alapadatokId={selectedSchool?.id}
+          tableName="muhelyiskola"
+          onRollbackSuccess={() => {
+            setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+          }}
+        />
       </PageWrapper>
     </Container>
-
   );
 }

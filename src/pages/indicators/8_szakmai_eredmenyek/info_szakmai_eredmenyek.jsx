@@ -10,14 +10,14 @@ const InfoSzakmaiEredmenyek = () => {
       <Typography variant="body2" color="text.secondary">
         Szakmai, közismereti, kulturális és sporteredmények
         <br />
-        Az eredmények tanévenkénti bemutatása és a tanévenkénti eredmények 
-        összehasonlítása nemzetközi, országos, regionális, megyei és település szinten.
+        Az eredmények tanévenkénti bemutatása és a tanévenkénti eredmények
+        összehasonlítása nemzetközi, országos, regionális, megyei és település
+        szinten.
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        Adatforrás: 
-        Lehet a KRÉTA, az intézmény éves beszámolója, a szakképző intézmények 
-        versenyeredményeinek nyilvántartására használt adatbázis.
-        </Typography>
+        Adatforrás: Lehet a KRÉTA, az intézmény éves beszámolója, a szakképző
+        intézmények versenyeredményeinek nyilvántartására használt adatbázis.
+      </Typography>
     </Box>
   );
 };

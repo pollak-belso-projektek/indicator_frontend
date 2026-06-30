@@ -52,12 +52,24 @@ import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
 // Fix munkavállalói kategóriák (a képernyőkép alapján)
 const MUNKAVALLALOI_KATEGORIAK = [
-  { key: "itm_miniszteri_elismero_oklevel", label: "ITM Miniszteri Elismerő Oklevél" },
+  {
+    key: "itm_miniszteri_elismero_oklevel",
+    label: "ITM Miniszteri Elismerő Oklevél",
+  },
   { key: "itm_szakkepzesert_dij", label: "ITM Szakképzésért díj" },
-  { key: "kim_miniszter_elismero_oklevele", label: "KIM Miniszter Elismerő Oklevele" },
+  {
+    key: "kim_miniszter_elismero_oklevele",
+    label: "KIM Miniszter Elismerő Oklevele",
+  },
   { key: "kim_szakkepzesert_dij", label: "KIM Szakképzésért díj" },
-  { key: "kim_oktatoi_szolgalati_emlekazerem", label: "KIM Oktatói szolgálati Emlékérem" },
-  { key: "pedagogus_szolgalati_emlekazerem", label: "Pedagógus Szolgálati Emlékérem" },
+  {
+    key: "kim_oktatoi_szolgalati_emlekazerem",
+    label: "KIM Oktatói szolgálati Emlékérem",
+  },
+  {
+    key: "pedagogus_szolgalati_emlekazerem",
+    label: "Pedagógus Szolgálati Emlékérem",
+  },
   { key: "hszc_kivalosagi_dij", label: "HSZC Kiválósági díj" },
 ];
 
@@ -69,7 +81,11 @@ export default function IntézményiElismeresek() {
   const selectedSchool = useSelector(selectSelectedSchool);
 
   // ─── Snackbar ────────────────────────────────────────────────────────────────
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
   const showSnackbar = useCallback((message, severity = "success") => {
     setSnackbar({ open: true, message, severity });
   }, []);
@@ -91,8 +107,10 @@ export default function IntézményiElismeresek() {
   });
 
   const [addIntézményiElismeresek] = useAddIntézményiElismeresekMutation();
-  const [updateIntézményiElismeresek] = useUpdateIntézményiElismeresekMutation();
-  const [deleteIntézményiElismeresek] = useDeleteIntézményiElismeresekMutation();
+  const [updateIntézményiElismeresek] =
+    useUpdateIntézményiElismeresekMutation();
+  const [deleteIntézményiElismeresek] =
+    useDeleteIntézményiElismeresekMutation();
   const [upsertMunkavallalok] = useUpsertMunkavallalokElismeresekMutation();
 
   // ─── Intézményi adatok state (Csoportosítva dij_neve alapján) ────────────────
@@ -115,22 +133,22 @@ export default function IntézményiElismeresek() {
           grouped[key] = {
             groupId: key,
             dij_neve: item.dij_neve,
-            years: {}
+            years: {},
           };
-          schoolYears.forEach(yearStr => {
-             const startYear = parseInt(yearStr.split("/")[0], 10);
-             grouped[key].years[startYear] = { id: null, darabszam: 0 };
+          schoolYears.forEach((yearStr) => {
+            const startYear = parseInt(yearStr.split("/")[0], 10);
+            grouped[key].years[startYear] = { id: null, darabszam: 0 };
           });
         }
-        
+
         // Ha olyan tanévről van adat ami esetleg nincs a megjelenített schoolYears-ben
         if (!grouped[key].years[item.tanev_kezdete]) {
-            grouped[key].years[item.tanev_kezdete] = { id: null, darabszam: 0 };
+          grouped[key].years[item.tanev_kezdete] = { id: null, darabszam: 0 };
         }
 
         grouped[key].years[item.tanev_kezdete] = {
           id: item.id,
-          darabszam: item.darabszam ?? 0
+          darabszam: item.darabszam ?? 0,
         };
       });
 
@@ -150,7 +168,9 @@ export default function IntézményiElismeresek() {
     schoolYears.forEach((yearStr) => {
       const startYear = parseInt(yearStr.split("/")[0], 10);
       byYear[startYear] = { tanev_kezdete: startYear };
-      MUNKAVALLALOI_KATEGORIAK.forEach((k) => { byYear[startYear][k.key] = 0; });
+      MUNKAVALLALOI_KATEGORIAK.forEach((k) => {
+        byYear[startYear][k.key] = 0;
+      });
     });
 
     if (Array.isArray(munkavallalokRawData)) {
@@ -175,29 +195,32 @@ export default function IntézményiElismeresek() {
     setIntezményiModified(true);
   }, []);
 
-  const handleIntezményiCountChange = useCallback((groupId, startYear, value) => {
-    setIntezményiData((prev) => ({
-      ...prev,
-      [groupId]: {
-        ...prev[groupId],
-        years: {
-          ...prev[groupId].years,
-          [startYear]: {
-            ...prev[groupId].years[startYear],
-            darabszam: parseInt(value) || 0
-          }
-        }
-      },
-    }));
-    setIntezményiModified(true);
-  }, []);
+  const handleIntezményiCountChange = useCallback(
+    (groupId, startYear, value) => {
+      setIntezményiData((prev) => ({
+        ...prev,
+        [groupId]: {
+          ...prev[groupId],
+          years: {
+            ...prev[groupId].years,
+            [startYear]: {
+              ...prev[groupId].years[startYear],
+              darabszam: parseInt(value) || 0,
+            },
+          },
+        },
+      }));
+      setIntezményiModified(true);
+    },
+    [],
+  );
 
   const handleAddDij = useCallback(() => {
     if (!newDijNeve.trim() || !selectedSchool) return;
 
     // Check if name already exists
     const exists = Object.values(intezményiData).some(
-      (g) => g.dij_neve.toLowerCase() === newDijNeve.trim().toLowerCase()
+      (g) => g.dij_neve.toLowerCase() === newDijNeve.trim().toLowerCase(),
     );
     if (exists) {
       showSnackbar("Ez a díj már létezik a listában!", "warning");
@@ -208,7 +231,7 @@ export default function IntézményiElismeresek() {
     const group = {
       groupId,
       dij_neve: newDijNeve.trim(),
-      years: {}
+      years: {},
     };
     schoolYears.forEach((yearStr) => {
       const startYear = parseInt(yearStr.split("/")[0], 10);
@@ -221,30 +244,35 @@ export default function IntézményiElismeresek() {
     setNewDijNeve("");
   }, [newDijNeve, selectedSchool, intezményiData, schoolYears, showSnackbar]);
 
-  const handleDeleteDij = useCallback(async (groupId) => {
-    try {
-      const group = intezményiData[groupId];
-      const idsToDelete = Object.values(group.years)
-        .map((y) => y.id)
-        .filter((id) => id);
+  const handleDeleteDij = useCallback(
+    async (groupId) => {
+      try {
+        const group = intezményiData[groupId];
+        const idsToDelete = Object.values(group.years)
+          .map((y) => y.id)
+          .filter((id) => id);
 
-      if (idsToDelete.length > 0) {
-        const promises = idsToDelete.map((id) => deleteIntézményiElismeresek(id).unwrap());
-        await Promise.all(promises);
-      } else {
-        // Only local, remove immediately
-        setIntezményiData((prev) => {
-          const next = { ...prev };
-          delete next[groupId];
-          return next;
-        });
+        if (idsToDelete.length > 0) {
+          const promises = idsToDelete.map((id) =>
+            deleteIntézményiElismeresek(id).unwrap(),
+          );
+          await Promise.all(promises);
+        } else {
+          // Only local, remove immediately
+          setIntezményiData((prev) => {
+            const next = { ...prev };
+            delete next[groupId];
+            return next;
+          });
+        }
+        showSnackbar("Díj kategória sikeresen törölve!");
+      } catch (err) {
+        console.error(err);
+        showSnackbar("Hiba a törlés során!", "error");
       }
-      showSnackbar("Díj kategória sikeresen törölve!");
-    } catch (err) {
-      console.error(err);
-      showSnackbar("Hiba a törlés során!", "error");
-    }
-  }, [intezményiData, deleteIntézményiElismeresek, showSnackbar]);
+    },
+    [intezményiData, deleteIntézményiElismeresek, showSnackbar],
+  );
 
   const handleIntezményiSave = useCallback(async () => {
     try {
@@ -269,7 +297,7 @@ export default function IntézményiElismeresek() {
                   id: yearData.id,
                   darabszam: yearData.darabszam,
                   dij_neve: group.dij_neve,
-                }).unwrap()
+                }).unwrap(),
               );
             }
             hasAnySaved = true;
@@ -282,7 +310,7 @@ export default function IntézményiElismeresek() {
                   tanev_kezdete: startYear,
                   dij_neve: group.dij_neve,
                   darabszam: yearData.darabszam,
-                }).unwrap()
+                }).unwrap(),
               );
               hasAnySaved = true;
             }
@@ -299,7 +327,7 @@ export default function IntézményiElismeresek() {
               tanev_kezdete: latestYear,
               dij_neve: group.dij_neve,
               darabszam: 0,
-            }).unwrap()
+            }).unwrap(),
           );
         }
       });
@@ -348,7 +376,9 @@ export default function IntézményiElismeresek() {
         return upsertMunkavallalok({
           alapadatok_id: selectedSchool.id,
           tanev_kezdete: startYear,
-          ...Object.fromEntries(MUNKAVALLALOI_KATEGORIAK.map((k) => [k.key, rec[k.key] ?? 0])),
+          ...Object.fromEntries(
+            MUNKAVALLALOI_KATEGORIAK.map((k) => [k.key, rec[k.key] ?? 0]),
+          ),
         }).unwrap();
       });
       await Promise.all(promises);
@@ -358,7 +388,13 @@ export default function IntézményiElismeresek() {
       console.error(err);
       showSnackbar("Hiba a mentés során!", "error");
     }
-  }, [selectedSchool, munkavallalokData, schoolYears, upsertMunkavallalok, showSnackbar]);
+  }, [
+    selectedSchool,
+    munkavallalokData,
+    schoolYears,
+    upsertMunkavallalok,
+    showSnackbar,
+  ]);
 
   const handleMunkavallalokReset = useCallback(() => {
     setMunkavallalokData(JSON.parse(JSON.stringify(munkavallalokOriginal)));
@@ -420,7 +456,8 @@ export default function IntézményiElismeresek() {
 
         {!selectedSchool && (
           <Alert severity="info" sx={{ mb: 3 }}>
-            Kérjük, válasszon egy intézményt a fenti legördülő menüből az adatok megtekintéséhez és szerkesztéséhez.
+            Kérjük, válasszon egy intézményt a fenti legördülő menüből az adatok
+            megtekintéséhez és szerkesztéséhez.
           </Alert>
         )}
 
@@ -429,8 +466,19 @@ export default function IntézményiElismeresek() {
         ─────────────────────────────────────────────────────────────────────── */}
         <Card sx={{ mb: 4 }}>
           <CardContent>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }} flexWrap="wrap" gap={1}>
-              <Typography variant="h6" component="h2" sx={{ color: "#1976d2", fontWeight: "bold" }}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ mb: 2 }}
+              flexWrap="wrap"
+              gap={1}
+            >
+              <Typography
+                variant="h6"
+                component="h2"
+                sx={{ color: "#1976d2", fontWeight: "bold" }}
+              >
                 Intézmény által elnyert díjak, elismerések
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -468,7 +516,11 @@ export default function IntézményiElismeresek() {
                   sheetName="Intézményi díjak"
                   columns={[
                     { header: "Díj neve", key: "dij_neve", width: 45 },
-                    ...schoolYears.map((yr) => ({ header: yr, key: yr, width: 14 })),
+                    ...schoolYears.map((yr) => ({
+                      header: yr,
+                      key: yr,
+                      width: 14,
+                    })),
                   ]}
                   rows={intezményiExportRows}
                   buttonLabel="Export"
@@ -477,20 +529,49 @@ export default function IntézményiElismeresek() {
               </Stack>
             </Stack>
 
-            <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+            <TableContainer
+              component={Paper}
+              variant="outlined"
+              sx={{ overflowX: "auto" }}
+            >
               <Table size="small">
                 <TableHead>
                   <TableRow sx={{ backgroundColor: "#e8f5e9" }}>
-                    <TableCell sx={{ fontWeight: "bold", minWidth: 200 }}>Témakörök</TableCell>
-                    <TableCell sx={{ fontWeight: "bold", minWidth: 120, backgroundColor: "#e3f2fd", textAlign: "center" }}>
+                    <TableCell sx={{ fontWeight: "bold", minWidth: 200 }}>
+                      Témakörök
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: "bold",
+                        minWidth: 120,
+                        backgroundColor: "#e3f2fd",
+                        textAlign: "center",
+                      }}
+                    >
                       Információk
                     </TableCell>
                     {schoolYears.map((year) => (
-                      <TableCell key={year} align="center" sx={{ fontWeight: "bold", minWidth: 100, backgroundColor: "#e8f4fd" }}>
+                      <TableCell
+                        key={year}
+                        align="center"
+                        sx={{
+                          fontWeight: "bold",
+                          minWidth: 100,
+                          backgroundColor: "#e8f4fd",
+                        }}
+                      >
                         {year}
                       </TableCell>
                     ))}
-                    <TableCell sx={{ fontWeight: "bold", width: 60, textAlign: "center" }}>Töröl</TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: "bold",
+                        width: 60,
+                        textAlign: "center",
+                      }}
+                    >
+                      Töröl
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -499,14 +580,26 @@ export default function IntézményiElismeresek() {
                     <TableCell sx={{ fontWeight: "bold", color: "#e65100" }}>
                       Intézmény által elnyert díjak, elismerések – összesen
                     </TableCell>
-                    <TableCell align="center" sx={{ backgroundColor: "#e3f2fd" }}>
-                      <Chip label="Összesen" size="small" color="primary" variant="outlined" />
+                    <TableCell
+                      align="center"
+                      sx={{ backgroundColor: "#e3f2fd" }}
+                    >
+                      <Chip
+                        label="Összesen"
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
                     </TableCell>
                     {schoolYears.map((yearStr) => {
                       const startYear = parseInt(yearStr.split("/")[0], 10);
                       const sum = intezményiByYear[startYear] || 0;
                       return (
-                        <TableCell key={yearStr} align="center" sx={{ fontWeight: "bold" }}>
+                        <TableCell
+                          key={yearStr}
+                          align="center"
+                          sx={{ fontWeight: "bold" }}
+                        >
                           {sum}
                         </TableCell>
                       );
@@ -517,8 +610,13 @@ export default function IntézményiElismeresek() {
                   {/* Dinamikus sorok */}
                   {Object.values(intezményiData).length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={schoolYears.length + 3} align="center" sx={{ color: "text.secondary", py: 3 }}>
-                        Még nincs felvett díj. Kattintson az „Új díj hozzáadása" gombra!
+                      <TableCell
+                        colSpan={schoolYears.length + 3}
+                        align="center"
+                        sx={{ color: "text.secondary", py: 3 }}
+                      >
+                        Még nincs felvett díj. Kattintson az „Új díj hozzáadása"
+                        gombra!
                       </TableCell>
                     </TableRow>
                   )}
@@ -526,11 +624,23 @@ export default function IntézményiElismeresek() {
                     .sort((a, b) => a.dij_neve.localeCompare(b.dij_neve, "hu"))
                     .map((group, idx) => {
                       return (
-                        <TableRow key={group.groupId} sx={{ backgroundColor: idx % 2 === 0 ? "#fafafa" : "white", "&:hover": { backgroundColor: "#f5f5f5" } }}>
+                        <TableRow
+                          key={group.groupId}
+                          sx={{
+                            backgroundColor:
+                              idx % 2 === 0 ? "#fafafa" : "white",
+                            "&:hover": { backgroundColor: "#f5f5f5" },
+                          }}
+                        >
                           <TableCell>
                             <TextField
                               value={group.dij_neve}
-                              onChange={(e) => handleIntezményiNameChange(group.groupId, e.target.value)}
+                              onChange={(e) =>
+                                handleIntezményiNameChange(
+                                  group.groupId,
+                                  e.target.value,
+                                )
+                              }
                               size="small"
                               variant="standard"
                               fullWidth
@@ -538,8 +648,21 @@ export default function IntézményiElismeresek() {
                               disabled={!selectedSchool}
                             />
                           </TableCell>
-                          <TableCell align="center" sx={{ backgroundColor: "#e3f2fd" }}>
-                            <Chip label="Darab" size="small" variant="outlined" sx={{ fontSize: "0.7rem", backgroundColor: "white", borderColor: "#1976d2", color: "#1976d2" }} />
+                          <TableCell
+                            align="center"
+                            sx={{ backgroundColor: "#e3f2fd" }}
+                          >
+                            <Chip
+                              label="Darab"
+                              size="small"
+                              variant="outlined"
+                              sx={{
+                                fontSize: "0.7rem",
+                                backgroundColor: "white",
+                                borderColor: "#1976d2",
+                                color: "#1976d2",
+                              }}
+                            />
                           </TableCell>
                           {schoolYears.map((yr) => {
                             const startYear = parseInt(yr.split("/")[0], 10);
@@ -549,9 +672,18 @@ export default function IntézményiElismeresek() {
                                 <TextField
                                   type="number"
                                   value={val}
-                                  onChange={(e) => handleIntezményiCountChange(group.groupId, startYear, e.target.value)}
+                                  onChange={(e) =>
+                                    handleIntezményiCountChange(
+                                      group.groupId,
+                                      startYear,
+                                      e.target.value,
+                                    )
+                                  }
                                   size="small"
-                                  inputProps={{ min: 0, style: { textAlign: "center" } }}
+                                  inputProps={{
+                                    min: 0,
+                                    style: { textAlign: "center" },
+                                  }}
                                   sx={{ width: 70 }}
                                   disabled={!selectedSchool}
                                 />
@@ -561,7 +693,12 @@ export default function IntézményiElismeresek() {
                           <TableCell align="center">
                             <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
                               <Tooltip title="Díj törlése">
-                                <IconButton size="small" color="error" onClick={() => handleDeleteDij(group.groupId)} disabled={!selectedSchool}>
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() => handleDeleteDij(group.groupId)}
+                                  disabled={!selectedSchool}
+                                >
                                   <DeleteIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
@@ -581,9 +718,21 @@ export default function IntézményiElismeresek() {
         ─────────────────────────────────────────────────────────────────────── */}
         <Card sx={{ mb: 3 }}>
           <CardContent>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }} flexWrap="wrap" gap={1}>
-              <Typography variant="h6" component="h2" sx={{ color: "#1976d2", fontWeight: "bold" }}>
-                Munkavállalók által elnyert díjak, elismerések, kitüntetésre való felterjesztések
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ mb: 2 }}
+              flexWrap="wrap"
+              gap={1}
+            >
+              <Typography
+                variant="h6"
+                component="h2"
+                sx={{ color: "#1976d2", fontWeight: "bold" }}
+              >
+                Munkavállalók által elnyert díjak, elismerések, kitüntetésre
+                való felterjesztések
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap">
                 <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
@@ -610,8 +759,16 @@ export default function IntézményiElismeresek() {
                   fileName="munkavallalok_elismeresek"
                   sheetName="Munkavállalói díjak"
                   columns={[
-                    { header: "Elismerés típusa", key: "kategoriak", width: 40 },
-                    ...schoolYears.map((yr) => ({ header: yr, key: yr, width: 16 })),
+                    {
+                      header: "Elismerés típusa",
+                      key: "kategoriak",
+                      width: 40,
+                    },
+                    ...schoolYears.map((yr) => ({
+                      header: yr,
+                      key: yr,
+                      width: 16,
+                    })),
                   ]}
                   rows={munkavallalokExportRows}
                   buttonLabel="Export"
@@ -626,16 +783,37 @@ export default function IntézményiElismeresek() {
               </Alert>
             )}
 
-            <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+            <TableContainer
+              component={Paper}
+              variant="outlined"
+              sx={{ overflowX: "auto" }}
+            >
               <Table size="small">
                 <TableHead>
                   <TableRow sx={{ backgroundColor: "#fff8e8" }}>
-                    <TableCell sx={{ fontWeight: "bold", minWidth: 260 }}>Elismerés típusa</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: "bold", minWidth: 100, backgroundColor: "#e3f2fd" }}>
+                    <TableCell sx={{ fontWeight: "bold", minWidth: 260 }}>
+                      Elismerés típusa
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        minWidth: 100,
+                        backgroundColor: "#e3f2fd",
+                      }}
+                    >
                       Információk
                     </TableCell>
                     {schoolYears.map((year) => (
-                      <TableCell key={year} align="center" sx={{ fontWeight: "bold", minWidth: 110, backgroundColor: "#e8f4fd" }}>
+                      <TableCell
+                        key={year}
+                        align="center"
+                        sx={{
+                          fontWeight: "bold",
+                          minWidth: 110,
+                          backgroundColor: "#e8f4fd",
+                        }}
+                      >
                         {year}
                       </TableCell>
                     ))}
@@ -647,15 +825,30 @@ export default function IntézményiElismeresek() {
                     <TableCell sx={{ fontWeight: "bold", color: "#e65100" }}>
                       Munkavállalók által elnyert díjak, elismerések – összesen
                     </TableCell>
-                    <TableCell align="center" sx={{ backgroundColor: "#e3f2fd" }}>
-                      <Chip label="Összesen" size="small" color="primary" variant="outlined" />
+                    <TableCell
+                      align="center"
+                      sx={{ backgroundColor: "#e3f2fd" }}
+                    >
+                      <Chip
+                        label="Összesen"
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
                     </TableCell>
                     {schoolYears.map((yearStr) => {
                       const startYear = parseInt(yearStr.split("/")[0], 10);
                       const rec = munkavallalokData[startYear] ?? {};
-                      const sum = MUNKAVALLALOI_KATEGORIAK.reduce((acc, k) => acc + (rec[k.key] || 0), 0);
+                      const sum = MUNKAVALLALOI_KATEGORIAK.reduce(
+                        (acc, k) => acc + (rec[k.key] || 0),
+                        0,
+                      );
                       return (
-                        <TableCell key={yearStr} align="center" sx={{ fontWeight: "bold" }}>
+                        <TableCell
+                          key={yearStr}
+                          align="center"
+                          sx={{ fontWeight: "bold" }}
+                        >
                           {sum}
                         </TableCell>
                       );
@@ -666,23 +859,50 @@ export default function IntézményiElismeresek() {
                   {MUNKAVALLALOI_KATEGORIAK.map((kat, idx) => (
                     <TableRow
                       key={kat.key}
-                      sx={{ backgroundColor: idx % 2 === 0 ? "#fafafa" : "white", "&:hover": { backgroundColor: "#f5f5f5" } }}
+                      sx={{
+                        backgroundColor: idx % 2 === 0 ? "#fafafa" : "white",
+                        "&:hover": { backgroundColor: "#f5f5f5" },
+                      }}
                     >
                       <TableCell sx={{ pl: 3 }}>{kat.label}</TableCell>
-                      <TableCell align="center" sx={{ backgroundColor: "#e3f2fd" }}>
-                        <Chip label="Darab" size="small" variant="outlined" sx={{ backgroundColor: "white", borderColor: "#1976d2", color: "#1976d2", fontSize: "0.75rem" }} />
+                      <TableCell
+                        align="center"
+                        sx={{ backgroundColor: "#e3f2fd" }}
+                      >
+                        <Chip
+                          label="Darab"
+                          size="small"
+                          variant="outlined"
+                          sx={{
+                            backgroundColor: "white",
+                            borderColor: "#1976d2",
+                            color: "#1976d2",
+                            fontSize: "0.75rem",
+                          }}
+                        />
                       </TableCell>
                       {schoolYears.map((yearStr) => {
                         const startYear = parseInt(yearStr.split("/")[0], 10);
-                        const val = munkavallalokData[startYear]?.[kat.key] ?? 0;
+                        const val =
+                          munkavallalokData[startYear]?.[kat.key] ?? 0;
                         return (
                           <TableCell key={yearStr} align="center">
                             <TextField
                               type="number"
                               value={val}
-                              onChange={(e) => handleMunkavallalokChange(startYear, kat.key, e.target.value)}
+                              onChange={(e) =>
+                                handleMunkavallalokChange(
+                                  startYear,
+                                  kat.key,
+                                  e.target.value,
+                                )
+                              }
                               size="small"
-                              inputProps={{ min: 0, step: 1, style: { textAlign: "center" } }}
+                              inputProps={{
+                                min: 0,
+                                step: 1,
+                                style: { textAlign: "center" },
+                              }}
                               sx={{ width: 75 }}
                               placeholder="0"
                               disabled={!selectedSchool}
@@ -700,7 +920,12 @@ export default function IntézményiElismeresek() {
       </Box>
 
       {/* ─── Díj hozzáadása dialog ──────────────────────────────────────────── */}
-      <Dialog open={openAddDialog} onClose={() => setOpenAddDialog(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={openAddDialog}
+        onClose={() => setOpenAddDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Új intézményi díj / elismerés hozzáadása</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
@@ -716,8 +941,19 @@ export default function IntézményiElismeresek() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setOpenAddDialog(false); setNewDijNeve(""); }}>Mégsem</Button>
-          <Button variant="contained" onClick={handleAddDij} disabled={!newDijNeve.trim()}>
+          <Button
+            onClick={() => {
+              setOpenAddDialog(false);
+              setNewDijNeve("");
+            }}
+          >
+            Mégsem
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleAddDij}
+            disabled={!newDijNeve.trim()}
+          >
             Hozzáadás
           </Button>
         </DialogActions>
@@ -730,7 +966,11 @@ export default function IntézményiElismeresek() {
         onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert onClose={() => setSnackbar((s) => ({ ...s, open: false }))} severity={snackbar.severity} variant="filled">
+        <Alert
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+          severity={snackbar.severity}
+          variant="filled"
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

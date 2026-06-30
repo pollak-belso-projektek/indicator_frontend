@@ -35,6 +35,8 @@ import InfoVegzettekElegedettsege from "./info_vegzettek_elegedettsege";
 import TitleVegzettekElegedettsege from "./title_vegzettek_elegedettsege";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 const evszamok = generateSchoolYears();
 
@@ -54,15 +56,16 @@ export default function VegzettekElegedettsege() {
     isLoading: isLoadingElegedettseg,
     isFetching: isFetchingElegedettseg,
     refetch: refetchElegedettseg,
-  } = useGetElegedettsegQuery(
-    { alapadatok_id: selectedSchool?.id }
-  );
+  } = useGetElegedettsegQuery({ alapadatok_id: selectedSchool?.id });
 
-  const [addElegedettseg, { isLoading: isAdding }] = useAddElegedettsegMutation();
-  const [updateElegedettseg, { isLoading: isUpdating }] = useUpdateElegedettsegMutation();
+  const [addElegedettseg, { isLoading: isAdding }] =
+    useAddElegedettsegMutation();
+  const [updateElegedettseg, { isLoading: isUpdating }] =
+    useUpdateElegedettsegMutation();
 
   // Component State
   const [tableData, setTableData] = useState({});
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -76,19 +79,26 @@ export default function VegzettekElegedettsege() {
     if (!schoolsData) return { szakmaRows: [], programMap: {} };
 
     const relevantSchools = selectedSchool
-      ? schoolsData.filter(s => s.id === selectedSchool.id)
+      ? schoolsData.filter((s) => s.id === selectedSchool.id)
       : schoolsData;
 
     const rows = [];
     const map = {};
 
-    relevantSchools.forEach(school => {
-      if (school.alapadatok_szakirany && Array.isArray(school.alapadatok_szakirany)) {
-        school.alapadatok_szakirany.forEach(sz => {
+    relevantSchools.forEach((school) => {
+      if (
+        school.alapadatok_szakirany &&
+        Array.isArray(school.alapadatok_szakirany)
+      ) {
+        school.alapadatok_szakirany.forEach((sz) => {
           const szakiranyId = sz.szakirany_id || sz.szakirany?.id;
 
-          if (sz.szakirany?.szakma && Array.isArray(sz.szakirany.szakma) && sz.szakirany.szakma.length > 0) {
-            sz.szakirany.szakma.forEach(szm => {
+          if (
+            sz.szakirany?.szakma &&
+            Array.isArray(sz.szakirany.szakma) &&
+            sz.szakirany.szakma.length > 0
+          ) {
+            sz.szakirany.szakma.forEach((szm) => {
               const szakmaId = szm.szakma_id || szm.szakma?.id;
               const szakmaNev = szm.szakma?.nev;
               if (szakmaNev) {
@@ -106,7 +116,10 @@ export default function VegzettekElegedettsege() {
           } else if (szakiranyId) {
             const key = `szakirany_${szakiranyId}`;
             if (!map[key]) {
-              rows.push({ key, label: `Szakirány: ${sz.szakirany?.nev || 'Ismeretlen'}` });
+              rows.push({
+                key,
+                label: `Szakirány: ${sz.szakirany?.nev || "Ismeretlen"}`,
+              });
               map[key] = {
                 szakirany_id: szakiranyId,
                 szakma_id: null,
@@ -128,11 +141,13 @@ export default function VegzettekElegedettsege() {
     const relevantData = apiData || [];
     const sumData = {};
 
-    relevantData.forEach(item => {
+    relevantData.forEach((item) => {
       const year = item.tanev_kezdete;
       const szakmaId = item.szakma_id || item.szakma?.id;
       const szakiranyId = item.szakirany_id || item.szakirany?.id;
-      const key = szakmaId ? `szakma_${szakmaId}_${szakiranyId}` : `szakirany_${szakiranyId}`;
+      const key = szakmaId
+        ? `szakma_${szakmaId}_${szakiranyId}`
+        : `szakirany_${szakiranyId}`;
 
       if (!initialData[key]) {
         initialData[key] = {};
@@ -142,7 +157,7 @@ export default function VegzettekElegedettsege() {
         initialData[key][year] = { id: item.id, munkaadok_elegedettsege: "" };
         sumData[key][year] = { sum: 0, count: 0 };
       }
-      
+
       const val = item.munkaadok_elegedettsege;
       if (val !== undefined && val !== null && val !== "") {
         sumData[key][year].sum += Number(val);
@@ -152,11 +167,13 @@ export default function VegzettekElegedettsege() {
     });
 
     if (!selectedSchool) {
-      Object.keys(sumData).forEach(key => {
-        Object.keys(sumData[key]).forEach(year => {
+      Object.keys(sumData).forEach((key) => {
+        Object.keys(sumData[key]).forEach((year) => {
           const entry = sumData[key][year];
           if (entry.count > 0) {
-            initialData[key][year].munkaadok_elegedettsege = Number((entry.sum / entry.count).toFixed(2));
+            initialData[key][year].munkaadok_elegedettsege = Number(
+              (entry.sum / entry.count).toFixed(2),
+            );
           }
         });
       });
@@ -172,7 +189,7 @@ export default function VegzettekElegedettsege() {
     const year = parseInt(yearStr, 10);
     const numValue = parseFloat(value);
 
-    setTableData(prev => ({
+    setTableData((prev) => ({
       ...prev,
       [key]: {
         ...(prev[key] || {}),
@@ -211,15 +228,21 @@ export default function VegzettekElegedettsege() {
         for (const [yearStr, fields] of Object.entries(yearData)) {
           const year = parseInt(yearStr, 10);
 
-          const savedFields = savedData?.[key]?.[yearStr] || { munkaadok_elegedettsege: "" };
+          const savedFields = savedData?.[key]?.[yearStr] || {
+            munkaadok_elegedettsege: "",
+          };
 
-          if (fields.munkaadok_elegedettsege !== savedFields.munkaadok_elegedettsege) {
+          if (
+            fields.munkaadok_elegedettsege !==
+            savedFields.munkaadok_elegedettsege
+          ) {
             const payload = {
               alapadatok_id: programMap[key].alapadatok_id,
               szakirany_id: programMap[key].szakirany_id,
               szakma_id: programMap[key].szakma_id,
               tanev_kezdete: year,
-              munkaadok_elegedettsege: parseFloat(fields.munkaadok_elegedettsege) || 0,
+              munkaadok_elegedettsege:
+                parseFloat(fields.munkaadok_elegedettsege) || 0,
             };
 
             if (fields.id) {
@@ -237,7 +260,9 @@ export default function VegzettekElegedettsege() {
       setIsModified(false);
       refetchElegedettseg();
 
-      setSnackbarMessage(`Sikeresen mentve: ${savedCount} új rekord és ${updatedCount} frissített rekord`);
+      setSnackbarMessage(
+        `Sikeresen mentve: ${savedCount} új rekord és ${updatedCount} frissített rekord`,
+      );
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
     } catch (error) {
@@ -255,7 +280,12 @@ export default function VegzettekElegedettsege() {
     setSnackbarOpen(false);
   };
 
-  if (isFetching || isLoadingSchools || isLoadingElegedettseg || isFetchingElegedettseg) {
+  if (
+    isFetching ||
+    isLoadingSchools ||
+    isLoadingElegedettseg ||
+    isFetchingElegedettseg
+  ) {
     return <PageLoadingOverlay isLoading={true} />;
   }
 
@@ -267,30 +297,35 @@ export default function VegzettekElegedettsege() {
       >
         <Fade in={true} timeout={800}>
           <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
-
             <LockStatusIndicator tableName="elegedettseg" />
 
             {fetchError && (
               <Alert severity="error" sx={{ mb: 2 }}>
-                Hiba történt az adatok betöltése során: {fetchError.message || "Ismeretlen hiba"}
+                Hiba történt az adatok betöltése során:{" "}
+                {fetchError.message || "Ismeretlen hiba"}
               </Alert>
             )}
 
             {!selectedSchool && (
               <Alert severity="info" sx={{ mb: 2 }}>
-                Nincs iskola kiválasztva - az összes iskola adatait összegzi a rendszer.
+                Nincs iskola kiválasztva - az összes iskola adatait összegzi a
+                rendszer.
               </Alert>
             )}
 
             {isModified && (
               <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
-                Mentetlen módosítások vannak. Ne felejtsd el menteni a változtatásokat!
+                Mentetlen módosítások vannak. Ne felejtsd el menteni a
+                változtatásokat!
               </Alert>
             )}
 
             {/* Action Buttons */}
             <Stack direction="row" spacing={2} sx={{ mb: 3, ml: 2 }}>
-              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="export_adatok" />
+              <ExportDOMTableToExcel
+                tableId=".MuiTable-root"
+                fileName="export_adatok"
+              />
               <LockedTableWrapper tableName="elegedettseg">
                 <Button
                   variant="contained"
@@ -302,9 +337,24 @@ export default function VegzettekElegedettsege() {
                 </Button>
                 <Button
                   variant="outlined"
+                  color="primary"
+                  onClick={() => setHistoryOpen(true)}
+                  startIcon={<HistoryIcon />}
+                  sx={{ ml: 2 }}
+                >
+                  Előzmények
+                </Button>
+                <Button
+                  variant="outlined"
                   startIcon={<RefreshIcon />}
                   onClick={handleResetData}
-                  disabled={!isModified || !savedData || isSaving || isAdding || isUpdating}
+                  disabled={
+                    !isModified ||
+                    !savedData ||
+                    isSaving ||
+                    isAdding ||
+                    isUpdating
+                  }
                 >
                   Visszaállítás
                 </Button>
@@ -317,10 +367,14 @@ export default function VegzettekElegedettsege() {
 
             {szakmaRows.length === 0 ? (
               <Alert severity="warning" sx={{ m: 2 }}>
-                Nincsenek megjeleníthető szakmák. Kérjük válasszon intézményt vagy rendeljen hozzá szakmákat az intézményekhez.
+                Nincsenek megjeleníthető szakmák. Kérjük válasszon intézményt
+                vagy rendeljen hozzá szakmákat az intézményekhez.
               </Alert>
             ) : (
-              <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
+              <TableContainer
+                component={Paper}
+                sx={{ maxWidth: "100%", overflowX: "auto" }}
+              >
                 <Table size="small" sx={{ minWidth: 800 }}>
                   <TableHead>
                     <TableRow>
@@ -360,7 +414,10 @@ export default function VegzettekElegedettsege() {
                             fontWeight: "bold",
                             backgroundColor: "#fff2cc",
                             borderBottom: "2px solid #ddd",
-                            borderRight: i === evszamok.length - 1 ? "none" : "1px solid #ddd",
+                            borderRight:
+                              i === evszamok.length - 1
+                                ? "none"
+                                : "1px solid #ddd",
                             minWidth: 100,
                           }}
                         >
@@ -375,7 +432,8 @@ export default function VegzettekElegedettsege() {
                         key={row.key}
                         hover
                         sx={{
-                          backgroundColor: index % 2 === 0 ? "#f9f9f9" : "white",
+                          backgroundColor:
+                            index % 2 === 0 ? "#f9f9f9" : "white",
                         }}
                       >
                         <TableCell
@@ -384,7 +442,8 @@ export default function VegzettekElegedettsege() {
                             borderRight: "2px solid #ddd",
                             position: "sticky",
                             left: 0,
-                            backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#fff",
+                            backgroundColor:
+                              index % 2 === 0 ? "#f9f9f9" : "#fff",
                             zIndex: 1,
                           }}
                         >
@@ -397,7 +456,10 @@ export default function VegzettekElegedettsege() {
                               key={year}
                               align="center"
                               sx={{
-                                borderRight: i === evszamok.length - 1 ? "none" : "1px solid #ddd",
+                                borderRight:
+                                  i === evszamok.length - 1
+                                    ? "none"
+                                    : "1px solid #ddd",
                                 p: 0.5,
                               }}
                             >
@@ -405,15 +467,32 @@ export default function VegzettekElegedettsege() {
                                 type="number"
                                 size="small"
                                 disabled={!selectedSchool}
-                                value={tableData[row.key]?.[startYear]?.munkaadok_elegedettsege ?? ""}
-                                onChange={(e) => handleDataChange(row.key, startYear, e.target.value)}
+                                value={
+                                  tableData[row.key]?.[startYear]
+                                    ?.munkaadok_elegedettsege ?? ""
+                                }
+                                onChange={(e) =>
+                                  handleDataChange(
+                                    row.key,
+                                    startYear,
+                                    e.target.value,
+                                  )
+                                }
                                 inputProps={{
                                   min: 0,
                                   max: 100,
                                   step: 0.1,
-                                  style: { textAlign: "center", padding: "4px" },
+                                  style: {
+                                    textAlign: "center",
+                                    padding: "4px",
+                                  },
                                 }}
-                                sx={{ width: "80px", backgroundColor: !selectedSchool ? "#f5f5f5" : "#fff" }}
+                                sx={{
+                                  width: "80px",
+                                  backgroundColor: !selectedSchool
+                                    ? "#f5f5f5"
+                                    : "#fff",
+                                }}
                                 placeholder=""
                               />
                             </TableCell>
@@ -432,12 +511,28 @@ export default function VegzettekElegedettsege() {
               onClose={handleSnackbarClose}
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
             >
-              <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} variant="filled">
+              <Alert
+                onClose={handleSnackbarClose}
+                severity={snackbarSeverity}
+                variant="filled"
+              >
                 {snackbarMessage}
               </Alert>
             </Snackbar>
           </Box>
         </Fade>
+
+        <HistoryDialog
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          alapadatokId={selectedSchool?.id}
+          tableName="elegedettseg"
+          onRollbackSuccess={() => {
+            setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+          }}
+        />
       </PageWrapper>
     </Container>
   );

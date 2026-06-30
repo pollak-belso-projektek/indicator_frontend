@@ -36,6 +36,8 @@ import PageWrapper from "../../PageWrapper";
 import InfoFelvettekSzama from "./info_felvettek_szama";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 const evszamok = generateSchoolYears();
 
@@ -70,6 +72,7 @@ const FelvettekSzama = () => {
 
   // State for the integrated table data
   const [tableData, setTableData] = useState({});
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [originalTableData, setOriginalTableData] = useState({}); // Store original data for reset
   const [isModified, setIsModified] = useState(false);
   const [_saveSuccess, setSaveSuccess] = useState(false);
@@ -192,7 +195,7 @@ const FelvettekSzama = () => {
     let relevantSchools = schoolsData;
     if (selectedSchool) {
       relevantSchools = schoolsData.filter(
-        (school) => school.id === selectedSchool.id
+        (school) => school.id === selectedSchool.id,
       );
     }
 
@@ -230,7 +233,7 @@ const FelvettekSzama = () => {
 
               // Add "Nincs meghatározva" entry for each szakirány
               const normalizedSzakiranyNev = normalizeSzakiranyName(
-                szakirany.nev
+                szakirany.nev,
               );
               const subTypes =
                 szakmaNevek.length > 0
@@ -249,7 +252,7 @@ const FelvettekSzama = () => {
             } else {
               // If no szakmák exist, still add "Nincs meghatározva" entry
               const normalizedSzakiranyNev = normalizeSzakiranyName(
-                szakirany.nev
+                szakirany.nev,
               );
               categories.push({
                 category: `${szakirany.nev} szakmái`,
@@ -302,7 +305,7 @@ const FelvettekSzama = () => {
   const isSummaryRow = (programType) => {
     // Find the category this programType belongs to
     const category = programTypes.find((cat) =>
-      cat.subTypes.includes(programType)
+      cat.subTypes.includes(programType),
     );
 
     if (!category) return false;
@@ -413,7 +416,7 @@ const FelvettekSzama = () => {
   // Get calculated value for summary rows
   const getCalculatedValue = (programType, year, field) => {
     const category = programTypes.find((cat) =>
-      cat.subTypes.includes(programType)
+      cat.subTypes.includes(programType),
     );
 
     if (!category) return 0;
@@ -436,12 +439,12 @@ const FelvettekSzama = () => {
       jelentkezokSzama = getCalculatedValue(
         programType,
         year,
-        "jelentkezok_szama_9"
+        "jelentkezok_szama_9",
       );
       felvettekSzama = getCalculatedValue(
         programType,
         year,
-        "felvettek_szama_9"
+        "felvettek_szama_9",
       );
     } else {
       // For regular rows, use table data
@@ -482,7 +485,7 @@ const FelvettekSzama = () => {
       let relevantSchools = schoolsData;
       if (selectedSchool) {
         relevantSchools = schoolsData.filter(
-          (school) => school.id === selectedSchool.id
+          (school) => school.id === selectedSchool.id,
         );
       }
 
@@ -523,13 +526,13 @@ const FelvettekSzama = () => {
               } else {
                 szakiranyNev = "Nincs meghatározva";
                 console.warn(
-                  `⚠️ Could not extract szakirány from: ${programType}`
+                  `⚠️ Could not extract szakirány from: ${programType}`,
                 );
               }
             } else {
               // Find the program type in our categories to get proper names
               const category = programTypes.find((cat) =>
-                cat.subTypes.includes(programType)
+                cat.subTypes.includes(programType),
               );
 
               if (category) {
@@ -537,7 +540,7 @@ const FelvettekSzama = () => {
                   szakiranyNev = programType;
                   // For szakirány level, we need a default szakma or skip
                   console.warn(
-                    `Skipping szakirány level record: ${programType} - no szakma specified`
+                    `Skipping szakirány level record: ${programType} - no szakma specified`,
                   );
                   continue; // Skip this iteration as backend requires both szakma and szakirany
                 } else if (category.category.includes("szakmái")) {
@@ -548,7 +551,7 @@ const FelvettekSzama = () => {
                   // For institution types like "Technikum", we need to find actual szakma/szakirany pairs
                   // Let's find all szakma-szakirany combinations for this institution type
                   const institutionSchools = relevantSchools.filter(
-                    (school) => school.intezmeny_tipus === programType
+                    (school) => school.intezmeny_tipus === programType,
                   );
 
                   if (institutionSchools.length > 0) {
@@ -582,12 +585,12 @@ const FelvettekSzama = () => {
 
                   if (!szakmaNev || !szakiranyNev) {
                     console.warn(
-                      `Institution type record: ${programType} - could not find valid szakma/szakirany pair`
+                      `Institution type record: ${programType} - could not find valid szakma/szakirany pair`,
                     );
                     continue;
                   } else {
                     console.log(
-                      `Institution type record: ${programType} - using szakma: ${szakmaNev}, szakirany: ${szakiranyNev}`
+                      `Institution type record: ${programType} - using szakma: ${szakmaNev}, szakirany: ${szakiranyNev}`,
                     );
                   }
                 }
@@ -597,7 +600,7 @@ const FelvettekSzama = () => {
             // Skip if we don't have szakirany name (szakma can be null for "Nincs meghatározva")
             if (!szakiranyNev) {
               console.warn(
-                `Skipping record - missing szakirany (${szakiranyNev})`
+                `Skipping record - missing szakirany (${szakiranyNev})`,
               );
               continue;
             }
@@ -632,14 +635,14 @@ const FelvettekSzama = () => {
               console.log(
                 `✅ Saved record for ${
                   szakmaNev || "Nincs meghatározva"
-                } - ${szakiranyNev} - ${year}`
+                } - ${szakiranyNev} - ${year}`,
               );
             } catch (recordError) {
               console.error(
                 `❌ Error saving record for ${
                   szakmaNev || "Nincs meghatározva"
                 } - ${szakiranyNev} - ${year}:`,
-                recordError
+                recordError,
               );
 
               // For now, don't throw the error to avoid stopping the entire save process
@@ -715,19 +718,19 @@ const FelvettekSzama = () => {
 
     console.log(
       "🎯 All available szakirány names:",
-      Array.from(szakiranyNames)
+      Array.from(szakiranyNames),
     );
 
     // Show which Nincs meghatározva entries we're creating
     const nincsMeghatározvaEntries = programTypes.flatMap(
       (category) =>
         category.subTypes?.filter((subType) =>
-          subType.startsWith("Nincs meghatározva")
-        ) || []
+          subType.startsWith("Nincs meghatározva"),
+        ) || [],
     );
     console.log(
       "🔧 Generated Nincs meghatározva entries:",
-      nincsMeghatározvaEntries
+      nincsMeghatározvaEntries,
     );
   }, [programTypes, schoolsData]);
 
@@ -756,7 +759,7 @@ const FelvettekSzama = () => {
     if (hasAdmissionData) {
       console.log(
         "Loading existing admission data from API:",
-        apiAdmissionData
+        apiAdmissionData,
       );
       setDataSource("FelvettekSzama");
 
@@ -786,7 +789,7 @@ const FelvettekSzama = () => {
           } else {
             // "Nincs meghatározva" entry (szakma is null)
             const normalizedSzakiranyNev = normalizeSzakiranyName(
-              szakirany.nev
+              szakirany.nev,
             );
             programKey = `Nincs meghatározva (${normalizedSzakiranyNev})`;
             console.log(`📥 Loading Nincs meghatározva record:`, {
@@ -863,7 +866,10 @@ const FelvettekSzama = () => {
               </Alert>
             )}
             <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-              <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="felvettek_szama" />
+              <ExportDOMTableToExcel
+                tableId=".MuiTable-root"
+                fileName="felvettek_szama"
+              />
               <LockedTableWrapper tableName="felvettek_szama">
                 <Button
                   variant="contained"
@@ -872,6 +878,15 @@ const FelvettekSzama = () => {
                   disabled={!isModified || isAdding || isSaving}
                 >
                   {isAdding || isSaving ? "Mentés..." : "Mentés"}
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => setHistoryOpen(true)}
+                  startIcon={<HistoryIcon />}
+                  sx={{ ml: 2 }}
+                >
+                  Előzmények
                 </Button>
                 <Button
                   variant="outlined"
@@ -1052,7 +1067,7 @@ const FelvettekSzama = () => {
                               backgroundColor: "#ffffff",
                               zIndex: 1,
                               fontStyle: subType.startsWith(
-                                "Nincs meghatározva"
+                                "Nincs meghatározva",
                               )
                                 ? "italic"
                                 : "normal",
@@ -1067,11 +1082,11 @@ const FelvettekSzama = () => {
                           {/* Jelentkezések és felvettek aránya - calculated automatically */}
                           {evszamok.map((schoolYear) => {
                             const startYear = parseInt(
-                              schoolYear.split("/")[0]
+                              schoolYear.split("/")[0],
                             );
                             const percentage = calculatePercentage(
                               subType,
-                              startYear
+                              startYear,
                             );
                             const isReadOnly = isSummaryRow(subType);
 
@@ -1082,12 +1097,12 @@ const FelvettekSzama = () => {
                               const jelentkezok = getCalculatedValue(
                                 subType,
                                 startYear,
-                                "jelentkezok_szama_9"
+                                "jelentkezok_szama_9",
                               );
                               const felvettek = getCalculatedValue(
                                 subType,
                                 startYear,
-                                "felvettek_szama_9"
+                                "felvettek_szama_9",
                               );
                               hasData = jelentkezok > 0 || felvettek > 0;
                               displayValue = hasData ? percentage : "0%";
@@ -1123,7 +1138,7 @@ const FelvettekSzama = () => {
                           {/* 9. évfolyamra jelentkezők száma */}
                           {evszamok.map((schoolYear) => {
                             const startYear = parseInt(
-                              schoolYear.split("/")[0]
+                              schoolYear.split("/")[0],
                             );
                             const data = tableData[subType]?.[startYear];
                             const isReadOnly = isSummaryRow(subType);
@@ -1131,7 +1146,7 @@ const FelvettekSzama = () => {
                               ? getCalculatedValue(
                                   subType,
                                   startYear,
-                                  "jelentkezok_szama_9"
+                                  "jelentkezok_szama_9",
                                 )
                               : data?.jelentkezok_szama_9 || 0;
 
@@ -1155,7 +1170,7 @@ const FelvettekSzama = () => {
                                         subType,
                                         startYear,
                                         "jelentkezok_szama_9",
-                                        e.target.value
+                                        e.target.value,
                                       );
                                     }
                                   }}
@@ -1203,7 +1218,7 @@ const FelvettekSzama = () => {
                           {/* 9. évfolyamra felvettek száma */}
                           {evszamok.map((schoolYear) => {
                             const startYear = parseInt(
-                              schoolYear.split("/")[0]
+                              schoolYear.split("/")[0],
                             );
                             const data = tableData[subType]?.[startYear];
                             const isReadOnly = isSummaryRow(subType);
@@ -1211,7 +1226,7 @@ const FelvettekSzama = () => {
                               ? getCalculatedValue(
                                   subType,
                                   startYear,
-                                  "felvettek_szama_9"
+                                  "felvettek_szama_9",
                                 )
                               : data?.felvettek_szama_9 || 0;
 
@@ -1235,7 +1250,7 @@ const FelvettekSzama = () => {
                                         subType,
                                         startYear,
                                         "felvettek_szama_9",
-                                        e.target.value
+                                        e.target.value,
                                       );
                                     }
                                   }}
@@ -1283,7 +1298,7 @@ const FelvettekSzama = () => {
                           {/* 9. évfolyamra felvehető létszám */}
                           {evszamok.map((schoolYear) => {
                             const startYear = parseInt(
-                              schoolYear.split("/")[0]
+                              schoolYear.split("/")[0],
                             );
                             const data = tableData[subType]?.[startYear];
                             const isReadOnly = isSummaryRow(subType);
@@ -1291,7 +1306,7 @@ const FelvettekSzama = () => {
                               ? getCalculatedValue(
                                   subType,
                                   startYear,
-                                  "felvettek_letszam_9"
+                                  "felvettek_letszam_9",
                                 )
                               : data?.felvettek_letszam_9 || 0;
 
@@ -1315,7 +1330,7 @@ const FelvettekSzama = () => {
                                         subType,
                                         startYear,
                                         "felvettek_letszam_9",
-                                        e.target.value
+                                        e.target.value,
                                       );
                                     }
                                   }}
@@ -1382,6 +1397,18 @@ const FelvettekSzama = () => {
             />
           </Box>
         </Fade>
+
+        <HistoryDialog
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          alapadatokId={selectedSchool?.id}
+          tableName="felvettekSzama"
+          onRollbackSuccess={() => {
+            setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+          }}
+        />
       </PageWrapper>
     </Container>
   );

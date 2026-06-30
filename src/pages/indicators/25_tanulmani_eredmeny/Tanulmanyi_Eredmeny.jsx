@@ -16,7 +16,10 @@ import {
   Alert,
   Snackbar,
 } from "@mui/material";
-import { Save as SaveIcon, RestartAlt as RestartAltIcon } from "@mui/icons-material";
+import {
+  Save as SaveIcon,
+  RestartAlt as RestartAltIcon,
+} from "@mui/icons-material";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import {
   useGetAllAlapadatokQuery,
@@ -29,6 +32,8 @@ import PageWrapper from "../../PageWrapper";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import InfoTanulmanyiEredmeny from "./info_tanulmani_eredmeny";
 import TitleTanulmanyiEredmeny from "./title_tanulmani_eredmeny";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 const evszamok = generateSchoolYears();
 
@@ -37,6 +42,7 @@ export default function TanulmanyiEredmeny() {
   const { data: schoolsData } = useGetAllAlapadatokQuery();
 
   const [tableData, setTableData] = useState({});
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [originalData, setOriginalData] = useState({});
   const [isModified, setIsModified] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -53,20 +59,28 @@ export default function TanulmanyiEredmeny() {
 
     let relevantSchools = schoolsData;
     if (selectedSchool) {
-      relevantSchools = schoolsData.filter((school) => school.id === selectedSchool.id);
+      relevantSchools = schoolsData.filter(
+        (school) => school.id === selectedSchool.id,
+      );
     }
 
-    const types = [...new Set(relevantSchools.map((school) => school.intezmeny_tipus))].filter(Boolean);
+    const types = [
+      ...new Set(relevantSchools.map((school) => school.intezmeny_tipus)),
+    ].filter(Boolean);
     return types;
   }, [schoolsData, selectedSchool]);
 
   // Fetch data for all years
-  const currentYearFormatted = evszamok.length > 0 ? parseInt(evszamok[evszamok.length - 1].split('/')[0]) : new Date().getFullYear();
+  const currentYearFormatted =
+    evszamok.length > 0
+      ? parseInt(evszamok[evszamok.length - 1].split("/")[0])
+      : new Date().getFullYear();
 
-  const { data: tanulmanyiData, isFetching: isTanulmanyiFetching } = useGetTanulmanyiEredmenyQuery(
-    { alapadatok_id: selectedSchool?.id },
-    { skip: !selectedSchool }
-  );
+  const { data: tanulmanyiData, isFetching: isTanulmanyiFetching } =
+    useGetTanulmanyiEredmenyQuery(
+      { alapadatok_id: selectedSchool?.id },
+      { skip: !selectedSchool },
+    );
 
   // Initialize table data from API response
   useEffect(() => {
@@ -82,10 +96,20 @@ export default function TanulmanyiEredmeny() {
 
       if (Array.isArray(tanulmanyiData)) {
         tanulmanyiData.forEach((item) => {
-          const { intezmeny_tipus, jogviszony, felev, kituno, bukott, id, tanev_kezdete } = item;
-          
+          const {
+            intezmeny_tipus,
+            jogviszony,
+            felev,
+            kituno,
+            bukott,
+            id,
+            tanev_kezdete,
+          } = item;
+
           // Find the matching school year string
-          const yearStr = evszamok.find((y) => parseInt(y.split('/')[0]) === tanev_kezdete);
+          const yearStr = evszamok.find(
+            (y) => parseInt(y.split("/")[0]) === tanev_kezdete,
+          );
           if (!yearStr) return;
 
           if (!formattedData[yearStr][intezmeny_tipus]) {
@@ -99,12 +123,18 @@ export default function TanulmanyiEredmeny() {
 
           const semesterData = {
             id,
-            kituno: kituno !== null && kituno !== undefined ? parseFloat(kituno) : "",
-            bukott: bukott !== null && bukott !== undefined ? parseFloat(bukott) : "",
+            kituno:
+              kituno !== null && kituno !== undefined ? parseFloat(kituno) : "",
+            bukott:
+              bukott !== null && bukott !== undefined ? parseFloat(bukott) : "",
           };
 
-          formattedData[yearStr][intezmeny_tipus][jogviszony][felev] = { ...semesterData };
-          originalFormattedData[yearStr][intezmeny_tipus][jogviszony][felev] = { ...semesterData };
+          formattedData[yearStr][intezmeny_tipus][jogviszony][felev] = {
+            ...semesterData,
+          };
+          originalFormattedData[yearStr][intezmeny_tipus][jogviszony][felev] = {
+            ...semesterData,
+          };
         });
       }
 
@@ -120,24 +150,35 @@ export default function TanulmanyiEredmeny() {
   };
 
   const isFieldModified = (yearStr, instType, jogv, semester, field) => {
-    const orig = originalData[yearStr]?.[instType]?.[jogv]?.[semester]?.[field] ?? "";
-    const curr = tableData[yearStr]?.[instType]?.[jogv]?.[semester]?.[field] ?? "";
+    const orig =
+      originalData[yearStr]?.[instType]?.[jogv]?.[semester]?.[field] ?? "";
+    const curr =
+      tableData[yearStr]?.[instType]?.[jogv]?.[semester]?.[field] ?? "";
     return orig !== curr;
   };
 
   const getFieldSx = (yearStr, instType, jogv, semester, field) => ({
-    '& input': {
-      textAlign: 'right',
+    "& input": {
+      textAlign: "right",
       p: 1,
-      backgroundColor: isFieldModified(yearStr, instType, jogv, semester, field) ? '#fef08a' : 'inherit',
+      backgroundColor: isFieldModified(yearStr, instType, jogv, semester, field)
+        ? "#fef08a"
+        : "inherit",
     },
   });
 
-  const handleDataChange = (yearStr, instType, jogviszony, semester, field, value) => {
+  const handleDataChange = (
+    yearStr,
+    instType,
+    jogviszony,
+    semester,
+    field,
+    value,
+  ) => {
     // Prevent negative numbers entirely by sanitizing input
     const sanitizedValue = value.replace(/-/g, "");
     if (sanitizedValue !== "" && isNaN(sanitizedValue)) return;
-    
+
     setTableData((prev) => {
       const yearData = prev[yearStr] || {};
       const instData = yearData[instType] || {};
@@ -154,7 +195,8 @@ export default function TanulmanyiEredmeny() {
               ...jogvData,
               [semester]: {
                 ...semesterData,
-                [field]: sanitizedValue === "" ? "" : parseFloat(sanitizedValue),
+                [field]:
+                  sanitizedValue === "" ? "" : parseFloat(sanitizedValue),
               },
             },
           },
@@ -165,7 +207,8 @@ export default function TanulmanyiEredmeny() {
   };
 
   const getCellValue = (yearStr, instType, jogviszony, semester, field) => {
-    const val = tableData[yearStr]?.[instType]?.[jogviszony]?.[semester]?.[field];
+    const val =
+      tableData[yearStr]?.[instType]?.[jogviszony]?.[semester]?.[field];
     return val !== undefined ? val : "";
   };
 
@@ -178,7 +221,7 @@ export default function TanulmanyiEredmeny() {
   const calculateGrandTotal = (yearStr, semester, field) => {
     let total = 0;
     institutionTypes.forEach((instType) => {
-      ['Tanulói jogviszony', 'Felnőttképzési jogviszony'].forEach((jogv) => {
+      ["Tanulói jogviszony", "Felnőttképzési jogviszony"].forEach((jogv) => {
         total += getNumericValue(yearStr, instType, jogv, semester, field);
       });
     });
@@ -194,19 +237,47 @@ export default function TanulmanyiEredmeny() {
       const promises = [];
 
       for (const yearStr of evszamok) {
-        const yearPrefix = parseInt(yearStr.split('/')[0]);
+        const yearPrefix = parseInt(yearStr.split("/")[0]);
 
         for (const instType of institutionTypes) {
-          for (const jogv of ['Tanulói jogviszony', 'Felnőttképzési jogviszony']) {
-            for (const semester of ['felev1', 'felev2']) {
+          for (const jogv of [
+            "Tanulói jogviszony",
+            "Felnőttképzési jogviszony",
+          ]) {
+            for (const semester of ["felev1", "felev2"]) {
               // Check if anything was modified in this row
-              const kitunoModified = isFieldModified(yearStr, instType, jogv, semester, 'kituno');
-              const bukottModified = isFieldModified(yearStr, instType, jogv, semester, 'bukott');
+              const kitunoModified = isFieldModified(
+                yearStr,
+                instType,
+                jogv,
+                semester,
+                "kituno",
+              );
+              const bukottModified = isFieldModified(
+                yearStr,
+                instType,
+                jogv,
+                semester,
+                "bukott",
+              );
               if (!kitunoModified && !bukottModified) continue;
 
-              const id = originalData[yearStr]?.[instType]?.[jogv]?.[semester]?.id;
-              const kituno = getNumericValue(yearStr, instType, jogv, semester, 'kituno');
-              const bukott = getNumericValue(yearStr, instType, jogv, semester, 'bukott');
+              const id =
+                originalData[yearStr]?.[instType]?.[jogv]?.[semester]?.id;
+              const kituno = getNumericValue(
+                yearStr,
+                instType,
+                jogv,
+                semester,
+                "kituno",
+              );
+              const bukott = getNumericValue(
+                yearStr,
+                instType,
+                jogv,
+                semester,
+                "bukott",
+              );
 
               const recordData = {
                 alapadatok_id: selectedSchool.id,
@@ -220,11 +291,19 @@ export default function TanulmanyiEredmeny() {
 
               if (id) {
                 promises.push(
-                  updateTanulmanyiEredmeny({ id, ...recordData }).unwrap().then(() => { updatedCount++; })
+                  updateTanulmanyiEredmeny({ id, ...recordData })
+                    .unwrap()
+                    .then(() => {
+                      updatedCount++;
+                    }),
                 );
               } else {
                 promises.push(
-                  addTanulmanyiEredmeny(recordData).unwrap().then(() => { savedCount++; })
+                  addTanulmanyiEredmeny(recordData)
+                    .unwrap()
+                    .then(() => {
+                      savedCount++;
+                    }),
                 );
               }
             }
@@ -234,7 +313,9 @@ export default function TanulmanyiEredmeny() {
 
       if (promises.length > 0) {
         await Promise.all(promises);
-        setSnackbarMessage(`Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`);
+        setSnackbarMessage(
+          `Sikeresen mentve: ${savedCount} új, ${updatedCount} frissítve`,
+        );
         setSnackbarSeverity("success");
       } else {
         setSnackbarMessage("Nem történt módosítás!");
@@ -246,7 +327,9 @@ export default function TanulmanyiEredmeny() {
       setIsModified(false);
     } catch (error) {
       console.error("Hiba a mentés során:", error);
-      setSnackbarMessage(error?.data?.message || error?.message || "Hiba történt a mentés során");
+      setSnackbarMessage(
+        error?.data?.message || error?.message || "Hiba történt a mentés során",
+      );
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {
@@ -283,19 +366,23 @@ export default function TanulmanyiEredmeny() {
 
   // Render a single year table
   const renderYearTable = (yearStr) => {
-    const shortYear = `${yearStr.split('/')[0]}/${yearStr.split('/')[1].slice(2)}`;
+    const shortYear = `${yearStr.split("/")[0]}/${yearStr.split("/")[1].slice(2)}`;
 
     return (
       <TableContainer
         key={yearStr}
         component={Paper}
         elevation={0}
-        sx={{ overflowX: 'auto', border: "1px solid #ddd", mb: 4 }}
+        sx={{ overflowX: "auto", border: "1px solid #ddd", mb: 4 }}
       >
         <Table size="small" sx={{ minWidth: 800 }}>
           <TableHead>
             <TableRow>
-              <TableCell rowSpan={2} colSpan={2} sx={{ ...headerSx, width: "30%" }}></TableCell>
+              <TableCell
+                rowSpan={2}
+                colSpan={2}
+                sx={{ ...headerSx, width: "30%" }}
+              ></TableCell>
               <TableCell colSpan={2} sx={headerSx}>
                 {`${shortYear}-as tanév I. félév utolsó tanítási napja`}
               </TableCell>
@@ -306,29 +393,54 @@ export default function TanulmanyiEredmeny() {
             <TableRow>
               {/* Semester 1 */}
               <TableCell sx={subHeaderSx}>
-                Kitűnő tanulók<br />száma<br />(fő)
+                Kitűnő tanulók
+                <br />
+                száma
+                <br />
+                (fő)
               </TableCell>
               <TableCell sx={subHeaderSx}>
-                Bukott tanulók<br />száma<br />(Fő)
+                Bukott tanulók
+                <br />
+                száma
+                <br />
+                (Fő)
               </TableCell>
               {/* Semester 2 */}
               <TableCell sx={subHeaderSx}>
-                Kitűnő tanulók<br />száma<br />(fő)
+                Kitűnő tanulók
+                <br />
+                száma
+                <br />
+                (fő)
               </TableCell>
               <TableCell sx={subHeaderSx}>
-                Bukott tanulók<br />száma<br />(Fő)
+                Bukott tanulók
+                <br />
+                száma
+                <br />
+                (Fő)
               </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {institutionTypes.map((instType) => {
-              const jogviszonyTypes = ['Tanulói jogviszony', 'Felnőttképzési jogviszony'];
+              const jogviszonyTypes = [
+                "Tanulói jogviszony",
+                "Felnőttképzési jogviszony",
+              ];
               return jogviszonyTypes.map((jogv, jogvIndex) => (
                 <TableRow key={`${yearStr}-${instType}-${jogv}`}>
                   {jogvIndex === 0 && (
                     <TableCell
                       rowSpan={2}
-                      sx={{ ...cellSx, fontWeight: "medium", textAlign: "center", backgroundColor: "#f8f9fa", borderRight: "2px solid #ddd" }}
+                      sx={{
+                        ...cellSx,
+                        fontWeight: "medium",
+                        textAlign: "center",
+                        backgroundColor: "#f8f9fa",
+                        borderRight: "2px solid #ddd",
+                      }}
                     >
                       {instType}
                     </TableCell>
@@ -341,11 +453,30 @@ export default function TanulmanyiEredmeny() {
                       size="small"
                       type="number"
                       fullWidth
-                      value={getCellValue(yearStr, instType, jogv, 'felev1', 'kituno')}
+                      value={getCellValue(
+                        yearStr,
+                        instType,
+                        jogv,
+                        "felev1",
+                        "kituno",
+                      )}
                       onChange={(e) =>
-                        handleDataChange(yearStr, instType, jogv, 'felev1', 'kituno', e.target.value)
+                        handleDataChange(
+                          yearStr,
+                          instType,
+                          jogv,
+                          "felev1",
+                          "kituno",
+                          e.target.value,
+                        )
                       }
-                      sx={getFieldSx(yearStr, instType, jogv, 'felev1', 'kituno')}
+                      sx={getFieldSx(
+                        yearStr,
+                        instType,
+                        jogv,
+                        "felev1",
+                        "kituno",
+                      )}
                       inputProps={{ min: 0 }}
                     />
                   </TableCell>
@@ -354,11 +485,30 @@ export default function TanulmanyiEredmeny() {
                       size="small"
                       type="number"
                       fullWidth
-                      value={getCellValue(yearStr, instType, jogv, 'felev1', 'bukott')}
+                      value={getCellValue(
+                        yearStr,
+                        instType,
+                        jogv,
+                        "felev1",
+                        "bukott",
+                      )}
                       onChange={(e) =>
-                        handleDataChange(yearStr, instType, jogv, 'felev1', 'bukott', e.target.value)
+                        handleDataChange(
+                          yearStr,
+                          instType,
+                          jogv,
+                          "felev1",
+                          "bukott",
+                          e.target.value,
+                        )
                       }
-                      sx={getFieldSx(yearStr, instType, jogv, 'felev1', 'bukott')}
+                      sx={getFieldSx(
+                        yearStr,
+                        instType,
+                        jogv,
+                        "felev1",
+                        "bukott",
+                      )}
                       inputProps={{ min: 0 }}
                     />
                   </TableCell>
@@ -369,11 +519,30 @@ export default function TanulmanyiEredmeny() {
                       size="small"
                       type="number"
                       fullWidth
-                      value={getCellValue(yearStr, instType, jogv, 'felev2', 'kituno')}
+                      value={getCellValue(
+                        yearStr,
+                        instType,
+                        jogv,
+                        "felev2",
+                        "kituno",
+                      )}
                       onChange={(e) =>
-                        handleDataChange(yearStr, instType, jogv, 'felev2', 'kituno', e.target.value)
+                        handleDataChange(
+                          yearStr,
+                          instType,
+                          jogv,
+                          "felev2",
+                          "kituno",
+                          e.target.value,
+                        )
                       }
-                      sx={getFieldSx(yearStr, instType, jogv, 'felev2', 'kituno')}
+                      sx={getFieldSx(
+                        yearStr,
+                        instType,
+                        jogv,
+                        "felev2",
+                        "kituno",
+                      )}
                       inputProps={{ min: 0 }}
                     />
                   </TableCell>
@@ -382,11 +551,30 @@ export default function TanulmanyiEredmeny() {
                       size="small"
                       type="number"
                       fullWidth
-                      value={getCellValue(yearStr, instType, jogv, 'felev2', 'bukott')}
+                      value={getCellValue(
+                        yearStr,
+                        instType,
+                        jogv,
+                        "felev2",
+                        "bukott",
+                      )}
                       onChange={(e) =>
-                        handleDataChange(yearStr, instType, jogv, 'felev2', 'bukott', e.target.value)
+                        handleDataChange(
+                          yearStr,
+                          instType,
+                          jogv,
+                          "felev2",
+                          "bukott",
+                          e.target.value,
+                        )
                       }
-                      sx={getFieldSx(yearStr, instType, jogv, 'felev2', 'bukott')}
+                      sx={getFieldSx(
+                        yearStr,
+                        instType,
+                        jogv,
+                        "felev2",
+                        "bukott",
+                      )}
                       inputProps={{ min: 0 }}
                     />
                   </TableCell>
@@ -417,7 +605,7 @@ export default function TanulmanyiEredmeny() {
                     backgroundColor: "#ffcdd240",
                   }}
                 >
-                  {calculateGrandTotal(yearStr, 'felev1', 'kituno')}
+                  {calculateGrandTotal(yearStr, "felev1", "kituno")}
                 </TableCell>
                 <TableCell
                   sx={{
@@ -427,7 +615,7 @@ export default function TanulmanyiEredmeny() {
                     backgroundColor: "#ffcdd240",
                   }}
                 >
-                  {calculateGrandTotal(yearStr, 'felev1', 'bukott')}
+                  {calculateGrandTotal(yearStr, "felev1", "bukott")}
                 </TableCell>
                 <TableCell
                   sx={{
@@ -437,7 +625,7 @@ export default function TanulmanyiEredmeny() {
                     backgroundColor: "#ffcdd240",
                   }}
                 >
-                  {calculateGrandTotal(yearStr, 'felev2', 'kituno')}
+                  {calculateGrandTotal(yearStr, "felev2", "kituno")}
                 </TableCell>
                 <TableCell
                   sx={{
@@ -447,7 +635,7 @@ export default function TanulmanyiEredmeny() {
                     backgroundColor: "#ffcdd240",
                   }}
                 >
-                  {calculateGrandTotal(yearStr, 'felev2', 'bukott')}
+                  {calculateGrandTotal(yearStr, "felev2", "bukott")}
                 </TableCell>
               </TableRow>
             )}
@@ -463,9 +651,18 @@ export default function TanulmanyiEredmeny() {
       infoContent={<InfoTanulmanyiEredmeny />}
     >
       <Box sx={{ p: 3 }}>
-        <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center" mb={3}>
+        <Stack
+          direction="row"
+          spacing={2}
+          justifyContent="space-between"
+          alignItems="center"
+          mb={3}
+        >
           <Box>
-            <ExportDOMTableToExcel tableId=".MuiTable-root" fileName="tanulmanyi_eredmeny_export" />
+            <ExportDOMTableToExcel
+              tableId=".MuiTable-root"
+              fileName="tanulmanyi_eredmeny_export"
+            />
           </Box>
           <Stack direction="row" spacing={2}>
             <Button
@@ -486,12 +683,22 @@ export default function TanulmanyiEredmeny() {
             >
               Mentés
             </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => setHistoryOpen(true)}
+              startIcon={<HistoryIcon />}
+              sx={{ ml: 2 }}
+            >
+              Előzmények
+            </Button>
           </Stack>
         </Stack>
 
         {!selectedSchool ? (
           <Alert severity="info" sx={{ mb: 3 }}>
-            Kérjük, válasszon egy intézményt a fenti legördülő menüből az adatok megtekintéséhez.
+            Kérjük, válasszon egy intézményt a fenti legördülő menüből az adatok
+            megtekintéséhez.
           </Alert>
         ) : institutionTypes.length === 0 ? (
           <Alert severity="warning" sx={{ mb: 3 }}>
@@ -507,10 +714,26 @@ export default function TanulmanyiEredmeny() {
         autoHideDuration={6000}
         onClose={() => setSnackbarOpen(false)}
       >
-        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        alapadatokId={selectedSchool?.id}
+        tableName="tanulmanyi_eredmeny"
+        onRollbackSuccess={() => {
+          setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+        }}
+      />
     </PageWrapper>
   );
 }
