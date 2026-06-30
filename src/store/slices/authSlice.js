@@ -21,6 +21,7 @@ const decodeUserFromToken = (accessToken) => {
       school: decoded.school,
       permissions: decoded.permissions,
       tableAccess: decoded.tableAccess,
+      isTwoFactorEnabled: decoded.isTwoFactorEnabled,
       role: getHighestRole(decoded.permissions),
       exp: decoded.exp,
       iat: decoded.iat,
