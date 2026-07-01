@@ -48,6 +48,26 @@ import {
   clearMustChangePassword,
 } from "../store/slices/authSlice";
 
+const StyledCard = styled(Card)(({ theme }) => ({
+  borderRadius: "16px",
+  boxShadow: "0 4px 20px 0 rgba(0,0,0,0.05)",
+  transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+  height: "100%",
+  "&:hover": {
+    boxShadow: "0 8px 30px 0 rgba(0,0,0,0.08)",
+    transform: "translateY(-2px)",
+  }
+}));
+
+const SectionHeader = ({ icon: Icon, title }) => (
+  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+    <Box sx={{ p: 1, borderRadius: 2, bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1), color: "primary.main", display: "flex" }}>
+      <Icon size={20} />
+    </Box>
+    <Typography variant="h6" fontWeight="600">{title}</Typography>
+  </Box>
+);
+
 function ProfileEdit() {
   const user = useSelector(selectUser);
   const role = useSelector(selectUserRole);
@@ -58,6 +78,7 @@ function ProfileEdit() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const theme = useTheme();
 
   const isForcedPasswordChange =
     searchParams.get("mustChangePassword") === "true" || mustChangePassword;
@@ -231,29 +252,9 @@ function ProfileEdit() {
         <CircularProgress size={60} thickness={4} />
       </Container>
     );
-  }
 
-  const theme = useTheme();
 
-  const StyledCard = styled(Card)(({ theme }) => ({
-    borderRadius: "16px",
-    boxShadow: "0 4px 20px 0 rgba(0,0,0,0.05)",
-    transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
-    height: "100%",
-    "&:hover": {
-      boxShadow: "0 8px 30px 0 rgba(0,0,0,0.08)",
-      transform: "translateY(-2px)",
-    }
-  }));
 
-  const SectionHeader = ({ icon: Icon, title }) => (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
-      <Box sx={{ p: 1, borderRadius: 2, bgcolor: alpha(theme.palette.primary.main, 0.1), color: "primary.main", display: "flex" }}>
-        <Icon size={20} />
-      </Box>
-      <Typography variant="h6" fontWeight="600">{title}</Typography>
-    </Box>
-  );
 
   return (
     <Box sx={{ pb: 8, bgcolor: "background.default", minHeight: "100vh" }}>

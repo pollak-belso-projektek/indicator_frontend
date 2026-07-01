@@ -88,7 +88,7 @@ export default function ExportDOMTableToExcel({
           const cell = row.getCell(colIndex);
           
           // Get text content or input value
-          const input = cellNode.querySelector("input");
+          const input = cellNode.querySelector("input, textarea, select");
           let val = input ? input.value : cellNode.innerText;
           val = val.replace(/\s+/g, " ").trim();
           

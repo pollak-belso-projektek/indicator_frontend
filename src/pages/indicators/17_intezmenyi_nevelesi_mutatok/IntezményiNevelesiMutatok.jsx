@@ -379,7 +379,7 @@ export default function IntezményiNevelesiMutatok() {
 
       summary.igazolatlanOra = String(
         toNonNegativeInt(summary.igazolatlanOra) +
-          toNonNegativeInt(row.igazolatlanOra),
+        toNonNegativeInt(row.igazolatlanOra),
       );
 
       categories.forEach((category) => {
@@ -797,25 +797,25 @@ export default function IntezményiNevelesiMutatok() {
                                     value={
                                       isTotalCell
                                         ? String(
-                                            getCategoryTotal(
-                                              classRows[className],
-                                              category.name,
-                                            ),
-                                          )
+                                          getCategoryTotal(
+                                            classRows[className],
+                                            category.name,
+                                          ),
+                                        )
                                         : classRows[className]?.[
-                                            category.name
-                                          ]?.[subcategory] || "0"
+                                        category.name
+                                        ]?.[subcategory] || "0"
                                     }
                                     onChange={
                                       isTotalCell
                                         ? undefined
                                         : (e) =>
-                                            handleDataChange(
-                                              className,
-                                              category.name,
-                                              subcategory,
-                                              e.target.value,
-                                            )
+                                          handleDataChange(
+                                            className,
+                                            category.name,
+                                            subcategory,
+                                            e.target.value,
+                                          )
                                     }
                                     size="small"
                                     inputProps={{
@@ -847,7 +847,7 @@ export default function IntezményiNevelesiMutatok() {
                         </TableCell>
                         <TableCell align="center">
                           <TextField
-                            type="number"
+
                             value={summaryData.igazolatlanOra}
                             size="small"
                             inputProps={{
@@ -868,7 +868,7 @@ export default function IntezményiNevelesiMutatok() {
                               align="center"
                             >
                               <TextField
-                                type="number"
+
                                 value={
                                   summaryData[category.name]?.[subcategory] ||
                                   "0"
