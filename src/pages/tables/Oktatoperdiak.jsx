@@ -116,6 +116,12 @@ const Oktatoperdiak = () => {
     }
   }, [oktatorPerDiakData, years]);
 
+  // Reset data when school changes to prevent showing previous school's data
+  useEffect(() => {
+    setHetiOratomeg(["0", "0", "0", "0"]);
+    setIsModified(false);
+  }, [selectedSchool?.id]);
+
   // Calculate számított oktatói létszám: hetiOratomeg / divisor
   const szamitottOktatoiLetszam = hetiOratomeg.map((val) => {
     const parsed = parseFloat(String(val).replace(',', '.'));

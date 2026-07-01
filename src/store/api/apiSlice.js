@@ -1046,6 +1046,14 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["SZMSZ"],
     }),
+    bulkSaveSZMSZ: build.mutation({
+      query: (body) => ({
+        url: "szmsz/bulk",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["SZMSZ"],
+    }),
     updateSZMSZ: build.mutation({
       query: ({ id, ...data }) => ({
         url: `szmsz/${id}`,
@@ -1910,6 +1918,7 @@ export const {
   useGetSZMSZByYearQuery,
   useGetAllSZMSZQuery,
   useAddSZMSZMutation,
+  useBulkSaveSZMSZMutation,
   useUpdateSZMSZMutation,
   useDeleteSZMSZMutation,
   useGetAllEgyOktatoraJutoTanuloQuery,
