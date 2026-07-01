@@ -252,9 +252,7 @@ function ProfileEdit() {
         <CircularProgress size={60} thickness={4} />
       </Container>
     );
-
-
-
+  }
 
   return (
     <Box sx={{ pb: 8, bgcolor: "background.default", minHeight: "100vh" }}>
