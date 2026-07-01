@@ -1151,6 +1151,7 @@ export default function SzakképzésiMunkaszerződésArány() {
       setIsSaving(true);
       let savedCount = 0;
       let updatedCount = 0;
+      const savePromises = [];
 
       console.log("🔍 DEBUG: Starting save process");
       console.log("🔍 DEBUG: szmszData available:", szmszData);
@@ -1283,25 +1284,35 @@ export default function SzakképzésiMunkaszerződésArány() {
               try {
                 if (existingRecord) {
                   // Update existing record
-                  await updateSZMSZ({
-                    id: existingRecord.id,
-                    ...recordData,
-                  }).unwrap();
-                  updatedCount++;
-                  console.log(
-                    `Updated SZMSZ record for ${rawSzakmaNev} - ${szakiranyNev} - ${year}`,
+                  savePromises.push(
+                    updateSZMSZ({
+                      id: existingRecord.id,
+                      ...recordData,
+                    })
+                      .unwrap()
+                      .then(() => {
+                        updatedCount++;
+                        console.log(
+                          `Updated SZMSZ record for ${rawSzakmaNev} - ${szakiranyNev} - ${year}`,
+                        );
+                      })
                   );
                 } else {
                   // Create new record
-                  await addSZMSZ(recordData).unwrap();
-                  savedCount++;
-                  console.log(
-                    `Created new SZMSZ record for ${rawSzakmaNev} - ${szakiranyNev} - ${year}`,
+                  savePromises.push(
+                    addSZMSZ(recordData)
+                      .unwrap()
+                      .then(() => {
+                        savedCount++;
+                        console.log(
+                          `Created new SZMSZ record for ${rawSzakmaNev} - ${szakiranyNev} - ${year}`,
+                        );
+                      })
                   );
                 }
               } catch (recordError) {
                 console.error(
-                  `Error saving SZMSZ record for ${rawSzakmaNev} - ${szakiranyNev} - ${year}:`,
+                  `Error setting up SZMSZ save promise for ${rawSzakmaNev} - ${szakiranyNev} - ${year}:`,
                   recordError,
                 );
                 throw recordError; // Re-throw to be caught by outer catch
@@ -1310,6 +1321,9 @@ export default function SzakképzésiMunkaszerződésArány() {
           }
         }
       }
+
+      // Execute all save operations concurrently
+      await Promise.all(savePromises);
 
       setSavedData(JSON.parse(JSON.stringify(szakképzésiData)));
       setIsModified(false);
