@@ -87,9 +87,10 @@ export default function DobbantoProgramAránya() {
   const isSaving = isAdding || isUpdating;
   const saveError = addError || updateError;
 
+  const [historyOpen, setHistoryOpen] = useState(false);
+
   // Data structure for the three main sections
   const [dobbantoData, setDobbantoData] = useState(() => {
-    const [historyOpen, setHistoryOpen] = useState(false);
     const initialData = {
       percentage_overall: {},
       dobbanto_students: {},

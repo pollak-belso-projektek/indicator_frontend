@@ -35,8 +35,7 @@ import { generateSchoolYears } from "../../../utils/schoolYears";
 import {
   useGetTanugyiAdatokQuery,
   useGetAllSZMSZQuery,
-  useAddSZMSZMutation,
-  useUpdateSZMSZMutation,
+  useBulkSaveSZMSZMutation,
 } from "../../../store/api/apiSlice";
 import { useSelector } from "react-redux";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
@@ -70,8 +69,7 @@ export default function SzakképzésiMunkaszerződésArány() {
         : new Date().getFullYear() - 1,
   });
 
-  const [addSZMSZ, { isLoading: isAdding }] = useAddSZMSZMutation();
-  const [updateSZMSZ, { isLoading: isUpdating }] = useUpdateSZMSZMutation();
+  const [bulkSaveSZMSZ, { isLoading: isBulkSaving }] = useBulkSaveSZMSZMutation();
 
   const szakiranyok_szakmak = useMemo(() => {
     return (tipus) => {
@@ -1149,9 +1147,7 @@ export default function SzakképzésiMunkaszerződésArány() {
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      let savedCount = 0;
-      let updatedCount = 0;
-      const savePromises = [];
+      const recordsToSave = [];
 
       console.log("🔍 DEBUG: Starting save process");
       console.log("🔍 DEBUG: szmszData available:", szmszData);
@@ -1284,35 +1280,17 @@ export default function SzakképzésiMunkaszerződésArány() {
               try {
                 if (existingRecord) {
                   // Update existing record
-                  savePromises.push(
-                    updateSZMSZ({
-                      id: existingRecord.id,
-                      ...recordData,
-                    })
-                      .unwrap()
-                      .then(() => {
-                        updatedCount++;
-                        console.log(
-                          `Updated SZMSZ record for ${rawSzakmaNev} - ${szakiranyNev} - ${year}`,
-                        );
-                      })
-                  );
+                  recordsToSave.push({
+                    id: existingRecord.id,
+                    ...recordData,
+                  });
                 } else {
                   // Create new record
-                  savePromises.push(
-                    addSZMSZ(recordData)
-                      .unwrap()
-                      .then(() => {
-                        savedCount++;
-                        console.log(
-                          `Created new SZMSZ record for ${rawSzakmaNev} - ${szakiranyNev} - ${year}`,
-                        );
-                      })
-                  );
+                  recordsToSave.push(recordData);
                 }
               } catch (recordError) {
                 console.error(
-                  `Error setting up SZMSZ save promise for ${rawSzakmaNev} - ${szakiranyNev} - ${year}:`,
+                  `Error setting up SZMSZ save data for ${rawSzakmaNev} - ${szakiranyNev} - ${year}:`,
                   recordError,
                 );
                 throw recordError; // Re-throw to be caught by outer catch
@@ -1322,8 +1300,15 @@ export default function SzakképzésiMunkaszerződésArány() {
         }
       }
 
-      // Execute all save operations concurrently
-      await Promise.all(savePromises);
+      // Execute bulk save
+      let savedCount = 0;
+      let updatedCount = 0;
+      if (recordsToSave.length > 0) {
+        await bulkSaveSZMSZ(recordsToSave).unwrap();
+        // Just estimating counts based on id presence
+        updatedCount = recordsToSave.filter(r => r.id).length;
+        savedCount = recordsToSave.filter(r => !r.id).length;
+      }
 
       setSavedData(JSON.parse(JSON.stringify(szakképzésiData)));
       setIsModified(false);
@@ -1650,9 +1635,9 @@ export default function SzakképzésiMunkaszerződésArány() {
                   variant="contained"
                   startIcon={<SaveIcon />}
                   onClick={handleSave}
-                  disabled={!isModified || isUpdating || isAdding || isSaving}
+                  disabled={!isModified || isBulkSaving || isSaving}
                 >
-                  {isUpdating || isAdding || isSaving ? "Mentés..." : "Mentés"}
+                  {isBulkSaving || isSaving ? "Mentés..." : "Mentés"}
                 </Button>
                 <Button
                   variant="outlined"
@@ -1670,8 +1655,7 @@ export default function SzakképzésiMunkaszerződésArány() {
                   disabled={
                     !isModified ||
                     !savedData ||
-                    isUpdating ||
-                    isAdding ||
+                    isBulkSaving ||
                     isSaving
                   }
                 >
