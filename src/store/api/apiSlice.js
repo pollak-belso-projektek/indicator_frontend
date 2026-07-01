@@ -1936,6 +1936,7 @@ export const {
   useGetIntezmenyiNeveltsegiMutatokByYearQuery,
   useAddIntezmenyiNeveltsegiMutatokMutation,
   useUpdateIntezmenyiNeveltsegiMutatokMutation,
+  useBulkSaveIntezmenyiNeveltsegMutation,
   // Logs hooks
   useGetLogsQuery,
   useGetLogByIdQuery,
