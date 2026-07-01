@@ -1123,6 +1123,14 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["IntezmenyiNeveltsegiMutatok"],
     }),
+    bulkSaveIntezmenyiNeveltseg: build.mutation({
+      query: (body) => ({
+        url: "intezmenyi_neveltseg/bulk",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["IntezmenyiNeveltsegiMutatok"],
+    }),
 
 
     // Versenyek (Competitions)

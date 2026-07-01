@@ -35,10 +35,9 @@ import { selectSelectedSchool } from "../../../store/slices/authSlice";
 
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import {
-  useAddIntezmenyiNeveltsegiMutatokMutation,
   useGetIntezmenyiNeveltsegiMutatokByYearQuery,
   useGetTanugyiAdatokQuery,
-  useUpdateIntezmenyiNeveltsegiMutatokMutation,
+  useBulkSaveIntezmenyiNeveltsegMutation,
 } from "../../../store/api/apiSlice";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
@@ -299,10 +298,8 @@ export default function IntezményiNevelesiMutatok() {
     },
   );
 
-  const [addIntezmenyiNeveltsegiMutatok, { isLoading: isAdding }] =
-    useAddIntezmenyiNeveltsegiMutatokMutation();
-  const [updateIntezmenyiNeveltsegiMutatok, { isLoading: isUpdating }] =
-    useUpdateIntezmenyiNeveltsegiMutatokMutation();
+  const [bulkSaveIntezmenyiNeveltseg, { isLoading: isSaving }] =
+    useBulkSaveIntezmenyiNeveltsegMutation();
 
   const {
     data: tanugyiData,
@@ -319,7 +316,7 @@ export default function IntezményiNevelesiMutatok() {
   const [isModified, setIsModified] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
 
-  const isSaving = isAdding || isUpdating;
+
   const hasHydratedRows =
     classes.length === 0 || Object.keys(classRows).length === classes.length;
   const isInitialLoading =
@@ -481,7 +478,7 @@ export default function IntezményiNevelesiMutatok() {
     }
 
     try {
-      for (const className of rowsToSave) {
+      const recordsToSave = rowsToSave.map((className) => {
         const row = classRows[className];
         const payload = {
           alapadatok_id: selectedSchool.id,
@@ -508,14 +505,13 @@ export default function IntezményiNevelesiMutatok() {
         const recordId = row?._recordId || existingRecord?.id;
 
         if (recordId) {
-          await updateIntezmenyiNeveltsegiMutatok({
-            id: recordId,
-            ...payload,
-          }).unwrap();
-        } else {
-          await addIntezmenyiNeveltsegiMutatok(payload).unwrap();
+          payload.id = recordId;
         }
-      }
+        
+        return payload;
+      });
+
+      await bulkSaveIntezmenyiNeveltseg(recordsToSave).unwrap();
 
       await refetch();
       setSavedData(JSON.parse(JSON.stringify(classRows)));
