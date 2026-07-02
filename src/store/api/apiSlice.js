@@ -1927,6 +1927,7 @@ export const {
   useDeleteSzakmaiVizsgaEredmenyekMutation,
 
   useGetMuhelyiskolaQuery,
+  useLazyGetMuhelyiskolaQuery,
   useAddMuhelyiskolaMutation,
   useUpdateMuhelyiskolaMutation,
   useDeleteMuhelyiskolaMutation,
