@@ -481,9 +481,9 @@ export default function EgyuttmukodesekSzama() {
     <TableCell
       sx={{
         fontWeight: "bold",
-        backgroundColor: "#fff2cc",
-        borderBottom: "2px solid #ccc",
-        borderRight: "1px solid #ccc",
+        backgroundColor: "#fff3e0",
+        borderBottom: "2px solid #e0e0e0",
+        borderRight: "1px solid #e0e0e0",
         minWidth: 140,
         ...extraSx,
       }}
@@ -605,15 +605,15 @@ export default function EgyuttmukodesekSzama() {
           component={Paper}
           sx={{ maxWidth: "100%", overflowX: "auto", mb: 4 }}
         >
-          <Table size="medium" sx={{ minWidth: 600, border: "2px solid #ccc" }}>
+          <Table size="medium" sx={{ minWidth: 600, border: "2px solid #e0e0e0" }}>
             <TableHead>
               <TableRow>
                 <TableCell
                   sx={{
                     fontWeight: "bold",
                     minWidth: 260,
-                    borderRight: "2px solid #ccc",
-                    borderBottom: "2px solid #ccc",
+                    borderRight: "2px solid #e0e0e0",
+                    borderBottom: "2px solid #e0e0e0",
                     backgroundColor: "#f5f5f5",
                     position: "sticky",
                     left: 0,
@@ -629,12 +629,12 @@ export default function EgyuttmukodesekSzama() {
                     align="center"
                     sx={{
                       fontWeight: "bold",
-                      backgroundColor: "#fff2cc",
-                      borderBottom: "2px solid #ccc",
+                      backgroundColor: "#fff3e0",
+                      borderBottom: "2px solid #e0e0e0",
                       borderRight:
                         i === schoolYears.length - 1
                           ? "none"
-                          : "2px solid #ccc",
+                          : "2px solid #e0e0e0",
                     }}
                   >
                     {year}
@@ -644,8 +644,8 @@ export default function EgyuttmukodesekSzama() {
                   sx={{
                     fontWeight: "bold",
                     width: 60,
-                    borderBottom: "2px solid #ccc",
-                    borderLeft: "2px solid #ccc",
+                    borderBottom: "2px solid #e0e0e0",
+                    borderLeft: "2px solid #e0e0e0",
                     position: "sticky",
                     right: 0,
                     backgroundColor: "#f5f5f5",
@@ -658,8 +658,8 @@ export default function EgyuttmukodesekSzama() {
               <TableRow>
                 <TableCell
                   sx={{
-                    borderRight: "2px solid #ccc",
-                    borderBottom: "2px solid #ccc",
+                    borderRight: "2px solid #e0e0e0",
+                    borderBottom: "2px solid #e0e0e0",
                     backgroundColor: "#f5f5f5",
                     position: "sticky",
                     left: 0,
@@ -680,14 +680,14 @@ export default function EgyuttmukodesekSzama() {
                       borderRight:
                         i === schoolYears.length - 1
                           ? "none"
-                          : "2px solid #ccc",
+                          : "2px solid #e0e0e0",
                     })}
                   </React.Fragment>
                 ))}
                 <TableCell
                   sx={{
-                    borderLeft: "2px solid #ccc",
-                    borderBottom: "2px solid #ccc",
+                    borderLeft: "2px solid #e0e0e0",
+                    borderBottom: "2px solid #e0e0e0",
                     backgroundColor: "#f5f5f5",
                     position: "sticky",
                     right: 0,
@@ -715,8 +715,8 @@ export default function EgyuttmukodesekSzama() {
                     <TableRow key={`t1-${name}`} hover>
                       <TableCell
                         sx={{
-                          borderRight: "2px solid #ccc",
-                          borderBottom: "1px solid #ddd",
+                          borderRight: "2px solid #e0e0e0",
+                          borderBottom: "1px solid #e0e0e0",
                           position: "sticky",
                           left: 0,
                           backgroundColor: "#fff",
@@ -731,14 +731,14 @@ export default function EgyuttmukodesekSzama() {
                           <TableCell
                             align="center"
                             sx={{
-                              borderBottom: "1px solid #ddd",
-                              borderRight: "1px solid #eee",
+                              borderBottom: "1px solid #e0e0e0",
+                              borderRight: "1px solid #f5f5f5",
                               backgroundColor: isTable1FieldModified(
                                 name,
                                 year,
                                 "egyuttmukodes_formaja",
                               )
-                                ? "#fef08a"
+                                ? "#fff9c4"
                                 : "inherit",
                             }}
                           >
@@ -767,14 +767,14 @@ export default function EgyuttmukodesekSzama() {
                           <TableCell
                             align="center"
                             sx={{
-                              borderBottom: "1px solid #ddd",
-                              borderRight: "1px solid #eee",
+                              borderBottom: "1px solid #e0e0e0",
+                              borderRight: "1px solid #f5f5f5",
                               backgroundColor: isTable1FieldModified(
                                 name,
                                 year,
                                 "erintett_evfolyam",
                               )
-                                ? "#fef08a"
+                                ? "#fff9c4"
                                 : "inherit",
                             }}
                           >
@@ -800,17 +800,17 @@ export default function EgyuttmukodesekSzama() {
                           <TableCell
                             align="center"
                             sx={{
-                              borderBottom: "1px solid #ddd",
+                              borderBottom: "1px solid #e0e0e0",
                               borderRight:
                                 i === schoolYears.length - 1
                                   ? "none"
-                                  : "2px solid #ccc",
+                                  : "2px solid #e0e0e0",
                               backgroundColor: isTable1FieldModified(
                                 name,
                                 year,
                                 "erintett_tanulok_szama",
                               )
-                                ? "#fef08a"
+                                ? "#fff9c4"
                                 : "inherit",
                             }}
                           >
@@ -841,8 +841,8 @@ export default function EgyuttmukodesekSzama() {
                       <TableCell
                         align="center"
                         sx={{
-                          borderLeft: "2px solid #ccc",
-                          borderBottom: "1px solid #ddd",
+                          borderLeft: "2px solid #e0e0e0",
+                          borderBottom: "1px solid #e0e0e0",
                           position: "sticky",
                           right: 0,
                           backgroundColor: "#fff",
@@ -890,15 +890,15 @@ export default function EgyuttmukodesekSzama() {
           component={Paper}
           sx={{ maxWidth: "100%", overflowX: "auto", mb: 4 }}
         >
-          <Table size="medium" sx={{ minWidth: 900, border: "2px solid #ccc" }}>
+          <Table size="medium" sx={{ minWidth: 900, border: "2px solid #e0e0e0" }}>
             <TableHead>
               <TableRow>
                 <TableCell
                   sx={{
                     fontWeight: "bold",
                     minWidth: 260,
-                    borderRight: "2px solid #ccc",
-                    borderBottom: "2px solid #ccc",
+                    borderRight: "2px solid #e0e0e0",
+                    borderBottom: "2px solid #e0e0e0",
                     backgroundColor: "#f5f5f5",
                     position: "sticky",
                     left: 0,
@@ -914,12 +914,12 @@ export default function EgyuttmukodesekSzama() {
                     align="center"
                     sx={{
                       fontWeight: "bold",
-                      backgroundColor: "#fff2cc",
-                      borderBottom: "2px solid #ccc",
+                      backgroundColor: "#fff3e0",
+                      borderBottom: "2px solid #e0e0e0",
                       borderRight:
                         i === schoolYears.length - 1
                           ? "none"
-                          : "2px solid #ccc",
+                          : "2px solid #e0e0e0",
                     }}
                   >
                     {year}
@@ -929,8 +929,8 @@ export default function EgyuttmukodesekSzama() {
                   sx={{
                     fontWeight: "bold",
                     width: 60,
-                    borderBottom: "2px solid #ccc",
-                    borderLeft: "2px solid #ccc",
+                    borderBottom: "2px solid #e0e0e0",
+                    borderLeft: "2px solid #e0e0e0",
                     position: "sticky",
                     right: 0,
                     backgroundColor: "#f5f5f5",
@@ -943,8 +943,8 @@ export default function EgyuttmukodesekSzama() {
               <TableRow>
                 <TableCell
                   sx={{
-                    borderRight: "2px solid #ccc",
-                    borderBottom: "2px solid #ccc",
+                    borderRight: "2px solid #e0e0e0",
+                    borderBottom: "2px solid #e0e0e0",
                     backgroundColor: "#f5f5f5",
                     position: "sticky",
                     left: 0,
@@ -967,15 +967,15 @@ export default function EgyuttmukodesekSzama() {
                         borderRight:
                           i === schoolYears.length - 1
                             ? "none"
-                            : "2px solid #ccc",
+                            : "2px solid #e0e0e0",
                       },
                     )}
                   </React.Fragment>
                 ))}
                 <TableCell
                   sx={{
-                    borderLeft: "2px solid #ccc",
-                    borderBottom: "2px solid #ccc",
+                    borderLeft: "2px solid #e0e0e0",
+                    borderBottom: "2px solid #e0e0e0",
                     backgroundColor: "#f5f5f5",
                     position: "sticky",
                     right: 0,
@@ -1003,8 +1003,8 @@ export default function EgyuttmukodesekSzama() {
                     <TableRow key={`t2-${name}`} hover>
                       <TableCell
                         sx={{
-                          borderRight: "2px solid #ccc",
-                          borderBottom: "1px solid #ddd",
+                          borderRight: "2px solid #e0e0e0",
+                          borderBottom: "1px solid #e0e0e0",
                           position: "sticky",
                           left: 0,
                           backgroundColor: "#fff",
@@ -1019,14 +1019,14 @@ export default function EgyuttmukodesekSzama() {
                           <TableCell
                             align="center"
                             sx={{
-                              borderBottom: "1px solid #ddd",
-                              borderRight: "1px solid #eee",
+                              borderBottom: "1px solid #e0e0e0",
+                              borderRight: "1px solid #f5f5f5",
                               backgroundColor: isTable2FieldModified(
                                 name,
                                 year,
                                 "felsooktataba_lepo_szama",
                               )
-                                ? "#fef08a"
+                                ? "#fff9c4"
                                 : "inherit",
                             }}
                           >
@@ -1055,14 +1055,14 @@ export default function EgyuttmukodesekSzama() {
                           <TableCell
                             align="center"
                             sx={{
-                              borderBottom: "1px solid #ddd",
-                              borderRight: "1px solid #eee",
+                              borderBottom: "1px solid #e0e0e0",
+                              borderRight: "1px solid #f5f5f5",
                               backgroundColor: isTable2FieldModified(
                                 name,
                                 year,
                                 "vegzos_technikumi_szama",
                               )
-                                ? "#fef08a"
+                                ? "#fff9c4"
                                 : "inherit",
                             }}
                           >
@@ -1091,17 +1091,17 @@ export default function EgyuttmukodesekSzama() {
                           <TableCell
                             align="center"
                             sx={{
-                              borderBottom: "1px solid #ddd",
+                              borderBottom: "1px solid #e0e0e0",
                               borderRight:
                                 i === schoolYears.length - 1
                                   ? "none"
-                                  : "2px solid #ccc",
+                                  : "2px solid #e0e0e0",
                               backgroundColor: isTable2FieldModified(
                                 name,
                                 year,
                                 "tovabbtanulok_aranya",
                               )
-                                ? "#fef08a"
+                                ? "#fff9c4"
                                 : "inherit",
                             }}
                           >
@@ -1130,8 +1130,8 @@ export default function EgyuttmukodesekSzama() {
                       <TableCell
                         align="center"
                         sx={{
-                          borderLeft: "2px solid #ccc",
-                          borderBottom: "1px solid #ddd",
+                          borderLeft: "2px solid #e0e0e0",
+                          borderBottom: "1px solid #e0e0e0",
                           position: "sticky",
                           right: 0,
                           backgroundColor: "#fff",

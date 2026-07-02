@@ -103,7 +103,7 @@ export default function Palyazatok() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
   const metrics = [
     { key: "beadott_db", label: "beadott (db)", color: "#f5f5f5" },
-    { key: "elnyert_db", label: "elnyert (db)", color: "#ffebee" },
+    { key: "elnyert_db", label: "elnyert (db)", color: "#ffcdd2" },
     { key: "osszeg_ft", label: "összeg (Ft)", color: "#ffffff" },
     { key: "erintett", label: "érintett", color: "#f5f5f5" },
   ];
@@ -671,7 +671,7 @@ export default function Palyazatok() {
           component={Paper}
           sx={{ maxWidth: "100%", overflowX: "auto" }}
         >
-          <Table size="small" sx={{ minWidth: 1000, border: "2px solid #ccc" }}>
+          <Table size="small" sx={{ minWidth: 1000, border: "2px solid #e0e0e0" }}>
             <TableHead>
               <TableRow>
                 <TableCell
@@ -679,8 +679,8 @@ export default function Palyazatok() {
                   sx={{
                     fontWeight: "bold",
                     minWidth: 300,
-                    borderRight: "2px solid #ccc",
-                    borderBottom: "2px solid #ccc",
+                    borderRight: "2px solid #e0e0e0",
+                    borderBottom: "2px solid #e0e0e0",
                     backgroundColor: "#fff",
                     position: "sticky",
                     left: 0,
@@ -696,12 +696,12 @@ export default function Palyazatok() {
                     colSpan={4}
                     sx={{
                       fontWeight: "bold",
-                      backgroundColor: "#fff2cc",
-                      borderBottom: "1px solid #ccc",
+                      backgroundColor: "#fff3e0",
+                      borderBottom: "1px solid #e0e0e0",
                       borderRight:
                         i === schoolYears.length - 1
                           ? "none"
-                          : "2px solid #ccc",
+                          : "2px solid #e0e0e0",
                     }}
                   >
                     {year}
@@ -712,7 +712,7 @@ export default function Palyazatok() {
                   sx={{
                     fontWeight: "bold",
                     width: 60,
-                    borderBottom: "2px solid #ccc",
+                    borderBottom: "2px solid #e0e0e0",
                     position: "sticky",
                     right: 0,
                     backgroundColor: "#f5f5f5",
@@ -733,12 +733,12 @@ export default function Palyazatok() {
                         sx={{
                           fontWeight: 600,
                           backgroundColor: m.color,
-                          borderBottom: "2px solid #ccc",
+                          borderBottom: "2px solid #e0e0e0",
                           borderRight:
                             j === metrics.length - 1 &&
                             i !== schoolYears.length - 1
-                              ? "2px solid #ccc"
-                              : "1px solid #ddd",
+                              ? "2px solid #e0e0e0"
+                              : "1px solid #e0e0e0",
                           minWidth: 90,
                           fontSize: "0.8rem",
                         }}
@@ -766,8 +766,8 @@ export default function Palyazatok() {
                     <TableRow key={`${category}-${name}`} hover>
                       <TableCell
                         sx={{
-                          borderRight: "2px solid #ccc",
-                          borderBottom: "1px solid #ddd",
+                          borderRight: "2px solid #e0e0e0",
+                          borderBottom: "1px solid #e0e0e0",
                           position: "sticky",
                           left: 0,
                           backgroundColor: "#fff",
@@ -799,19 +799,19 @@ export default function Palyazatok() {
                               key={`${year}-${m.key}`}
                               align="center"
                               sx={{
-                                borderBottom: "1px solid #ddd",
+                                borderBottom: "1px solid #e0e0e0",
                                 borderRight:
                                   j === metrics.length - 1 &&
                                   i !== schoolYears.length - 1
-                                    ? "2px solid #ccc"
-                                    : "1px solid #eee",
+                                    ? "2px solid #e0e0e0"
+                                    : "1px solid #f5f5f5",
                                 backgroundColor: isFieldModified(
                                   category,
                                   name,
                                   year,
                                   m.key,
                                 )
-                                  ? "#fef08a"
+                                  ? "#fff9c4"
                                   : "inherit",
                               }}
                             >
@@ -864,14 +864,14 @@ export default function Palyazatok() {
                 })}
 
               {/* Összes pályázat */}
-              <TableRow sx={{ backgroundColor: "#fff2cc", fontWeight: "bold" }}>
+              <TableRow sx={{ backgroundColor: "#fff3e0", fontWeight: "bold" }}>
                 <TableCell
                   sx={{
                     fontWeight: "bold",
-                    borderRight: "2px solid #ccc",
+                    borderRight: "2px solid #e0e0e0",
                     position: "sticky",
                     left: 0,
-                    backgroundColor: "#fff2cc",
+                    backgroundColor: "#fff3e0",
                     zIndex: 1,
                   }}
                 >
@@ -890,8 +890,8 @@ export default function Palyazatok() {
                           borderRight:
                             j === metrics.length - 1 &&
                             i !== schoolYears.length - 1
-                              ? "2px solid #ccc"
-                              : "1px solid #ddd",
+                              ? "2px solid #e0e0e0"
+                              : "1px solid #e0e0e0",
                         }}
                       >
                         {isMoney ? formatMoney(val) : val}
@@ -903,7 +903,7 @@ export default function Palyazatok() {
                   sx={{
                     position: "sticky",
                     right: 0,
-                    backgroundColor: "#fff2cc",
+                    backgroundColor: "#fff3e0",
                     zIndex: 1,
                   }}
                 ></TableCell>
@@ -914,7 +914,7 @@ export default function Palyazatok() {
                 <TableCell
                   sx={{
                     fontWeight: "bold",
-                    borderRight: "2px solid #ccc",
+                    borderRight: "2px solid #e0e0e0",
                     position: "sticky",
                     left: 0,
                     backgroundColor: "#e0e0e0",
@@ -933,7 +933,7 @@ export default function Palyazatok() {
                       align="center"
                       sx={{
                         backgroundColor: isEloiranyzatModified(year)
-                          ? "#fef08a"
+                          ? "#fff9c4"
                           : "inherit",
                       }}
                     >
@@ -960,7 +960,7 @@ export default function Palyazatok() {
                       sx={{
                         borderRight:
                           i !== schoolYears.length - 1
-                            ? "2px solid #ccc"
+                            ? "2px solid #e0e0e0"
                             : "none",
                         backgroundColor: "gray",
                       }}
@@ -982,7 +982,7 @@ export default function Palyazatok() {
                 <TableCell
                   sx={{
                     fontWeight: "bold",
-                    borderRight: "2px solid #ccc",
+                    borderRight: "2px solid #e0e0e0",
                     position: "sticky",
                     left: 0,
                     backgroundColor: "#fff",
@@ -1012,7 +1012,7 @@ export default function Palyazatok() {
                       ></TableCell>
                       <TableCell
                         align="center"
-                        sx={{ backgroundColor: "#ffcc00", fontWeight: "bold" }}
+                        sx={{ backgroundColor: "#fff3e0", fontWeight: "bold" }}
                       >
                         {arany} %
                       </TableCell>
@@ -1020,7 +1020,7 @@ export default function Palyazatok() {
                         sx={{
                           borderRight:
                             i !== schoolYears.length - 1
-                              ? "2px solid #ccc"
+                              ? "2px solid #e0e0e0"
                               : "none",
                         }}
                       ></TableCell>

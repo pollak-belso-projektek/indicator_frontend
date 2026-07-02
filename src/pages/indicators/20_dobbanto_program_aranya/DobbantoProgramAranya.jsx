@@ -526,7 +526,7 @@ export default function DobbantoProgramAránya() {
                       />
                       <Table size="small">
                         <TableHead>
-                          <TableRow sx={{ backgroundColor: "#ffebee" }}>
+                          <TableRow sx={{ backgroundColor: "#ffcdd2" }}>
                             {schoolYears.map((year) => (
                               <TableCell
                                 key={year}
@@ -534,7 +534,7 @@ export default function DobbantoProgramAránya() {
                                 sx={{
                                   fontWeight: "bold",
                                   minWidth: 120,
-                                  backgroundColor: "#e8f4fd",
+                                  backgroundColor: "#f0f8ff",
                                 }}
                               >
                                 {year}
@@ -556,8 +556,8 @@ export default function DobbantoProgramAránya() {
                                   align="center"
                                   sx={{
                                     backgroundColor: isOver100
-                                      ? "#ffebee"
-                                      : "#f8fdf8",
+                                      ? "#ffcdd2"
+                                      : "#e8f5e8",
                                     fontWeight: "medium",
                                     fontSize: "1.1rem",
                                     color: isOver100 ? "#d32f2f" : "inherit",
@@ -610,7 +610,7 @@ export default function DobbantoProgramAránya() {
                       />
                       <Table size="small">
                         <TableHead>
-                          <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+                          <TableRow sx={{ backgroundColor: "#f0f8ff" }}>
                             {schoolYears.map((year) => (
                               <TableCell
                                 key={year}
@@ -618,7 +618,7 @@ export default function DobbantoProgramAránya() {
                                 sx={{
                                   fontWeight: "bold",
                                   minWidth: 120,
-                                  backgroundColor: "#e8f4fd",
+                                  backgroundColor: "#f0f8ff",
                                 }}
                               >
                                 {year}
@@ -627,7 +627,7 @@ export default function DobbantoProgramAránya() {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
+                          <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                             {schoolYears.map((year) => (
                               <TableCell key={year} align="center">
                                 <TextField
@@ -702,7 +702,7 @@ export default function DobbantoProgramAránya() {
                                 sx={{
                                   fontWeight: "bold",
                                   minWidth: 120,
-                                  backgroundColor: "#e8f4fd",
+                                  backgroundColor: "#f0f8ff",
                                 }}
                               >
                                 {year}
@@ -711,13 +711,13 @@ export default function DobbantoProgramAránya() {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
+                          <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                             {schoolYears.map((year) => (
                               <TableCell
                                 key={year}
                                 align="center"
                                 sx={{
-                                  backgroundColor: "#fafafa",
+                                  backgroundColor: "#f5f5f5",
                                   fontWeight: "medium",
                                   fontSize: "1.1rem",
                                 }}

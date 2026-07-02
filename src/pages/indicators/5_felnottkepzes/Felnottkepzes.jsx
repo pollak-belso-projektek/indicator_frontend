@@ -279,7 +279,7 @@ export default function Felnottkepzes() {
                                 key={year}
                                 align="center"
                                 sx={{
-                                  backgroundColor: "#f8fdf8",
+                                  backgroundColor: "#e8f5e8",
                                   fontWeight: "medium",
                                 }}
                               >
@@ -323,7 +323,7 @@ export default function Felnottkepzes() {
                                 key={year}
                                 align="center"
                                 sx={{
-                                  backgroundColor: "#fafafa",
+                                  backgroundColor: "#f5f5f5",
                                   fontWeight: "medium",
                                 }}
                               >
@@ -338,7 +338,7 @@ export default function Felnottkepzes() {
                 </Card>
 
                 {/* Formula Information */}
-                <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
+                <Card sx={{ mt: 3, backgroundColor: "#f5f5f5" }}>
                   <CardContent>
                     <Typography variant="h6" component="h3" gutterBottom>
                       Számítási formula

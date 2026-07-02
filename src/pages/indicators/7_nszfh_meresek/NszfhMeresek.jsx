@@ -717,7 +717,7 @@ export default function NszfhMeresek() {
                 mb: 4,
                 overflowX: "auto",
                 borderRadius: 2,
-                border: "1px solid #ffcc80",
+                border: "1px solid #fff3e0",
               }}
             >
               <Table
@@ -882,11 +882,11 @@ export default function NszfhMeresek() {
                     let bgColor = "#ffffff";
                     let hoverColor = "#f5f5f5";
                     if (rowInfo.kepzes_forma === "Technikum") {
-                      bgColor = rowInfo.isParent ? "#fff2cc" : "#fffaf0";
-                      hoverColor = rowInfo.isParent ? "#ffe6b3" : "#fbf2e3";
+                      bgColor = rowInfo.isParent ? "#fff3e0" : "#fff3e0";
+                      hoverColor = rowInfo.isParent ? "#fff3e0" : "#fff3e0";
                     } else {
-                      bgColor = rowInfo.isParent ? "#e8f4fd" : "#f4f9fd";
-                      hoverColor = rowInfo.isParent ? "#d4e6f1" : "#e5f0f9";
+                      bgColor = rowInfo.isParent ? "#f0f8ff" : "#f0f8ff";
+                      hoverColor = rowInfo.isParent ? "#f0f8ff" : "#f0f8ff";
                     }
 
                     const isParent = rowInfo.isParent;
@@ -984,7 +984,7 @@ export default function NszfhMeresek() {
                                           backgroundColor: isParent
                                             ? "transparent"
                                             : "rgba(255,255,255,0.7)",
-                                          color: "#757575",
+                                          color: "#666",
                                           fontWeight: "bold",
                                         },
                                       }}
@@ -1040,7 +1040,7 @@ export default function NszfhMeresek() {
                                           fontWeight: isParent
                                             ? "bold"
                                             : "normal",
-                                          color: isParent ? "#555" : "inherit",
+                                          color: isParent ? "#666" : "inherit",
                                         },
                                       }}
                                       sx={{

@@ -399,14 +399,14 @@ export default function Lemorzsolodas() {
                 size="small"
                 sx={{
                   minWidth: 1400,
-                  "& td, & th": { border: "1px solid #ddd" },
+                  "& td, & th": { border: "1px solid #e0e0e0" },
                 }}
               >
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: "#fbe9e7" }}>
+                  <TableRow sx={{ backgroundColor: "#fff3e0" }}>
                     <TableCell
                       colSpan={2}
-                      sx={{ fontWeight: "bold", border: "1px solid #ddd" }}
+                      sx={{ fontWeight: "bold", border: "1px solid #e0e0e0" }}
                     ></TableCell>
                     <TableCell
                       colSpan={schoolYears.length}
@@ -422,7 +422,7 @@ export default function Lemorzsolodas() {
                       align="center"
                       sx={{
                         fontWeight: "bold",
-                        backgroundColor: "#e8f5e9",
+                        backgroundColor: "#e8f5e8",
                         color: "#2e7d32",
                       }}
                     >
@@ -435,8 +435,8 @@ export default function Lemorzsolodas() {
                       align="center"
                       sx={{
                         fontWeight: "bold",
-                        backgroundColor: "#fce4ec",
-                        color: "#c2185b",
+                        backgroundColor: "#ffcdd2",
+                        color: "#d32f2f",
                       }}
                     >
                       október 1-jei létszám + belépett tanulók száma
@@ -527,7 +527,7 @@ export default function Lemorzsolodas() {
                         <TableRow
                           sx={{
                             backgroundColor:
-                              catIdx % 2 === 0 ? "#ffe082" : "#a5d6a7",
+                              catIdx % 2 === 0 ? "#fff3e0" : "#e8f5e8",
                           }}
                         >
                           <TableCell sx={{ fontWeight: "bold" }}>
@@ -658,7 +658,7 @@ export default function Lemorzsolodas() {
                                     }}
                                     sx={{
                                       width: "70px",
-                                      backgroundColor: "#f9fbe7",
+                                      backgroundColor: "#fff3e0",
                                     }}
                                   />
                                 </TableCell>
@@ -697,7 +697,7 @@ export default function Lemorzsolodas() {
                                     }}
                                     sx={{
                                       width: "70px",
-                                      backgroundColor: "#e0f2f1",
+                                      backgroundColor: "#f0f8ff",
                                     }}
                                   />
                                 </TableCell>

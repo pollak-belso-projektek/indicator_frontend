@@ -385,7 +385,7 @@ export default function Kompetencia() {
                           sx={{
                             fontWeight: "bold",
                             minWidth: 80,
-                            color: "red",
+                            color: "#d32f2f",
                           }}
                         >
                           intézményi
@@ -405,7 +405,7 @@ export default function Kompetencia() {
                       sx={{
                         verticalAlign: "middle",
                         fontWeight: "bold",
-                        backgroundColor: "#fff2cc",
+                        backgroundColor: "#fff3e0",
                       }}
                     >
                       Technikum
@@ -452,7 +452,7 @@ export default function Kompetencia() {
                             }
                             sx={{
                               width: "100px",
-                              "& .MuiInputBase-input": { color: "red" },
+                              "& .MuiInputBase-input": { color: "#d32f2f" },
                             }}
                             inputProps={{
                               style: { textAlign: "center" },
@@ -510,7 +510,7 @@ export default function Kompetencia() {
                             }
                             sx={{
                               width: "100px",
-                              "& .MuiInputBase-input": { color: "red" },
+                              "& .MuiInputBase-input": { color: "#d32f2f" },
                             }}
                             inputProps={{
                               style: { textAlign: "center" },
@@ -537,7 +537,7 @@ export default function Kompetencia() {
                       sx={{
                         verticalAlign: "middle",
                         fontWeight: "bold",
-                        backgroundColor: "#e8f4fd",
+                        backgroundColor: "#f0f8ff",
                       }}
                     >
                       Szakképző
@@ -584,7 +584,7 @@ export default function Kompetencia() {
                             }
                             sx={{
                               width: "100px",
-                              "& .MuiInputBase-input": { color: "red" },
+                              "& .MuiInputBase-input": { color: "#d32f2f" },
                             }}
                             inputProps={{
                               style: { textAlign: "center" },
@@ -642,7 +642,7 @@ export default function Kompetencia() {
                             }
                             sx={{
                               width: "100px",
-                              "& .MuiInputBase-input": { color: "red" },
+                              "& .MuiInputBase-input": { color: "#d32f2f" },
                             }}
                             inputProps={{
                               style: { textAlign: "center" },
@@ -658,7 +658,7 @@ export default function Kompetencia() {
             </TableContainer>
 
             <Box
-              sx={{ mt: 3, p: 2, backgroundColor: "#fff9e6", borderRadius: 1 }}
+              sx={{ mt: 3, p: 2, backgroundColor: "#fff3e0", borderRadius: 1 }}
             >
               <Typography variant="subtitle2" gutterBottom>
                 Jelmagyarázat:

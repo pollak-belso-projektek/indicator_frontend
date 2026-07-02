@@ -40,7 +40,7 @@ const InfoSzakmaiBemutatok = () => {
           p: 2,
           backgroundColor: "#f0f8ff",
           borderRadius: 1,
-          border: "1px solid #90caf9",
+          border: "1px solid #f0f8ff",
         }}
       >
         <Typography

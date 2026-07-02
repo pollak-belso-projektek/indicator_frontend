@@ -393,7 +393,7 @@ export default function SzakmaiVizsga() {
                         sx={{
                           fontWeight: "bold",
                           minWidth: 250,
-                          borderRight: "2px solid #ddd",
+                          borderRight: "2px solid #e0e0e0",
                           position: "sticky",
                           left: 0,
                           backgroundColor: "#ffffff",
@@ -410,12 +410,12 @@ export default function SzakmaiVizsga() {
                           colSpan={3}
                           sx={{
                             fontWeight: "bold",
-                            backgroundColor: "#fff2cc",
-                            borderBottom: "1px solid #ddd",
+                            backgroundColor: "#fff3e0",
+                            borderBottom: "1px solid #e0e0e0",
                             borderRight:
                               i === evszamok.length - 1
                                 ? "none"
-                                : "2px solid #ddd",
+                                : "2px solid #e0e0e0",
                           }}
                         >
                           {year}
@@ -429,8 +429,8 @@ export default function SzakmaiVizsga() {
                             align="center"
                             sx={{
                               fontWeight: 600,
-                              backgroundColor: "#fff2cc",
-                              borderBottom: "2px solid #ddd",
+                              backgroundColor: "#fff3e0",
+                              borderBottom: "2px solid #e0e0e0",
                               minWidth: 90,
                             }}
                           >
@@ -440,8 +440,8 @@ export default function SzakmaiVizsga() {
                             align="center"
                             sx={{
                               fontWeight: 600,
-                              backgroundColor: "#fff2cc",
-                              borderBottom: "2px solid #ddd",
+                              backgroundColor: "#fff3e0",
+                              borderBottom: "2px solid #e0e0e0",
                               minWidth: 100,
                             }}
                           >
@@ -451,12 +451,12 @@ export default function SzakmaiVizsga() {
                             align="center"
                             sx={{
                               fontWeight: 600,
-                              backgroundColor: "#fff2cc",
-                              borderBottom: "2px solid #ddd",
+                              backgroundColor: "#fff3e0",
+                              borderBottom: "2px solid #e0e0e0",
                               borderRight:
                                 i === evszamok.length - 1
                                   ? "none"
-                                  : "2px solid #ddd",
+                                  : "2px solid #e0e0e0",
                               minWidth: 110,
                             }}
                           >
@@ -468,14 +468,14 @@ export default function SzakmaiVizsga() {
                   </TableHead>
                   <TableBody>
                     {/* Total Row */}
-                    <TableRow sx={{ backgroundColor: "#fffde7" }}>
+                    <TableRow sx={{ backgroundColor: "#fff3e0" }}>
                       <TableCell
                         sx={{
                           fontWeight: "bold",
-                          borderRight: "2px solid #ddd",
+                          borderRight: "2px solid #e0e0e0",
                           position: "sticky",
                           left: 0,
-                          backgroundColor: "#fffde7",
+                          backgroundColor: "#fff3e0",
                           zIndex: 1,
                         }}
                       >
@@ -508,7 +508,7 @@ export default function SzakmaiVizsga() {
                                 borderRight:
                                   i === evszamok.length - 1
                                     ? "none"
-                                    : "2px solid #ddd",
+                                    : "2px solid #e0e0e0",
                               }}
                             >
                               <Typography
@@ -535,17 +535,17 @@ export default function SzakmaiVizsga() {
                         key={row.key}
                         hover
                         sx={{
-                          backgroundColor: index % 2 === 0 ? "#fff" : "#f9f9f9",
+                          backgroundColor: index % 2 === 0 ? "#fff" : "#f5f5f5",
                         }}
                       >
                         <TableCell
                           sx={{
                             fontWeight: "medium",
-                            borderRight: "2px solid #ddd",
+                            borderRight: "2px solid #e0e0e0",
                             position: "sticky",
                             left: 0,
                             backgroundColor:
-                              index % 2 === 0 ? "#fff" : "#f9f9f9",
+                              index % 2 === 0 ? "#fff" : "#f5f5f5",
                             zIndex: 1,
                           }}
                         >
@@ -598,7 +598,7 @@ export default function SzakmaiVizsga() {
                                   borderRight:
                                     i === evszamok.length - 1
                                       ? "none"
-                                      : "2px solid #ddd",
+                                      : "2px solid #e0e0e0",
                                 }}
                               >
                                 <TextField

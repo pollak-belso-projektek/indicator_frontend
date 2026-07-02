@@ -40,7 +40,7 @@ const InfoIntezmenyiNevelesiMutatok = () => {
         </Typography>
       </Box>
 
-      <Box sx={{ mt: 2, p: 2, backgroundColor: "#fff8f0", borderRadius: 1 }}>
+      <Box sx={{ mt: 2, p: 2, backgroundColor: "#fff3e0", borderRadius: 1 }}>
         <Typography variant="body2">
           <strong>Megjegyzés:</strong> A mutató olyan bontásban számítandó,
           amelynek felhasználása segítséget jelent a pedagógiai munka

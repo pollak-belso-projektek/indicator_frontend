@@ -235,7 +235,7 @@ export default function Hianyzas() {
       textAlign: "right",
       p: 1,
       backgroundColor: isFieldModified(instType, jogv, semester, field)
-        ? "#fef08a"
+        ? "#fff9c4"
         : "inherit",
     },
   });
@@ -408,7 +408,7 @@ export default function Hianyzas() {
 
   const headerSx = {
     fontWeight: "bold",
-    backgroundColor: "#60a5fa",
+    backgroundColor: "#f0f8ff",
     color: "#000",
     textAlign: "center",
     border: "1px solid #000",
@@ -416,7 +416,7 @@ export default function Hianyzas() {
 
   const subHeaderSx = {
     fontWeight: "bold",
-    backgroundColor: "#fcd34d",
+    backgroundColor: "#fff3e0",
     color: "#000",
     textAlign: "center",
     border: "1px solid #000",
@@ -729,7 +729,7 @@ export default function Hianyzas() {
                         ...cellSx,
                         fontWeight: "bold",
                         textAlign: "right",
-                        backgroundColor: "#ffedd5",
+                        backgroundColor: "#fff3e0",
                       }}
                     >
                       Összesen (óra)
@@ -739,7 +739,7 @@ export default function Hianyzas() {
                         ...cellSx,
                         fontWeight: "bold",
                         textAlign: "right",
-                        backgroundColor: "#fed7aa",
+                        backgroundColor: "#fff3e0",
                       }}
                     >
                       {calculateGrandTotal("felev1", "igazolt")}
@@ -749,7 +749,7 @@ export default function Hianyzas() {
                         ...cellSx,
                         fontWeight: "bold",
                         textAlign: "right",
-                        backgroundColor: "#fed7aa",
+                        backgroundColor: "#fff3e0",
                       }}
                     >
                       {calculateGrandTotal("felev1", "igazolatlan")}
@@ -759,7 +759,7 @@ export default function Hianyzas() {
                         ...cellSx,
                         fontWeight: "bold",
                         textAlign: "right",
-                        backgroundColor: "#fed7aa",
+                        backgroundColor: "#fff3e0",
                       }}
                     >
                       {calculateGrandTotal("felev1", "osszes")}
@@ -769,7 +769,7 @@ export default function Hianyzas() {
                         ...cellSx,
                         fontWeight: "bold",
                         textAlign: "right",
-                        backgroundColor: "#fed7aa",
+                        backgroundColor: "#fff3e0",
                       }}
                     >
                       {calculateGrandTotal("felev1", "atlag")}
@@ -779,7 +779,7 @@ export default function Hianyzas() {
                         ...cellSx,
                         fontWeight: "bold",
                         textAlign: "right",
-                        backgroundColor: "#fed7aa",
+                        backgroundColor: "#fff3e0",
                       }}
                     >
                       {calculateGrandTotal("felev2", "igazolt")}
@@ -789,7 +789,7 @@ export default function Hianyzas() {
                         ...cellSx,
                         fontWeight: "bold",
                         textAlign: "right",
-                        backgroundColor: "#fed7aa",
+                        backgroundColor: "#fff3e0",
                       }}
                     >
                       {calculateGrandTotal("felev2", "igazolatlan")}
@@ -799,7 +799,7 @@ export default function Hianyzas() {
                         ...cellSx,
                         fontWeight: "bold",
                         textAlign: "right",
-                        backgroundColor: "#fed7aa",
+                        backgroundColor: "#fff3e0",
                       }}
                     >
                       {calculateGrandTotal("felev2", "osszes")}
@@ -809,7 +809,7 @@ export default function Hianyzas() {
                         ...cellSx,
                         fontWeight: "bold",
                         textAlign: "right",
-                        backgroundColor: "#fed7aa",
+                        backgroundColor: "#fff3e0",
                       }}
                     >
                       {calculateGrandTotal("felev2", "atlag")}

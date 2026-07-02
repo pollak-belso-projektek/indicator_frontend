@@ -162,7 +162,7 @@ export default function TanulmanyiEredmeny() {
       textAlign: "right",
       p: 1,
       backgroundColor: isFieldModified(yearStr, instType, jogv, semester, field)
-        ? "#fef08a"
+        ? "#fff9c4"
         : "inherit",
     },
   });
@@ -340,27 +340,27 @@ export default function TanulmanyiEredmeny() {
   // Style definitions matching Tanuloletszam pattern
   const headerSx = {
     fontWeight: "bold",
-    backgroundColor: "#e1f5fe",
+    backgroundColor: "#f0f8ff",
     color: "#000",
     textAlign: "center",
-    borderBottom: "2px solid #ddd",
-    borderRight: "1px solid #ddd",
+    borderBottom: "2px solid #e0e0e0",
+    borderRight: "1px solid #e0e0e0",
   };
 
   const subHeaderSx = {
     fontWeight: "bold",
-    backgroundColor: "#e1f5fe40",
+    backgroundColor: "#f0f8ff40",
     color: "#000",
     textAlign: "center",
-    borderBottom: "1px solid #ddd",
-    borderRight: "1px solid #ddd",
+    borderBottom: "1px solid #e0e0e0",
+    borderRight: "1px solid #e0e0e0",
     p: 1,
     fontSize: "0.85rem",
   };
 
   const cellSx = {
-    borderBottom: "1px solid #ddd",
-    borderRight: "1px solid #ddd",
+    borderBottom: "1px solid #e0e0e0",
+    borderRight: "1px solid #e0e0e0",
     p: 1,
   };
 
@@ -373,7 +373,7 @@ export default function TanulmanyiEredmeny() {
         key={yearStr}
         component={Paper}
         elevation={0}
-        sx={{ overflowX: "auto", border: "1px solid #ddd", mb: 4 }}
+        sx={{ overflowX: "auto", border: "1px solid #e0e0e0", mb: 4 }}
       >
         <Table size="small" sx={{ minWidth: 800 }}>
           <TableHead>
@@ -438,8 +438,8 @@ export default function TanulmanyiEredmeny() {
                         ...cellSx,
                         fontWeight: "medium",
                         textAlign: "center",
-                        backgroundColor: "#f8f9fa",
-                        borderRight: "2px solid #ddd",
+                        backgroundColor: "#f5f5f5",
+                        borderRight: "2px solid #e0e0e0",
                       }}
                     >
                       {instType}
@@ -592,7 +592,7 @@ export default function TanulmanyiEredmeny() {
                     fontWeight: "bold",
                     textAlign: "right",
                     backgroundColor: "#ffcdd2",
-                    borderRight: "2px solid #ddd",
+                    borderRight: "2px solid #e0e0e0",
                   }}
                 >
                   Összesen (fő)

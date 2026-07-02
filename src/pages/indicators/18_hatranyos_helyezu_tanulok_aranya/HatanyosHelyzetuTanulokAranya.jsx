@@ -753,7 +753,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     color: "#d32f2f",
                                     fontSize: "0.9rem",
                                     py: 2,
-                                    border: "1px solid #ffb3ba",
+                                    border: "1px solid #ffcdd2",
                                     width: "33%",
                                   }}
                                 >
@@ -764,11 +764,11 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                   sx={{
                                     fontWeight: "bold",
                                     textAlign: "center",
-                                    backgroundColor: "#e3f2fd",
+                                    backgroundColor: "#f0f8ff",
                                     color: "#1976d2",
                                     fontSize: "0.9rem",
                                     py: 2,
-                                    border: "1px solid #b3d9ff",
+                                    border: "1px solid #f0f8ff",
                                     width: "33%",
                                   }}
                                 >
@@ -783,7 +783,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     color: "#7b1fa2",
                                     fontSize: "0.9rem",
                                     py: 2,
-                                    border: "1px solid #d1c4e9",
+                                    border: "1px solid #f3e5f5",
                                     width: "33%",
                                   }}
                                 >
@@ -798,7 +798,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     align="center"
                                     sx={{
                                       fontWeight: "bold",
-                                      backgroundColor: "#ffebee",
+                                      backgroundColor: "#ffcdd2",
                                       fontSize: "0.8rem",
                                       py: 1.5,
                                       minWidth: "90px",
@@ -819,7 +819,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                       fontSize: "0.8rem",
                                       py: 1.5,
                                       minWidth: "90px",
-                                      border: "1px solid #e3f2fd",
+                                      border: "1px solid #f0f8ff",
                                     }}
                                   >
                                     {year.replace("/", "/")}
@@ -832,7 +832,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     align="center"
                                     sx={{
                                       fontWeight: "bold",
-                                      backgroundColor: "#fafafa",
+                                      backgroundColor: "#f5f5f5",
                                       fontSize: "0.8rem",
                                       py: 1.5,
                                       minWidth: "90px",
@@ -858,7 +858,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                       sx={{
                                         fontWeight: "bold",
                                         color: "#d32f2f",
-                                        backgroundColor: "#ffebee",
+                                        backgroundColor: "#ffcdd2",
                                         padding: "12px 8px",
                                         borderRadius: "8px",
                                         fontSize: "1rem",
@@ -885,7 +885,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                         padding: "12px 8px",
                                         borderRadius: "8px",
                                         fontSize: "1rem",
-                                        border: "1px solid #e3f2fd",
+                                        border: "1px solid #f0f8ff",
                                       }}
                                     >
                                       {calculatePercentage("daytime", year)}%
@@ -904,7 +904,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                       sx={{
                                         fontWeight: "bold",
                                         color: "#7b1fa2",
-                                        backgroundColor: "#fafafa",
+                                        backgroundColor: "#f5f5f5",
                                         padding: "12px 8px",
                                         borderRadius: "8px",
                                         fontSize: "1rem",
@@ -934,7 +934,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                             fontWeight: "bold",
                             mb: 3,
                             pb: 1,
-                            borderBottom: "2px solid #e3f2fd",
+                            borderBottom: "2px solid #f0f8ff",
                           }}
                         >
                           2. HH tanulók száma
@@ -961,7 +961,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     color: "#d32f2f",
                                     fontSize: "0.9rem",
                                     py: 2,
-                                    border: "1px solid #ffb3ba",
+                                    border: "1px solid #ffcdd2",
                                     width: "33%",
                                   }}
                                 >
@@ -972,11 +972,11 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                   sx={{
                                     fontWeight: "bold",
                                     textAlign: "center",
-                                    backgroundColor: "#e3f2fd",
+                                    backgroundColor: "#f0f8ff",
                                     color: "#1976d2",
                                     fontSize: "0.9rem",
                                     py: 2,
-                                    border: "1px solid #b3d9ff",
+                                    border: "1px solid #f0f8ff",
                                     width: "33%",
                                   }}
                                 >
@@ -991,7 +991,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     color: "#7b1fa2",
                                     fontSize: "0.9rem",
                                     py: 2,
-                                    border: "1px solid #d1c4e9",
+                                    border: "1px solid #f3e5f5",
                                     width: "33%",
                                   }}
                                 >
@@ -1006,7 +1006,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     align="center"
                                     sx={{
                                       fontWeight: "bold",
-                                      backgroundColor: "#ffebee",
+                                      backgroundColor: "#ffcdd2",
                                       fontSize: "0.8rem",
                                       py: 1.5,
                                       minWidth: "90px",
@@ -1027,7 +1027,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                       fontSize: "0.8rem",
                                       py: 1.5,
                                       minWidth: "90px",
-                                      border: "1px solid #e3f2fd",
+                                      border: "1px solid #f0f8ff",
                                     }}
                                   >
                                     {year.replace("/", "/")}
@@ -1040,7 +1040,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     align="center"
                                     sx={{
                                       fontWeight: "bold",
-                                      backgroundColor: "#fafafa",
+                                      backgroundColor: "#f5f5f5",
                                       fontSize: "0.8rem",
                                       py: 1.5,
                                       minWidth: "90px",
@@ -1066,7 +1066,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                       sx={{
                                         fontWeight: "bold",
                                         color: "#d32f2f",
-                                        backgroundColor: "#ffebee",
+                                        backgroundColor: "#ffcdd2",
                                         padding: "12px 8px",
                                         borderRadius: "8px",
                                         fontSize: "1rem",
@@ -1110,10 +1110,10 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                         "& .MuiOutlinedInput-root": {
                                           backgroundColor: "#f0f8ff",
                                           "&:hover": {
-                                            backgroundColor: "#e3f2fd",
+                                            backgroundColor: "#f0f8ff",
                                           },
                                           "&.Mui-focused": {
-                                            backgroundColor: "#e3f2fd",
+                                            backgroundColor: "#f0f8ff",
                                           },
                                         },
                                       }}
@@ -1152,7 +1152,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                       sx={{
                                         width: "100px",
                                         "& .MuiOutlinedInput-root": {
-                                          backgroundColor: "#fafafa",
+                                          backgroundColor: "#f5f5f5",
                                           "&:hover": {
                                             backgroundColor: "#f3e5f5",
                                           },
@@ -1184,7 +1184,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                             fontWeight: "bold",
                             mb: 3,
                             pb: 1,
-                            borderBottom: "2px solid #c8e6c9",
+                            borderBottom: "2px solid #e8f5e8",
                           }}
                         >
                           3. Tanulói összlétszám (Alapadatokból)
@@ -1211,7 +1211,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     color: "#d32f2f",
                                     fontSize: "0.9rem",
                                     py: 2,
-                                    border: "1px solid #ffb3ba",
+                                    border: "1px solid #ffcdd2",
                                   }}
                                 >
                                   Összesen (tanulói + felnőttképzési) (fő)
@@ -1221,11 +1221,11 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                   sx={{
                                     fontWeight: "bold",
                                     textAlign: "center",
-                                    backgroundColor: "#e3f2fd",
+                                    backgroundColor: "#f0f8ff",
                                     color: "#1976d2",
                                     fontSize: "0.9rem",
                                     py: 2,
-                                    border: "1px solid #b3d9ff",
+                                    border: "1px solid #f0f8ff",
                                   }}
                                 >
                                   Tanulói jogviszony (fő)
@@ -1239,7 +1239,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     color: "#7b1fa2",
                                     fontSize: "0.9rem",
                                     py: 2,
-                                    border: "1px solid #d1c4e9",
+                                    border: "1px solid #f3e5f5",
                                   }}
                                 >
                                   Felnőttképzési jogviszony (fő)
@@ -1253,7 +1253,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     align="center"
                                     sx={{
                                       fontWeight: "bold",
-                                      backgroundColor: "#ffebee",
+                                      backgroundColor: "#ffcdd2",
                                       fontSize: "0.8rem",
                                       py: 1.5,
                                       minWidth: "90px",
@@ -1274,7 +1274,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                       fontSize: "0.8rem",
                                       py: 1.5,
                                       minWidth: "90px",
-                                      border: "1px solid #e3f2fd",
+                                      border: "1px solid #f0f8ff",
                                     }}
                                   >
                                     {year.replace("/", "/")}
@@ -1287,7 +1287,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     align="center"
                                     sx={{
                                       fontWeight: "bold",
-                                      backgroundColor: "#fafafa",
+                                      backgroundColor: "#f5f5f5",
                                       fontSize: "0.8rem",
                                       py: 1.5,
                                       minWidth: "90px",
@@ -1313,7 +1313,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                       sx={{
                                         fontWeight: "bold",
                                         color: "#d32f2f",
-                                        backgroundColor: "#ffebee",
+                                        backgroundColor: "#ffcdd2",
                                         padding: "12px 8px",
                                         borderRadius: "8px",
                                         fontSize: "1rem",
@@ -1340,7 +1340,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                         padding: "12px 8px",
                                         borderRadius: "8px",
                                         fontSize: "1rem",
-                                        border: "1px solid #e3f2fd",
+                                        border: "1px solid #f0f8ff",
                                       }}
                                     >
                                       {totalStudents.daytime[year] || 0}
@@ -1359,7 +1359,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                       sx={{
                                         fontWeight: "bold",
                                         color: "#7b1fa2",
-                                        backgroundColor: "#fafafa",
+                                        backgroundColor: "#f5f5f5",
                                         padding: "12px 8px",
                                         borderRadius: "8px",
                                         fontSize: "1rem",
@@ -1384,12 +1384,12 @@ export default function HatanyosHelyzetuTanulokAranya() {
                           variant="h5"
                           gutterBottom
                           sx={{
-                            color: "#6a1b9a",
+                            color: "#7b1fa2",
                             textAlign: "center",
                             fontWeight: "bold",
                             mb: 3,
                             pb: 1,
-                            borderBottom: "2px solid #ce93d8",
+                            borderBottom: "2px solid #f3e5f5",
                           }}
                         >
                           4. HHH tanulók aránya
@@ -1413,10 +1413,10 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     fontWeight: "bold",
                                     textAlign: "center",
                                     backgroundColor: "#f3e5f5",
-                                    color: "#6a1b9a",
+                                    color: "#7b1fa2",
                                     fontSize: "0.9rem",
                                     py: 2,
-                                    border: "1px solid #ce93d8",
+                                    border: "1px solid #f3e5f5",
                                     width: "33%",
                                   }}
                                 >
@@ -1427,11 +1427,11 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                   sx={{
                                     fontWeight: "bold",
                                     textAlign: "center",
-                                    backgroundColor: "#e3f2fd",
+                                    backgroundColor: "#f0f8ff",
                                     color: "#1976d2",
                                     fontSize: "0.9rem",
                                     py: 2,
-                                    border: "1px solid #b3d9ff",
+                                    border: "1px solid #f0f8ff",
                                     width: "33%",
                                   }}
                                 >
@@ -1446,7 +1446,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     color: "#7b1fa2",
                                     fontSize: "0.9rem",
                                     py: 2,
-                                    border: "1px solid #d1c4e9",
+                                    border: "1px solid #f3e5f5",
                                     width: "33%",
                                   }}
                                 >
@@ -1460,11 +1460,11 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     align="center"
                                     sx={{
                                       fontWeight: "bold",
-                                      backgroundColor: "#f8eaff",
+                                      backgroundColor: "#f3e5f5",
                                       fontSize: "0.8rem",
                                       py: 1.5,
                                       minWidth: "90px",
-                                      border: "1px solid #ce93d8",
+                                      border: "1px solid #f3e5f5",
                                     }}
                                   >
                                     {year.replace("/", "/")}
@@ -1480,7 +1480,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                       fontSize: "0.8rem",
                                       py: 1.5,
                                       minWidth: "90px",
-                                      border: "1px solid #e3f2fd",
+                                      border: "1px solid #f0f8ff",
                                     }}
                                   >
                                     {year.replace("/", "/")}
@@ -1492,7 +1492,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     align="center"
                                     sx={{
                                       fontWeight: "bold",
-                                      backgroundColor: "#fafafa",
+                                      backgroundColor: "#f5f5f5",
                                       fontSize: "0.8rem",
                                       py: 1.5,
                                       minWidth: "90px",
@@ -1516,12 +1516,12 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                       variant="body1"
                                       sx={{
                                         fontWeight: "bold",
-                                        color: "#6a1b9a",
-                                        backgroundColor: "#f8eaff",
+                                        color: "#7b1fa2",
+                                        backgroundColor: "#f3e5f5",
                                         padding: "12px 8px",
                                         borderRadius: "8px",
                                         fontSize: "1rem",
-                                        border: "1px solid #ce93d8",
+                                        border: "1px solid #f3e5f5",
                                       }}
                                     >
                                       {getCombinedHhhPercentage(year)}%
@@ -1543,7 +1543,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                         padding: "12px 8px",
                                         borderRadius: "8px",
                                         fontSize: "1rem",
-                                        border: "1px solid #e3f2fd",
+                                        border: "1px solid #f0f8ff",
                                       }}
                                     >
                                       {calculateHhhPercentage("daytime", year)}%
@@ -1561,7 +1561,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                       sx={{
                                         fontWeight: "bold",
                                         color: "#7b1fa2",
-                                        backgroundColor: "#fafafa",
+                                        backgroundColor: "#f5f5f5",
                                         padding: "12px 8px",
                                         borderRadius: "8px",
                                         fontSize: "1rem",
@@ -1586,12 +1586,12 @@ export default function HatanyosHelyzetuTanulokAranya() {
                           variant="h5"
                           gutterBottom
                           sx={{
-                            color: "#6a1b9a",
+                            color: "#7b1fa2",
                             textAlign: "center",
                             fontWeight: "bold",
                             mb: 3,
                             pb: 1,
-                            borderBottom: "2px solid #ce93d8",
+                            borderBottom: "2px solid #f3e5f5",
                           }}
                         >
                           5. HHH tanulók száma
@@ -1615,10 +1615,10 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     fontWeight: "bold",
                                     textAlign: "center",
                                     backgroundColor: "#f3e5f5",
-                                    color: "#6a1b9a",
+                                    color: "#7b1fa2",
                                     fontSize: "0.9rem",
                                     py: 2,
-                                    border: "1px solid #ce93d8",
+                                    border: "1px solid #f3e5f5",
                                     width: "33%",
                                   }}
                                 >
@@ -1629,11 +1629,11 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                   sx={{
                                     fontWeight: "bold",
                                     textAlign: "center",
-                                    backgroundColor: "#e3f2fd",
+                                    backgroundColor: "#f0f8ff",
                                     color: "#1976d2",
                                     fontSize: "0.9rem",
                                     py: 2,
-                                    border: "1px solid #b3d9ff",
+                                    border: "1px solid #f0f8ff",
                                     width: "33%",
                                   }}
                                 >
@@ -1648,7 +1648,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     color: "#7b1fa2",
                                     fontSize: "0.9rem",
                                     py: 2,
-                                    border: "1px solid #d1c4e9",
+                                    border: "1px solid #f3e5f5",
                                     width: "33%",
                                   }}
                                 >
@@ -1662,11 +1662,11 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     align="center"
                                     sx={{
                                       fontWeight: "bold",
-                                      backgroundColor: "#f8eaff",
+                                      backgroundColor: "#f3e5f5",
                                       fontSize: "0.8rem",
                                       py: 1.5,
                                       minWidth: "90px",
-                                      border: "1px solid #ce93d8",
+                                      border: "1px solid #f3e5f5",
                                     }}
                                   >
                                     {year.replace("/", "/")}
@@ -1682,7 +1682,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                       fontSize: "0.8rem",
                                       py: 1.5,
                                       minWidth: "90px",
-                                      border: "1px solid #e3f2fd",
+                                      border: "1px solid #f0f8ff",
                                     }}
                                   >
                                     {year.replace("/", "/")}
@@ -1694,7 +1694,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     align="center"
                                     sx={{
                                       fontWeight: "bold",
-                                      backgroundColor: "#fafafa",
+                                      backgroundColor: "#f5f5f5",
                                       fontSize: "0.8rem",
                                       py: 1.5,
                                       minWidth: "90px",
@@ -1719,12 +1719,12 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                       variant="body1"
                                       sx={{
                                         fontWeight: "bold",
-                                        color: "#6a1b9a",
-                                        backgroundColor: "#f8eaff",
+                                        color: "#7b1fa2",
+                                        backgroundColor: "#f3e5f5",
                                         padding: "12px 8px",
                                         borderRadius: "8px",
                                         fontSize: "1rem",
-                                        border: "1px solid #ce93d8",
+                                        border: "1px solid #f3e5f5",
                                       }}
                                     >
                                       {getCombinedHhhStudents(year)}
@@ -1764,10 +1764,10 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                         "& .MuiOutlinedInput-root": {
                                           backgroundColor: "#f0f8ff",
                                           "&:hover": {
-                                            backgroundColor: "#e3f2fd",
+                                            backgroundColor: "#f0f8ff",
                                           },
                                           "&.Mui-focused": {
-                                            backgroundColor: "#e3f2fd",
+                                            backgroundColor: "#f0f8ff",
                                           },
                                         },
                                       }}
@@ -1806,7 +1806,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                       sx={{
                                         width: "100px",
                                         "& .MuiOutlinedInput-root": {
-                                          backgroundColor: "#fafafa",
+                                          backgroundColor: "#f5f5f5",
                                           "&:hover": {
                                             backgroundColor: "#f3e5f5",
                                           },
@@ -1850,7 +1850,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                 sx={{
                                   textAlign: "center",
                                   p: 2,
-                                  bgcolor: "#ffebee",
+                                  bgcolor: "#ffcdd2",
                                 }}
                               >
                                 <Typography
@@ -1872,7 +1872,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                 sx={{
                                   textAlign: "center",
                                   p: 2,
-                                  bgcolor: "#e3f2fd",
+                                  bgcolor: "#f0f8ff",
                                 }}
                               >
                                 <Typography
@@ -1947,12 +1947,12 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                   }}
                                 >
                                   <TrendingUpIcon
-                                    sx={{ color: "#f57c00", mr: 1 }}
+                                    sx={{ color: "#ffb74d", mr: 1 }}
                                   />
                                   <Typography
                                     variant="h6"
                                     sx={{
-                                      color: "#f57c00",
+                                      color: "#ffb74d",
                                       fontWeight: "bold",
                                     }}
                                   >
@@ -1964,7 +1964,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     <Typography
                                       variant="h4"
                                       sx={{
-                                        color: "#f57c00",
+                                        color: "#ffb74d",
                                         fontWeight: "bold",
                                         mb: 1,
                                       }}
@@ -2000,7 +2000,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                 >
                                   <TrendingUpIcon
                                     sx={{
-                                      color: "#388e3c",
+                                      color: "#2e7d32",
                                       mr: 1,
                                       transform: "rotate(180deg)",
                                     }}
@@ -2008,7 +2008,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                   <Typography
                                     variant="h6"
                                     sx={{
-                                      color: "#388e3c",
+                                      color: "#2e7d32",
                                       fontWeight: "bold",
                                     }}
                                   >
@@ -2021,7 +2021,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     <Typography
                                       variant="h4"
                                       sx={{
-                                        color: "#388e3c",
+                                        color: "#2e7d32",
                                         fontWeight: "bold",
                                         mb: 1,
                                       }}
@@ -2115,9 +2115,9 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                         key={yearData.year}
                                         sx={{
                                           "&:nth-of-type(odd)": {
-                                            bgcolor: "#fafafa",
+                                            bgcolor: "#f5f5f5",
                                           },
-                                          "&:hover": { bgcolor: "#f0f0f0" },
+                                          "&:hover": { bgcolor: "#f5f5f5" },
                                         }}
                                       >
                                         <TableCell sx={{ fontWeight: "bold" }}>
@@ -2128,7 +2128,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                             label={`${yearData.combined}%`}
                                             size="small"
                                             sx={{
-                                              bgcolor: "#ffebee",
+                                              bgcolor: "#ffcdd2",
                                               color: "#d32f2f",
                                               fontWeight: "bold",
                                             }}
@@ -2139,7 +2139,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                             label={`${yearData.daytime}%`}
                                             size="small"
                                             sx={{
-                                              bgcolor: "#e3f2fd",
+                                              bgcolor: "#f0f8ff",
                                               color: "#1976d2",
                                               fontWeight: "bold",
                                             }}

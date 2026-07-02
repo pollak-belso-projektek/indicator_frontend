@@ -1374,7 +1374,7 @@ export default function SzakképzésiMunkaszerződésArány() {
                           sx={{
                             fontWeight: "bold",
                             minWidth: 100,
-                            backgroundColor: "#e8f4fd",
+                            backgroundColor: "#f0f8ff",
                           }}
                         >
                           {year}
@@ -1429,7 +1429,7 @@ export default function SzakképzésiMunkaszerződésArány() {
                           const isSpecialization =
                             itemObj.type === "specialization";
 
-                          let backgroundColor = "#f9f9f9";
+                          let backgroundColor = "#f5f5f5";
                           let fontWeight = "normal";
                           let fontSize = "0.8rem";
                           let paddingLeft = "8px";
@@ -1636,14 +1636,14 @@ export default function SzakképzésiMunkaszerződésArány() {
                   "percentage",
                   "szakképzési munkaszerződéssel rendelkezők aránya (%) - AUTOMATIKUSAN SZÁMÍTOTT",
                   "%",
-                  "#ffebee",
+                  "#ffcdd2",
                 )}
                 {/* Contract Students Count Table */}
                 {renderTableSection(
                   "contract_students",
                   "szakképzési munkaszerződéssel rendelkező tanulók száma (tanulói jogviszony) (fő) - SZERKESZTHETŐ",
                   "fő",
-                  "#e3f2fd",
+                  "#f0f8ff",
                 )}
                 {/* Total Students Table */}
                 {renderTableSection(

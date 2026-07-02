@@ -211,7 +211,7 @@ export default function EgyOktatoraJutoOsszDiak() {
 
   const headerSx = {
     fontWeight: "bold",
-    backgroundColor: "#60a5fa",
+    backgroundColor: "#f0f8ff",
     color: "#000",
     textAlign: "center",
     border: "1px solid #000",
@@ -219,7 +219,7 @@ export default function EgyOktatoraJutoOsszDiak() {
 
   const subHeaderSx = {
     fontWeight: "bold",
-    backgroundColor: "#fcd34d",
+    backgroundColor: "#fff3e0",
     color: "#000",
     textAlign: "center",
     border: "1px solid #000",
@@ -320,7 +320,7 @@ export default function EgyOktatoraJutoOsszDiak() {
                   sx={{
                     ...cellSx,
                     fontWeight: "bold",
-                    backgroundColor: "#e0f2fe",
+                    backgroundColor: "#f0f8ff",
                   }}
                 >
                   Tanulói létszám összesen (Tanügyi adatokból)
@@ -329,7 +329,7 @@ export default function EgyOktatoraJutoOsszDiak() {
                   sx={{
                     ...cellSx,
                     textAlign: "right",
-                    backgroundColor: "#f0f9ff",
+                    backgroundColor: "#f0f8ff",
                   }}
                 >
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -344,7 +344,7 @@ export default function EgyOktatoraJutoOsszDiak() {
                   sx={{
                     ...cellSx,
                     fontWeight: "bold",
-                    backgroundColor: "#e0f2fe",
+                    backgroundColor: "#f0f8ff",
                   }}
                 >
                   Oktatói létszám összesen (Alkalmazott adatokból)
@@ -353,7 +353,7 @@ export default function EgyOktatoraJutoOsszDiak() {
                   sx={{
                     ...cellSx,
                     textAlign: "right",
-                    backgroundColor: "#f0f9ff",
+                    backgroundColor: "#f0f8ff",
                   }}
                 >
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -368,7 +368,7 @@ export default function EgyOktatoraJutoOsszDiak() {
                   sx={{
                     ...cellSx,
                     fontWeight: "bold",
-                    backgroundColor: "#dcfce7",
+                    backgroundColor: "#e8f5e8",
                   }}
                 >
                   Egy oktatóra jutó össz diák (számított)
@@ -377,12 +377,12 @@ export default function EgyOktatoraJutoOsszDiak() {
                   sx={{
                     ...cellSx,
                     textAlign: "right",
-                    backgroundColor: "#f0fdf4",
+                    backgroundColor: "#e8f5e8",
                   }}
                 >
                   <Typography
                     variant="body2"
-                    sx={{ fontWeight: 700, color: "#16a34a" }}
+                    sx={{ fontWeight: 700, color: "#2e7d32" }}
                   >
                     {calculatedRatio}
                   </Typography>
@@ -395,7 +395,7 @@ export default function EgyOktatoraJutoOsszDiak() {
                   sx={{
                     ...cellSx,
                     fontWeight: "bold",
-                    backgroundColor: "#fef9c3",
+                    backgroundColor: "#fff3e0",
                   }}
                 >
                   Egy oktatóra jutó össz diák (mentett érték)
@@ -413,7 +413,7 @@ export default function EgyOktatoraJutoOsszDiak() {
                         textAlign: "right",
                         p: 1,
                         backgroundColor: isFieldModified()
-                          ? "#fef08a"
+                          ? "#fff9c4"
                           : "inherit",
                       },
                     }}

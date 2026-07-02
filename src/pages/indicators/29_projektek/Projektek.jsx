@@ -334,8 +334,8 @@ export default function Projektek() {
 
   const tableHeaderSx = {
     fontWeight: "bold",
-    backgroundColor: "#e1f5fe",
-    borderBottom: "2px solid #ccc",
+    backgroundColor: "#f0f8ff",
+    borderBottom: "2px solid #e0e0e0",
   };
 
   return (
@@ -414,7 +414,7 @@ export default function Projektek() {
         >
           <Table
             size="small"
-            sx={{ minWidth: 1000, border: "2px solid #ccc" }}
+            sx={{ minWidth: 1000, border: "2px solid #e0e0e0" }}
             className="MuiTable-root"
           >
             {schoolYears.map((year) => {
@@ -428,8 +428,8 @@ export default function Projektek() {
                         align="center"
                         sx={{
                           fontWeight: "bold",
-                          backgroundColor: "#fff2cc",
-                          borderBottom: "2px solid #ccc",
+                          backgroundColor: "#fff3e0",
+                          borderBottom: "2px solid #e0e0e0",
                           fontSize: "1.1rem",
                           py: 1,
                         }}
@@ -485,13 +485,13 @@ export default function Projektek() {
                         <TableRow key={row.id || index} hover>
                           <TableCell
                             sx={{
-                              borderBottom: "1px solid #eee",
-                              backgroundColor: "#f9f9f9",
+                              borderBottom: "1px solid #f5f5f5",
+                              backgroundColor: "#f5f5f5",
                             }}
                           >
                             {row.agazat_szakma}
                           </TableCell>
-                          <TableCell sx={{ borderBottom: "1px solid #eee" }}>
+                          <TableCell sx={{ borderBottom: "1px solid #f5f5f5" }}>
                             <TextField
                               fullWidth
                               size="small"
@@ -519,7 +519,7 @@ export default function Projektek() {
                               }}
                             />
                           </TableCell>
-                          <TableCell sx={{ borderBottom: "1px solid #eee" }}>
+                          <TableCell sx={{ borderBottom: "1px solid #f5f5f5" }}>
                             <TextField
                               fullWidth
                               size="small"
@@ -548,7 +548,7 @@ export default function Projektek() {
                               }}
                             />
                           </TableCell>
-                          <TableCell sx={{ borderBottom: "1px solid #eee" }}>
+                          <TableCell sx={{ borderBottom: "1px solid #f5f5f5" }}>
                             <TextField
                               fullWidth
                               size="small"
@@ -576,7 +576,7 @@ export default function Projektek() {
                               }}
                             />
                           </TableCell>
-                          <TableCell sx={{ borderBottom: "1px solid #eee" }}>
+                          <TableCell sx={{ borderBottom: "1px solid #f5f5f5" }}>
                             <TextField
                               fullWidth
                               size="small"
@@ -607,7 +607,7 @@ export default function Projektek() {
                           </TableCell>
                           <TableCell
                             align="center"
-                            sx={{ borderBottom: "1px solid #eee" }}
+                            sx={{ borderBottom: "1px solid #f5f5f5" }}
                           >
                             <IconButton
                               size="small"
@@ -628,7 +628,7 @@ export default function Projektek() {
                         sx={{
                           fontWeight: "bold",
                           textAlign: "right",
-                          borderBottom: "2px solid #ccc",
+                          borderBottom: "2px solid #e0e0e0",
                         }}
                       >
                         Projektekben eltöltött órák száma összesen
@@ -636,14 +636,14 @@ export default function Projektek() {
                       <TableCell
                         sx={{
                           fontWeight: "bold",
-                          borderBottom: "2px solid #ccc",
+                          borderBottom: "2px solid #e0e0e0",
                           fontSize: "1.1rem",
                         }}
                       >
                         {calculateTotal(year)}
                       </TableCell>
                       <TableCell
-                        sx={{ borderBottom: "2px solid #ccc" }}
+                        sx={{ borderBottom: "2px solid #e0e0e0" }}
                       ></TableCell>
                     </TableRow>
                   </TableBody>

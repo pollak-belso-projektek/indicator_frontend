@@ -301,24 +301,24 @@ export default function NyelvvizsgakSzama() {
   // Styling matching indicator 29 (Projektek)
   const tableHeaderSx = {
     fontWeight: "bold",
-    backgroundColor: "#e1f5fe",
-    borderBottom: "2px solid #ccc",
-    borderRight: "1px solid #ccc",
+    backgroundColor: "#f0f8ff",
+    borderBottom: "2px solid #e0e0e0",
+    borderRight: "1px solid #e0e0e0",
     textAlign: "center",
   };
 
   const yearHeaderSx = {
     fontWeight: "bold",
-    backgroundColor: "#fff2cc",
-    borderBottom: "2px solid #ccc",
+    backgroundColor: "#fff3e0",
+    borderBottom: "2px solid #e0e0e0",
     textAlign: "center",
     fontSize: "1.1rem",
     py: 1,
   };
 
   const cellSx = {
-    borderBottom: "1px solid #eee",
-    borderRight: "1px solid #eee",
+    borderBottom: "1px solid #f5f5f5",
+    borderRight: "1px solid #f5f5f5",
     p: 0.5,
   };
 
@@ -399,7 +399,7 @@ export default function NyelvvizsgakSzama() {
             >
               <Table
                 size="small"
-                sx={{ minWidth: 1000, border: "2px solid #ccc" }}
+                sx={{ minWidth: 1000, border: "2px solid #e0e0e0" }}
               >
                 <TableHead>
                   {/* Row 1: Year spanning all data columns */}
@@ -467,7 +467,7 @@ export default function NyelvvizsgakSzama() {
                       rowSpan={2}
                       sx={{
                         ...tableHeaderSx,
-                        backgroundColor: "#c8e6c9",
+                        backgroundColor: "#e8f5e8",
                         minWidth: 100,
                       }}
                     >
@@ -507,7 +507,7 @@ export default function NyelvvizsgakSzama() {
                         sx={{
                           ...cellSx,
                           fontWeight: 500,
-                          backgroundColor: "#f9f9f9",
+                          backgroundColor: "#f5f5f5",
                           textAlign: "center",
                         }}
                       >
@@ -661,7 +661,7 @@ export default function NyelvvizsgakSzama() {
                           ...cellSx,
                           textAlign: "center",
                           fontWeight: "bold",
-                          backgroundColor: "#e8f5e9",
+                          backgroundColor: "#e8f5e8",
                         }}
                       >
                         {calculateRowTotal(cls, year)}
@@ -676,7 +676,7 @@ export default function NyelvvizsgakSzama() {
                       sx={{
                         fontWeight: "bold",
                         textAlign: "center",
-                        borderBottom: "2px solid #ccc",
+                        borderBottom: "2px solid #e0e0e0",
                       }}
                     >
                       Iskolában nyelvvizsgával rendelkezők összesen
@@ -685,7 +685,7 @@ export default function NyelvvizsgakSzama() {
                       sx={{
                         fontWeight: "bold",
                         textAlign: "center",
-                        borderBottom: "2px solid #ccc",
+                        borderBottom: "2px solid #e0e0e0",
                         fontSize: "1.1rem",
                       }}
                     >
