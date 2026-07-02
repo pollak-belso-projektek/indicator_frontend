@@ -700,7 +700,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
   // Find which category contains the current active page and expand it
   useEffect(() => {
-    const currentPath = location.pathname;
+    const currentPath = decodeURIComponent(location.pathname);
     let activeCategoryKey = null;
 
     // Check if current path is in fixed items
@@ -736,12 +736,12 @@ const SidebarContent = ({ onClose, ...rest }) => {
   const isCategoryActive = (categoryKey) => {
     const category = NavigationCategories[categoryKey];
     if (!category) return false;
-    return category.items.some((item) => item.link === location.pathname);
+    return category.items.some((item) => item.link === decodeURIComponent(location.pathname));
   };
 
   // Helper function to check if fixed general category is active
   const isFixedGeneralActive = () => {
-    return fixedItems.some((item) => item.link === location.pathname);
+    return fixedItems.some((item) => item.link === decodeURIComponent(location.pathname));
   };
 
   const scrollableItems = useMemo(() => {
@@ -1087,7 +1087,7 @@ const NavItem = ({ icon, children, onClick, ...rest }) => {
   const location = useLocation();
   const { to, link, ...otherProps } = rest;
   const targetLink = to || link;
-  const isActive = targetLink && location.pathname === targetLink;
+  const isActive = targetLink && decodeURIComponent(location.pathname) === targetLink;
 
   const handleClick = (e) => {
     if (onClick) onClick(e);
