@@ -703,9 +703,8 @@ export default function Kompetencia() {
         alapadatokId={selectedSchool?.id}
         tableName="kompetencia"
         onRollbackSuccess={() => {
-          setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
-          setSnackbarSeverity("success");
-          setSnackbarOpen(true);
+          setSaveSuccess(true);
+          setTimeout(() => setSaveSuccess(false), 3000);
         }}
       />
     </PageWrapper>
