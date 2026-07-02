@@ -495,15 +495,12 @@ export default function SzakmaiEredmenyek() {
   }, [schoolYears, tanuloLetszamData]);
 
   // Show loading state
-  if (isLoading) {
-    return <PageLoadingOverlay isLoading={true} />;
-  }
-
   return (
     <PageWrapper
       titleContent={<TitleSzakmaiEredmenyek />}
       infoContent={<InfoSzakmaiEredmenyek />}
     >
+      <PageLoadingOverlay isLoading={isLoading || isFetching} />
       <Box>
         <LockStatusIndicator tableName="versenyek" />
 

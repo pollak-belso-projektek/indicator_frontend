@@ -48,6 +48,8 @@ import TitleIntézményiElismeresek from "./title_intezmenyi_elismeresek";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 // Fix munkavállalói kategóriák (a képernyőkép alapján)
@@ -95,6 +97,7 @@ export default function IntézményiElismeresek() {
     data: intezményiRawData = EMPTY_ARRAY,
     isLoading: intezményiLoading,
     isFetching: intezményiFetching,
+    refetch: refetchIntézményiElismeresek,
   } = useGetIntézményiElismeresekBySchoolQuery(selectedSchool?.id, {
     skip: !selectedSchool?.id,
   });
@@ -102,6 +105,8 @@ export default function IntézményiElismeresek() {
   const {
     data: munkavallalokRawData = EMPTY_ARRAY,
     isLoading: munkavallalokLoading,
+    isFetching: munkavallalokFetching,
+    refetch: refetchMunkavallalokElismeresek,
   } = useGetMunkavallalokElismeresekBySchoolQuery(selectedSchool?.id, {
     skip: !selectedSchool?.id,
   });
@@ -122,6 +127,9 @@ export default function IntézményiElismeresek() {
   // Díj hozzáadás dialog
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [newDijNeve, setNewDijNeve] = useState("");
+
+  const [historyIntezmenyiOpen, setHistoryIntezmenyiOpen] = useState(false);
+  const [historyMunkavallalokOpen, setHistoryMunkavallalokOpen] = useState(false);
 
   useEffect(() => {
     if (!intezményiFetching && intezményiRawData) {
@@ -442,15 +450,14 @@ export default function IntézményiElismeresek() {
     });
   }, [munkavallalokData, schoolYears]);
 
-  if (intezményiLoading || munkavallalokLoading) {
-    return <PageLoadingOverlay isLoading={true} />;
-  }
+  const _shouldShowOverlay = intezményiLoading || munkavallalokLoading || intezményiFetching || munkavallalokFetching;
 
   return (
     <PageWrapper
       titleContent={<TitleIntézményiElismeresek />}
       infoContent={<InfoIntézményiElismeresek />}
     >
+      <PageLoadingOverlay isLoading={_shouldShowOverlay} />
       <Box>
         <LockStatusIndicator tableName="intezmenyi_nevelesi_mutatok" />
 
@@ -503,12 +510,12 @@ export default function IntézményiElismeresek() {
                   </Button>
                   <Button
                     variant="outlined"
-                    startIcon={<RefreshIcon />}
-                    onClick={handleIntezményiReset}
-                    disabled={!intezményiModified}
+                    startIcon={<HistoryIcon />}
+                    onClick={() => setHistoryIntezmenyiOpen(true)}
+                    disabled={!selectedSchool}
                     size="small"
                   >
-                    Visszaállítás
+                    Előzmények
                   </Button>
                 </LockedTableWrapper>
                 <ExportToExcel
@@ -646,7 +653,7 @@ export default function IntézményiElismeresek() {
                               fullWidth
                               inputProps={{ style: { fontSize: "0.875rem" } }}
                               disabled={!selectedSchool}
-                             placeholder="0"/>
+                              placeholder="0" />
                           </TableCell>
                           <TableCell
                             align="center"
@@ -686,7 +693,7 @@ export default function IntézményiElismeresek() {
                                   }}
                                   sx={{ width: 70 }}
                                   disabled={!selectedSchool}
-                                 placeholder="0"/>
+                                  placeholder="0" />
                               </TableCell>
                             );
                           })}
@@ -747,12 +754,12 @@ export default function IntézményiElismeresek() {
                   </Button>
                   <Button
                     variant="outlined"
-                    startIcon={<RefreshIcon />}
-                    onClick={handleMunkavallalokReset}
-                    disabled={!munkavallalokModified}
+                    startIcon={<HistoryIcon />}
+                    onClick={() => setHistoryMunkavallalokOpen(true)}
+                    disabled={!selectedSchool}
                     size="small"
                   >
-                    Visszaállítás
+                    Előzmények
                   </Button>
                 </LockedTableWrapper>
                 <ExportToExcel
@@ -936,8 +943,7 @@ export default function IntézményiElismeresek() {
               fullWidth
               required
               autoFocus
-              placeholder="pl. Szakképzési Kiválóság Díja"
-             placeholder="0"/>
+              placeholder="pl. Szakképzési Kiválóság Díja" />
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -974,6 +980,28 @@ export default function IntézményiElismeresek() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <HistoryDialog
+        open={historyIntezmenyiOpen}
+        onClose={() => setHistoryIntezmenyiOpen(false)}
+        alapadatokId={selectedSchool?.id}
+        tableName="intezmenyi_elismeresek"
+        onRollbackSuccess={() => {
+          showSnackbar("Sikeres visszaállítás az előzményekből!");
+          refetchIntézményiElismeresek();
+        }}
+      />
+
+      <HistoryDialog
+        open={historyMunkavallalokOpen}
+        onClose={() => setHistoryMunkavallalokOpen(false)}
+        alapadatokId={selectedSchool?.id}
+        tableName="munkavallalok_elismeresek"
+        onRollbackSuccess={() => {
+          showSnackbar("Sikeres visszaállítás az előzményekből!");
+          refetchMunkavallalokElismeresek();
+        }}
+      />
     </PageWrapper>
   );
 }
