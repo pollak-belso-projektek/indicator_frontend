@@ -529,7 +529,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                                         align="center"
                                         sx={{
                                           fontWeight: "bold",
-                                          backgroundColor: "#fff3cd",
+                                          backgroundColor: "#fff3e0",
                                         }}
                                       >
                                         SNI tanulók száma (fő)
@@ -538,7 +538,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                                         align="center"
                                         sx={{
                                           fontWeight: "bold",
-                                          backgroundColor: "#d4edda",
+                                          backgroundColor: "#e8f5e8",
                                         }}
                                       >
                                         Összes tanuló (fő)
@@ -547,7 +547,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                                         align="center"
                                         sx={{
                                           fontWeight: "bold",
-                                          backgroundColor: "#cce5ff",
+                                          backgroundColor: "#f0f8ff",
                                         }}
                                       >
                                         SNI arány (%)
@@ -566,7 +566,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                                           <TableCell
                                             align="center"
                                             sx={{
-                                              backgroundColor: "#fff3cd40",
+                                              backgroundColor: "#fff3e040",
                                             }}
                                           >
                                             <TextField
@@ -592,7 +592,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                                           <TableCell
                                             align="center"
                                             sx={{
-                                              backgroundColor: "#d4edda40",
+                                              backgroundColor: "#e8f5e840",
                                             }}
                                           >
                                             <TextField
@@ -617,7 +617,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                                           <TableCell
                                             align="center"
                                             sx={{
-                                              backgroundColor: "#cce5ff40",
+                                              backgroundColor: "#f0f8ff40",
                                               fontWeight: "bold",
                                               color: "primary.main",
                                             }}
@@ -712,7 +712,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                   </Box>
                 )}
 
-                <Card sx={{ mt: 2, backgroundColor: "#f8f9fa" }}>
+                <Card sx={{ mt: 2, backgroundColor: "#f5f5f5" }}>
                   <CardContent>
                     <Typography variant="h6" component="h3" gutterBottom>
                       SNI tanulók kategóriái és jellemzői
@@ -890,7 +890,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                           sx={{
                             mt: 2,
                             p: 2,
-                            backgroundColor: "#cce5ff",
+                            backgroundColor: "#f0f8ff",
                             borderRadius: 1,
                           }}
                         >

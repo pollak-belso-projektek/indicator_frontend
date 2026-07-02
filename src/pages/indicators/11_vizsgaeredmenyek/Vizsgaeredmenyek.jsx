@@ -124,37 +124,37 @@ export default function Vizsgaeredmenyek() {
         category: "agazati_alapvizsga_eredmeny",
         title: "ágazati alapvizsga",
         subjects: szakiranySubjects,
-        color: "#fff2e8",
+        color: "#fff3e0",
       },
       {
         category: "magyar_nyelv_eretsegi_eredmeny",
         title: "magyar nyelv és irodalom érettségi vizsgaeredmény",
         subjects: szakiranySubjects,
-        color: "#e8f2ff",
+        color: "#f0f8ff",
       },
       {
         category: "matematika_eretsegi_eredmeny",
         title: "matematika érettségi vizsgaeredmény",
         subjects: szakiranySubjects,
-        color: "#fff8e8",
+        color: "#fff3e0",
       },
       {
         category: "tortenelem_eretsegi_eredmeny",
         title: "történelem érettségi vizsgaeredmény",
         subjects: szakiranySubjects,
-        color: "#f8e8ff",
+        color: "#f3e5f5",
       },
       {
         category: "angol_nyelv_eretsegi_eredmeny",
         title: "angol nyelv érettségi vizsgaeredmény",
         subjects: szakiranySubjects,
-        color: "#e8fff8",
+        color: "#e8f5e8",
       },
       {
         category: "agazati_szakmai_eretsegi_eredmeny",
         title: "ágazati szakmai érettségi vizsgaeredmény",
         subjects: szakiranySubjects,
-        color: "#ffe8f8",
+        color: "#f3e5f5",
       },
     ];
   }, [schoolsData, selectedSchool]);
@@ -523,7 +523,7 @@ export default function Vizsgaeredmenyek() {
                         fontWeight: "bold",
                         minWidth: 250,
                         maxWidth: 350,
-                        borderRight: "2px solid #ddd",
+                        borderRight: "2px solid #e0e0e0",
                         position: "sticky",
                         left: 0,
                         backgroundColor: "#ffffff",
@@ -538,7 +538,7 @@ export default function Vizsgaeredmenyek() {
                       sx={{
                         fontWeight: "bold",
                         backgroundColor: "#ffcdd2",
-                        borderBottom: "2px solid #ddd",
+                        borderBottom: "2px solid #e0e0e0",
                       }}
                     >
                       Vizsgaeredmények (átlag)
@@ -571,8 +571,8 @@ export default function Vizsgaeredmenyek() {
                           sx={{
                             fontWeight: "bold",
                             backgroundColor: categoryData.color,
-                            borderBottom: "2px solid #ddd",
-                            borderRight: "2px solid #ddd",
+                            borderBottom: "2px solid #e0e0e0",
+                            borderRight: "2px solid #e0e0e0",
                             position: "sticky",
                             left: 0,
                             zIndex: 2,
@@ -587,7 +587,7 @@ export default function Vizsgaeredmenyek() {
                             key={year}
                             sx={{
                               backgroundColor: categoryData.color,
-                              borderBottom: "2px solid #ddd",
+                              borderBottom: "2px solid #e0e0e0",
                             }}
                           />
                         ))}
@@ -602,7 +602,7 @@ export default function Vizsgaeredmenyek() {
                             sx={{
                               fontWeight: "normal",
                               pl: 4,
-                              borderRight: "1px solid #ddd",
+                              borderRight: "1px solid #e0e0e0",
                               position: "sticky",
                               left: 0,
                               backgroundColor: "#ffffff",
@@ -624,11 +624,11 @@ export default function Vizsgaeredmenyek() {
                                 key={`${subject.key}-${yearStr}`}
                                 align="center"
                                 sx={{
-                                  backgroundColor: "#e8f5e920",
+                                  backgroundColor: "#e8f5e820",
                                   borderRight:
                                     yearIdx === schoolYears.length - 1
-                                      ? "2px solid #ddd"
-                                      : "1px solid #ddd",
+                                      ? "2px solid #e0e0e0"
+                                      : "1px solid #e0e0e0",
                                   p: 0.5,
                                 }}
                               >

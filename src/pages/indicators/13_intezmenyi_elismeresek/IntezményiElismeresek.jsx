@@ -536,7 +536,7 @@ export default function IntézményiElismeresek() {
             >
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: "#e8f5e9" }}>
+                  <TableRow sx={{ backgroundColor: "#e8f5e8" }}>
                     <TableCell sx={{ fontWeight: "bold", minWidth: 200 }}>
                       Témakörök
                     </TableCell>
@@ -544,7 +544,7 @@ export default function IntézményiElismeresek() {
                       sx={{
                         fontWeight: "bold",
                         minWidth: 120,
-                        backgroundColor: "#e3f2fd",
+                        backgroundColor: "#f0f8ff",
                         textAlign: "center",
                       }}
                     >
@@ -557,7 +557,7 @@ export default function IntézményiElismeresek() {
                         sx={{
                           fontWeight: "bold",
                           minWidth: 100,
-                          backgroundColor: "#e8f4fd",
+                          backgroundColor: "#f0f8ff",
                         }}
                       >
                         {year}
@@ -576,13 +576,13 @@ export default function IntézményiElismeresek() {
                 </TableHead>
                 <TableBody>
                   {/* Összesítő sor (csak olvasható, automatikusan számolt) */}
-                  <TableRow sx={{ backgroundColor: "#fffde7" }}>
-                    <TableCell sx={{ fontWeight: "bold", color: "#e65100" }}>
+                  <TableRow sx={{ backgroundColor: "#fff3e0" }}>
+                    <TableCell sx={{ fontWeight: "bold", color: "#d32f2f" }}>
                       Intézmény által elnyert díjak, elismerések – összesen
                     </TableCell>
                     <TableCell
                       align="center"
-                      sx={{ backgroundColor: "#e3f2fd" }}
+                      sx={{ backgroundColor: "#f0f8ff" }}
                     >
                       <Chip
                         label="Összesen"
@@ -628,7 +628,7 @@ export default function IntézményiElismeresek() {
                           key={group.groupId}
                           sx={{
                             backgroundColor:
-                              idx % 2 === 0 ? "#fafafa" : "white",
+                              idx % 2 === 0 ? "#f5f5f5" : "white",
                             "&:hover": { backgroundColor: "#f5f5f5" },
                           }}
                         >
@@ -650,7 +650,7 @@ export default function IntézményiElismeresek() {
                           </TableCell>
                           <TableCell
                             align="center"
-                            sx={{ backgroundColor: "#e3f2fd" }}
+                            sx={{ backgroundColor: "#f0f8ff" }}
                           >
                             <Chip
                               label="Darab"
@@ -790,7 +790,7 @@ export default function IntézményiElismeresek() {
             >
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: "#fff8e8" }}>
+                  <TableRow sx={{ backgroundColor: "#fff3e0" }}>
                     <TableCell sx={{ fontWeight: "bold", minWidth: 260 }}>
                       Elismerés típusa
                     </TableCell>
@@ -799,7 +799,7 @@ export default function IntézményiElismeresek() {
                       sx={{
                         fontWeight: "bold",
                         minWidth: 100,
-                        backgroundColor: "#e3f2fd",
+                        backgroundColor: "#f0f8ff",
                       }}
                     >
                       Információk
@@ -811,7 +811,7 @@ export default function IntézményiElismeresek() {
                         sx={{
                           fontWeight: "bold",
                           minWidth: 110,
-                          backgroundColor: "#e8f4fd",
+                          backgroundColor: "#f0f8ff",
                         }}
                       >
                         {year}
@@ -821,13 +821,13 @@ export default function IntézményiElismeresek() {
                 </TableHead>
                 <TableBody>
                   {/* Összesítő sor a munkavállalóknál is */}
-                  <TableRow sx={{ backgroundColor: "#fffde7" }}>
-                    <TableCell sx={{ fontWeight: "bold", color: "#e65100" }}>
+                  <TableRow sx={{ backgroundColor: "#fff3e0" }}>
+                    <TableCell sx={{ fontWeight: "bold", color: "#d32f2f" }}>
                       Munkavállalók által elnyert díjak, elismerések – összesen
                     </TableCell>
                     <TableCell
                       align="center"
-                      sx={{ backgroundColor: "#e3f2fd" }}
+                      sx={{ backgroundColor: "#f0f8ff" }}
                     >
                       <Chip
                         label="Összesen"
@@ -860,14 +860,14 @@ export default function IntézményiElismeresek() {
                     <TableRow
                       key={kat.key}
                       sx={{
-                        backgroundColor: idx % 2 === 0 ? "#fafafa" : "white",
+                        backgroundColor: idx % 2 === 0 ? "#f5f5f5" : "white",
                         "&:hover": { backgroundColor: "#f5f5f5" },
                       }}
                     >
                       <TableCell sx={{ pl: 3 }}>{kat.label}</TableCell>
                       <TableCell
                         align="center"
-                        sx={{ backgroundColor: "#e3f2fd" }}
+                        sx={{ backgroundColor: "#f0f8ff" }}
                       >
                         <Chip
                           label="Darab"

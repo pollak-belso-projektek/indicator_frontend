@@ -49,7 +49,7 @@ const categoryTypes = [
     dbKey: "szulok_elegedettsege",
     label: "Szülők",
     description: "Szülői elégedettség az intézmény működésével",
-    color: "#e3f2fd",
+    color: "#f0f8ff",
   },
   {
     key: "oktato",
@@ -63,7 +63,7 @@ const categoryTypes = [
     dbKey: "tanulok_elegedettsege",
     label: "Tanulók",
     description: "Tanulók elégedettsége az oktatással és környezettel",
-    color: "#e8f5e9",
+    color: "#e8f5e8",
   },
   {
     key: "dualis_kepzohely",
@@ -314,7 +314,7 @@ export default function ElegedettsegMeresEredmenyei() {
               p: 2,
               backgroundColor: "#f0f8ff",
               borderRadius: 1,
-              border: "1px solid #90caf9",
+              border: "1px solid #f0f8ff",
             }}
           >
             <Typography variant="body2" sx={{ fontStyle: "italic" }}>
@@ -329,7 +329,7 @@ export default function ElegedettsegMeresEredmenyei() {
               p: 2,
               backgroundColor: "#e8f5e8",
               borderRadius: 1,
-              border: "1px solid #4caf50",
+              border: "1px solid #2e7d32",
             }}
           >
             <Typography variant="body2" sx={{ fontStyle: "italic" }}>
@@ -402,7 +402,7 @@ export default function ElegedettsegMeresEredmenyei() {
                       sx={{
                         fontWeight: "bold",
                         minWidth: 200,
-                        borderRight: "2px solid #ddd",
+                        borderRight: "2px solid #e0e0e0",
                         position: "sticky",
                         left: 0,
                         backgroundColor: "#ffffff",
@@ -418,12 +418,12 @@ export default function ElegedettsegMeresEredmenyei() {
                         align="center"
                         sx={{
                           fontWeight: "bold",
-                          backgroundColor: "#fff2cc",
-                          borderBottom: "1px solid #ddd",
+                          backgroundColor: "#fff3e0",
+                          borderBottom: "1px solid #e0e0e0",
                           borderRight:
                             i === evszamok.length - 1
                               ? "none"
-                              : "1px solid #ddd",
+                              : "1px solid #e0e0e0",
                           minWidth: 120,
                         }}
                       >
@@ -438,7 +438,7 @@ export default function ElegedettsegMeresEredmenyei() {
                     <TableRow key={category.key} hover>
                       <TableCell
                         sx={{
-                          borderRight: "2px solid #ddd",
+                          borderRight: "2px solid #e0e0e0",
                           position: "sticky",
                           left: 0,
                           backgroundColor: category.color,
@@ -458,7 +458,7 @@ export default function ElegedettsegMeresEredmenyei() {
                               borderRight:
                                 i === evszamok.length - 1
                                   ? "none"
-                                  : "1px solid #ddd",
+                                  : "1px solid #e0e0e0",
                             }}
                           >
                             <TextField
@@ -499,14 +499,14 @@ export default function ElegedettsegMeresEredmenyei() {
                   ))}
 
                   {/* Average Row */}
-                  <TableRow sx={{ backgroundColor: "#fffde7" }}>
+                  <TableRow sx={{ backgroundColor: "#fff3e0" }}>
                     <TableCell
                       sx={{
                         fontWeight: "bold",
-                        borderRight: "2px solid #ddd",
+                        borderRight: "2px solid #e0e0e0",
                         position: "sticky",
                         left: 0,
-                        backgroundColor: "#fffde7",
+                        backgroundColor: "#fff3e0",
                         zIndex: 1,
                       }}
                     >
@@ -523,7 +523,7 @@ export default function ElegedettsegMeresEredmenyei() {
                             borderRight:
                               i === evszamok.length - 1
                                 ? "none"
-                                : "1px solid #ddd",
+                                : "1px solid #e0e0e0",
                             fontSize: "1.1rem",
                           }}
                         >
@@ -595,7 +595,7 @@ export default function ElegedettsegMeresEredmenyei() {
         </Card>
 
         {/* Data Collection Methods */}
-        <Card sx={{ mt: 3, backgroundColor: "#f8fff8" }}>
+        <Card sx={{ mt: 3, backgroundColor: "#e8f5e8" }}>
           <CardContent>
             <Typography variant="h6" component="h3" gutterBottom>
               Adatgyűjtési módszerek
@@ -636,7 +636,7 @@ export default function ElegedettsegMeresEredmenyei() {
         </Card>
 
         {/* Quality Indicators */}
-        <Card sx={{ mt: 3, backgroundColor: "#fff8f0" }}>
+        <Card sx={{ mt: 3, backgroundColor: "#fff3e0" }}>
           <CardContent>
             <Typography variant="h6" component="h3" gutterBottom>
               Minőségi mutatók
@@ -675,7 +675,7 @@ export default function ElegedettsegMeresEredmenyei() {
         </Card>
 
         {/* Legend */}
-        <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
+        <Card sx={{ mt: 3, backgroundColor: "#f5f5f5" }}>
           <CardContent>
             <Typography variant="h6" component="h3" gutterBottom>
               Jelmagyarázat
@@ -684,7 +684,7 @@ export default function ElegedettsegMeresEredmenyei() {
               <Chip
                 label="0-100% skála"
                 variant="outlined"
-                sx={{ backgroundColor: "#e8f4fd" }}
+                sx={{ backgroundColor: "#f0f8ff" }}
               />
               <Chip
                 label="Tizedesjegyek használhatók"

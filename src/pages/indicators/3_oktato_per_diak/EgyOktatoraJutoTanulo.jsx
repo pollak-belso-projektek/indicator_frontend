@@ -385,7 +385,7 @@ export default function EgyOktatoraJutoTanulo() {
         )}
 
         {/* Summary Statistics */}
-        <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
+        <Card sx={{ mb: 3, backgroundColor: "#f5f5f5" }}>
           <CardContent>
             <Typography variant="h6" component="h3" gutterBottom>
               Összesített statisztikák
@@ -404,19 +404,19 @@ export default function EgyOktatoraJutoTanulo() {
                       <TableCell sx={{ fontWeight: "bold" }}>Tanév</TableCell>
                       <TableCell
                         align="center"
-                        sx={{ fontWeight: "bold", backgroundColor: "#d4edda" }}
+                        sx={{ fontWeight: "bold", backgroundColor: "#e8f5e8" }}
                       >
                         Összes tanuló (fő)
                       </TableCell>
                       <TableCell
                         align="center"
-                        sx={{ fontWeight: "bold", backgroundColor: "#e6f3ff" }}
+                        sx={{ fontWeight: "bold", backgroundColor: "#f0f8ff" }}
                       >
                         Összes oktató (fő)
                       </TableCell>
                       <TableCell
                         align="center"
-                        sx={{ fontWeight: "bold", backgroundColor: "#fff3cd" }}
+                        sx={{ fontWeight: "bold", backgroundColor: "#fff3e0" }}
                       >
                         Átlagos arány (tanuló/oktató)
                       </TableCell>
@@ -433,20 +433,20 @@ export default function EgyOktatoraJutoTanulo() {
                         </TableCell>
                         <TableCell
                           align="center"
-                          sx={{ backgroundColor: "#d4edda40" }}
+                          sx={{ backgroundColor: "#e8f5e840" }}
                         >
                           {stats.totalTanulok}
                         </TableCell>
                         <TableCell
                           align="center"
-                          sx={{ backgroundColor: "#e6f3ff40" }}
+                          sx={{ backgroundColor: "#f0f8ff40" }}
                         >
                           {stats.totalOktatok}
                         </TableCell>
                         <TableCell
                           align="center"
                           sx={{
-                            backgroundColor: "#fff3cd40",
+                            backgroundColor: "#fff3e040",
                             fontWeight: "bold",
                             color: "primary.main",
                           }}
@@ -490,7 +490,7 @@ export default function EgyOktatoraJutoTanulo() {
         {activeTab === 0 && (
           <Box>
             {/* Instructions Card */}
-            <Card sx={{ mb: 3, backgroundColor: "#f8f9fa" }}>
+            <Card sx={{ mb: 3, backgroundColor: "#f5f5f5" }}>
               <CardContent>
                 <Typography variant="h6" component="h3" gutterBottom>
                   Oktató-tanuló arány értelmezése
@@ -526,7 +526,7 @@ export default function EgyOktatoraJutoTanulo() {
                   sx={{
                     mt: 3,
                     p: 2,
-                    backgroundColor: "#fff2cc",
+                    backgroundColor: "#fff3e0",
                     borderRadius: 1,
                   }}
                 >
@@ -584,7 +584,7 @@ export default function EgyOktatoraJutoTanulo() {
                                     align="center"
                                     sx={{
                                       fontWeight: "bold",
-                                      backgroundColor: "#d4edda",
+                                      backgroundColor: "#e8f5e8",
                                     }}
                                   >
                                     Tanulók száma (fő)
@@ -593,7 +593,7 @@ export default function EgyOktatoraJutoTanulo() {
                                     align="center"
                                     sx={{
                                       fontWeight: "bold",
-                                      backgroundColor: "#e6f3ff",
+                                      backgroundColor: "#f0f8ff",
                                     }}
                                   >
                                     Oktatók száma (fő)
@@ -602,7 +602,7 @@ export default function EgyOktatoraJutoTanulo() {
                                     align="center"
                                     sx={{
                                       fontWeight: "bold",
-                                      backgroundColor: "#fff3cd",
+                                      backgroundColor: "#fff3e0",
                                     }}
                                   >
                                     Egy oktatóra jutó tanulók
@@ -624,7 +624,7 @@ export default function EgyOktatoraJutoTanulo() {
                                       </TableCell>
                                       <TableCell
                                         align="center"
-                                        sx={{ backgroundColor: "#d4edda40" }}
+                                        sx={{ backgroundColor: "#e8f5e840" }}
                                       >
                                         <TextField
                                           type="number"
@@ -646,7 +646,7 @@ export default function EgyOktatoraJutoTanulo() {
                                       </TableCell>
                                       <TableCell
                                         align="center"
-                                        sx={{ backgroundColor: "#e6f3ff40" }}
+                                        sx={{ backgroundColor: "#f0f8ff40" }}
                                       >
                                         <TextField
                                           type="number"
@@ -669,7 +669,7 @@ export default function EgyOktatoraJutoTanulo() {
                                       <TableCell
                                         align="center"
                                         sx={{
-                                          backgroundColor: "#fff3cd40",
+                                          backgroundColor: "#fff3e040",
                                           fontWeight: "bold",
                                           color: "primary.main",
                                         }}
@@ -763,7 +763,7 @@ export default function EgyOktatoraJutoTanulo() {
             </Card>
 
             {/* Legend */}
-            <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
+            <Card sx={{ mt: 3, backgroundColor: "#f5f5f5" }}>
               <CardContent>
                 <Typography variant="h6" component="h3" gutterBottom>
                   Jelmagyarázat
@@ -777,17 +777,17 @@ export default function EgyOktatoraJutoTanulo() {
                   <Chip
                     label="Tanulók száma"
                     variant="outlined"
-                    sx={{ backgroundColor: "#d4edda" }}
+                    sx={{ backgroundColor: "#e8f5e8" }}
                   />
                   <Chip
                     label="Oktatók száma"
                     variant="outlined"
-                    sx={{ backgroundColor: "#e6f3ff" }}
+                    sx={{ backgroundColor: "#f0f8ff" }}
                   />
                   <Chip
                     label="Oktató-tanuló arány"
                     variant="outlined"
-                    sx={{ backgroundColor: "#fff3cd" }}
+                    sx={{ backgroundColor: "#fff3e0" }}
                   />
                 </Stack>
                 <Typography variant="body2">
@@ -990,7 +990,7 @@ export default function EgyOktatoraJutoTanulo() {
                   sx={{
                     mt: 2,
                     p: 2,
-                    backgroundColor: "#fff2cc",
+                    backgroundColor: "#fff3e0",
                     borderRadius: 1,
                   }}
                 >

@@ -145,7 +145,7 @@ export default function SzakmaiTovabbkepzesek() {
     "& input": {
       textAlign: "center",
       p: 1,
-      backgroundColor: isFieldModified(year, field) ? "#fef08a" : "inherit",
+      backgroundColor: isFieldModified(year, field) ? "#fff9c4" : "inherit",
     },
   });
 
@@ -440,7 +440,7 @@ export default function SzakmaiTovabbkepzesek() {
         <TableContainer
           component={Paper}
           elevation={3}
-          sx={{ overflowX: "auto", mt: 3, border: "1px solid #ccc" }}
+          sx={{ overflowX: "auto", mt: 3, border: "1px solid #e0e0e0" }}
         >
           <Table
             size="small"
@@ -468,7 +468,7 @@ export default function SzakmaiTovabbkepzesek() {
                   <TableRow
                     key={rowItem.key}
                     sx={{
-                      backgroundColor: idx % 2 === 0 ? "#fafafa" : "white",
+                      backgroundColor: idx % 2 === 0 ? "#f5f5f5" : "white",
                     }}
                   >
                     {idx === 0 && (
@@ -576,7 +576,7 @@ export default function SzakmaiTovabbkepzesek() {
                 );
               })}
 
-              <TableRow sx={{ backgroundColor: "#fff3cd" }}>
+              <TableRow sx={{ backgroundColor: "#fff3e0" }}>
                 <TableCell colSpan={3} sx={{ ...cellSx, fontWeight: "bold" }}>
                   Összesen:
                 </TableCell>
@@ -594,7 +594,7 @@ export default function SzakmaiTovabbkepzesek() {
                 })}
               </TableRow>
 
-              <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+              <TableRow sx={{ backgroundColor: "#f0f8ff" }}>
                 <TableCell colSpan={3} sx={{ ...cellSx, fontWeight: "bold" }}>
                   Oktatók létszáma (fő):
                 </TableCell>
@@ -623,10 +623,10 @@ export default function SzakmaiTovabbkepzesek() {
                 })}
               </TableRow>
 
-              <TableRow sx={{ backgroundColor: "#f8d7da" }}>
+              <TableRow sx={{ backgroundColor: "#ffcdd2" }}>
                 <TableCell
                   colSpan={3}
-                  sx={{ ...cellSx, fontWeight: "bold", color: "#721c24" }}
+                  sx={{ ...cellSx, fontWeight: "bold", color: "#d32f2f" }}
                 >
                   Szakmai továbbképzésen résztvevő oktatók aránya:
                 </TableCell>
@@ -636,7 +636,7 @@ export default function SzakmaiTovabbkepzesek() {
                     <TableCell
                       key={yearStr}
                       align="center"
-                      sx={{ ...cellSx, fontWeight: "bold", color: "#721c24" }}
+                      sx={{ ...cellSx, fontWeight: "bold", color: "#d32f2f" }}
                     >
                       {calcData[year]?.aranyText || "0%"}
                     </TableCell>
@@ -644,7 +644,7 @@ export default function SzakmaiTovabbkepzesek() {
                 })}
               </TableRow>
 
-              <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+              <TableRow sx={{ backgroundColor: "#f0f8ff" }}>
                 <TableCell colSpan={3} sx={{ ...cellSx, fontWeight: "bold" }}>
                   Továbbképzésre fordított összeg az intézményben (Ft):
                 </TableCell>
@@ -673,10 +673,10 @@ export default function SzakmaiTovabbkepzesek() {
                 })}
               </TableRow>
 
-              <TableRow sx={{ backgroundColor: "#fff3cd" }}>
+              <TableRow sx={{ backgroundColor: "#fff3e0" }}>
                 <TableCell
                   colSpan={3}
-                  sx={{ ...cellSx, fontWeight: "bold", color: "#e65100" }}
+                  sx={{ ...cellSx, fontWeight: "bold", color: "#d32f2f" }}
                 >
                   Szakmai képzésre fordított, egy főre jutó költség (Ft/fő):
                 </TableCell>

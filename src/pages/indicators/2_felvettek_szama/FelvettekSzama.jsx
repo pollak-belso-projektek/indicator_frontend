@@ -916,7 +916,7 @@ const FelvettekSzama = () => {
                       sx={{
                         fontWeight: "bold",
                         minWidth: 200,
-                        borderRight: "2px solid #ddd",
+                        borderRight: "2px solid #e0e0e0",
                         position: "sticky",
                         left: 0,
                         backgroundColor: "#ffffff",
@@ -930,8 +930,8 @@ const FelvettekSzama = () => {
                       align="center"
                       sx={{
                         fontWeight: "bold",
-                        backgroundColor: "#e3f2fd",
-                        borderRight: "1px solid #ddd",
+                        backgroundColor: "#f0f8ff",
+                        borderRight: "1px solid #e0e0e0",
                       }}
                     >
                       Jelentkezések és felvettek aránya
@@ -942,7 +942,7 @@ const FelvettekSzama = () => {
                       sx={{
                         fontWeight: "bold",
                         backgroundColor: "#f3e5f5",
-                        borderRight: "1px solid #ddd",
+                        borderRight: "1px solid #e0e0e0",
                       }}
                     >
                       9. évfolyamra jelentkezők száma
@@ -953,7 +953,7 @@ const FelvettekSzama = () => {
                       sx={{
                         fontWeight: "bold",
                         backgroundColor: "#e8f5e8",
-                        borderRight: "1px solid #ddd",
+                        borderRight: "1px solid #e0e0e0",
                       }}
                     >
                       9. évfolyamra felvettek száma
@@ -974,7 +974,7 @@ const FelvettekSzama = () => {
                         align="center"
                         sx={{
                           fontWeight: "bold",
-                          backgroundColor: "#e3f2fd40",
+                          backgroundColor: "#f0f8ff40",
                           fontSize: "0.75rem",
                         }}
                       >
@@ -1034,8 +1034,8 @@ const FelvettekSzama = () => {
                           sx={{
                             fontWeight: "bold",
                             backgroundColor: "#f5f5f5",
-                            borderBottom: "2px solid #ddd",
-                            borderRight: "2px solid #ddd",
+                            borderBottom: "2px solid #e0e0e0",
+                            borderRight: "2px solid #e0e0e0",
                             position: "sticky",
                             left: 0,
                             zIndex: 2,
@@ -1061,7 +1061,7 @@ const FelvettekSzama = () => {
                             sx={{
                               fontWeight: "medium",
                               pl: category.category.includes("szakmái") ? 4 : 2,
-                              borderRight: "1px solid #ddd",
+                              borderRight: "1px solid #e0e0e0",
                               position: "sticky",
                               left: 0,
                               backgroundColor: "#ffffff",
@@ -1123,7 +1123,7 @@ const FelvettekSzama = () => {
                                 sx={{
                                   backgroundColor: isReadOnly
                                     ? "#f5f5f5"
-                                    : "#e3f2fd20",
+                                    : "#f0f8ff20",
                                   fontWeight: "bold",
                                   color: hasData
                                     ? "primary.main"
@@ -1194,18 +1194,18 @@ const FelvettekSzama = () => {
                                     "& .MuiOutlinedInput-root": {
                                       "& fieldset": {
                                         borderColor: isModified
-                                          ? "#ff9800"
+                                          ? "#ffb74d"
                                           : undefined,
                                         borderWidth: isModified ? "2px" : "1px",
                                       },
                                       "&:hover fieldset": {
                                         borderColor: isModified
-                                          ? "#ff9800"
+                                          ? "#ffb74d"
                                           : undefined,
                                       },
                                       "&.Mui-focused fieldset": {
                                         borderColor: isModified
-                                          ? "#ff9800"
+                                          ? "#ffb74d"
                                           : undefined,
                                       },
                                     },
@@ -1274,18 +1274,18 @@ const FelvettekSzama = () => {
                                     "& .MuiOutlinedInput-root": {
                                       "& fieldset": {
                                         borderColor: isModified
-                                          ? "#ff9800"
+                                          ? "#ffb74d"
                                           : undefined,
                                         borderWidth: isModified ? "2px" : "1px",
                                       },
                                       "&:hover fieldset": {
                                         borderColor: isModified
-                                          ? "#ff9800"
+                                          ? "#ffb74d"
                                           : undefined,
                                       },
                                       "&.Mui-focused fieldset": {
                                         borderColor: isModified
-                                          ? "#ff9800"
+                                          ? "#ffb74d"
                                           : undefined,
                                       },
                                     },
@@ -1354,18 +1354,18 @@ const FelvettekSzama = () => {
                                     "& .MuiOutlinedInput-root": {
                                       "& fieldset": {
                                         borderColor: isModified
-                                          ? "#ff9800"
+                                          ? "#ffb74d"
                                           : undefined,
                                         borderWidth: isModified ? "2px" : "1px",
                                       },
                                       "&:hover fieldset": {
                                         borderColor: isModified
-                                          ? "#ff9800"
+                                          ? "#ffb74d"
                                           : undefined,
                                       },
                                       "&.Mui-focused fieldset": {
                                         borderColor: isModified
-                                          ? "#ff9800"
+                                          ? "#ffb74d"
                                           : undefined,
                                       },
                                     },

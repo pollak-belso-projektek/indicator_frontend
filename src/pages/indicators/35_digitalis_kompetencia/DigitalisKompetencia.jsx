@@ -290,15 +290,15 @@ export default function DigitalisKompetencia() {
           component={Paper}
           sx={{ maxWidth: "100%", overflowX: "auto" }}
         >
-          <Table size="medium" sx={{ minWidth: 800, border: "2px solid #ccc" }}>
+          <Table size="medium" sx={{ minWidth: 800, border: "2px solid #e0e0e0" }}>
             <TableHead>
               <TableRow>
                 <TableCell
                   sx={{
                     fontWeight: "bold",
                     minWidth: 350,
-                    borderRight: "2px solid #ccc",
-                    borderBottom: "2px solid #ccc",
+                    borderRight: "2px solid #e0e0e0",
+                    borderBottom: "2px solid #e0e0e0",
                     backgroundColor: "#f5f5f5",
                   }}
                 >
@@ -310,12 +310,12 @@ export default function DigitalisKompetencia() {
                     align="center"
                     sx={{
                       fontWeight: "bold",
-                      backgroundColor: "#fff2cc",
-                      borderBottom: "2px solid #ccc",
+                      backgroundColor: "#fff3e0",
+                      borderBottom: "2px solid #e0e0e0",
                       borderRight:
                         i === schoolYears.length - 1
                           ? "none"
-                          : "1px solid #ccc",
+                          : "1px solid #e0e0e0",
                       minWidth: 150,
                     }}
                   >
@@ -328,8 +328,8 @@ export default function DigitalisKompetencia() {
               <TableRow hover>
                 <TableCell
                   sx={{
-                    borderRight: "2px solid #ccc",
-                    borderBottom: "1px solid #ddd",
+                    borderRight: "2px solid #e0e0e0",
+                    borderBottom: "1px solid #e0e0e0",
                     fontWeight: 500,
                   }}
                 >
@@ -340,13 +340,13 @@ export default function DigitalisKompetencia() {
                     key={`${year}-fejleszto`}
                     align="center"
                     sx={{
-                      borderBottom: "1px solid #ddd",
+                      borderBottom: "1px solid #e0e0e0",
                       borderRight:
                         i === schoolYears.length - 1
                           ? "none"
-                          : "1px solid #eee",
+                          : "1px solid #f5f5f5",
                       backgroundColor: isFieldModified(year, "fejleszto")
-                        ? "#fef08a"
+                        ? "#fff9c4"
                         : "inherit",
                     }}
                   >
@@ -366,8 +366,8 @@ export default function DigitalisKompetencia() {
               <TableRow hover>
                 <TableCell
                   sx={{
-                    borderRight: "2px solid #ccc",
-                    borderBottom: "1px solid #ddd",
+                    borderRight: "2px solid #e0e0e0",
+                    borderBottom: "1px solid #e0e0e0",
                     fontWeight: 500,
                   }}
                 >
@@ -378,13 +378,13 @@ export default function DigitalisKompetencia() {
                     key={`${year}-hasznalo`}
                     align="center"
                     sx={{
-                      borderBottom: "1px solid #ddd",
+                      borderBottom: "1px solid #e0e0e0",
                       borderRight:
                         i === schoolYears.length - 1
                           ? "none"
-                          : "1px solid #eee",
+                          : "1px solid #f5f5f5",
                       backgroundColor: isFieldModified(year, "hasznalo")
-                        ? "#fef08a"
+                        ? "#fff9c4"
                         : "inherit",
                     }}
                   >

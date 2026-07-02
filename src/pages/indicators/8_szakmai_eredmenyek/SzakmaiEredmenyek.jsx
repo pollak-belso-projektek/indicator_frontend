@@ -605,7 +605,7 @@ export default function SzakmaiEredmenyek() {
                   sx={{
                     fontWeight: "bold",
                     minWidth: 250,
-                    borderRight: "2px solid #ddd",
+                    borderRight: "2px solid #e0e0e0",
                     position: "sticky",
                     left: 0,
                     backgroundColor: "#ffffff",
@@ -622,12 +622,12 @@ export default function SzakmaiEredmenyek() {
                     colSpan={4}
                     sx={{
                       fontWeight: "bold",
-                      backgroundColor: "#fff2cc",
-                      borderBottom: "1px solid #ddd",
+                      backgroundColor: "#fff3e0",
+                      borderBottom: "1px solid #e0e0e0",
                       borderRight:
                         i === schoolYears.length - 1
                           ? "none"
-                          : "2px solid #ddd",
+                          : "2px solid #e0e0e0",
                     }}
                   >
                     {year}
@@ -663,12 +663,12 @@ export default function SzakmaiEredmenyek() {
                         sx={{
                           fontWeight: 600,
                           backgroundColor: placement.color,
-                          borderBottom: "2px solid #ddd",
+                          borderBottom: "2px solid #e0e0e0",
                           borderRight:
                             j === placementTypes.length - 1 &&
                             i !== schoolYears.length - 1
-                              ? "2px solid #ddd"
-                              : "1px solid #ddd",
+                              ? "2px solid #e0e0e0"
+                              : "1px solid #e0e0e0",
                           minWidth: 90,
                           fontSize: "0.75rem",
                           lineHeight: 1.2,
@@ -683,14 +683,14 @@ export default function SzakmaiEredmenyek() {
             </TableHead>
             <TableBody>
               {/* Totals Row */}
-              <TableRow sx={{ backgroundColor: "#fffde7" }}>
+              <TableRow sx={{ backgroundColor: "#fff3e0" }}>
                 <TableCell
                   sx={{
                     fontWeight: "bold",
-                    borderRight: "2px solid #ddd",
+                    borderRight: "2px solid #e0e0e0",
                     position: "sticky",
                     left: 0,
-                    backgroundColor: "#fffde7",
+                    backgroundColor: "#fff3e0",
                     zIndex: 1,
                   }}
                 >
@@ -709,8 +709,8 @@ export default function SzakmaiEredmenyek() {
                             borderRight:
                               j === placementTypes.length - 1 &&
                               i !== schoolYears.length - 1
-                                ? "2px solid #ddd"
-                                : "1px solid #ddd",
+                                ? "2px solid #e0e0e0"
+                                : "1px solid #e0e0e0",
                           }}
                         >
                           {totals[startYear]?.[placement.key] || 0}
@@ -751,7 +751,7 @@ export default function SzakmaiEredmenyek() {
                     <TableRow key={`${category}-${competition}`} hover>
                       <TableCell
                         sx={{
-                          borderRight: "2px solid #ddd",
+                          borderRight: "2px solid #e0e0e0",
                           position: "sticky",
                           left: 0,
                           backgroundColor: "#fff",
@@ -806,7 +806,7 @@ export default function SzakmaiEredmenyek() {
                                   year,
                                   placement.key,
                                 )
-                                  ? "#fef08a"
+                                  ? "#fff9c4"
                                   : "inherit",
                               }}
                             />
@@ -839,14 +839,14 @@ export default function SzakmaiEredmenyek() {
                 })}
 
               {/* Totals Row */}
-              <TableRow sx={{ backgroundColor: "#fff2cc", fontWeight: "bold" }}>
+              <TableRow sx={{ backgroundColor: "#fff3e0", fontWeight: "bold" }}>
                 <TableCell
                   sx={{
                     position: "sticky",
                     left: 0,
                     fontWeight: "bold",
 
-                    backgroundColor: "#fff2cc",
+                    backgroundColor: "#fff3e0",
                     boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
                     zIndex: 10,
                   }}
@@ -870,7 +870,7 @@ export default function SzakmaiEredmenyek() {
                   sx={{
                     position: "sticky",
                     right: 0,
-                    backgroundColor: "#fff2cc",
+                    backgroundColor: "#fff3e0",
                     boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
                     zIndex: 1000,
                   }}
@@ -878,13 +878,13 @@ export default function SzakmaiEredmenyek() {
               </TableRow>
 
               {/* Summary Row */}
-              <TableRow sx={{ backgroundColor: "#e8f4fd" }}>
+              <TableRow sx={{ backgroundColor: "#f0f8ff" }}>
                 <TableCell
                   sx={{
                     fontWeight: "bold",
                     position: "sticky",
                     left: 0,
-                    backgroundColor: "#e8f4fd",
+                    backgroundColor: "#f0f8ff",
                     boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
                     zIndex: 1,
                   }}
@@ -902,7 +902,7 @@ export default function SzakmaiEredmenyek() {
                         borderRight:
                           i === schoolYears.length - 1
                             ? "none"
-                            : "2px solid #ddd",
+                            : "2px solid #e0e0e0",
                       }}
                     >
                       <TextField
@@ -922,7 +922,7 @@ export default function SzakmaiEredmenyek() {
                   sx={{
                     position: "sticky",
                     right: 0,
-                    backgroundColor: "#e8f4fd",
+                    backgroundColor: "#f0f8ff",
                     boxShadow: "-2px 0 5px -2px rgba(0,0,0,0.1)",
                     zIndex: 1,
                   }}
@@ -1031,7 +1031,7 @@ export default function SzakmaiEredmenyek() {
         </Dialog>
 
         {/* Legend */}
-        <Card sx={{ mt: 3, backgroundColor: "#f8f9fa" }}>
+        <Card sx={{ mt: 3, backgroundColor: "#f5f5f5" }}>
           <CardContent>
             <Typography variant="h6" component="h3" gutterBottom>
               Jelmagyarázat

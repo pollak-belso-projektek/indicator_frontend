@@ -907,7 +907,7 @@ export default function OktatokEgyebTev() {
                                                   fieldKey,
                                                   year,
                                                 )
-                                                  ? "2px solid #ff9800"
+                                                  ? "2px solid #ffb74d"
                                                   : "1px solid transparent",
                                               }}
                                             />
@@ -977,7 +977,7 @@ export default function OktatokEgyebTev() {
                                               null,
                                               year,
                                             )
-                                              ? "2px solid #ff9800"
+                                              ? "2px solid #ffb74d"
                                               : "1px solid transparent",
                                           }}
                                         />
@@ -1024,7 +1024,7 @@ export default function OktatokEgyebTev() {
                             <TableCell
                               sx={{
                                 fontWeight: "bold",
-                                borderTop: "2px solid #333",
+                                borderTop: "2px solid #666",
                               }}
                             >
                               Oktatók létszáma (fő)
@@ -1033,7 +1033,7 @@ export default function OktatokEgyebTev() {
                               <TableCell
                                 key={year}
                                 sx={{
-                                  borderTop: "2px solid #333",
+                                  borderTop: "2px solid #666",
                                   fontWeight: "bold",
                                 }}
                               >
@@ -1081,7 +1081,7 @@ export default function OktatokEgyebTev() {
                                             null,
                                             year,
                                           )
-                                            ? "2px solid #ff9800"
+                                            ? "2px solid #ffb74d"
                                             : "1px solid transparent",
                                       }}
                                     />

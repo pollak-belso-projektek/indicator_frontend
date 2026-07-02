@@ -499,7 +499,7 @@ export default function MuhelyiskolaiReszszakmat() {
                   >
                     <Table size="small">
                       <TableHead>
-                        <TableRow sx={{ backgroundColor: "#ffebee" }}>
+                        <TableRow sx={{ backgroundColor: "#ffcdd2" }}>
                           {schoolYears.map((year) => (
                             <TableCell
                               key={year}
@@ -507,7 +507,7 @@ export default function MuhelyiskolaiReszszakmat() {
                               sx={{
                                 fontWeight: "bold",
                                 minWidth: 120,
-                                backgroundColor: "#e8f4fd",
+                                backgroundColor: "#f0f8ff",
                               }}
                             >
                               {year}
@@ -549,7 +549,7 @@ export default function MuhelyiskolaiReszszakmat() {
                                     width: "80px",
                                     "& .MuiOutlinedInput-root": {
                                       backgroundColor: isOverLimit
-                                        ? "#ffebee"
+                                        ? "#ffcdd2"
                                         : "inherit",
                                       "& fieldset": {
                                         borderColor: isOverLimit
@@ -609,7 +609,7 @@ export default function MuhelyiskolaiReszszakmat() {
                   >
                     <Table size="small">
                       <TableHead>
-                        <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+                        <TableRow sx={{ backgroundColor: "#f0f8ff" }}>
                           {schoolYears.map((year) => (
                             <TableCell
                               key={year}
@@ -617,7 +617,7 @@ export default function MuhelyiskolaiReszszakmat() {
                               sx={{
                                 fontWeight: "bold",
                                 minWidth: 120,
-                                backgroundColor: "#e8f4fd",
+                                backgroundColor: "#f0f8ff",
                               }}
                             >
                               {year}
@@ -626,7 +626,7 @@ export default function MuhelyiskolaiReszszakmat() {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
+                        <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                           {schoolYears.map((year) => (
                             <TableCell key={year} align="center">
                               <TextField
@@ -696,7 +696,7 @@ export default function MuhelyiskolaiReszszakmat() {
                               sx={{
                                 fontWeight: "bold",
                                 minWidth: 120,
-                                backgroundColor: "#e8f4fd",
+                                backgroundColor: "#f0f8ff",
                               }}
                             >
                               {year}
@@ -705,7 +705,7 @@ export default function MuhelyiskolaiReszszakmat() {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
+                        <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                           {schoolYears.map((year) => (
                             <TableCell key={year} align="center">
                               <TextField
@@ -736,7 +736,7 @@ export default function MuhelyiskolaiReszszakmat() {
                       p: 2,
                       backgroundColor: "#f0f8ff",
                       borderRadius: 1,
-                      border: "1px solid #90caf9",
+                      border: "1px solid #f0f8ff",
                       display: "flex",
                       alignItems: "center",
                       gap: 2,

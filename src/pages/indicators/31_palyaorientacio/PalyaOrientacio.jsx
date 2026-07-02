@@ -57,9 +57,9 @@ const CATEGORIES = [
 ];
 
 const CATEGORY_COLORS = {
-  "Pályaorientációs rendezvény megnevezése": "#e8f5e9",
-  "Pályaorientációs tevékenység megnevezése": "#e3f2fd",
-  "DKA-ban megszervezett tevékenység megnevezése": "#fce4ec",
+  "Pályaorientációs rendezvény megnevezése": "#e8f5e8",
+  "Pályaorientációs tevékenység megnevezése": "#f0f8ff",
+  "DKA-ban megszervezett tevékenység megnevezése": "#ffcdd2",
 };
 
 export default function PalyaOrientacio() {
@@ -449,15 +449,15 @@ export default function PalyaOrientacio() {
           component={Paper}
           sx={{ maxWidth: "100%", overflowX: "auto" }}
         >
-          <Table size="medium" sx={{ minWidth: 900, border: "2px solid #ccc" }}>
+          <Table size="medium" sx={{ minWidth: 900, border: "2px solid #e0e0e0" }}>
             <TableHead>
               <TableRow>
                 <TableCell
                   sx={{
                     fontWeight: "bold",
                     minWidth: 200,
-                    borderRight: "2px solid #ccc",
-                    borderBottom: "2px solid #ccc",
+                    borderRight: "2px solid #e0e0e0",
+                    borderBottom: "2px solid #e0e0e0",
                     backgroundColor: "#fff",
                     position: "sticky",
                     left: 0,
@@ -470,8 +470,8 @@ export default function PalyaOrientacio() {
                   sx={{
                     fontWeight: "bold",
                     minWidth: 280,
-                    borderRight: "2px solid #ccc",
-                    borderBottom: "2px solid #ccc",
+                    borderRight: "2px solid #e0e0e0",
+                    borderBottom: "2px solid #e0e0e0",
                     backgroundColor: "#fff",
                     zIndex: 2,
                   }}
@@ -484,12 +484,12 @@ export default function PalyaOrientacio() {
                     align="center"
                     sx={{
                       fontWeight: "bold",
-                      backgroundColor: "#fff2cc",
-                      borderBottom: "2px solid #ccc",
+                      backgroundColor: "#fff3e0",
+                      borderBottom: "2px solid #e0e0e0",
                       borderRight:
                         i === schoolYears.length - 1
                           ? "none"
-                          : "1px solid #ccc",
+                          : "1px solid #e0e0e0",
                       minWidth: 150,
                     }}
                   >
@@ -511,8 +511,8 @@ export default function PalyaOrientacio() {
                   sx={{
                     fontWeight: "bold",
                     width: 60,
-                    borderBottom: "2px solid #ccc",
-                    borderLeft: "2px solid #ccc",
+                    borderBottom: "2px solid #e0e0e0",
+                    borderLeft: "2px solid #e0e0e0",
                     position: "sticky",
                     right: 0,
                     backgroundColor: "#f5f5f5",
@@ -551,8 +551,8 @@ export default function PalyaOrientacio() {
                         <TableCell
                           rowSpan={categoryCounts[category]}
                           sx={{
-                            borderRight: "2px solid #ccc",
-                            borderBottom: "1px solid #ddd",
+                            borderRight: "2px solid #e0e0e0",
+                            borderBottom: "1px solid #e0e0e0",
                             position: "sticky",
                             left: 0,
                             backgroundColor: bgColor,
@@ -568,8 +568,8 @@ export default function PalyaOrientacio() {
                       )}
                       <TableCell
                         sx={{
-                          borderRight: "2px solid #ccc",
-                          borderBottom: "1px solid #ddd",
+                          borderRight: "2px solid #e0e0e0",
+                          borderBottom: "1px solid #e0e0e0",
                           backgroundColor: "#fff",
                           zIndex: 1,
                           width: "30%",
@@ -586,13 +586,13 @@ export default function PalyaOrientacio() {
                             key={`${year}-val`}
                             align="center"
                             sx={{
-                              borderBottom: "1px solid #ddd",
+                              borderBottom: "1px solid #e0e0e0",
                               borderRight:
                                 i === schoolYears.length - 1
                                   ? "none"
-                                  : "1px solid #eee",
+                                  : "1px solid #f5f5f5",
                               backgroundColor: isFieldModified(key, year)
-                                ? "#fef08a"
+                                ? "#fff9c4"
                                 : "inherit",
                             }}
                           >
@@ -613,8 +613,8 @@ export default function PalyaOrientacio() {
                       <TableCell
                         align="center"
                         sx={{
-                          borderLeft: "2px solid #ccc",
-                          borderBottom: "1px solid #ddd",
+                          borderLeft: "2px solid #e0e0e0",
+                          borderBottom: "1px solid #e0e0e0",
                           position: "sticky",
                           right: 0,
                           backgroundColor: "#fff",

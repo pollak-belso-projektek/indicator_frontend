@@ -425,7 +425,7 @@ export default function ElhelyezkedesimMutato() {
                         colSpan={2}
                         sx={{
                           backgroundColor: "#f5f5f5",
-                          borderRight: "2px solid #ddd",
+                          borderRight: "2px solid #e0e0e0",
                           zIndex: 3,
                         }}
                       />
@@ -433,10 +433,10 @@ export default function ElhelyezkedesimMutato() {
                         colSpan={evszamok.length}
                         align="center"
                         sx={{
-                          backgroundColor: "#fff2cc",
+                          backgroundColor: "#fff3e0",
                           fontWeight: "bold",
-                          borderRight: "2px solid #ddd",
-                          borderBottom: "1px solid #ddd",
+                          borderRight: "2px solid #e0e0e0",
+                          borderBottom: "1px solid #e0e0e0",
                         }}
                       >
                         szakmai oktatásban végzettek elhelyezkedési aránya (%)
@@ -445,10 +445,10 @@ export default function ElhelyezkedesimMutato() {
                         colSpan={evszamok.length}
                         align="center"
                         sx={{
-                          backgroundColor: "#e1f5fe",
+                          backgroundColor: "#f0f8ff",
                           fontWeight: "bold",
-                          borderRight: "2px solid #ddd",
-                          borderBottom: "1px solid #ddd",
+                          borderRight: "2px solid #e0e0e0",
+                          borderBottom: "1px solid #e0e0e0",
                         }}
                       >
                         elhelyezkedők száma (fő)
@@ -457,9 +457,9 @@ export default function ElhelyezkedesimMutato() {
                         colSpan={evszamok.length}
                         align="center"
                         sx={{
-                          backgroundColor: "#e8f5e9",
+                          backgroundColor: "#e8f5e8",
                           fontWeight: "bold",
-                          borderBottom: "1px solid #ddd",
+                          borderBottom: "1px solid #e0e0e0",
                         }}
                       >
                         szakmai oktatásban sikeresen végzettek száma (fő)
@@ -472,7 +472,7 @@ export default function ElhelyezkedesimMutato() {
                         sx={{
                           backgroundColor: "#f5f5f5",
                           fontWeight: "bold",
-                          borderBottom: "2px solid #ddd",
+                          borderBottom: "2px solid #e0e0e0",
                           minWidth: 150,
                           zIndex: 3,
                           top: 40,
@@ -486,8 +486,8 @@ export default function ElhelyezkedesimMutato() {
                         sx={{
                           backgroundColor: "#f5f5f5",
                           fontWeight: "bold",
-                          borderRight: "2px solid #ddd",
-                          borderBottom: "2px solid #ddd",
+                          borderRight: "2px solid #e0e0e0",
+                          borderBottom: "2px solid #e0e0e0",
                           minWidth: 250,
                           zIndex: 3,
                           top: 40,
@@ -504,13 +504,13 @@ export default function ElhelyezkedesimMutato() {
                           key={`arany-${year}`}
                           align="center"
                           sx={{
-                            backgroundColor: "#fff2cc",
+                            backgroundColor: "#fff3e0",
                             fontWeight: "bold",
-                            borderBottom: "2px solid #ddd",
+                            borderBottom: "2px solid #e0e0e0",
                             borderRight:
                               i === evszamok.length - 1
-                                ? "2px solid #ddd"
-                                : "1px solid #ddd",
+                                ? "2px solid #e0e0e0"
+                                : "1px solid #e0e0e0",
                             minWidth: 80,
                             top: 40,
                             position: "sticky",
@@ -527,13 +527,13 @@ export default function ElhelyezkedesimMutato() {
                           key={`elh-${year}`}
                           align="center"
                           sx={{
-                            backgroundColor: "#e1f5fe",
+                            backgroundColor: "#f0f8ff",
                             fontWeight: "bold",
-                            borderBottom: "2px solid #ddd",
+                            borderBottom: "2px solid #e0e0e0",
                             borderRight:
                               i === evszamok.length - 1
-                                ? "2px solid #ddd"
-                                : "1px solid #ddd",
+                                ? "2px solid #e0e0e0"
+                                : "1px solid #e0e0e0",
                             minWidth: 80,
                             top: 40,
                             position: "sticky",
@@ -550,13 +550,13 @@ export default function ElhelyezkedesimMutato() {
                           key={`veg-${year}`}
                           align="center"
                           sx={{
-                            backgroundColor: "#e8f5e9",
+                            backgroundColor: "#e8f5e8",
                             fontWeight: "bold",
-                            borderBottom: "2px solid #ddd",
+                            borderBottom: "2px solid #e0e0e0",
                             borderRight:
                               i === evszamok.length - 1
                                 ? "none"
-                                : "1px solid #ddd",
+                                : "1px solid #e0e0e0",
                             minWidth: 80,
                             top: 40,
                             position: "sticky",
@@ -577,17 +577,17 @@ export default function ElhelyezkedesimMutato() {
                           hover
                           sx={{
                             backgroundColor: cat.isTotal
-                              ? "#e1f5fe"
-                              : "#fff2cc",
+                              ? "#f0f8ff"
+                              : "#fff3e0",
                           }}
                         >
                           <TableCell
                             sx={{
                               fontWeight: "bold",
-                              borderRight: "1px solid #ddd",
+                              borderRight: "1px solid #e0e0e0",
                               borderBottom: cat.isTotal
-                                ? "2px solid #4fc3f7"
-                                : "1px solid #ddd",
+                                ? "2px solid #f0f8ff"
+                                : "1px solid #e0e0e0",
                               position: "sticky",
                               left: 0,
                               backgroundColor: "inherit",
@@ -599,10 +599,10 @@ export default function ElhelyezkedesimMutato() {
                           <TableCell
                             sx={{
                               fontWeight: "bold",
-                              borderRight: "2px solid #ddd",
+                              borderRight: "2px solid #e0e0e0",
                               borderBottom: cat.isTotal
-                                ? "2px solid #4fc3f7"
-                                : "1px solid #ddd",
+                                ? "2px solid #f0f8ff"
+                                : "1px solid #e0e0e0",
                               position: "sticky",
                               left: 150,
                               backgroundColor: "inherit",
@@ -622,11 +622,11 @@ export default function ElhelyezkedesimMutato() {
                                 color: "primary.main",
                                 borderRight:
                                   idx === evszamok.length - 1
-                                    ? "2px solid #ddd"
-                                    : "1px solid #ddd",
+                                    ? "2px solid #e0e0e0"
+                                    : "1px solid #e0e0e0",
                                 borderBottom: cat.isTotal
-                                  ? "2px solid #4fc3f7"
-                                  : "1px solid #ddd",
+                                  ? "2px solid #f0f8ff"
+                                  : "1px solid #e0e0e0",
                               }}
                             >
                               {calculateTotalArany(cat, year)}
@@ -642,11 +642,11 @@ export default function ElhelyezkedesimMutato() {
                                 fontWeight: "bold",
                                 borderRight:
                                   idx === evszamok.length - 1
-                                    ? "2px solid #ddd"
-                                    : "1px solid #ddd",
+                                    ? "2px solid #e0e0e0"
+                                    : "1px solid #e0e0e0",
                                 borderBottom: cat.isTotal
-                                  ? "2px solid #4fc3f7"
-                                  : "1px solid #ddd",
+                                  ? "2px solid #f0f8ff"
+                                  : "1px solid #e0e0e0",
                               }}
                             >
                               {calculateTotalElhelyezkedok(cat, year)}
@@ -663,10 +663,10 @@ export default function ElhelyezkedesimMutato() {
                                 borderRight:
                                   idx === evszamok.length - 1
                                     ? "none"
-                                    : "1px solid #ddd",
+                                    : "1px solid #e0e0e0",
                                 borderBottom: cat.isTotal
-                                  ? "2px solid #4fc3f7"
-                                  : "1px solid #ddd",
+                                  ? "2px solid #f0f8ff"
+                                  : "1px solid #e0e0e0",
                               }}
                             >
                               {calculateTotalVegzettek(cat, year)}
@@ -680,7 +680,7 @@ export default function ElhelyezkedesimMutato() {
                             <TableRow hover key={key}>
                               <TableCell
                                 sx={{
-                                  borderRight: "1px solid #ddd",
+                                  borderRight: "1px solid #e0e0e0",
                                   position: "sticky",
                                   left: 0,
                                   backgroundColor: "#fff",
@@ -691,7 +691,7 @@ export default function ElhelyezkedesimMutato() {
                               </TableCell>
                               <TableCell
                                 sx={{
-                                  borderRight: "2px solid #ddd",
+                                  borderRight: "2px solid #e0e0e0",
                                   position: "sticky",
                                   left: 150,
                                   backgroundColor: "#fff",
@@ -709,8 +709,8 @@ export default function ElhelyezkedesimMutato() {
                                   sx={{
                                     borderRight:
                                       idx === evszamok.length - 1
-                                        ? "2px solid #ddd"
-                                        : "1px solid #ddd",
+                                        ? "2px solid #e0e0e0"
+                                        : "1px solid #e0e0e0",
                                   }}
                                 >
                                   {calculateRowArany(key, year)}
@@ -728,11 +728,11 @@ export default function ElhelyezkedesimMutato() {
                                     key={`row-elh-${year}`}
                                     align="center"
                                     sx={{
-                                      backgroundColor: "#e1f5fe20",
+                                      backgroundColor: "#f0f8ff20",
                                       borderRight:
                                         idx === evszamok.length - 1
-                                          ? "2px solid #ddd"
-                                          : "1px solid #ddd",
+                                          ? "2px solid #e0e0e0"
+                                          : "1px solid #e0e0e0",
                                       p: 0.5,
                                     }}
                                   >
@@ -777,11 +777,11 @@ export default function ElhelyezkedesimMutato() {
                                     key={`row-veg-${year}`}
                                     align="center"
                                     sx={{
-                                      backgroundColor: "#e8f5e920",
+                                      backgroundColor: "#e8f5e820",
                                       borderRight:
                                         idx === evszamok.length - 1
                                           ? "none"
-                                          : "1px solid #ddd",
+                                          : "1px solid #e0e0e0",
                                       p: 0.5,
                                     }}
                                   >

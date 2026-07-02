@@ -1098,7 +1098,7 @@ export default function TanuloLetszam() {
                           sx={{
                             fontWeight: "bold",
                             minWidth: 250,
-                            borderRight: "2px solid #ddd",
+                            borderRight: "2px solid #e0e0e0",
                             position: "sticky",
                             left: 0,
                             backgroundColor: "#ffffff",
@@ -1112,7 +1112,7 @@ export default function TanuloLetszam() {
                           sx={{
                             fontWeight: "bold",
                             backgroundColor: "#ffcdd2",
-                            borderBottom: "2px solid #ddd",
+                            borderBottom: "2px solid #e0e0e0",
                           }}
                         >
                           Létszám (Október 1.)
@@ -1125,7 +1125,7 @@ export default function TanuloLetszam() {
                           sx={{
                             fontWeight: "bold",
                             backgroundColor: "#ffcdd2",
-                            borderRight: "1px solid #ddd",
+                            borderRight: "1px solid #e0e0e0",
                           }}
                         >
                           (tanulói + felnőttképzési jogviszony) (fő)
@@ -1135,8 +1135,8 @@ export default function TanuloLetszam() {
                           align="center"
                           sx={{
                             fontWeight: "bold",
-                            backgroundColor: "#e1f5fe",
-                            borderRight: "1px solid #ddd",
+                            backgroundColor: "#f0f8ff",
+                            borderRight: "1px solid #e0e0e0",
                           }}
                         >
                           tanulói jogviszony (fő)
@@ -1164,7 +1164,7 @@ export default function TanuloLetszam() {
                               fontSize: "0.75rem",
                               borderRight:
                                 year === evszamok[evszamok.length - 1]
-                                  ? "1px solid #ddd"
+                                  ? "1px solid #e0e0e0"
                                   : "none",
                             }}
                           >
@@ -1178,11 +1178,11 @@ export default function TanuloLetszam() {
                             align="center"
                             sx={{
                               fontWeight: "bold",
-                              backgroundColor: "#e1f5fe40",
+                              backgroundColor: "#f0f8ff40",
                               fontSize: "0.75rem",
                               borderRight:
                                 year === evszamok[evszamok.length - 1]
-                                  ? "1px solid #ddd"
+                                  ? "1px solid #e0e0e0"
                                   : "none",
                             }}
                           >
@@ -1212,8 +1212,8 @@ export default function TanuloLetszam() {
                           sx={{
                             fontWeight: "bold",
                             backgroundColor: "#e8f5e8",
-                            borderBottom: "2px solid #4caf50",
-                            borderRight: "2px solid #ddd",
+                            borderBottom: "2px solid #2e7d32",
+                            borderRight: "2px solid #e0e0e0",
                             position: "sticky",
                             left: 0,
                             zIndex: 2,
@@ -1245,7 +1245,7 @@ export default function TanuloLetszam() {
                                   : isNegative
                                     ? "#d32f2f"
                                     : "text.primary",
-                                borderBottom: "2px solid #4caf50",
+                                borderBottom: "2px solid #2e7d32",
                               }}
                             >
                               {change === "∞" ? "∞" : change}
@@ -1275,7 +1275,7 @@ export default function TanuloLetszam() {
                                   : isNegative
                                     ? "#d32f2f"
                                     : "text.primary",
-                                borderBottom: "2px solid #4caf50",
+                                borderBottom: "2px solid #2e7d32",
                               }}
                             >
                               {change === "∞" ? "∞" : change}
@@ -1305,7 +1305,7 @@ export default function TanuloLetszam() {
                                   : isNegative
                                     ? "#d32f2f"
                                     : "text.primary",
-                                borderBottom: "2px solid #4caf50",
+                                borderBottom: "2px solid #2e7d32",
                               }}
                             >
                               {change === "∞" ? "∞" : change}
@@ -1326,8 +1326,8 @@ export default function TanuloLetszam() {
                                   sx={{
                                     fontWeight: "bold",
                                     backgroundColor: "#f0f8ff",
-                                    borderBottom: "2px solid #ddd",
-                                    borderRight: "2px solid #ddd",
+                                    borderBottom: "2px solid #e0e0e0",
+                                    borderRight: "2px solid #e0e0e0",
                                     position: "sticky",
                                     left: 0,
                                     zIndex: 2,
@@ -1354,8 +1354,8 @@ export default function TanuloLetszam() {
                                   sx={{
                                     fontWeight: "medium",
                                     pl: 2,
-                                    backgroundColor: "#f8f9fa",
-                                    borderRight: "1px solid #ddd",
+                                    backgroundColor: "#f5f5f5",
+                                    borderRight: "1px solid #e0e0e0",
                                     position: "sticky",
                                     left: 0,
                                     zIndex: 1,
@@ -1408,7 +1408,7 @@ export default function TanuloLetszam() {
                                       key={`student-${category.szakiranyName}-${startYear}`}
                                       align="center"
                                       sx={{
-                                        backgroundColor: "#e1f5fe20",
+                                        backgroundColor: "#f0f8ff20",
                                         fontWeight: "bold",
                                         color:
                                           subcategoryTanuloi > 0
@@ -1459,7 +1459,7 @@ export default function TanuloLetszam() {
                                     sx={{
                                       fontWeight: "normal",
                                       pl: 4,
-                                      borderRight: "1px solid #ddd",
+                                      borderRight: "1px solid #e0e0e0",
                                       position: "sticky",
                                       left: 0,
                                       backgroundColor: "#ffffff",
@@ -1517,7 +1517,7 @@ export default function TanuloLetszam() {
                                       <TableCell
                                         key={`student-${subType}-${startYear}`}
                                         align="center"
-                                        sx={{ backgroundColor: "#e1f5fe20" }}
+                                        sx={{ backgroundColor: "#f0f8ff20" }}
                                       >
                                         <TextField
                                           type="number"
@@ -1597,8 +1597,8 @@ export default function TanuloLetszam() {
                                         : category.isInstitutionType
                                           ? "#fff3e0"
                                           : "#f0f8ff",
-                                      borderBottom: "2px solid #ddd",
-                                      borderRight: "2px solid #ddd",
+                                      borderBottom: "2px solid #e0e0e0",
+                                      borderRight: "2px solid #e0e0e0",
                                       position: "sticky",
                                       left: 0,
                                       zIndex: 2,
@@ -1631,7 +1631,7 @@ export default function TanuloLetszam() {
                                   sx={{
                                     backgroundColor:
                                       category.isTotal && subType === "Összesen"
-                                        ? "#f1f8e9"
+                                        ? "#e8f5e8"
                                         : "inherit",
                                   }}
                                 >
@@ -1643,7 +1643,7 @@ export default function TanuloLetszam() {
                                           ? "bold"
                                           : "medium",
                                       pl: category.isSpecialty ? 4 : 2,
-                                      borderRight: "1px solid #ddd",
+                                      borderRight: "1px solid #e0e0e0",
                                       position: "sticky",
                                       left: 0,
                                       backgroundColor:
@@ -1655,12 +1655,12 @@ export default function TanuloLetszam() {
                                       borderTop:
                                         category.isTotal &&
                                         subType === "Összesen"
-                                          ? "2px solid #4caf50"
+                                          ? "2px solid #2e7d32"
                                           : "none",
                                       borderBottom:
                                         category.isTotal &&
                                         subType === "Összesen"
-                                          ? "2px solid #4caf50"
+                                          ? "2px solid #2e7d32"
                                           : "none",
                                     }}
                                   >
@@ -1715,12 +1715,12 @@ export default function TanuloLetszam() {
                                           borderTop:
                                             category.isTotal &&
                                             subType === "Összesen"
-                                              ? "2px solid #4caf50"
+                                              ? "2px solid #2e7d32"
                                               : "none",
                                           borderBottom:
                                             category.isTotal &&
                                             subType === "Összesen"
-                                              ? "2px solid #4caf50"
+                                              ? "2px solid #2e7d32"
                                               : "none",
                                         }}
                                       >
@@ -1748,7 +1748,7 @@ export default function TanuloLetszam() {
                                           key={`student-${subType}-${startYear}`}
                                           align="center"
                                           sx={{
-                                            backgroundColor: "#e1f5fe40",
+                                            backgroundColor: "#f0f8ff40",
                                             fontWeight: "bold",
                                             color:
                                               value > 0
@@ -1779,8 +1779,8 @@ export default function TanuloLetszam() {
                                               value > 0
                                                 ? "primary.main"
                                                 : "text.disabled",
-                                            borderTop: "2px solid #4caf50",
-                                            borderBottom: "2px solid #4caf50",
+                                            borderTop: "2px solid #2e7d32",
+                                            borderBottom: "2px solid #2e7d32",
                                           }}
                                         >
                                           {value}
@@ -1794,7 +1794,7 @@ export default function TanuloLetszam() {
                                         <TableCell
                                           key={`student-${subType}-${startYear}`}
                                           align="center"
-                                          sx={{ backgroundColor: "#e1f5fe20" }}
+                                          sx={{ backgroundColor: "#f0f8ff20" }}
                                         >
                                           <TextField
                                             type="number"
@@ -1871,8 +1871,8 @@ export default function TanuloLetszam() {
                                               value > 0
                                                 ? "primary.main"
                                                 : "text.disabled",
-                                            borderTop: "2px solid #4caf50",
-                                            borderBottom: "2px solid #4caf50",
+                                            borderTop: "2px solid #2e7d32",
+                                            borderBottom: "2px solid #2e7d32",
                                           }}
                                         >
                                           {value}

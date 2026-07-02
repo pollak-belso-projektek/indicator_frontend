@@ -443,7 +443,7 @@ export default function DualisKepzohelyekSzama() {
         >
           <Table
             size="medium"
-            sx={{ minWidth: 1000, border: "2px solid #ccc" }}
+            sx={{ minWidth: 1000, border: "2px solid #e0e0e0" }}
           >
             <TableHead>
               <TableRow>
@@ -452,8 +452,8 @@ export default function DualisKepzohelyekSzama() {
                   sx={{
                     fontWeight: "bold",
                     minWidth: 250,
-                    borderRight: "2px solid #ccc",
-                    borderBottom: "2px solid #ccc",
+                    borderRight: "2px solid #e0e0e0",
+                    borderBottom: "2px solid #e0e0e0",
                     backgroundColor: "#fff",
                     position: "sticky",
                     left: 0,
@@ -470,12 +470,12 @@ export default function DualisKepzohelyekSzama() {
                     colSpan={3}
                     sx={{
                       fontWeight: "bold",
-                      backgroundColor: "#fff2cc",
-                      borderBottom: "2px solid #ccc",
+                      backgroundColor: "#fff3e0",
+                      borderBottom: "2px solid #e0e0e0",
                       borderRight:
                         i === schoolYears.length - 1
                           ? "none"
-                          : "2px solid #ccc",
+                          : "2px solid #e0e0e0",
                     }}
                   >
                     {year}
@@ -486,8 +486,8 @@ export default function DualisKepzohelyekSzama() {
                   sx={{
                     fontWeight: "bold",
                     width: 60,
-                    borderBottom: "2px solid #ccc",
-                    borderLeft: "2px solid #ccc",
+                    borderBottom: "2px solid #e0e0e0",
+                    borderLeft: "2px solid #e0e0e0",
                     position: "sticky",
                     right: 0,
                     backgroundColor: "#f5f5f5",
@@ -506,9 +506,9 @@ export default function DualisKepzohelyekSzama() {
                       align="center"
                       sx={{
                         fontWeight: "bold",
-                        backgroundColor: "#fff2cc",
-                        borderBottom: "2px solid #ccc",
-                        borderRight: "1px solid #ccc",
+                        backgroundColor: "#fff3e0",
+                        borderBottom: "2px solid #e0e0e0",
+                        borderRight: "1px solid #e0e0e0",
                         minWidth: 150,
                       }}
                     >
@@ -518,9 +518,9 @@ export default function DualisKepzohelyekSzama() {
                       align="center"
                       sx={{
                         fontWeight: "bold",
-                        backgroundColor: "#fff2cc",
-                        borderBottom: "2px solid #ccc",
-                        borderRight: "1px solid #ccc",
+                        backgroundColor: "#fff3e0",
+                        borderBottom: "2px solid #e0e0e0",
+                        borderRight: "1px solid #e0e0e0",
                         minWidth: 100,
                       }}
                     >
@@ -530,12 +530,12 @@ export default function DualisKepzohelyekSzama() {
                       align="center"
                       sx={{
                         fontWeight: "bold",
-                        backgroundColor: "#fff2cc",
-                        borderBottom: "2px solid #ccc",
+                        backgroundColor: "#fff3e0",
+                        borderBottom: "2px solid #e0e0e0",
                         borderRight:
                           i === schoolYears.length - 1
                             ? "none"
-                            : "2px solid #ccc",
+                            : "2px solid #e0e0e0",
                         minWidth: 200,
                       }}
                     >
@@ -565,8 +565,8 @@ export default function DualisKepzohelyekSzama() {
                     <TableRow key={name} hover>
                       <TableCell
                         sx={{
-                          borderRight: "2px solid #ccc",
-                          borderBottom: "1px solid #ddd",
+                          borderRight: "2px solid #e0e0e0",
+                          borderBottom: "1px solid #e0e0e0",
                           position: "sticky",
                           left: 0,
                           backgroundColor: "#fff",
@@ -589,14 +589,14 @@ export default function DualisKepzohelyekSzama() {
                             <TableCell
                               align="center"
                               sx={{
-                                borderBottom: "1px solid #ddd",
-                                borderRight: "1px solid #eee",
+                                borderBottom: "1px solid #e0e0e0",
+                                borderRight: "1px solid #f5f5f5",
                                 backgroundColor: isFieldModified(
                                   name,
                                   year,
                                   "egyuttmukodes_formaja",
                                 )
-                                  ? "#fef08a"
+                                  ? "#fff9c4"
                                   : "inherit",
                               }}
                             >
@@ -622,14 +622,14 @@ export default function DualisKepzohelyekSzama() {
                             <TableCell
                               align="center"
                               sx={{
-                                borderBottom: "1px solid #ddd",
-                                borderRight: "1px solid #eee",
+                                borderBottom: "1px solid #e0e0e0",
+                                borderRight: "1px solid #f5f5f5",
                                 backgroundColor: isFieldModified(
                                   name,
                                   year,
                                   "egyuttmukodes_szama",
                                 )
-                                  ? "#fef08a"
+                                  ? "#fff9c4"
                                   : "inherit",
                               }}
                             >
@@ -653,17 +653,17 @@ export default function DualisKepzohelyekSzama() {
                             <TableCell
                               align="center"
                               sx={{
-                                borderBottom: "1px solid #ddd",
+                                borderBottom: "1px solid #e0e0e0",
                                 borderRight:
                                   i === schoolYears.length - 1
                                     ? "none"
-                                    : "2px solid #ccc",
+                                    : "2px solid #e0e0e0",
                                 backgroundColor: isFieldModified(
                                   name,
                                   year,
                                   "egyeb_rendezvenyek",
                                 )
-                                  ? "#fef08a"
+                                  ? "#fff9c4"
                                   : "inherit",
                               }}
                             >
@@ -692,8 +692,8 @@ export default function DualisKepzohelyekSzama() {
                       <TableCell
                         align="center"
                         sx={{
-                          borderLeft: "2px solid #ccc",
-                          borderBottom: "1px solid #ddd",
+                          borderLeft: "2px solid #e0e0e0",
+                          borderBottom: "1px solid #e0e0e0",
                           position: "sticky",
                           right: 0,
                           backgroundColor: "#fff",

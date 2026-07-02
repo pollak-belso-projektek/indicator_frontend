@@ -187,7 +187,7 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
           <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{errorMsg}</Alert>
         )}
 
-        {isLoading || isFetching ? (
+        {isLoading ? (
           <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={6} gap={2}>
             <CircularProgress size={48} thickness={4} />
             <Typography color="text.secondary">Előzmények betöltése...</Typography>

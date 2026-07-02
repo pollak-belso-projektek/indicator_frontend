@@ -66,7 +66,7 @@ export default function SzakmaiBemutatokKonferenciak() {
       category: "konferenciak",
       title: "Konferenciák",
       description: "Szakmai konferenciák és tudományos rendezvények",
-      backgroundColor: "#fff8e8",
+      backgroundColor: "#fff3e0",
       nameField: "konferenciak_neve",
       numberField: "konferenciak_letszam",
     },
@@ -74,7 +74,7 @@ export default function SzakmaiBemutatokKonferenciak() {
       category: "szakmai_rendezvenyek",
       title: "Szakmai rendezvények",
       description: "Egyéb szakmai rendezvények és programok",
-      backgroundColor: "#e8f2ff",
+      backgroundColor: "#f0f8ff",
       nameField: "egyeb_rendezvenyek_neve",
       numberField: "egyeb_rendezvenyek_letszam",
     },
@@ -388,7 +388,7 @@ export default function SzakmaiBemutatokKonferenciak() {
                         sx={{
                           fontWeight: "bold",
                           minWidth: 150,
-                          backgroundColor: "#e3f2fd",
+                          backgroundColor: "#f0f8ff",
                         }}
                       >
                         Információk
@@ -400,7 +400,7 @@ export default function SzakmaiBemutatokKonferenciak() {
                           sx={{
                             fontWeight: "bold",
                             minWidth: 120,
-                            backgroundColor: "#e8f4fd",
+                            backgroundColor: "#f0f8ff",
                           }}
                         >
                           {yearLabel}
@@ -425,7 +425,7 @@ export default function SzakmaiBemutatokKonferenciak() {
                         sx={{
                           fontWeight: "medium",
                           textAlign: "left",
-                          backgroundColor: "#f9f9f9",
+                          backgroundColor: "#f5f5f5",
                         }}
                       >
                         tevékenységek színterei
@@ -463,7 +463,7 @@ export default function SzakmaiBemutatokKonferenciak() {
                         sx={{
                           fontWeight: "medium",
                           textAlign: "left",
-                          backgroundColor: "#f9f9f9",
+                          backgroundColor: "#f5f5f5",
                         }}
                       >
                         bevont tanulók száma (fő)

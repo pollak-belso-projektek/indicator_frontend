@@ -389,7 +389,7 @@ export default function VegzettekElegedettsege() {
                         sx={{
                           fontWeight: "bold",
                           minWidth: 250,
-                          borderRight: "2px solid #ddd",
+                          borderRight: "2px solid #e0e0e0",
                           position: "sticky",
                           left: 0,
                           backgroundColor: "#ffffff",
@@ -404,8 +404,8 @@ export default function VegzettekElegedettsege() {
                         align="center"
                         sx={{
                           fontWeight: "bold",
-                          backgroundColor: "#fff2cc",
-                          borderBottom: "1px solid #ddd",
+                          backgroundColor: "#fff3e0",
+                          borderBottom: "1px solid #e0e0e0",
                         }}
                       >
                         végzetteket foglalkoztató munkaadók elégedettsége (%)
@@ -418,12 +418,12 @@ export default function VegzettekElegedettsege() {
                           align="center"
                           sx={{
                             fontWeight: "bold",
-                            backgroundColor: "#fff2cc",
-                            borderBottom: "2px solid #ddd",
+                            backgroundColor: "#fff3e0",
+                            borderBottom: "2px solid #e0e0e0",
                             borderRight:
                               i === evszamok.length - 1
                                 ? "none"
-                                : "1px solid #ddd",
+                                : "1px solid #e0e0e0",
                             minWidth: 100,
                           }}
                         >
@@ -439,17 +439,17 @@ export default function VegzettekElegedettsege() {
                         hover
                         sx={{
                           backgroundColor:
-                            index % 2 === 0 ? "#f9f9f9" : "white",
+                            index % 2 === 0 ? "#f5f5f5" : "white",
                         }}
                       >
                         <TableCell
                           sx={{
                             fontWeight: "bold",
-                            borderRight: "2px solid #ddd",
+                            borderRight: "2px solid #e0e0e0",
                             position: "sticky",
                             left: 0,
                             backgroundColor:
-                              index % 2 === 0 ? "#f9f9f9" : "#fff",
+                              index % 2 === 0 ? "#f5f5f5" : "#fff",
                             zIndex: 1,
                           }}
                         >
@@ -465,7 +465,7 @@ export default function VegzettekElegedettsege() {
                                 borderRight:
                                   i === evszamok.length - 1
                                     ? "none"
-                                    : "1px solid #ddd",
+                                    : "1px solid #e0e0e0",
                                 p: 0.5,
                               }}
                             >

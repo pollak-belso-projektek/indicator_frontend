@@ -402,15 +402,15 @@ export default function Szervezetfejlesztes() {
           component={Paper}
           sx={{ maxWidth: "100%", overflowX: "auto" }}
         >
-          <Table size="medium" sx={{ minWidth: 800, border: "2px solid #ccc" }}>
+          <Table size="medium" sx={{ minWidth: 800, border: "2px solid #e0e0e0" }}>
             <TableHead>
               <TableRow>
                 <TableCell
                   sx={{
                     fontWeight: "bold",
                     minWidth: 300,
-                    borderRight: "2px solid #ccc",
-                    borderBottom: "2px solid #ccc",
+                    borderRight: "2px solid #e0e0e0",
+                    borderBottom: "2px solid #e0e0e0",
                     backgroundColor: "#fff",
                     position: "sticky",
                     left: 0,
@@ -425,12 +425,12 @@ export default function Szervezetfejlesztes() {
                     align="center"
                     sx={{
                       fontWeight: "bold",
-                      backgroundColor: "#fff2cc",
-                      borderBottom: "2px solid #ccc",
+                      backgroundColor: "#fff3e0",
+                      borderBottom: "2px solid #e0e0e0",
                       borderRight:
                         i === schoolYears.length - 1
                           ? "none"
-                          : "1px solid #ccc",
+                          : "1px solid #e0e0e0",
                       minWidth: 150,
                     }}
                   >
@@ -452,8 +452,8 @@ export default function Szervezetfejlesztes() {
                   sx={{
                     fontWeight: "bold",
                     width: 60,
-                    borderBottom: "2px solid #ccc",
-                    borderLeft: "2px solid #ccc",
+                    borderBottom: "2px solid #e0e0e0",
+                    borderLeft: "2px solid #e0e0e0",
                     position: "sticky",
                     right: 0,
                     backgroundColor: "#f5f5f5",
@@ -484,8 +484,8 @@ export default function Szervezetfejlesztes() {
                     <TableRow key={name} hover>
                       <TableCell
                         sx={{
-                          borderRight: "2px solid #ccc",
-                          borderBottom: "1px solid #ddd",
+                          borderRight: "2px solid #e0e0e0",
+                          borderBottom: "1px solid #e0e0e0",
                           position: "sticky",
                           left: 0,
                           backgroundColor: "#fff",
@@ -504,13 +504,13 @@ export default function Szervezetfejlesztes() {
                             key={`${year}-val`}
                             align="center"
                             sx={{
-                              borderBottom: "1px solid #ddd",
+                              borderBottom: "1px solid #e0e0e0",
                               borderRight:
                                 i === schoolYears.length - 1
                                   ? "none"
-                                  : "1px solid #eee",
+                                  : "1px solid #f5f5f5",
                               backgroundColor: isFieldModified(name, year)
-                                ? "#fef08a"
+                                ? "#fff9c4"
                                 : "inherit",
                             }}
                           >
@@ -531,8 +531,8 @@ export default function Szervezetfejlesztes() {
                       <TableCell
                         align="center"
                         sx={{
-                          borderLeft: "2px solid #ccc",
-                          borderBottom: "1px solid #ddd",
+                          borderLeft: "2px solid #e0e0e0",
+                          borderBottom: "1px solid #e0e0e0",
                           position: "sticky",
                           right: 0,
                           backgroundColor: "#fff",

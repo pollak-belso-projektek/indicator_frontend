@@ -673,13 +673,13 @@ export default function IntezményiNevelesiMutatok() {
                 >
                   <Table size="small">
                     <TableHead>
-                      <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+                      <TableRow sx={{ backgroundColor: "#f0f8ff" }}>
                         <TableCell
                           sx={{
                             fontWeight: "bold",
                             minWidth: 150,
                             textAlign: "center",
-                            backgroundColor: "#bbdefb",
+                            backgroundColor: "#f0f8ff",
                           }}
                         >
                           Osztály jele
@@ -703,8 +703,8 @@ export default function IntezményiNevelesiMutatok() {
                               textAlign: "center",
                               backgroundColor:
                                 category.name === "dicséret"
-                                  ? "#c8e6c8"
-                                  : "#ffebee",
+                                  ? "#e8f5e8"
+                                  : "#ffcdd2",
                               color:
                                 category.name === "dicséret"
                                   ? "#2e7d32"
@@ -717,7 +717,7 @@ export default function IntezményiNevelesiMutatok() {
                       </TableRow>
                       <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                         <TableCell
-                          sx={{ backgroundColor: "#bbdefb" }}
+                          sx={{ backgroundColor: "#f0f8ff" }}
                         ></TableCell>
                         <TableCell
                           sx={{ backgroundColor: "#ffcdd2" }}
@@ -752,7 +752,7 @@ export default function IntezményiNevelesiMutatok() {
                       {classes.map((className, index) => (
                         <TableRow
                           key={`${className}-${index}`}
-                          sx={{ backgroundColor: "#fafafa" }}
+                          sx={{ backgroundColor: "#f5f5f5" }}
                         >
                           <TableCell
                             sx={{ textAlign: "center", color: "#666" }}
@@ -830,13 +830,13 @@ export default function IntezményiNevelesiMutatok() {
 
                       {/* Summary Row */}
                       <TableRow
-                        sx={{ backgroundColor: "#ffcc02", fontWeight: "bold" }}
+                        sx={{ backgroundColor: "#fff3e0", fontWeight: "bold" }}
                       >
                         <TableCell
                           sx={{
                             fontWeight: "bold",
                             textAlign: "center",
-                            backgroundColor: "#ffcc02",
+                            backgroundColor: "#fff3e0",
                           }}
                         >
                           összesen
