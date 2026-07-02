@@ -77,6 +77,13 @@ export const indicatorApi = createApi({
         body: credentials,
       }),
     }),
+    googleLogin: build.mutation({
+      query: (credentials) => ({
+        url: "auth/google-login",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
     logout: build.mutation({
       query: () => ({
         url: "auth/logout",
@@ -1891,6 +1898,7 @@ export const {
   useUpdateMeMutation,
   useChangeMePasswordMutation,
   useLoginMutation,
+  useGoogleLoginMutation,
   useGenerate2FAMutation,
   useVerify2FAMutation,
   useDisable2FAMutation,

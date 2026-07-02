@@ -23,7 +23,8 @@ import {
 } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { useLoginMutation } from "../store/api/apiSlice";
+import { useLoginMutation, useGoogleLoginMutation } from "../store/api/apiSlice";
+import { GoogleLogin } from "@react-oauth/google";
 import {
   loginStart,
   loginSuccess,
@@ -75,6 +76,8 @@ export default function Login() {
   const otpRefs = useRef([]);
   const [trustDevice, setTrustDevice] = useState(false);
   const [requires2FA, setRequires2FA] = useState(false);
+  const [isGoogleLoginAttempt, setIsGoogleLoginAttempt] = useState(false);
+  const [googleIdToken, setGoogleIdToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const dispatch = useDispatch();
@@ -145,6 +148,7 @@ export default function Login() {
   }, [error]);
 
   const [loginMutation] = useLoginMutation();
+  const [googleLoginMutation] = useGoogleLoginMutation();
 
   if (isAuthenticated) {
     // If must change password, redirect to profile with flag
@@ -169,22 +173,41 @@ export default function Login() {
 
     dispatch(loginStart());
     try {
-      const payload = { email, password };
+      let result;
+      if (isGoogleLoginAttempt) {
+        const payload = {
+          idToken: googleIdToken,
+        };
+        const trustedDeviceToken = localStorage.getItem("trustedDeviceToken");
+        if (trustedDeviceToken) {
+          payload.trustedDeviceToken = trustedDeviceToken;
+        }
+        if (requires2FA) {
+          payload.twoFactorCode = twoFactorCode;
+          payload.trustDevice = trustDevice;
+        }
+        result = await googleLoginMutation(payload).unwrap();
+      } else {
+        const payload = { email, password };
 
-      const trustedDeviceToken = localStorage.getItem("trustedDeviceToken");
-      if (trustedDeviceToken) {
-        payload.trustedDeviceToken = trustedDeviceToken;
+        const trustedDeviceToken = localStorage.getItem("trustedDeviceToken");
+        if (trustedDeviceToken) {
+          payload.trustedDeviceToken = trustedDeviceToken;
+        }
+
+        if (requires2FA) {
+          payload.twoFactorCode = twoFactorCode;
+          payload.trustDevice = trustDevice;
+        }
+        result = await loginMutation(payload).unwrap();
       }
-
-      if (requires2FA) {
-        payload.twoFactorCode = twoFactorCode;
-        payload.trustDevice = trustDevice;
-      }
-
-      const result = await loginMutation(payload).unwrap();
 
       if (result.requires2FA) {
         setRequires2FA(true);
+        if (result.isGoogleLogin) {
+          setIsGoogleLoginAttempt(true);
+          setGoogleIdToken(result.idToken);
+        }
         dispatch(clearError()); // Clear loading and error state without failing
         dispatch(loginFailure(null)); // Specifically setting to null to stop loading indicator
         return;
@@ -214,6 +237,52 @@ export default function Login() {
       );
     }
   };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    dispatch(loginStart());
+    try {
+      const payload = {
+        idToken: credentialResponse.credential,
+      };
+      
+      const trustedDeviceToken = localStorage.getItem("trustedDeviceToken");
+      if (trustedDeviceToken) {
+        payload.trustedDeviceToken = trustedDeviceToken;
+      }
+
+      const result = await googleLoginMutation(payload).unwrap();
+
+      if (result.requires2FA) {
+        setRequires2FA(true);
+        setIsGoogleLoginAttempt(true);
+        setGoogleIdToken(result.idToken);
+        dispatch(clearError());
+        dispatch(loginFailure(null));
+        return;
+      }
+
+      if (result.trustedDeviceToken) {
+        localStorage.setItem("trustedDeviceToken", result.trustedDeviceToken);
+      }
+
+      dispatch(loginSuccess(result));
+      if (result.mustChangePassword) {
+        navigate("/profile?mustChangePassword=true", { replace: true });
+      }
+    } catch (err) {
+      const errorMsg = parseApiError(err);
+      dispatch(
+        loginFailure(
+          errorMsg || "Hiba történt a Google bejelentkezés során"
+        )
+      );
+    }
+  };
+
+  const handleGoogleError = () => {
+    dispatch(loginFailure("Google bejelentkezés megszakítva vagy sikertelen."));
+  };
+
 
   return (
     <Box
@@ -375,6 +444,8 @@ export default function Login() {
                       disabled={loading}
                       onClick={() => {
                         setRequires2FA(false);
+                        setIsGoogleLoginAttempt(false);
+                        setGoogleIdToken("");
                         setTwoFactorCode("");
                         setOtp(new Array(6).fill(""));
                       }}
@@ -399,6 +470,22 @@ export default function Login() {
                       >
                         Elfelejtett jelszó?
                       </Link>
+                    </Box>
+                  )}
+                  
+                  {!requires2FA && (
+                    <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Vagy jelentkezz be Google fiókkal
+                      </Typography>
+                      <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        theme="filled_blue"
+                        shape="rectangular"
+                        text="signin_with"
+                        size="large"
+                      />
                     </Box>
                   )}
                 </Stack>

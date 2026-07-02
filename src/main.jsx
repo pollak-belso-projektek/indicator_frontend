@@ -13,6 +13,7 @@ import "./store/api/oktatokEgyebTevSlice.js"; // Import to register the API slic
 import { setupListeners } from "@reduxjs/toolkit/query";
 import Router from "./router/router.jsx";
 import { AccessNotificationProvider } from "./contexts/AccessNotificationContext.jsx";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 // Import Tailwind CSS LAST to give it highest priority
 import "./index.css";
 
@@ -58,9 +59,11 @@ createRoot(document.getElementById("root")).render(
     <ChakraProvider>
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
-          <AccessNotificationProvider>
-            <Router />
-          </AccessNotificationProvider>
+          <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "your-google-client-id-here"}>
+            <AccessNotificationProvider>
+              <Router />
+            </AccessNotificationProvider>
+          </GoogleOAuthProvider>
         </PersistGate>
       </Provider>
     </ChakraProvider>
