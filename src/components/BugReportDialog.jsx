@@ -16,6 +16,7 @@ import {
   Stack,
   Paper,
   Chip,
+  Collapse
 } from "@mui/material";
 
 import { 
@@ -24,7 +25,9 @@ import {
   AttachFile as AttachFileIcon, 
   Assignment as AssignmentIcon,
   ErrorOutline as ErrorOutlineIcon,
-  Check as CheckIcon
+  Check as CheckIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon
 } from "@mui/icons-material";
 import { useSubmitBugReportMutation, useGetReportedBugsQuery, useResolveBugReportMutation } from "../store/api/apiSlice";
 import { selectUserPermissions } from "../store/slices/authSlice";
@@ -47,9 +50,32 @@ export default function BugReportDialog({ open, onClose }) {
   const [submitBugReport, { isLoading }] = useSubmitBugReportMutation();
   const { data: reportedBugs, isLoading: isBugsLoading } = useGetReportedBugsQuery(undefined, { skip: !open });
   const [resolveBugReport, { isLoading: isResolving }] = useResolveBugReportMutation();
+  const [expandedBugId, setExpandedBugId] = useState(null);
   
   const userPermissions = useSelector(selectUserPermissions);
-  const isDeveloper = userPermissions >= 16;
+  const isDeveloper = userPermissions?.isSuperadmin;
+
+  const renderFormattedText = (text) => {
+    if (!text) return 'Nincs részletes leírás.';
+    
+    return text.split('\n').map((line, i) => {
+      if (line.startsWith('### ')) {
+        return <Typography key={i} variant="subtitle2" sx={{ mt: 1.5, mb: 0.5, fontWeight: 'bold', color: 'text.primary' }}>{line.substring(4)}</Typography>;
+      }
+      
+      const parts = line.split(/(\*\*.*?\*\*)/g);
+      return (
+        <Typography key={i} variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary', minHeight: '1.2em', wordBreak: 'break-word' }}>
+          {parts.map((part, j) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              return <Box component="span" key={j} sx={{ fontWeight: 'bold', color: 'text.primary' }}>{part.slice(2, -2)}</Box>;
+            }
+            return <span key={j}>{part}</span>;
+          })}
+        </Typography>
+      );
+    });
+  };
 
   const handleClose = () => {
     // Only reset after close animation
@@ -61,6 +87,7 @@ export default function BugReportDialog({ open, onClose }) {
       setAttachment(null);
       setSubmitted(false);
       setErrorMessage("");
+      setExpandedBugId(null);
     }, 200);
     onClose();
   };
@@ -148,18 +175,31 @@ export default function BugReportDialog({ open, onClose }) {
                     variant="outlined" 
                     key={bug.id} 
                     sx={{ 
-                      p: 2, 
                       borderRadius: 2, 
-                      transition: '0.2s', 
-                      '&:hover': { borderColor: 'primary.main', bgcolor: 'primary.50', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' } 
+                      transition: '0.2s',
+                      overflow: 'hidden',
+                      '&:hover': { borderColor: 'primary.main', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' } 
                     }}
                   >
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1, lineHeight: 1.4 }}>
-                      {bug.name}
-                    </Typography>
-                    
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      {bug.labels && bug.labels.length > 0 ? (
+                    <Box 
+                      onClick={() => setExpandedBugId(expandedBugId === bug.id ? null : bug.id)}
+                      sx={{ 
+                        p: 2, 
+                        cursor: 'pointer', 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        bgcolor: expandedBugId === bug.id ? 'primary.50' : 'transparent',
+                        '&:hover': { bgcolor: 'primary.50' }
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1, lineHeight: 1.4, pr: 2 }}>
+                          {bug.name}
+                        </Typography>
+                        {expandedBugId === bug.id ? <ExpandLessIcon fontSize="small" color="action" /> : <ExpandMoreIcon fontSize="small" color="action" />}
+                      </Box>
+                      
+                      {bug.labels && bug.labels.length > 0 && (
                         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
                           {bug.labels.map(l => (
                             <Chip 
@@ -178,24 +218,71 @@ export default function BugReportDialog({ open, onClose }) {
                             />
                           ))}
                         </Stack>
-                      ) : (
-                        <Box /> // Empty placeholder for flex
-                      )}
-
-                      {isDeveloper && (
-                        <Button
-                          size="small"
-                          variant="text"
-                          color="success"
-                          startIcon={<CheckIcon />}
-                          onClick={() => resolveBugReport(bug.id)}
-                          disabled={isResolving}
-                          sx={{ minWidth: 'auto', p: 0.5, fontSize: '0.75rem' }}
-                        >
-                          Kész
-                        </Button>
                       )}
                     </Box>
+
+                    <Collapse in={expandedBugId === bug.id}>
+                      <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)', borderTop: 1, borderColor: 'divider' }}>
+                        <Box sx={{ mb: 2 }}>
+                          {renderFormattedText(bug.desc)}
+                        </Box>
+
+                        {bug.attachments && bug.attachments.length > 0 && (
+                          <Box sx={{ mt: 2, mb: 2 }}>
+                            <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block', mb: 1, color: 'text.secondary' }}>
+                              Csatolmányok ({bug.attachments.length}):
+                            </Typography>
+                            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                              {bug.attachments.map(att => (
+                                <Box key={att.id}>
+                                  {att.mimeType?.startsWith('image/') ? (
+                                    <a href={att.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
+                                      <Box
+                                        component="img"
+                                        src={att.previews?.[3]?.url || att.previews?.[2]?.url || att.url} 
+                                        alt={att.name}
+                                        sx={{ 
+                                          width: 80, 
+                                          height: 80, 
+                                          objectFit: 'cover', 
+                                          borderRadius: 1, 
+                                          border: '1px solid',
+                                          borderColor: 'divider',
+                                          '&:hover': { opacity: 0.8 }
+                                        }}
+                                      />
+                                    </a>
+                                  ) : (
+                                    <Button size="small" variant="outlined" href={att.url} target="_blank" startIcon={<AttachFileIcon />} sx={{ fontSize: '0.7rem', py: 0.5 }}>
+                                      {att.name}
+                                    </Button>
+                                  )}
+                                </Box>
+                              ))}
+                            </Stack>
+                          </Box>
+                        )}
+
+                        {isDeveloper && (
+                          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="success"
+                              startIcon={<CheckIcon />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                resolveBugReport(bug.id);
+                              }}
+                              disabled={isResolving}
+                              sx={{ boxShadow: 'none' }}
+                            >
+                              Készre állítás
+                            </Button>
+                          </Box>
+                        )}
+                      </Box>
+                    </Collapse>
                   </Paper>
                 ))}
               </Stack>
