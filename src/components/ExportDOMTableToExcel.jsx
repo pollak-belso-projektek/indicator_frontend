@@ -10,7 +10,8 @@ export default function ExportDOMTableToExcel({
   buttonLabel = "Export Táblázatba",
   buttonVariant = "outlined",
   buttonColor = "success",
-  buttonSx = {}
+  buttonSx = {},
+  excludeColumns = []
 }) {
   const [isExporting, setIsExporting] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
@@ -77,13 +78,26 @@ export default function ExportDOMTableToExcel({
         const cells = tr.querySelectorAll("th, td");
         let isHeader = tr.closest("thead") !== null || tr.querySelector("th") !== null;
 
-        cells.forEach((cellNode) => {
+        cells.forEach((cellNode, index) => {
+          if (excludeColumns.includes(index)) return;
+
           const colspan = parseInt(cellNode.getAttribute("colspan") || "1", 10);
           const rowspan = parseInt(cellNode.getAttribute("rowspan") || "1", 10);
           
+          // Adjust colspan for header rows if it spans across excluded columns
+          let adjustedColspan = colspan;
+          if (colspan > 1) {
+            let excludedCount = 0;
+            for (let i = 0; i < colspan; i++) {
+              if (excludeColumns.includes(index + i)) excludedCount++;
+            }
+            adjustedColspan -= excludedCount;
+            if (adjustedColspan <= 0) return; // Entire span is excluded
+          }
+          
           let colIndex = getEmptyCol(currentRowIdx);
           
-          markGrid(currentRowIdx, colIndex, rowspan, colspan);
+          markGrid(currentRowIdx, colIndex, rowspan, adjustedColspan);
 
           const cell = row.getCell(colIndex);
           
@@ -99,8 +113,8 @@ export default function ExportDOMTableToExcel({
           }
 
           // Merge if necessary
-          if (colspan > 1 || rowspan > 1) {
-            worksheet.mergeCells(currentRowIdx, colIndex, currentRowIdx + rowspan - 1, colIndex + colspan - 1);
+          if (adjustedColspan > 1 || rowspan > 1) {
+            worksheet.mergeCells(currentRowIdx, colIndex, currentRowIdx + rowspan - 1, colIndex + adjustedColspan - 1);
           }
 
           // Styling
