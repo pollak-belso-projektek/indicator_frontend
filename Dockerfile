@@ -8,9 +8,11 @@ ENV PATH /usr/src/node_modules/.bin:$PATH
 
 # Accept build arguments (from GitHub Actions)
 ARG VITE_API_BASE_URL
+ARG VITE_GOOGLE_CLIENT_ID
 
 # Set them as environment variables for Vite to access
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 
 COPY package.json ./
 
