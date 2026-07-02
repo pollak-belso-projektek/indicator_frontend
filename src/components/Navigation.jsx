@@ -617,11 +617,59 @@ const SidebarContent = ({ onClose, ...rest }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [itemSearch, setItemSearch] = useState("");
-  const [expandedCategories, setExpandedCategories] = useState({
-    GENERAL: false, // Keep general collapsed by default
-    FIXED_GENERAL: false, // Keep fixed general collapsed by default
-    INDICATORS: true, // Keep indicators expanded by default
+  const [expandedCategories, setExpandedCategories] = useState(() => {
+    // Check if we have saved state
+    try {
+      const saved = sessionStorage.getItem('navExpandedCategories');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error("Error reading nav state", e);
+    }
+
+    let currentPath = decodeURIComponent(location.pathname);
+    if (currentPath !== "/" && currentPath.endsWith("/")) {
+      currentPath = currentPath.slice(0, -1);
+    }
+
+    const initialState = {
+      GENERAL: false,
+      FIXED_GENERAL: false,
+      INDICATORS: true,
+    };
+
+    // Determine if FIXED_GENERAL should be open
+    const isFixedItem = [
+      "/dashboard", "/alapadatok", "/adat-import",
+      "/schools", "/users", "/logs"
+    ].includes(currentPath);
+
+    if (isFixedItem) {
+      initialState.FIXED_GENERAL = true;
+    }
+
+    // Determine if any dynamic category should be open
+    Object.entries(NavigationCategories).forEach(([categoryKey, category]) => {
+      const hasActiveItem = category.items.some(
+        (item) => item.link === currentPath,
+      );
+      if (hasActiveItem) {
+        initialState[categoryKey] = true;
+      }
+    });
+
+    return initialState;
   });
+
+  // Save state whenever it changes
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('navExpandedCategories', JSON.stringify(expandedCategories));
+    } catch (e) {
+      // ignore
+    }
+  }, [expandedCategories]);
 
   const tableAccess = useSelector(selectUserTableAccess);
   const userPermissions = useSelector(selectUserPermissions);
@@ -700,13 +748,24 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
   // Find which category contains the current active page and expand it
   useEffect(() => {
-    const currentPath = decodeURIComponent(location.pathname);
+    let currentPath = decodeURIComponent(location.pathname);
+    if (currentPath !== "/" && currentPath.endsWith("/")) {
+      currentPath = currentPath.slice(0, -1);
+    }
+
     let activeCategoryKey = null;
 
     // Check if current path is in fixed items
     const isInFixedItems = fixedItems.some((item) => item.link === currentPath);
     if (isInFixedItems) {
-      // Az "Általános" részleget alapból nem nyitjuk ki
+      // Az "Általános" részleget mindig nyitva tartjuk, ha valamelyik aloldalán vagyunk
+      setExpandedCategories((prev) => {
+        if (prev.FIXED_GENERAL) return prev;
+        return {
+          ...prev,
+          FIXED_GENERAL: true,
+        };
+      });
       return;
     }
 
@@ -741,7 +800,11 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
   // Helper function to check if fixed general category is active
   const isFixedGeneralActive = () => {
-    return fixedItems.some((item) => item.link === decodeURIComponent(location.pathname));
+    let currentPath = decodeURIComponent(location.pathname);
+    if (currentPath !== "/" && currentPath.endsWith("/")) {
+      currentPath = currentPath.slice(0, -1);
+    }
+    return fixedItems.some((item) => item.link === currentPath);
   };
 
   const scrollableItems = useMemo(() => {
@@ -977,7 +1040,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
             <FiChevronDown style={{ transform: expandedCategories["FIXED_GENERAL"] ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 0.2s", color: isFixedGeneralActive() ? "#1976d2" : "#9e9e9e" }} />
           </ListItemButton>
 
-          <Collapse in={expandedCategories["FIXED_GENERAL"]} timeout="auto" unmountOnExit>
+          <Collapse in={expandedCategories["FIXED_GENERAL"]} timeout="auto" unmountOnExit={false} appear={false}>
             <List component="div" disablePadding sx={{ mt: 0.5 }}>
               {fixedItems.map((link) => (
                 <NavItem key={link.name} icon={link.icon} to={link.link} link={link.link} onClick={() => onClose()}>
@@ -1029,7 +1092,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
                 <FiChevronDown style={{ transform: expandedCategories[categoryKey] ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 0.2s", color: isCategoryActive(categoryKey) ? "#1976d2" : "#9e9e9e" }} />
               </ListItemButton>
 
-              <Collapse in={expandedCategories[categoryKey]} timeout="auto" unmountOnExit>
+              <Collapse in={expandedCategories[categoryKey]} timeout="auto" unmountOnExit appear={false}>
                 <List component="div" disablePadding sx={{ mt: 0.5 }}>
                   {category.items.map((link) => (
                     <NavItem key={link.name} icon={link.icon} to={link.link} link={link.link} onClick={() => onClose()}>
