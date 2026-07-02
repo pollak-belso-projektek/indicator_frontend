@@ -632,7 +632,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
     if (currentPath !== "/" && currentPath.endsWith("/")) {
       currentPath = currentPath.slice(0, -1);
     }
-    
+
     const initialState = {
       GENERAL: false,
       FIXED_GENERAL: false,
@@ -641,10 +641,10 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
     // Determine if FIXED_GENERAL should be open
     const isFixedItem = [
-      "/dashboard", "/alapadatok", "/adat-import", 
+      "/dashboard", "/alapadatok", "/adat-import",
       "/schools", "/users", "/logs"
     ].includes(currentPath);
-    
+
     if (isFixedItem) {
       initialState.FIXED_GENERAL = true;
     }
@@ -752,7 +752,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
     if (currentPath !== "/" && currentPath.endsWith("/")) {
       currentPath = currentPath.slice(0, -1);
     }
-    
+
     let activeCategoryKey = null;
 
     // Check if current path is in fixed items
@@ -969,7 +969,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
         <Box sx={{ mx: 2, my: 2 }}>
           <TextField
-            placeholder="Keresés név vagy szám alapján... (Ctrl+K)"
+            placeholder="Keresés... (Ctrl+K)"
             value={itemSearch}
             onChange={(e) => setItemSearch(e.target.value)}
             size="small"
@@ -1033,9 +1033,9 @@ const SidebarContent = ({ onClose, ...rest }) => {
             <ListItemIcon sx={{ minWidth: 40, color: isFixedGeneralActive() ? "primary.main" : "grey.600" }}>
               <MdHome size={20} />
             </ListItemIcon>
-            <ListItemText 
-              primary="Általános" 
-              primaryTypographyProps={{ fontSize: "0.875rem", fontWeight: isFixedGeneralActive() ? 700 : 600, color: isFixedGeneralActive() ? "primary.main" : "text.primary" }} 
+            <ListItemText
+              primary="Általános"
+              primaryTypographyProps={{ fontSize: "0.875rem", fontWeight: isFixedGeneralActive() ? 700 : 600, color: isFixedGeneralActive() ? "primary.main" : "text.primary" }}
             />
             <FiChevronDown style={{ transform: expandedCategories["FIXED_GENERAL"] ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 0.2s", color: isFixedGeneralActive() ? "#1976d2" : "#9e9e9e" }} />
           </ListItemButton>
@@ -1073,57 +1073,57 @@ const SidebarContent = ({ onClose, ...rest }) => {
       >
         {!itemSearch
           ? Object.entries(filteredCategories).map(([categoryKey, category]) => (
-              <Box key={categoryKey} sx={{ mb: 1 }}>
-                <ListItemButton
-                  onClick={() => toggleCategory(categoryKey)}
-                  sx={{
-                    mx: 2, p: 1.5, borderRadius: 3, transition: "all 0.2s ease-in-out",
-                    bgcolor: isCategoryActive(categoryKey) ? "primary.50" : "transparent",
-                    "&:hover": { bgcolor: isCategoryActive(categoryKey) ? "primary.100" : "grey.50" }
-                  }}
-                >
-                  <ListItemIcon sx={{ minWidth: 40, color: isCategoryActive(categoryKey) ? "primary.main" : "grey.600" }}>
-                    {React.createElement(category.icon, { size: 20 })}
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={category.name} 
-                    primaryTypographyProps={{ fontSize: "0.875rem", fontWeight: isCategoryActive(categoryKey) ? 700 : 600, color: isCategoryActive(categoryKey) ? "primary.main" : "text.primary" }} 
-                  />
-                  <FiChevronDown style={{ transform: expandedCategories[categoryKey] ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 0.2s", color: isCategoryActive(categoryKey) ? "#1976d2" : "#9e9e9e" }} />
-                </ListItemButton>
+            <Box key={categoryKey} sx={{ mb: 1 }}>
+              <ListItemButton
+                onClick={() => toggleCategory(categoryKey)}
+                sx={{
+                  mx: 2, p: 1.5, borderRadius: 3, transition: "all 0.2s ease-in-out",
+                  bgcolor: isCategoryActive(categoryKey) ? "primary.50" : "transparent",
+                  "&:hover": { bgcolor: isCategoryActive(categoryKey) ? "primary.100" : "grey.50" }
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 40, color: isCategoryActive(categoryKey) ? "primary.main" : "grey.600" }}>
+                  {React.createElement(category.icon, { size: 20 })}
+                </ListItemIcon>
+                <ListItemText
+                  primary={category.name}
+                  primaryTypographyProps={{ fontSize: "0.875rem", fontWeight: isCategoryActive(categoryKey) ? 700 : 600, color: isCategoryActive(categoryKey) ? "primary.main" : "text.primary" }}
+                />
+                <FiChevronDown style={{ transform: expandedCategories[categoryKey] ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 0.2s", color: isCategoryActive(categoryKey) ? "#1976d2" : "#9e9e9e" }} />
+              </ListItemButton>
 
-                <Collapse in={expandedCategories[categoryKey]} timeout="auto" unmountOnExit appear={false}>
-                  <List component="div" disablePadding sx={{ mt: 0.5 }}>
-                    {category.items.map((link) => (
-                      <NavItem key={link.name} icon={link.icon} to={link.link} link={link.link} onClick={() => onClose()}>
-                        {getDisplayName(link)}
-                      </NavItem>
-                    ))}
-                  </List>
-                </Collapse>
-              </Box>
-            ))
+              <Collapse in={expandedCategories[categoryKey]} timeout="auto" unmountOnExit appear={false}>
+                <List component="div" disablePadding sx={{ mt: 0.5 }}>
+                  {category.items.map((link) => (
+                    <NavItem key={link.name} icon={link.icon} to={link.link} link={link.link} onClick={() => onClose()}>
+                      {getDisplayName(link)}
+                    </NavItem>
+                  ))}
+                </List>
+              </Collapse>
+            </Box>
+          ))
           : filteredScrollableItems
-              .sort((a, b) => {
-                const searchValue = itemSearch.trim();
-                const searchClean = searchValue.replace(/\.$/, "");
-                if (searchClean && !isNaN(searchClean)) {
-                  const aNumber = getPageNumber(a.link);
-                  const bNumber = getPageNumber(b.link);
-                  const searchNum = parseInt(searchClean);
-                  if (aNumber === searchNum && bNumber !== searchNum) return -1;
-                  if (bNumber === searchNum && aNumber !== searchNum) return 1;
-                  if (aNumber && bNumber) return aNumber - bNumber;
-                  if (aNumber && !bNumber) return -1;
-                  if (!aNumber && bNumber) return 1;
-                }
-                return a.name.localeCompare(b.name);
-              })
-              .map((link) => (
-                <NavItem key={link.name} icon={link.icon} to={link.link} link={link.link} onClick={() => onClose()}>
-                  {getDisplayName(link)}
-                </NavItem>
-              ))}
+            .sort((a, b) => {
+              const searchValue = itemSearch.trim();
+              const searchClean = searchValue.replace(/\.$/, "");
+              if (searchClean && !isNaN(searchClean)) {
+                const aNumber = getPageNumber(a.link);
+                const bNumber = getPageNumber(b.link);
+                const searchNum = parseInt(searchClean);
+                if (aNumber === searchNum && bNumber !== searchNum) return -1;
+                if (bNumber === searchNum && aNumber !== searchNum) return 1;
+                if (aNumber && bNumber) return aNumber - bNumber;
+                if (aNumber && !bNumber) return -1;
+                if (!aNumber && bNumber) return 1;
+              }
+              return a.name.localeCompare(b.name);
+            })
+            .map((link) => (
+              <NavItem key={link.name} icon={link.icon} to={link.link} link={link.link} onClick={() => onClose()}>
+                {getDisplayName(link)}
+              </NavItem>
+            ))}
 
         {itemSearch && Object.keys(filteredCategories).length === 0 && filteredScrollableItems.length === 0 && (
           <Box sx={{ mx: 2, my: 1 }}>
@@ -1190,15 +1190,15 @@ const NavItem = ({ icon, children, onClick, ...rest }) => {
       {...otherProps}
     >
       {IconComponent && (
-        <ListItemIcon sx={{ 
+        <ListItemIcon sx={{
           minWidth: 40,
           color: isActive ? "primary.main" : "grey.500"
         }}>
           <IconComponent size={20} />
         </ListItemIcon>
       )}
-      <ListItemText 
-        primary={children} 
+      <ListItemText
+        primary={children}
         primaryTypographyProps={{
           fontSize: "0.875rem",
           fontWeight: isActive ? 600 : 500,
@@ -1281,11 +1281,11 @@ const MobileNav = ({ onOpen, ...rest }) => {
   };
 
   return (
-    <AppBar 
-      position="static" 
-      color="default" 
+    <AppBar
+      position="static"
+      color="default"
       elevation={0}
-      sx={{ 
+      sx={{
         bgcolor: 'white',
         borderBottom: '1px solid',
         borderColor: 'divider',
@@ -1349,9 +1349,9 @@ const MobileNav = ({ onOpen, ...rest }) => {
         </Stack>
       </Toolbar>
 
-      <BugReportDialog 
-        open={bugReportOpen} 
-        onClose={() => setBugReportOpen(false)} 
+      <BugReportDialog
+        open={bugReportOpen}
+        onClose={() => setBugReportOpen(false)}
       />
     </AppBar>
   );

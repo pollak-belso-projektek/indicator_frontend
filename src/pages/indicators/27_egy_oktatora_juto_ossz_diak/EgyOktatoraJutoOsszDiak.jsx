@@ -24,7 +24,6 @@ import {
   useLazyGetAlkalmazottAdatokQuery,
   useLazyGetEngedelyezettOratomegQuery,
   useUpsertEngedelyezettOratomegMutation,
-  useGetFormHistoryQuery,
 } from "../../../store/api/apiSlice";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import PageWrapper from "../../PageWrapper";
@@ -52,18 +51,10 @@ export default function EgyOktatoraJutoOsszDiak() {
   const [isSaving, setIsSaving] = useState(false);
   const [isModified, setIsModified] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  
+
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-
-  // Load history points
-  const { data: historyData, refetch: refetchHistory } = useGetFormHistoryQuery(
-    selectedSchool?.id
-      ? { alapadatok_id: selectedSchool.id, table_name: "engedelyezettOratomeg" }
-      : window.skipToken,
-    { skip: !selectedSchool?.id }
-  );
 
   const fetchData = async () => {
     if (!selectedSchool?.id) return;
@@ -158,13 +149,13 @@ export default function EgyOktatoraJutoOsszDiak() {
   const handleSave = async () => {
     if (!selectedSchool?.id) return;
     setIsSaving(true);
-    
+
     try {
       // Upsert all modified years (or all years)
       const savePromises = schoolYears.map((yearStr) => {
         const year = parseInt(yearStr.split("/")[0]);
         const data = yearlyData[yearStr];
-        
+
         return upsertOratomeg({
           alapadatok_id: selectedSchool.id,
           tanev_kezdete: year,
@@ -174,16 +165,13 @@ export default function EgyOktatoraJutoOsszDiak() {
       });
 
       await Promise.all(savePromises);
-      
+
       setSnackbarMessage("Adatok sikeresen mentve!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
-      
+
       setSavedData(JSON.parse(JSON.stringify(yearlyData)));
       setIsModified(false);
-      
-      // Frissítsük az előzményeket a mentés után
-      refetchHistory();
     } catch (error) {
       console.error("Hiba a mentés során:", error);
       setSnackbarMessage("Hiba a mentés során.");
@@ -259,7 +247,7 @@ export default function EgyOktatoraJutoOsszDiak() {
               onChange={(e) => handleChange(year, dataKey, e.target.value)}
               inputProps={{ style: { textAlign: "center" } }}
               sx={{ width: "80px", backgroundColor: "white" }}
-             placeholder="0"/>
+              placeholder="0" />
           ) : (
             yearlyData[year]?.[dataKey] ?? ""
           )}
@@ -309,10 +297,7 @@ export default function EgyOktatoraJutoOsszDiak() {
                 borderRadius: 1,
               }}
             >
-              <ExportDOMTableToExcel
-                tableId=".MuiTable-root"
-                fileName="egy_oktatora_juto_diak_export"
-              />
+
               <LockedTableWrapper tableName="engedelyezettOratomeg">
                 <Button
                   variant="contained"
@@ -320,7 +305,16 @@ export default function EgyOktatoraJutoOsszDiak() {
                   onClick={handleSave}
                   disabled={!isModified || isSaving}
                 >
-                  {isSaving ? "Mentés..." : "Mentés véglegesítése"}
+                  {isSaving ? "Mentés" : "Mentés"}
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  startIcon={<RefreshIcon />}
+                  onClick={handleReset}
+                  disabled={!isModified || isSaving}
+                >
+                  Visszaállítás
                 </Button>
                 <Button
                   variant="outlined"
@@ -331,15 +325,11 @@ export default function EgyOktatoraJutoOsszDiak() {
                 >
                   Előzmények
                 </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<RefreshIcon />}
-                  onClick={handleReset}
-                  disabled={!isModified || isSaving}
-                >
-                  Visszaállítás
-                </Button>
               </LockedTableWrapper>
+              <ExportDOMTableToExcel
+                tableId=".MuiTable-root"
+                fileName="egy_oktatora_juto_diak_export"
+              />
             </Stack>
 
             <TableContainer
@@ -480,9 +470,9 @@ export default function EgyOktatoraJutoOsszDiak() {
             <HistoryDialog
               open={historyOpen}
               onClose={() => setHistoryOpen(false)}
-              historyData={historyData || []}
-              onRestore={handleHistoryRestore}
-              title="Egy oktatóra jutó össz diák - Előzmények"
+              alapadatokId={selectedSchool?.id}
+              tableName="engedelyezettOratomeg"
+              onRollbackSuccess={handleHistoryRestore}
             />
           </>
         )}

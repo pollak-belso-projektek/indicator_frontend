@@ -197,10 +197,12 @@ export default function DualisKepzohelyekSzama() {
 
     try {
       const promises = [];
-      schoolYears.forEach((year) => {
-        const id = originalData[itemToDelete]?.[year]?.id;
-        if (id) promises.push(deleteData(id).unwrap());
+      const itemsToRemove = dbData.filter(item => (item.kepzohely_neve || "Ismeretlen") === itemToDelete);
+      
+      itemsToRemove.forEach(item => {
+        if (item.id) promises.push(deleteData(item.id).unwrap());
       });
+      
       if (promises.length > 0) await Promise.all(promises);
 
       const updatedData = { ...tableData };
@@ -222,7 +224,7 @@ export default function DualisKepzohelyekSzama() {
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
-  }, [tableData, originalData, deleteData, schoolYears, itemToDelete]);
+  }, [tableData, originalData, deleteData, schoolYears, itemToDelete, dbData]);
 
   const isFieldModified = (name, year, field) => {
     const orig = originalData[name]?.[year]?.[field] || "";

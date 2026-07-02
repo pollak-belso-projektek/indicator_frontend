@@ -437,40 +437,66 @@ export default function EgyuttmukodesekSzama() {
     setIsModified(false);
   }, [originalTable1Data, originalTable2Data]);
 
-  // ─── Export rows ─────────────────────────────────────────────────────────
-  const exportRows = useMemo(() => {
-    const rows = [];
-    rows.push({ intezmeny: "--- 1. táblázat: Együttműködések ---" });
+  // ─── Export konfiguráció ─────────────────────────────────────────────────────────
+  const exportSheets = useMemo(() => {
+    // 1. Táblázat adatai
+    const rowsTable1 = [];
     Object.keys(table1Data)
       .sort((a, b) => a.localeCompare(b, "hu"))
       .forEach((name) => {
         const row = { intezmeny: name };
         schoolYears.forEach((year) => {
-          row[`${year}__formaja`] =
-            table1Data[name][year]?.egyuttmukodes_formaja || "";
-          row[`${year}__evfolyam`] =
-            table1Data[name][year]?.erintett_evfolyam || "";
-          row[`${year}__tanulok`] =
-            table1Data[name][year]?.erintett_tanulok_szama || "";
+          row[`${year}__formaja`] = table1Data[name][year]?.egyuttmukodes_formaja || "";
+          row[`${year}__evfolyam`] = table1Data[name][year]?.erintett_evfolyam || "";
+          row[`${year}__tanulok`] = table1Data[name][year]?.erintett_tanulok_szama || "";
         });
-        rows.push(row);
+        rowsTable1.push(row);
       });
-    rows.push({ intezmeny: "--- 2. táblázat: Felsőoktatásba lépők ---" });
+
+    const columnsTable1 = [
+      { header: "Felsőoktatási intézmény", key: "intezmeny", width: 45 },
+      ...schoolYears.flatMap((year) => [
+        { header: `${year} - Együttműk. formája`, key: `${year}__formaja`, width: 30 },
+        { header: `${year} - Érintett évfolyam`, key: `${year}__evfolyam`, width: 22 },
+        { header: `${year} - Érintett tanulók száma`, key: `${year}__tanulok`, width: 22 },
+      ]),
+    ];
+
+    // 2. Táblázat adatai
+    const rowsTable2 = [];
     Object.keys(table2Data)
       .sort((a, b) => a.localeCompare(b, "hu"))
       .forEach((name) => {
         const row = { intezmeny: name };
         schoolYears.forEach((year) => {
-          row[`${year}__lepo`] =
-            table2Data[name][year]?.felsooktataba_lepo_szama || "";
-          row[`${year}__vegzos`] =
-            table2Data[name][year]?.vegzos_technikumi_szama || "";
-          row[`${year}__arany`] =
-            table2Data[name][year]?.tovabbtanulok_aranya || "";
+          row[`${year}__lepo`] = table2Data[name][year]?.felsooktataba_lepo_szama || "";
+          row[`${year}__vegzos`] = table2Data[name][year]?.vegzos_technikumi_szama || "";
+          row[`${year}__arany`] = table2Data[name][year]?.tovabbtanulok_aranya || "";
         });
-        rows.push(row);
+        rowsTable2.push(row);
       });
-    return rows;
+
+    const columnsTable2 = [
+      { header: "Felsőoktatási intézmény", key: "intezmeny", width: 45 },
+      ...schoolYears.flatMap((year) => [
+        { header: `${year} - Felsőokt. lépő`, key: `${year}__lepo`, width: 20 },
+        { header: `${year} - Végzős technikumi`, key: `${year}__vegzos`, width: 22 },
+        { header: `${year} - Továbbtanulók aránya`, key: `${year}__arany`, width: 22 },
+      ]),
+    ];
+
+    return [
+      {
+        sheetName: "Együttműködések",
+        columns: columnsTable1,
+        rows: rowsTable1,
+      },
+      {
+        sheetName: "Felsőoktatásba lépők",
+        columns: columnsTable2,
+        rows: rowsTable2,
+      }
+    ];
   }, [table1Data, table2Data, schoolYears]);
 
   if (isLoading) {
@@ -537,47 +563,7 @@ export default function EgyuttmukodesekSzama() {
           </LockedTableWrapper>
           <ExportToExcel
             fileName="egyuttmukudesek_szama"
-            sheetName="Együttműködések száma"
-            columns={[
-              {
-                header: "Felsőoktatási intézmény",
-                key: "intezmeny",
-                width: 45,
-              },
-              ...schoolYears.flatMap((year) => [
-                {
-                  header: `${year} - Együttműk. formája`,
-                  key: `${year}__formaja`,
-                  width: 30,
-                },
-                {
-                  header: `${year} - Érintett évfolyam`,
-                  key: `${year}__evfolyam`,
-                  width: 22,
-                },
-                {
-                  header: `${year} - Érintett tanulók száma`,
-                  key: `${year}__tanulok`,
-                  width: 22,
-                },
-                {
-                  header: `${year} - Felsőokt. lépő`,
-                  key: `${year}__lepo`,
-                  width: 20,
-                },
-                {
-                  header: `${year} - Végzős technikumi`,
-                  key: `${year}__vegzos`,
-                  width: 22,
-                },
-                {
-                  header: `${year} - Továbbtanulók aránya`,
-                  key: `${year}__arany`,
-                  width: 22,
-                },
-              ]),
-            ]}
-            rows={exportRows}
+            sheets={exportSheets}
             buttonLabel="Export Táblázatba"
           />
         </Stack>
