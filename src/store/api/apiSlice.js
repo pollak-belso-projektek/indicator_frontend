@@ -108,10 +108,11 @@ export const indicatorApi = createApi({
       query: () => "bug-report",
       providesTags: ["BugReports"],
     }),
-    resolveBugReport: build.mutation({
-      query: (id) => ({
-        url: `bug-report/${id}/resolve`,
-        method: "POST",
+    updateBugStatus: build.mutation({
+      query: ({ id, status }) => ({
+        url: `bug-report/${id}/status`,
+        method: "PUT",
+        body: { status },
       }),
       invalidatesTags: ["BugReports"],
     }),
@@ -2064,5 +2065,5 @@ export const {
   // Bug report hook
   useSubmitBugReportMutation,
   useGetReportedBugsQuery,
-  useResolveBugReportMutation,
+  useUpdateBugStatusMutation,
 } = indicatorApi;
