@@ -1154,7 +1154,7 @@ export const indicatorApi = createApi({
     }),
     bulkSaveIntezmenyiNeveltseg: build.mutation({
       query: (body) => ({
-        url: "intezmenyi_neveltseg/bulk",
+        url: "intezmenyi_neveltsegi_mutatok/bulk",
         method: "POST",
         body,
       }),

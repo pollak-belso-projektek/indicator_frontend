@@ -893,9 +893,10 @@ export default function IntezményiNevelesiMutatok() {
         alapadatokId={selectedSchool?.id}
         tableName="IntezmenyiNeveltsegiMutatok"
         onRollbackSuccess={() => {
-          setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
-          setSnackbarSeverity("success");
-          setSnackbarOpen(true);
+          setStatusMessage({
+            severity: "success",
+            text: "Sikeres visszaállítás az előzményekből!",
+          });
         }}
       />
     </PageWrapper>
