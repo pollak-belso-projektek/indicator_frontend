@@ -13,10 +13,16 @@ import {
   IconButton,
   MenuItem,
   Stack,
+  Grid,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
+  Paper
 } from "@mui/material";
 
-import { Close as CloseIcon, CheckCircle as CheckCircleIcon, AttachFile as AttachFileIcon } from "@mui/icons-material";
-import { useSubmitBugReportMutation } from "../store/api/apiSlice";
+import { Close as CloseIcon, CheckCircle as CheckCircleIcon, AttachFile as AttachFileIcon, BugReport as BugReportIcon } from "@mui/icons-material";
+import { useSubmitBugReportMutation, useGetReportedBugsQuery } from "../store/api/apiSlice";
 
 const SEVERITY_OPTIONS = [
   { value: "low", label: "Alacsony – Kisebb kellemetlenség" },
@@ -34,6 +40,7 @@ export default function BugReportDialog({ open, onClose }) {
   const [errorMessage, setErrorMessage] = useState("");
 
   const [submitBugReport, { isLoading }] = useSubmitBugReportMutation();
+  const { data: reportedBugs, isLoading: isBugsLoading } = useGetReportedBugsQuery(undefined, { skip: !open });
 
   const handleClose = () => {
     // Only reset after close animation
@@ -93,7 +100,7 @@ export default function BugReportDialog({ open, onClose }) {
     <Dialog
       open={open}
       onClose={handleClose}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
       PaperProps={{
         sx: { borderRadius: 2 },
@@ -116,6 +123,50 @@ export default function BugReportDialog({ open, onClose }) {
       </DialogTitle>
 
       <DialogContent>
+        <Grid container spacing={3}>
+          {/* Left Side: Reported Bugs */}
+          <Grid item xs={12} md={5}>
+            <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <BugReportIcon color="primary" /> Korábbi bejelentések
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Kérjük ellenőrizze, hogy a hiba szerepel-e már a listán!
+              </Typography>
+              
+              <Paper variant="outlined" sx={{ flexGrow: 1, maxHeight: 500, overflow: 'auto', bgcolor: 'background.default' }}>
+                {isBugsLoading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : reportedBugs && reportedBugs.length > 0 ? (
+                  <List disablePadding>
+                    {reportedBugs.map((bug, index) => (
+                      <div key={bug.id}>
+                        {index > 0 && <Divider />}
+                        <ListItem alignItems="flex-start" sx={{ py: 1.5 }}>
+                          <ListItemText
+                            primary={bug.name}
+                            primaryTypographyProps={{ variant: 'body2', fontWeight: 'bold' }}
+                          />
+                        </ListItem>
+                      </div>
+                    ))}
+                  </List>
+                ) : (
+                  <Box sx={{ p: 3, textAlign: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Jelenleg nincs nyitott hibabejelentés.
+                    </Typography>
+                  </Box>
+                )}
+              </Paper>
+            </Box>
+          </Grid>
+          
+          {/* Right Side: Form */}
+          <Grid item xs={12} md={7}>
+
         {submitted ? (
           <Box sx={{ textAlign: "center", py: 3 }}>
             <CheckCircleIcon sx={{ fontSize: 64, color: "success.main", mb: 2 }} />
@@ -237,6 +288,8 @@ export default function BugReportDialog({ open, onClose }) {
             </Box>
           </>
         )}
+          </Grid>
+        </Grid>
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 2 }}>

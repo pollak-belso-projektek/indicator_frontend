@@ -103,6 +103,9 @@ export const indicatorApi = createApi({
         body: reportData,
       }),
     }),
+    getReportedBugs: build.query({
+      query: () => "bug-report",
+    }),
     // User management endpoints
     getUsers: build.query({
       query: () => "users/",
@@ -2051,4 +2054,5 @@ export const {
   useRollbackFormHistoryMutation,
   // Bug report hook
   useSubmitBugReportMutation,
+  useGetReportedBugsQuery,
 } = indicatorApi;
