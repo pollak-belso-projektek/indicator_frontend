@@ -190,7 +190,7 @@ export default function SzakképzésiMunkaszerződésArány() {
 
               // Add specializations under szakirany with unique keys
               szakirany.specializations.forEach((spec, specIndex) => {
-                const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
+                const uniqueSpecKey = `${szakirany.name}::${specIndex}::${spec}`;
                 initialData[section][key][uniqueSpecKey] = {};
                 schoolYears.forEach((year) => {
                   initialData[section][key][uniqueSpecKey][year] = "0";
@@ -292,7 +292,7 @@ export default function SzakképzésiMunkaszerződésArány() {
 
                   // Add specializations under szakirany with unique keys
                   szakirany.specializations.forEach((spec, specIndex) => {
-                    const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
+                    const uniqueSpecKey = `${szakirany.name}::${specIndex}::${spec}`;
                     calculatedData[section][key][uniqueSpecKey] = {};
                     schoolYears.forEach((year) => {
                       calculatedData[section][key][uniqueSpecKey][year] = "0";
@@ -383,7 +383,7 @@ export default function SzakképzésiMunkaszerződésArány() {
                       );
 
                       szakirany.specializations.forEach((spec, specIndex) => {
-                        const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
+                        const uniqueSpecKey = `${szakirany.name}::${specIndex}::${spec}`;
                         let specContractStudents = 0;
                         let specTotalStudents = 0;
 
@@ -510,7 +510,7 @@ export default function SzakképzésiMunkaszerződésArány() {
                       );
 
                       szakirany.specializations.forEach((spec, specIndex) => {
-                        const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
+                        const uniqueSpecKey = `${szakirany.name}::${specIndex}::${spec}`;
                         let specContractStudents = 0;
                         let specTotalStudents = 0;
 
@@ -698,7 +698,7 @@ export default function SzakképzésiMunkaszerződésArány() {
                       );
 
                       szakirany.specializations.forEach((spec, specIndex) => {
-                        const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
+                        const uniqueSpecKey = `${szakirany.name}::${specIndex}::${spec}`;
                         let specContractStudents = 0;
                         let specTotalStudents = 0;
 
@@ -816,7 +816,7 @@ export default function SzakképzésiMunkaszerződésArány() {
                       );
 
                       szakirany.specializations.forEach((spec, specIndex) => {
-                        const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
+                        const uniqueSpecKey = `${szakirany.name}::${specIndex}::${spec}`;
                         let specContractStudents = 0;
                         let specTotalStudents = 0;
 
@@ -945,7 +945,11 @@ export default function SzakképzésiMunkaszerződésArány() {
           }
         } catch (error) {
           console.error("Error calculating data:", error);
+          setSnackbarMessage("Kiszámítási hiba: " + error.message);
+          setSnackbarSeverity("error");
+          setSnackbarOpen(true);
         } finally {
+          setHasInitializedFromAPI(true);
           setIsCalculating(false);
         }
       }, 50);
@@ -992,7 +996,7 @@ export default function SzakképzésiMunkaszerződésArány() {
       };
 
       // Only calculate percentage for the changed item if it's a specialization
-      if (subcategory.includes("_") && subcategory.split("_").length >= 3) {
+      if (subcategory.includes("::") && subcategory.split("::").length >= 3) {
         const contractValue = parseFloat(
           newData.contract_students[institutionKey]?.[subcategory]?.[year] || 0,
         );
@@ -1019,15 +1023,15 @@ export default function SzakképzésiMunkaszerződésArány() {
         }
 
         // Now recalculate totals efficiently - find the affected szakirany and institution
-        const parts = subcategory.split("_");
+        const parts = subcategory.split("::");
         const szakiranyName = parts[0];
 
         // Calculate szakirany total by summing all its specializations
         let szakiranyTotal = 0;
         Object.keys(newData[section][institutionKey]).forEach((key) => {
           if (
-            key.startsWith(szakiranyName + "_") &&
-            key.split("_").length >= 3
+            key.startsWith(szakiranyName + "::") &&
+            key.split("::").length >= 3
           ) {
             szakiranyTotal += parseFloat(
               newData[section][institutionKey][key][year] || 0,
@@ -1149,8 +1153,7 @@ export default function SzakképzésiMunkaszerződésArány() {
       setIsSaving(true);
       const recordsToSave = [];
 
-      console.log("🔍 DEBUG: Starting save process");
-      console.log("🔍 DEBUG: szmszData available:", szmszData);
+      console.log("Starting save process...");
 
       // Convert szakképzésiData to API format and save/update
       for (const [institutionKey, institutionData] of Object.entries(
@@ -1159,7 +1162,7 @@ export default function SzakképzésiMunkaszerződésArány() {
         for (const [itemKey, yearData] of Object.entries(institutionData)) {
           // ONLY PROCESS SPECIALIZATIONS (uniqueSpecKey format with underscores)
           // Skip subcategories and szakirany-level data since they're not editable
-          if (!itemKey.includes("_") || itemKey.split("_").length < 3) {
+          if (!itemKey.includes("::") || itemKey.split("::").length < 3) {
             console.log(
               `🔍 DEBUG: Skipping non-specialization data: ${itemKey}`,
             );
@@ -1181,41 +1184,19 @@ export default function SzakképzésiMunkaszerződésArány() {
                 contractValue !== null &&
                 contractValue !== undefined)
             ) {
-              console.log(
-                `🔍 DEBUG: Processing specialization record - institutionKey: ${institutionKey}, itemKey: ${itemKey}, year: ${year}, yearData: ${JSON.stringify(
-                  yearData,
-                )}`,
-              );
+              // Proceed with processing
 
               // Extract szakma from institution key
               const [szakmaFromInst] = institutionKey.split("_");
 
-              const parts = itemKey.split("_");
+              const parts = itemKey.split("::");
               const szakiranyNev = parts[0];
-              const rawSzakmaNev = parts.slice(2).join("_");
+              const rawSzakmaNev = parts.slice(2).join("::");
 
               // Handle "Nincs meghatározva" case - save as null in database
               const szakmaNev =
                 rawSzakmaNev === "Nincs meghatározva" ? null : rawSzakmaNev;
-
               const yearStart = parseInt(year.split("/")[0]);
-
-              console.log(`🔍 DEBUG: Extracted data:`);
-              console.log(`  - szakmaFromInst: ${szakmaFromInst}`);
-              console.log(`  - szakiranyNev: ${szakiranyNev}`);
-              console.log(`  - rawSzakmaNev: ${rawSzakmaNev}`);
-              console.log(`  - szakmaNev (for DB): ${szakmaNev}`);
-              console.log(`  - yearStart: ${yearStart}`);
-
-              // Enhanced debugging for szmszData structure
-              console.log(`🔍 DEBUG: Available szmszData:`, szmszData);
-              if (szmszData && szmszData.length > 0) {
-                console.log(`🔍 DEBUG: First record structure:`, szmszData[0]);
-                console.log(
-                  `🔍 DEBUG: All record keys:`,
-                  Object.keys(szmszData[0]),
-                );
-              }
 
               // Check if a record already exists for this combination
               const existingRecord = szmszData?.find((record) => {
@@ -1246,25 +1227,10 @@ export default function SzakképzésiMunkaszerződésArány() {
                 const szakiranyMatch = recordSzakirany === szakiranyNev;
                 const yearMatch = record.tanev_kezdete === yearStart;
 
-                console.log(`🔍 DEBUG: Checking record ${record.id}:`);
-                console.log(`  - available fields:`, Object.keys(record));
-                console.log(
-                  `  - recordSzakma: "${recordSzakma}" vs szakmaNev: "${szakmaNev}" -> ${szakmaMatch}`,
-                );
-                console.log(
-                  `  - recordSzakirany: "${recordSzakirany}" vs szakiranyNev: "${szakiranyNev}" -> ${szakiranyMatch}`,
-                );
-                console.log(
-                  `  - year match: ${record.tanev_kezdete} === ${yearStart} -> ${yearMatch}`,
-                );
-
                 return szakmaMatch && szakiranyMatch && yearMatch;
               });
 
-              console.log(
-                `🔍 DEBUG: Found existing record:`,
-                existingRecord ? `ID ${existingRecord.id}` : "none",
-              );
+              // Set up record data
 
               const recordData = {
                 alapadatok_id: selectedSchool?.id,
@@ -1275,7 +1241,7 @@ export default function SzakképzésiMunkaszerződésArány() {
                 munkaszerzodeses_tanulok_szama: parseInt(contractValue) || 0,
               };
 
-              console.log(`🔍 DEBUG: Record data to save:`, recordData);
+              // Try pushing record
 
               try {
                 if (existingRecord) {
@@ -1445,7 +1411,7 @@ export default function SzakképzésiMunkaszerződésArány() {
                             // Add specializations with unique keys
                             szakirany.specializations.forEach(
                               (spec, specIndex) => {
-                                const uniqueSpecKey = `${szakirany.name}_${specIndex}_${spec}`;
+                                const uniqueSpecKey = `${szakirany.name}::${specIndex}::${spec}`;
                                 allItems.push({
                                   type: "specialization",
                                   displayName: spec,
