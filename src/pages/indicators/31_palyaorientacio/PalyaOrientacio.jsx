@@ -217,10 +217,16 @@ export default function PalyaOrientacio() {
 
     try {
       const promises = [];
-      schoolYears.forEach((year) => {
-        const id = originalData[itemToDelete]?.[year]?.id;
-        if (id) promises.push(deleteData(id).unwrap());
+      const [delCategory, delName] = itemToDelete.split("::");
+      const itemsToRemove = dbData.filter(item => 
+        (item.kategoria || CATEGORIES[0]) === delCategory && 
+        (item.tevekenyseg_neve || "Ismeretlen") === delName
+      );
+      
+      itemsToRemove.forEach(item => {
+        if (item.id) promises.push(deleteData(item.id).unwrap());
       });
+      
       if (promises.length > 0) await Promise.all(promises);
 
       const updatedData = { ...tableData };
@@ -242,7 +248,7 @@ export default function PalyaOrientacio() {
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
-  }, [tableData, originalData, deleteData, schoolYears, itemToDelete]);
+  }, [tableData, originalData, deleteData, schoolYears, itemToDelete, dbData]);
 
   const isFieldModified = (key, year) => {
     const orig = originalData[key]?.[year]?.resztvevok_szama || "";
