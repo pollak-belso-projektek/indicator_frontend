@@ -29,7 +29,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon
 } from "@mui/icons-material";
-import { useSubmitBugReportMutation, useGetReportedBugsQuery, useResolveBugReportMutation } from "../store/api/apiSlice";
+import { useSubmitBugReportMutation, useGetReportedBugsQuery, useUpdateBugStatusMutation } from "../store/api/apiSlice";
 import { selectUserPermissions, selectAccessToken } from "../store/slices/authSlice";
 import config from "../config";
 
@@ -50,8 +50,23 @@ export default function BugReportDialog({ open, onClose }) {
 
   const [submitBugReport, { isLoading }] = useSubmitBugReportMutation();
   const { data: reportedBugs, isLoading: isBugsLoading } = useGetReportedBugsQuery(undefined, { skip: !open });
-  const [resolveBugReport, { isLoading: isResolving }] = useResolveBugReportMutation();
+  const [updateBugStatus, { isLoading: isUpdatingStatus }] = useUpdateBugStatusMutation();
   const [expandedBugId, setExpandedBugId] = useState(null);
+
+  const newBugs = [];
+  const inProgressBugs = [];
+  const resolvedBugs = [];
+
+  if (reportedBugs) {
+    reportedBugs.forEach(bug => {
+      const isResolved = bug.labels && bug.labels.some(l => l.name === 'Kész');
+      const isInProgress = bug.labels && bug.labels.some(l => l.name === 'Folyamatban');
+      
+      if (isResolved) resolvedBugs.push(bug);
+      else if (isInProgress) inProgressBugs.push(bug);
+      else newBugs.push(bug);
+    });
+  }
   
   const userPermissions = useSelector(selectUserPermissions);
   const accessToken = useSelector(selectAccessToken);
@@ -134,6 +149,147 @@ export default function BugReportDialog({ open, onClose }) {
     }
   };
 
+  const renderBugCard = (bug) => {
+    const isResolved = bug.labels && bug.labels.some(l => l.name === 'Kész');
+    const isInProgress = bug.labels && bug.labels.some(l => l.name === 'Folyamatban');
+
+    return (
+      <Paper 
+        elevation={0} 
+        variant="outlined" 
+        key={bug.id} 
+        sx={{ 
+          borderRadius: 2, 
+          transition: '0.2s',
+          overflow: 'hidden',
+          '&:hover': { borderColor: 'primary.main', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' } 
+        }}
+      >
+        <Box 
+          onClick={() => setExpandedBugId(expandedBugId === bug.id ? null : bug.id)}
+          sx={{ 
+            p: 2, 
+            cursor: 'pointer', 
+            display: 'flex', 
+            flexDirection: 'column',
+            bgcolor: expandedBugId === bug.id ? 'primary.50' : 'transparent',
+            '&:hover': { bgcolor: 'primary.50' }
+          }}
+        >
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1, lineHeight: 1.4, pr: 2 }}>
+              {bug.name}
+            </Typography>
+            {expandedBugId === bug.id ? <ExpandLessIcon fontSize="small" color="action" /> : <ExpandMoreIcon fontSize="small" color="action" />}
+          </Box>
+          
+          {bug.labels && bug.labels.length > 0 && (
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
+              {bug.labels.map(l => (
+                <Chip 
+                  key={l.id} 
+                  label={l.name || 'Címke'} 
+                  size="small" 
+                  variant={l.color ? "filled" : "outlined"}
+                  sx={{ 
+                    fontSize: '0.7rem', 
+                    height: 22, 
+                    fontWeight: 600,
+                    bgcolor: l.color === 'sky' ? '#00c2e0' : (l.color || 'transparent'),
+                    color: l.color ? '#fff' : 'text.primary',
+                    borderColor: l.color === 'sky' ? '#00c2e0' : (l.color || 'divider')
+                  }} 
+                />
+              ))}
+            </Stack>
+          )}
+        </Box>
+
+        <Collapse in={expandedBugId === bug.id}>
+          <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)', borderTop: 1, borderColor: 'divider' }}>
+            <Box sx={{ mb: 2 }}>
+              {renderFormattedText(bug.desc)}
+            </Box>
+
+            {bug.attachments && bug.attachments.length > 0 && (
+              <Box sx={{ mt: 2, mb: 2 }}>
+                <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block', mb: 1, color: 'text.secondary' }}>
+                  Csatolmányok ({bug.attachments.length}):
+                </Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {bug.attachments.map(att => (
+                    <Box key={att.id}>
+                      <Button 
+                        size="small" 
+                        variant="outlined" 
+                        href={att.url} 
+                        target="_blank" 
+                        startIcon={<AttachFileIcon />} 
+                        sx={{ fontSize: '0.7rem', py: 0.5 }}
+                      >
+                        {att.name}
+                      </Button>
+                    </Box>
+                  ))}
+                </Stack>
+              </Box>
+            )}
+
+            {isDeveloper && (
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
+                {!isInProgress && !isResolved && (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="primary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateBugStatus({ id: bug.id, status: 'Folyamatban' });
+                    }}
+                    disabled={isUpdatingStatus}
+                    sx={{ boxShadow: 'none' }}
+                  >
+                    Folyamatba vétel
+                  </Button>
+                )}
+                {!isResolved && (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="success"
+                    startIcon={<CheckIcon />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateBugStatus({ id: bug.id, status: 'Kész' });
+                    }}
+                    disabled={isUpdatingStatus}
+                    sx={{ boxShadow: 'none' }}
+                  >
+                    Készre állítás
+                  </Button>
+                )}
+                {isResolved && (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="primary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateBugStatus({ id: bug.id, status: 'Folyamatban' });
+                    }}
+                    disabled={isUpdatingStatus}
+                  >
+                    Újranyitás (Folyamatban)
+                  </Button>
+                )}
+              </Box>
+            )}
+          </Box>
+        </Collapse>
+      </Paper>
+    );
+  };
+
   return (
     <Dialog
       open={open}
@@ -170,127 +326,34 @@ export default function BugReportDialog({ open, onClose }) {
                 <CircularProgress size={24} />
               </Box>
             ) : reportedBugs && reportedBugs.length > 0 ? (
-              <Stack spacing={2}>
-                {reportedBugs.map((bug) => (
-                  <Paper 
-                    elevation={0} 
-                    variant="outlined" 
-                    key={bug.id} 
-                    sx={{ 
-                      borderRadius: 2, 
-                      transition: '0.2s',
-                      overflow: 'hidden',
-                      '&:hover': { borderColor: 'primary.main', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' } 
-                    }}
-                  >
-                    <Box 
-                      onClick={() => setExpandedBugId(expandedBugId === bug.id ? null : bug.id)}
-                      sx={{ 
-                        p: 2, 
-                        cursor: 'pointer', 
-                        display: 'flex', 
-                        flexDirection: 'column',
-                        bgcolor: expandedBugId === bug.id ? 'primary.50' : 'transparent',
-                        '&:hover': { bgcolor: 'primary.50' }
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1, lineHeight: 1.4, pr: 2 }}>
-                          {bug.name}
-                        </Typography>
-                        {expandedBugId === bug.id ? <ExpandLessIcon fontSize="small" color="action" /> : <ExpandMoreIcon fontSize="small" color="action" />}
-                      </Box>
-                      
-                      {bug.labels && bug.labels.length > 0 && (
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
-                          {bug.labels.map(l => (
-                            <Chip 
-                              key={l.id} 
-                              label={l.name || 'Címke'} 
-                              size="small" 
-                              variant={l.color ? "filled" : "outlined"}
-                              sx={{ 
-                                fontSize: '0.7rem', 
-                                height: 22, 
-                                fontWeight: 600,
-                                bgcolor: l.color === 'sky' ? '#00c2e0' : (l.color || 'transparent'),
-                                color: l.color ? '#fff' : 'text.primary',
-                                borderColor: l.color === 'sky' ? '#00c2e0' : (l.color || 'divider')
-                              }} 
-                            />
-                          ))}
-                        </Stack>
-                      )}
-                    </Box>
+              <Box>
+                {newBugs.length > 0 && (
+                  <Box sx={{ mb: 4 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'text.secondary', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>Új bejelentések ({newBugs.length})</Typography>
+                    <Stack spacing={2}>
+                      {newBugs.map(renderBugCard)}
+                    </Stack>
+                  </Box>
+                )}
+                
+                {inProgressBugs.length > 0 && (
+                  <Box sx={{ mb: 4 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'primary.main', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>Folyamatban lévő ({inProgressBugs.length})</Typography>
+                    <Stack spacing={2}>
+                      {inProgressBugs.map(renderBugCard)}
+                    </Stack>
+                  </Box>
+                )}
 
-                    <Collapse in={expandedBugId === bug.id}>
-                      <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)', borderTop: 1, borderColor: 'divider' }}>
-                        <Box sx={{ mb: 2 }}>
-                          {renderFormattedText(bug.desc)}
-                        </Box>
-
-                        {bug.attachments && bug.attachments.length > 0 && (
-                          <Box sx={{ mt: 2, mb: 2 }}>
-                            <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block', mb: 1, color: 'text.secondary' }}>
-                              Csatolmányok ({bug.attachments.length}):
-                            </Typography>
-                            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                              {bug.attachments.map(att => {
-                                const proxiedUrl = `${config.apiBaseUrl}api/v1/bug-report/attachment/${bug.id}/${att.id}?access_token=${accessToken}`;
-                                return (
-                                <Box key={att.id}>
-                                  {att.mimeType?.startsWith('image/') ? (
-                                    <a href={proxiedUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
-                                      <Box
-                                        component="img"
-                                        src={proxiedUrl} 
-                                        alt={att.name}
-                                        sx={{ 
-                                          width: 80, 
-                                          height: 80, 
-                                          objectFit: 'cover', 
-                                          borderRadius: 1, 
-                                          border: '1px solid',
-                                          borderColor: 'divider',
-                                          '&:hover': { opacity: 0.8 }
-                                        }}
-                                      />
-                                    </a>
-                                  ) : (
-                                    <Button size="small" variant="outlined" href={proxiedUrl} target="_blank" startIcon={<AttachFileIcon />} sx={{ fontSize: '0.7rem', py: 0.5 }}>
-                                      {att.name}
-                                    </Button>
-                                  )}
-                                </Box>
-                                );
-                              })}
-                            </Stack>
-                          </Box>
-                        )}
-
-                        {isDeveloper && (!bug.labels || !bug.labels.some(l => l.name === 'Kész')) && (
-                          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                            <Button
-                              size="small"
-                              variant="contained"
-                              color="success"
-                              startIcon={<CheckIcon />}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                resolveBugReport(bug.id);
-                              }}
-                              disabled={isResolving}
-                              sx={{ boxShadow: 'none' }}
-                            >
-                              Készre állítás
-                            </Button>
-                          </Box>
-                        )}
-                      </Box>
-                    </Collapse>
-                  </Paper>
-                ))}
-              </Stack>
+                {resolvedBugs.length > 0 && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'success.main', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>Kész / Megoldott ({resolvedBugs.length})</Typography>
+                    <Stack spacing={2}>
+                      {resolvedBugs.map(renderBugCard)}
+                    </Stack>
+                  </Box>
+                )}
+              </Box>
             ) : (
               <Box sx={{ p: 4, textAlign: 'center' }}>
                 <ErrorOutlineIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
