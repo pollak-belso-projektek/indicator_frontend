@@ -205,7 +205,7 @@ export default function Login() {
       if (err.name === "AbortError" || err.message?.includes("AbortError") || err.error?.includes("AbortError")) {
         return;
       }
-      
+
       const errorMsg = parseApiError(err);
       dispatch(
         loginFailure(
@@ -222,7 +222,7 @@ export default function Login() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(-45deg, #0d3a5a, #13749a, #1a4f76, #0f5b7d)",
+        background: "linear-gradient(-45deg, #0d3a5ad3, #3c83bad3, #18567ad3, #093d5fd3)",
         backgroundSize: "400% 400%",
         animation: `${gradientAnimation} 15s ease infinite`,
         p: 2,
@@ -232,7 +232,7 @@ export default function Login() {
         <GlassCard>
           <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
             <Stack spacing={4}>
-              <Box textAlign="center">
+              <Box className="flex items-center justify-center flex-col">
                 <Box
                   component="img"
                   src="https://cms.hodmezovasarhelyi.szc.edir.hu/uploads/HSZC_logo_color_tomb_k_4b19d45dc7.png"
@@ -412,7 +412,7 @@ export default function Login() {
           onClose={() => setForgotPasswordOpen(false)}
         />
       </Container>
-    </Box>
+    </Box >
   );
 }
 
