@@ -50,3 +50,4 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             VITE_API_BASE_URL=https://indicator-api.pollak.info/
+            VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}
