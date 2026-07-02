@@ -1402,7 +1402,7 @@ const FelvettekSzama = () => {
           open={historyOpen}
           onClose={() => setHistoryOpen(false)}
           alapadatokId={selectedSchool?.id}
-          tableName="felvettekSzama"
+          tableName="felvettek_Szama"
           onRollbackSuccess={() => {
             setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
             setSnackbarSeverity("success");

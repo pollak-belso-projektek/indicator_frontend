@@ -28,7 +28,11 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
   const dispatch = useDispatch();
   const { data: historyList, isLoading, isFetching, isError, refetch } = useGetFormHistoryQuery(
     { alapadatok_id: alapadatokId, table_name: tableName },
-    { skip: !open || !alapadatokId || !tableName, refetchOnMountOrArgChange: true }
+    { 
+      skip: !open || !alapadatokId || !tableName, 
+      refetchOnMountOrArgChange: true,
+      pollingInterval: open ? 3000 : 0 
+    }
   );
 
   const [rollbackFormHistory, { isLoading: isRollingBack }] = useRollbackFormHistoryMutation();
