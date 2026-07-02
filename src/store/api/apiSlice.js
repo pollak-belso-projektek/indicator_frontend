@@ -66,6 +66,7 @@ export const indicatorApi = createApi({
     "EgyuttmukodesekSzama",
     "NyelvvizsgakSzama",
     "FormHistory",
+    "BugReports",
   ],
   endpoints: (build) => ({
     // Authentication endpoints
@@ -105,6 +106,14 @@ export const indicatorApi = createApi({
     }),
     getReportedBugs: build.query({
       query: () => "bug-report",
+      providesTags: ["BugReports"],
+    }),
+    resolveBugReport: build.mutation({
+      query: (id) => ({
+        url: `bug-report/${id}/resolve`,
+        method: "POST",
+      }),
+      invalidatesTags: ["BugReports"],
     }),
     // User management endpoints
     getUsers: build.query({
@@ -2055,4 +2064,5 @@ export const {
   // Bug report hook
   useSubmitBugReportMutation,
   useGetReportedBugsQuery,
+  useResolveBugReportMutation,
 } = indicatorApi;

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import {
   Dialog,
   DialogTitle,
@@ -13,16 +14,20 @@ import {
   IconButton,
   MenuItem,
   Stack,
-  Grid,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  Paper
+  Paper,
+  Chip,
 } from "@mui/material";
 
-import { Close as CloseIcon, CheckCircle as CheckCircleIcon, AttachFile as AttachFileIcon, BugReport as BugReportIcon } from "@mui/icons-material";
-import { useSubmitBugReportMutation, useGetReportedBugsQuery } from "../store/api/apiSlice";
+import { 
+  Close as CloseIcon, 
+  CheckCircle as CheckCircleIcon, 
+  AttachFile as AttachFileIcon, 
+  Assignment as AssignmentIcon,
+  ErrorOutline as ErrorOutlineIcon,
+  Check as CheckIcon
+} from "@mui/icons-material";
+import { useSubmitBugReportMutation, useGetReportedBugsQuery, useResolveBugReportMutation } from "../store/api/apiSlice";
+import { selectUserPermissions } from "../store/slices/authSlice";
 
 const SEVERITY_OPTIONS = [
   { value: "low", label: "Alacsony – Kisebb kellemetlenség" },
@@ -41,6 +46,10 @@ export default function BugReportDialog({ open, onClose }) {
 
   const [submitBugReport, { isLoading }] = useSubmitBugReportMutation();
   const { data: reportedBugs, isLoading: isBugsLoading } = useGetReportedBugsQuery(undefined, { skip: !open });
+  const [resolveBugReport, { isLoading: isResolving }] = useResolveBugReportMutation();
+  
+  const userPermissions = useSelector(selectUserPermissions);
+  const isDeveloper = userPermissions >= 16;
 
   const handleClose = () => {
     // Only reset after close animation
@@ -100,227 +109,267 @@ export default function BugReportDialog({ open, onClose }) {
     <Dialog
       open={open}
       onClose={handleClose}
-      maxWidth="md"
+      maxWidth="lg"
       fullWidth
       PaperProps={{
-        sx: { borderRadius: 2 },
+        sx: { borderRadius: 3, overflow: 'hidden' },
       }}
     >
-      <DialogTitle
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          pb: 1,
-        }}
-      >
-        <Typography variant="h6" component="span">
-          Hibabejelentés
-        </Typography>
-        <IconButton onClick={handleClose} size="small" aria-label="Bezárás">
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-
-      <DialogContent>
-        <Grid container spacing={3}>
-          {/* Left Side: Reported Bugs */}
-          <Grid item xs={12} md={5}>
-            <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <BugReportIcon color="primary" /> Korábbi bejelentések
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Kérjük ellenőrizze, hogy a hiba szerepel-e már a listán!
-              </Typography>
-              
-              <Paper variant="outlined" sx={{ flexGrow: 1, maxHeight: 500, overflow: 'auto', bgcolor: 'background.default' }}>
-                {isBugsLoading ? (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : reportedBugs && reportedBugs.length > 0 ? (
-                  <List disablePadding>
-                    {reportedBugs.map((bug, index) => (
-                      <div key={bug.id}>
-                        {index > 0 && <Divider />}
-                        <ListItem alignItems="flex-start" sx={{ py: 1.5 }}>
-                          <ListItemText
-                            primary={bug.name}
-                            primaryTypographyProps={{ variant: 'body2', fontWeight: 'bold' }}
-                          />
-                        </ListItem>
-                      </div>
-                    ))}
-                  </List>
-                ) : (
-                  <Box sx={{ p: 3, textAlign: 'center' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Jelenleg nincs nyitott hibabejelentés.
-                    </Typography>
-                  </Box>
-                )}
-              </Paper>
-            </Box>
-          </Grid>
-          
-          {/* Right Side: Form */}
-          <Grid item xs={12} md={7}>
-
-        {submitted ? (
-          <Box sx={{ textAlign: "center", py: 3 }}>
-            <CheckCircleIcon sx={{ fontSize: 64, color: "success.main", mb: 2 }} />
-            <Typography variant="h6" gutterBottom>
-              Hibabejelentés Elküldve!
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, minHeight: '70vh' }}>
+        
+        {/* LEFT PANEL - PREVIOUS BUGS */}
+        <Box sx={{ 
+          width: { xs: '100%', md: '35%' }, 
+          bgcolor: 'grey.50', 
+          borderRight: { xs: 0, md: 1 }, 
+          borderBottom: { xs: 1, md: 0 },
+          borderColor: 'divider', 
+          display: 'flex', 
+          flexDirection: 'column' 
+        }}>
+          <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, fontWeight: 'bold' }}>
+              <AssignmentIcon color="primary" /> Korábbi bejelentések
             </Typography>
-            <Typography variant="body1" color="text.secondary">
-              A hibabejelentést sikeresen rögzítettük. Az adminisztrátorok
-              emailben értesítést kaptak és hamarosan foglalkoznak a problémával.
-            </Typography>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ mt: 2, fontStyle: "italic" }}
-            >
-              Köszönjük, hogy segít a rendszer fejlesztésében!
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Kérjük ellenőrizze, szerepel-e már a hiba a listán, hogy elkerüljük a duplikációkat!
             </Typography>
           </Box>
-        ) : (
-          <>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Kérjük, minél részletesebben írja le a tapasztalt hibát. A
-              bejelentés automatikusan továbbításra kerül az
-              adminisztrátoroknak.
-            </Typography>
-
-            {errorMessage && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {errorMessage}
-              </Alert>
-            )}
-
-            <Box component="form" onSubmit={handleSubmit} id="bug-report-form">
-              <Stack spacing={3}>
-                <TextField
-                  label="Hiba megnevezése"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Rövid, összefoglaló cím"
-                  required
-                  fullWidth
-                  variant="outlined"
-                  autoFocus
-                  disabled={isLoading}
-                />
-
-                <TextField
-                  select
-                  label="Súlyosság"
-                  value={severity}
-                  onChange={(e) => setSeverity(e.target.value)}
-                  fullWidth
-                  variant="outlined"
-                  disabled={isLoading}
-                >
-                  {SEVERITY_OPTIONS.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-
-                <TextField
-                  label="Hiba részletes leírása"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Mit tapasztalt? Mi történt a hiba jelentkezésekor?"
-                  required
-                  fullWidth
-                  multiline
-                  rows={4}
-                  variant="outlined"
-                  disabled={isLoading}
-                />
-
-                <TextField
-                  label="Reprodukálás lépései (opcionális)"
-                  value={stepsToReproduce}
-                  onChange={(e) => setStepsToReproduce(e.target.value)}
-                  placeholder="1. Kattintottam ide...&#10;2. Megnyitottam azt...&#10;3. Megjelent a hiba..."
-                  fullWidth
-                  multiline
-                  rows={3}
-                  variant="outlined"
-                  disabled={isLoading}
-                />
-
-                <Box>
-                  <Button
-                    component="label"
-                    variant="outlined"
-                    startIcon={<AttachFileIcon />}
-                    disabled={isLoading}
+          <Box sx={{ flexGrow: 1, overflow: 'auto', p: 3 }}>
+            {isBugsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                <CircularProgress size={24} />
+              </Box>
+            ) : reportedBugs && reportedBugs.length > 0 ? (
+              <Stack spacing={2}>
+                {reportedBugs.map((bug) => (
+                  <Paper 
+                    elevation={0} 
+                    variant="outlined" 
+                    key={bug.id} 
+                    sx={{ 
+                      p: 2, 
+                      borderRadius: 2, 
+                      transition: '0.2s', 
+                      '&:hover': { borderColor: 'primary.main', bgcolor: 'primary.50', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' } 
+                    }}
                   >
-                    Kép / Videó csatolása
-                    <input
-                      type="file"
-                      hidden
-                      accept="image/*, video/*"
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files.length > 0) {
-                          setAttachment(e.target.files[0]);
-                        }
-                      }}
-                    />
-                  </Button>
-                  {attachment && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                      <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 300 }}>
-                        Kiválasztva: {attachment.name}
-                      </Typography>
-                      <IconButton size="small" onClick={() => setAttachment(null)} disabled={isLoading} color="error">
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  )}
-                </Box>
-              </Stack>
-            </Box>
-          </>
-        )}
-          </Grid>
-        </Grid>
-      </DialogContent>
+                    <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1, lineHeight: 1.4 }}>
+                      {bug.name}
+                    </Typography>
+                    
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      {bug.labels && bug.labels.length > 0 ? (
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
+                          {bug.labels.map(l => (
+                            <Chip 
+                              key={l.id} 
+                              label={l.name || 'Címke'} 
+                              size="small" 
+                              variant={l.color ? "filled" : "outlined"}
+                              sx={{ 
+                                fontSize: '0.7rem', 
+                                height: 22, 
+                                fontWeight: 600,
+                                bgcolor: l.color === 'sky' ? '#00c2e0' : (l.color || 'transparent'),
+                                color: l.color ? '#fff' : 'text.primary',
+                                borderColor: l.color === 'sky' ? '#00c2e0' : (l.color || 'divider')
+                              }} 
+                            />
+                          ))}
+                        </Stack>
+                      ) : (
+                        <Box /> // Empty placeholder for flex
+                      )}
 
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        {submitted ? (
-          <Button onClick={handleClose} variant="contained">
-            Bezárás
-          </Button>
-        ) : (
-          <>
-            <Button onClick={handleClose} disabled={isLoading}>
-              Mégse
-            </Button>
-            <Button
-              type="submit"
-              form="bug-report-form"
-              variant="contained"
-              color="error"
-              disabled={isLoading || !title.trim() || !description.trim()}
-            >
-              {isLoading ? (
-                <>
-                  <CircularProgress size={20} sx={{ mr: 1 }} />
-                  Küldés...
-                </>
-              ) : (
-                "Hibabejelentés Küldése"
-              )}
-            </Button>
-          </>
-        )}
-      </DialogActions>
+                      {isDeveloper && (
+                        <Button
+                          size="small"
+                          variant="text"
+                          color="success"
+                          startIcon={<CheckIcon />}
+                          onClick={() => resolveBugReport(bug.id)}
+                          disabled={isResolving}
+                          sx={{ minWidth: 'auto', p: 0.5, fontSize: '0.75rem' }}
+                        >
+                          Kész
+                        </Button>
+                      )}
+                    </Box>
+                  </Paper>
+                ))}
+              </Stack>
+            ) : (
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <ErrorOutlineIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
+                <Typography variant="body2" color="text.secondary">
+                  Nincsenek korábbi bejelentések.
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Box>
+
+        {/* RIGHT PANEL - FORM */}
+        <Box sx={{ width: { xs: '100%', md: '65%' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.paper' }}>
+          <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: 1, borderColor: 'divider' }}>
+            <Typography variant="h6" fontWeight="bold" sx={{ px: 2 }}>
+              Új hiba jelentése
+            </Typography>
+            <IconButton onClick={handleClose} size="small" sx={{ bgcolor: 'grey.100', '&:hover': { bgcolor: 'grey.200' } }}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+          
+          <Box sx={{ flexGrow: 1, p: { xs: 3, md: 4 }, overflow: 'auto' }}>
+            {submitted ? (
+              <Box sx={{ textAlign: "center", py: 5 }}>
+                <CheckCircleIcon sx={{ fontSize: 72, color: "success.main", mb: 3 }} />
+                <Typography variant="h5" fontWeight="bold" gutterBottom>
+                  Hibabejelentés Elküldve!
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 400, mx: 'auto', mb: 3 }}>
+                  A hibabejelentést sikeresen rögzítettük. Az adminisztrátorok
+                  emailben értesítést kaptak és hamarosan foglalkoznak a problémával.
+                </Typography>
+                <Button variant="outlined" onClick={handleClose}>
+                  Ablak bezárása
+                </Button>
+              </Box>
+            ) : (
+              <>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+                  Kérjük, minél részletesebben írja le a tapasztalt hibát. A
+                  bejelentés automatikusan továbbításra kerül az
+                  adminisztrátoroknak.
+                </Typography>
+
+                {errorMessage && (
+                  <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                    {errorMessage}
+                  </Alert>
+                )}
+
+                <Box component="form" onSubmit={handleSubmit} id="bug-report-form">
+                  <Stack spacing={3.5}>
+                    <TextField
+                      label="Hiba megnevezése"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Rövid, összefoglaló cím"
+                      required
+                      fullWidth
+                      variant="outlined"
+                      autoFocus
+                      disabled={isLoading}
+                    />
+
+                    <TextField
+                      select
+                      label="Súlyosság"
+                      value={severity}
+                      onChange={(e) => setSeverity(e.target.value)}
+                      fullWidth
+                      variant="outlined"
+                      disabled={isLoading}
+                    >
+                      {SEVERITY_OPTIONS.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+
+                    <TextField
+                      label="Hiba részletes leírása"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Mit tapasztalt? Mi történt a hiba jelentkezésekor?"
+                      required
+                      fullWidth
+                      multiline
+                      rows={5}
+                      variant="outlined"
+                      disabled={isLoading}
+                    />
+
+                    <TextField
+                      label="Reprodukálás lépései (opcionális)"
+                      value={stepsToReproduce}
+                      onChange={(e) => setStepsToReproduce(e.target.value)}
+                      placeholder="1. Kattintottam ide...&#10;2. Megnyitottam azt...&#10;3. Megjelent a hiba..."
+                      fullWidth
+                      multiline
+                      rows={3}
+                      variant="outlined"
+                      disabled={isLoading}
+                    />
+
+                    <Box>
+                      <Button
+                        component="label"
+                        variant="outlined"
+                        startIcon={<AttachFileIcon />}
+                        disabled={isLoading}
+                        sx={{ borderRadius: 2, textTransform: 'none', px: 3 }}
+                      >
+                        Kép / Videó csatolása
+                        <input
+                          type="file"
+                          hidden
+                          accept="image/*, video/*"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files.length > 0) {
+                              setAttachment(e.target.files[0]);
+                            }
+                          }}
+                        />
+                      </Button>
+                      {attachment && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5, bgcolor: 'grey.50', p: 1, borderRadius: 1, border: 1, borderColor: 'grey.200', width: 'fit-content' }}>
+                          <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 300, fontWeight: 500 }}>
+                            {attachment.name}
+                          </Typography>
+                          <IconButton size="small" onClick={() => setAttachment(null)} disabled={isLoading} color="error" sx={{ p: 0.5 }}>
+                            <CloseIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      )}
+                    </Box>
+                  </Stack>
+                </Box>
+              </>
+            )}
+          </Box>
+          
+          {/* Actions Footer */}
+          {!submitted && (
+            <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'grey.50', display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              <Button onClick={handleClose} disabled={isLoading} color="inherit" sx={{ fontWeight: 600 }}>
+                Mégse
+              </Button>
+              <Button
+                type="submit"
+                form="bug-report-form"
+                variant="contained"
+                color="primary"
+                disableElevation
+                disabled={isLoading || !title.trim() || !description.trim()}
+                sx={{ borderRadius: 2, px: 4, fontWeight: 'bold' }}
+              >
+                {isLoading ? (
+                  <>
+                    <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                    Küldés...
+                  </>
+                ) : (
+                  "Hibabejelentés Küldése"
+                )}
+              </Button>
+            </Box>
+          )}
+        </Box>
+      </Box>
     </Dialog>
   );
 }
