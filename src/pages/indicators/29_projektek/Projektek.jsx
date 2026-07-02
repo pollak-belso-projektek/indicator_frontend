@@ -356,56 +356,52 @@ export default function Projektek() {
         <Stack
           direction="row"
           spacing={2}
-          justifyContent="space-between"
           alignItems="center"
           mb={3}
         >
-          <Box>
-            <ExportDOMTableToExcel
-              tableId=".MuiTable-root"
-              fileName="projektek_export"
-            />
-          </Box>
-          <Stack direction="row" spacing={2}>
-            <LockedTableWrapper tableName="projektek">
-              <Button
-                variant="outlined"
-                color="info"
-                startIcon={<AddIcon />}
-                onClick={() => setOpenAddDialog(true)}
-                disabled={!selectedSchool}
-              >
-                Új sor hozzáadása
-              </Button>
-              <Button
-                variant="outlined"
-                color="warning"
-                startIcon={<RefreshIcon />}
-                onClick={handleReset}
-                disabled={!isModified || isSaving}
-              >
-                Visszaállítás
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<SaveIcon />}
-                onClick={handleSave}
-                disabled={!isModified || isSaving || !selectedSchool}
-              >
-                Mentés
-              </Button>
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={() => setHistoryOpen(true)}
-                startIcon={<HistoryIcon />}
-                sx={{ ml: 2 }}
-              >
-                Előzmények
-              </Button>
-            </LockedTableWrapper>
-          </Stack>
+          <ExportDOMTableToExcel
+            tableId=".MuiTable-root"
+            fileName="projektek_export"
+            excludeColumns={[5]}
+          />
+          <LockedTableWrapper tableName="projektek">
+            <Button
+              variant="outlined"
+              color="info"
+              startIcon={<AddIcon />}
+              onClick={() => setOpenAddDialog(true)}
+              disabled={!selectedSchool}
+            >
+              Új sor hozzáadása
+            </Button>
+            <Button
+              variant="outlined"
+              color="warning"
+              startIcon={<RefreshIcon />}
+              onClick={handleReset}
+              disabled={!isModified || isSaving}
+            >
+              Visszaállítás
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<SaveIcon />}
+              onClick={handleSave}
+              disabled={!isModified || isSaving || !selectedSchool}
+            >
+              Mentés
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => setHistoryOpen(true)}
+              startIcon={<HistoryIcon />}
+              sx={{ ml: 2 }}
+            >
+              Előzmények
+            </Button>
+          </LockedTableWrapper>
         </Stack>
 
         <TableContainer

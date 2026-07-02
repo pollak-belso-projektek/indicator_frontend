@@ -34,6 +34,7 @@ import ExcelJS from "exceljs";
 export default function ExportToExcel({
   fileName = "export",
   sheetName = "Adatok",
+  sheets = [],
   columns = [],
   rows = [],
   groups = [],
@@ -57,7 +58,14 @@ export default function ExportToExcel({
   }, []);
 
   const handleExport = useCallback(async () => {
-    if (!columns.length) {
+    // Határozzuk meg a munkalapok listáját
+    const exportSheets = sheets && sheets.length > 0 
+      ? sheets 
+      : [{ sheetName, columns, rows, groups, freezeRows }];
+
+    // Ellenőrzés: legalább egy munkalapnak kell lennie oszlopokkal és adatokkal
+    const hasValidSheet = exportSheets.some(sheet => sheet.columns?.length > 0);
+    if (!hasValidSheet) {
       showSnackbar("Nincsenek oszlopok definiálva az exporthoz!", "warning");
       return;
     }
@@ -68,132 +76,140 @@ export default function ExportToExcel({
       workbook.creator = "Indikátor Rendszer";
       workbook.created = new Date();
 
-      const worksheet = workbook.addWorksheet(sheetName, {
-        views: freezeHeader
-          ? [
-              {
-                state: "frozen",
-                ySplit: freezeRows ?? (groups.length + 1),
-                xSplit: 0,
-              },
-            ]
-          : [],
-      });
+      // Ciklus a munkalapokon
+      exportSheets.forEach((sheetConf, sheetIndex) => {
+        const sName = sheetConf.sheetName || `Munkalap ${sheetIndex + 1}`;
+        const sCols = sheetConf.columns || [];
+        const sRows = sheetConf.rows || [];
+        const sGroups = sheetConf.groups || [];
+        const sFreezeRows = sheetConf.freezeRows;
+        
+        // Ha üres az oszlopdefiníció, kihagyjuk
+        if (!sCols.length) return;
 
-      // ── 1. Csoportfejléc sorok (pl. tanévek) ──────────────────────
-      const defaultGroupStyle = {
-        font: { bold: true, size: 11, color: { argb: "FF1A1A2E" } },
-        fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF2CC" } },
-        alignment: { horizontal: "center", vertical: "middle", wrapText: true },
-        border: {
-          top: { style: "thin", color: { argb: "FFAAAAAA" } },
-          left: { style: "thin", color: { argb: "FFAAAAAA" } },
-          bottom: { style: "medium", color: { argb: "FF555555" } },
-          right: { style: "thin", color: { argb: "FFAAAAAA" } },
-        },
-      };
-
-      groups.forEach((groupRow) => {
-        const row = worksheet.addRow([]);
-        let colIndex = 1;
-        groupRow.forEach(({ label, colSpan = 1 }) => {
-          const cell = row.getCell(colIndex);
-          cell.value = label;
-          Object.assign(cell, groupStyle ?? defaultGroupStyle);
-          if (colSpan > 1) {
-            worksheet.mergeCells(
-              row.number,
-              colIndex,
-              row.number,
-              colIndex + colSpan - 1
-            );
-          }
-          colIndex += colSpan;
-        });
-        row.height = 22;
-      });
-
-      // ── 2. Fejléc sor ─────────────────────────────────────────────
-      const defaultHeaderStyle = {
-        font: { bold: true, size: 10, color: { argb: "FFFFFFFF" } },
-        fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FF1976D2" } },
-        alignment: { horizontal: "center", vertical: "middle", wrapText: true },
-        border: {
-          top: { style: "thin", color: { argb: "FFAAAAAA" } },
-          left: { style: "thin", color: { argb: "FFAAAAAA" } },
-          bottom: { style: "medium", color: { argb: "FF1565C0" } },
-          right: { style: "thin", color: { argb: "FFAAAAAA" } },
-        },
-      };
-
-      const headerRow = worksheet.addRow(columns.map((col) => col.header));
-      headerRow.height = 28;
-      headerRow.eachCell((cell) => {
-        Object.assign(cell, headerStyle ?? defaultHeaderStyle);
-      });
-
-      // ── 3. Oszlopszélességek ───────────────────────────────────────
-      worksheet.columns = columns.map((col) => ({
-        key: col.key,
-        width: col.width ?? 16,
-      }));
-
-      // ── 4. Adatsorok ───────────────────────────────────────────────
-      const evenRowFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF5F5F5" } };
-      const oddRowFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFFFF" } };
-      const cellBorder = {
-        top: { style: "hair", color: { argb: "FFDDDDDD" } },
-        left: { style: "hair", color: { argb: "FFDDDDDD" } },
-        bottom: { style: "hair", color: { argb: "FFDDDDDD" } },
-        right: { style: "hair", color: { argb: "FFDDDDDD" } },
-      };
-
-      rows.forEach((rowData, rowIndex) => {
-        const dataRow = worksheet.addRow(
-          columns.map((col) => {
-            const val = rowData[col.key];
-            // Szám konverzió, ha lehetséges
-            if (val !== undefined && val !== null && val !== "" && !isNaN(Number(val))) {
-              return Number(val);
-            }
-            return val ?? "";
-          })
-        );
-
-        const isEven = rowIndex % 2 === 0;
-        dataRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-          cell.fill = isEven ? evenRowFill : oddRowFill;
-          cell.border = cellBorder;
-          cell.alignment = { vertical: "middle" };
-
-          // Számot tartalmazó cellák jobbra igazítása
-          if (typeof cell.value === "number") {
-            cell.alignment = { horizontal: "center", vertical: "middle" };
-          }
-
-          // Félkövér + sárga háttér - összesen sorok
-          if (rowData._isSummary) {
-            cell.font = { bold: true };
-            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF9C4" } };
-          }
-
-          // Egyedi cellaformázás, ha a rowData tartalmaz _styles-t
-          if (rowData._styles && rowData._styles[columns[colNumber - 1]?.key]) {
-            Object.assign(cell, rowData._styles[columns[colNumber - 1].key]);
-          }
+        const worksheet = workbook.addWorksheet(sName, {
+          views: freezeHeader
+            ? [
+                {
+                  state: "frozen",
+                  ySplit: sFreezeRows ?? (sGroups.length + 1),
+                  xSplit: 0,
+                },
+              ]
+            : [],
         });
 
-        dataRow.height = 18;
-      });
-
-      // ── 5. Autoszűrő ───────────────────────────────────────────────
-      if (autoFilter && rows.length > 0) {
-        const headerRowNumber = groups.length + 1;
-        worksheet.autoFilter = {
-          from: { row: headerRowNumber, column: 1 },
-          to: { row: headerRowNumber, column: columns.length },
+        // ── 1. Csoportfejléc sorok (pl. tanévek) ──────────────────────
+        const defaultGroupStyle = {
+          font: { bold: true, size: 11, color: { argb: "FF1A1A2E" } },
+          fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF2CC" } },
+          alignment: { horizontal: "center", vertical: "middle", wrapText: true },
+          border: {
+            top: { style: "thin", color: { argb: "FFAAAAAA" } },
+            left: { style: "thin", color: { argb: "FFAAAAAA" } },
+            bottom: { style: "medium", color: { argb: "FF555555" } },
+            right: { style: "thin", color: { argb: "FFAAAAAA" } },
+          },
         };
-      }
+
+        sGroups.forEach((groupRow) => {
+          const row = worksheet.addRow([]);
+          let colIndex = 1;
+          groupRow.forEach(({ label, colSpan = 1 }) => {
+            const cell = row.getCell(colIndex);
+            cell.value = label;
+            Object.assign(cell, groupStyle ?? defaultGroupStyle);
+            if (colSpan > 1) {
+              worksheet.mergeCells(
+                row.number,
+                colIndex,
+                row.number,
+                colIndex + colSpan - 1
+              );
+            }
+            colIndex += colSpan;
+          });
+          row.height = 22;
+        });
+
+        // ── 2. Fejléc sor ─────────────────────────────────────────────
+        const defaultHeaderStyle = {
+          font: { bold: true, size: 10, color: { argb: "FFFFFFFF" } },
+          fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FF1976D2" } },
+          alignment: { horizontal: "center", vertical: "middle", wrapText: true },
+          border: {
+            top: { style: "thin", color: { argb: "FFAAAAAA" } },
+            left: { style: "thin", color: { argb: "FFAAAAAA" } },
+            bottom: { style: "medium", color: { argb: "FF1565C0" } },
+            right: { style: "thin", color: { argb: "FFAAAAAA" } },
+          },
+        };
+
+        const headerRow = worksheet.addRow(sCols.map((col) => col.header));
+        headerRow.height = 28;
+        headerRow.eachCell((cell) => {
+          Object.assign(cell, headerStyle ?? defaultHeaderStyle);
+        });
+
+        // ── 3. Oszlopszélességek ───────────────────────────────────────
+        worksheet.columns = sCols.map((col) => ({
+          key: col.key,
+          width: col.width ?? 16,
+        }));
+
+        // ── 4. Adatsorok ───────────────────────────────────────────────
+        const evenRowFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF5F5F5" } };
+        const oddRowFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFFFF" } };
+        const cellBorder = {
+          top: { style: "hair", color: { argb: "FFDDDDDD" } },
+          left: { style: "hair", color: { argb: "FFDDDDDD" } },
+          bottom: { style: "hair", color: { argb: "FFDDDDDD" } },
+          right: { style: "hair", color: { argb: "FFDDDDDD" } },
+        };
+
+        sRows.forEach((rowData, rowIndex) => {
+          const dataRow = worksheet.addRow(
+            sCols.map((col) => {
+              const val = rowData[col.key];
+              if (val !== undefined && val !== null && val !== "" && !isNaN(Number(val))) {
+                return Number(val);
+              }
+              return val ?? "";
+            })
+          );
+
+          const isEven = rowIndex % 2 === 0;
+          dataRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+            cell.fill = isEven ? evenRowFill : oddRowFill;
+            cell.border = cellBorder;
+            cell.alignment = { vertical: "middle" };
+
+            if (typeof cell.value === "number") {
+              cell.alignment = { horizontal: "center", vertical: "middle" };
+            }
+
+            if (rowData._isSummary) {
+              cell.font = { bold: true };
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF9C4" } };
+            }
+
+            if (rowData._styles && rowData._styles[sCols[colNumber - 1]?.key]) {
+              Object.assign(cell, rowData._styles[sCols[colNumber - 1].key]);
+            }
+          });
+
+          dataRow.height = 18;
+        });
+
+        // ── 5. Autoszűrő ───────────────────────────────────────────────
+        if (autoFilter && sRows.length > 0) {
+          const headerRowNumber = sGroups.length + 1;
+          worksheet.autoFilter = {
+            from: { row: headerRowNumber, column: 1 },
+            to: { row: headerRowNumber, column: sCols.length },
+          };
+        }
+      });
 
       // ── 6. Letöltés ────────────────────────────────────────────────
       const buffer = await workbook.xlsx.writeBuffer();
@@ -220,6 +236,7 @@ export default function ExportToExcel({
   }, [
     fileName,
     sheetName,
+    sheets,
     columns,
     rows,
     groups,
@@ -233,15 +250,19 @@ export default function ExportToExcel({
     showSnackbar,
   ]);
 
+  const totalRows = sheets && sheets.length > 0
+    ? sheets.reduce((sum, s) => sum + (s.rows?.length ?? 0), 0)
+    : rows.length;
+
   return (
     <>
-      <Tooltip title={`Táblázat exportálása Excel fájlba (.xlsx) — ${rows.length} sor`} arrow>
+      <Tooltip title={`Táblázat exportálása Excel fájlba (.xlsx) — ${totalRows} sor`} arrow>
         <span>
           <Button
             variant={buttonVariant}
             color={buttonColor}
             onClick={handleExport}
-            disabled={isExporting || rows.length === 0}
+            disabled={isExporting || totalRows === 0}
             startIcon={
               isExporting ? (
                 <CircularProgress size={16} color="inherit" />
