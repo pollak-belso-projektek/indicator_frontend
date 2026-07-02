@@ -10,7 +10,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -34,6 +33,7 @@ import InfoTanulmanyiEredmeny from "./info_tanulmani_eredmeny";
 import TitleTanulmanyiEredmeny from "./title_tanulmani_eredmeny";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 const evszamok = generateSchoolYears();
 
@@ -449,7 +449,7 @@ export default function TanulmanyiEredmeny() {
 
                   {/* Semester 1 inputs */}
                   <TableCell sx={cellSx}>
-                    <TextField
+                    <ZeroHidingTextField
                       size="small"
                       type="number"
                       fullWidth
@@ -459,7 +459,7 @@ export default function TanulmanyiEredmeny() {
                         jogv,
                         "felev1",
                         "kituno",
-                      )}
+                      ) || 0}
                       onChange={(e) =>
                         handleDataChange(
                           yearStr,
@@ -478,10 +478,10 @@ export default function TanulmanyiEredmeny() {
                         "kituno",
                       )}
                       inputProps={{ min: 0 }}
-                    />
+                     placeholder="0"/>
                   </TableCell>
                   <TableCell sx={cellSx}>
-                    <TextField
+                    <ZeroHidingTextField
                       size="small"
                       type="number"
                       fullWidth
@@ -491,7 +491,7 @@ export default function TanulmanyiEredmeny() {
                         jogv,
                         "felev1",
                         "bukott",
-                      )}
+                      ) || 0}
                       onChange={(e) =>
                         handleDataChange(
                           yearStr,
@@ -510,12 +510,12 @@ export default function TanulmanyiEredmeny() {
                         "bukott",
                       )}
                       inputProps={{ min: 0 }}
-                    />
+                     placeholder="0"/>
                   </TableCell>
 
                   {/* Semester 2 inputs */}
                   <TableCell sx={cellSx}>
-                    <TextField
+                    <ZeroHidingTextField
                       size="small"
                       type="number"
                       fullWidth
@@ -525,7 +525,7 @@ export default function TanulmanyiEredmeny() {
                         jogv,
                         "felev2",
                         "kituno",
-                      )}
+                      ) || 0}
                       onChange={(e) =>
                         handleDataChange(
                           yearStr,
@@ -544,10 +544,10 @@ export default function TanulmanyiEredmeny() {
                         "kituno",
                       )}
                       inputProps={{ min: 0 }}
-                    />
+                     placeholder="0"/>
                   </TableCell>
                   <TableCell sx={cellSx}>
-                    <TextField
+                    <ZeroHidingTextField
                       size="small"
                       type="number"
                       fullWidth
@@ -557,7 +557,7 @@ export default function TanulmanyiEredmeny() {
                         jogv,
                         "felev2",
                         "bukott",
-                      )}
+                      ) || 0}
                       onChange={(e) =>
                         handleDataChange(
                           yearStr,
@@ -576,7 +576,7 @@ export default function TanulmanyiEredmeny() {
                         "bukott",
                       )}
                       inputProps={{ min: 0 }}
-                    />
+                     placeholder="0"/>
                   </TableCell>
                 </TableRow>
               ));

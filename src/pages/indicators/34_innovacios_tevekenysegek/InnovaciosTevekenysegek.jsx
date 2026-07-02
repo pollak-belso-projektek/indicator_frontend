@@ -17,7 +17,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -45,6 +44,7 @@ import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function InnovaciosTevekenysegek() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -511,9 +511,9 @@ export default function InnovaciosTevekenysegek() {
                                 : "inherit",
                             }}
                           >
-                            <TextField
+                            <ZeroHidingTextField
                               type="text"
-                              value={rawVal}
+                              value={rawVal || 0}
                               onChange={(e) =>
                                 handleDataChange(name, year, e.target.value)
                               }
@@ -523,7 +523,7 @@ export default function InnovaciosTevekenysegek() {
                               sx={{ width: "100%" }}
                               multiline
                               maxRows={4}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                         );
                       })}
@@ -567,15 +567,15 @@ export default function InnovaciosTevekenysegek() {
             <Box
               sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
             >
-              <TextField
+              <ZeroHidingTextField
                 fullWidth
                 label="Innovációs tevékenység megnevezése"
-                value={newActivityName}
+                value={newActivityName || 0}
                 onChange={(e) => setNewActivityName(e.target.value)}
                 placeholder="Pl. Online időpontfoglaló rendszer..."
                 autoFocus
                 multiline
-              />
+               placeholder="0"/>
             </Box>
           </DialogContent>
           <DialogActions sx={{ p: 2, pt: 0 }}>

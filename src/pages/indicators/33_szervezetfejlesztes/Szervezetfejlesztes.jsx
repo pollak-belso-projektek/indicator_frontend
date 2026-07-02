@@ -17,7 +17,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -47,6 +46,7 @@ import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function Szervezetfejlesztes() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -514,9 +514,9 @@ export default function Szervezetfejlesztes() {
                                 : "inherit",
                             }}
                           >
-                            <TextField
+                            <ZeroHidingTextField
                               type="text"
-                              value={rawVal}
+                              value={rawVal || 0}
                               onChange={(e) =>
                                 handleDataChange(name, year, e.target.value)
                               }
@@ -524,7 +524,7 @@ export default function Szervezetfejlesztes() {
                               placeholder="pl. 10 fő"
                               inputProps={{ style: { textAlign: "center" } }}
                               sx={{ width: "100%", maxWidth: "120px" }}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                         );
                       })}
@@ -570,14 +570,14 @@ export default function Szervezetfejlesztes() {
             <Box
               sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
             >
-              <TextField
+              <ZeroHidingTextField
                 fullWidth
                 label="Tevékenység megnevezése/formája"
-                value={newActivityName}
+                value={newActivityName || 0}
                 onChange={(e) => setNewActivityName(e.target.value)}
                 placeholder="Pl. Munkacsoportok alakítása"
                 autoFocus
-              />
+               placeholder="0"/>
             </Box>
           </DialogContent>
           <DialogActions sx={{ p: 2, pt: 0 }}>

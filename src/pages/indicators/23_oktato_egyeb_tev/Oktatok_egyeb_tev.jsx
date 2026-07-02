@@ -12,7 +12,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -44,6 +43,7 @@ import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function OktatokEgyebTev() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -878,14 +878,12 @@ export default function OktatokEgyebTev() {
                                         </TableCell>
                                         {schoolYears.map((year) => (
                                           <TableCell key={year} align="center">
-                                            <TextField
+                                            <ZeroHidingTextField
                                               size="small"
                                               type="number"
-                                              value={
-                                                data[year]?.[categoryKey]?.[
+                                              value={data[year]?.[categoryKey]?.[
                                                   fieldKey
-                                                ] || ""
-                                              }
+                                                ] || 0}
                                               onChange={(e) =>
                                                 handleInputChange(
                                                   categoryKey,
@@ -910,7 +908,7 @@ export default function OktatokEgyebTev() {
                                                   ? "2px solid #ffb74d"
                                                   : "1px solid transparent",
                                               }}
-                                            />
+                                             placeholder="0"/>
                                           </TableCell>
                                         ))}
                                       </TableRow>
@@ -950,12 +948,10 @@ export default function OktatokEgyebTev() {
                                     <TableCell>{categoryLabel}</TableCell>
                                     {schoolYears.map((year) => (
                                       <TableCell key={year} align="center">
-                                        <TextField
+                                        <ZeroHidingTextField
                                           size="small"
                                           type="number"
-                                          value={
-                                            data[year]?.[categoryKey] || ""
-                                          }
+                                          value={data[year]?.[categoryKey] || 0}
                                           onChange={(e) =>
                                             handleInputChange(
                                               categoryKey,
@@ -980,7 +976,7 @@ export default function OktatokEgyebTev() {
                                               ? "2px solid #ffb74d"
                                               : "1px solid transparent",
                                           }}
-                                        />
+                                         placeholder="0"/>
                                       </TableCell>
                                     ))}
                                   </TableRow>
@@ -1044,10 +1040,10 @@ export default function OktatokEgyebTev() {
                                     oktatokLetszamaFromAlkalmazott > 0;
 
                                   return (
-                                    <TextField
+                                    <ZeroHidingTextField
                                       size="small"
                                       type="number"
-                                      value={data[year]?.oktatok_letszama || ""}
+                                      value={data[year]?.oktatok_letszama || 0}
                                       onChange={(e) =>
                                         handleInputChange(
                                           "oktatok_letszama",
@@ -1084,7 +1080,7 @@ export default function OktatokEgyebTev() {
                                             ? "2px solid #ffb74d"
                                             : "1px solid transparent",
                                       }}
-                                    />
+                                     placeholder="0"/>
                                   );
                                 })()}
                               </TableCell>

@@ -10,7 +10,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -33,6 +32,7 @@ import TitleSzakmaiTovabbkepzesek from "./title_szakmai_tovabbkepzesek";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import ExportToExcel from "../../../components/ExportToExcel";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 const evszamok = generateSchoolYears();
 
@@ -553,11 +553,11 @@ export default function SzakmaiTovabbkepzesek() {
                       const year = parseInt(yearStr.split("/")[0], 10);
                       return (
                         <TableCell key={yearStr} align="center" sx={cellSx}>
-                          <TextField
+                          <ZeroHidingTextField
                             variant="outlined"
                             size="small"
                             fullWidth
-                            value={tableData[year]?.[rowItem.key] ?? ""}
+                            value={tableData[year]?.[rowItem.key] || 0}
                             onChange={(e) =>
                               handleDataChange(
                                 year,
@@ -602,11 +602,11 @@ export default function SzakmaiTovabbkepzesek() {
                   const year = parseInt(yearStr.split("/")[0], 10);
                   return (
                     <TableCell key={yearStr} align="center" sx={cellSx}>
-                      <TextField
+                      <ZeroHidingTextField
                         variant="outlined"
                         size="small"
                         fullWidth
-                        value={tableData[year]?.oktatok_letszama ?? ""}
+                        value={tableData[year]?.oktatok_letszama || 0}
                         onChange={(e) =>
                           handleDataChange(
                             year,
@@ -652,11 +652,11 @@ export default function SzakmaiTovabbkepzesek() {
                   const year = parseInt(yearStr.split("/")[0], 10);
                   return (
                     <TableCell key={yearStr} align="center" sx={cellSx}>
-                      <TextField
+                      <ZeroHidingTextField
                         variant="outlined"
                         size="small"
                         fullWidth
-                        value={tableData[year]?.forditott_osszeg ?? ""}
+                        value={tableData[year]?.forditott_osszeg || 0}
                         onChange={(e) =>
                           handleDataChange(
                             year,

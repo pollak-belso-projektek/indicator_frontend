@@ -17,7 +17,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -45,6 +44,7 @@ import TitleDualisKepzohelyekSzama from "./title_dualis_kepzohelyek_szama";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 export default function DualisKepzohelyekSzama() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
 
@@ -600,9 +600,9 @@ export default function DualisKepzohelyekSzama() {
                                   : "inherit",
                               }}
                             >
-                              <TextField
+                              <ZeroHidingTextField
                                 type="text"
-                                value={formaja}
+                                value={formaja || 0}
                                 onChange={(e) =>
                                   handleDataChange(
                                     name,
@@ -617,7 +617,7 @@ export default function DualisKepzohelyekSzama() {
                                 sx={{ width: "100%" }}
                                 multiline
                                 maxRows={3}
-                              />
+                               placeholder="0"/>
                             </TableCell>
                             <TableCell
                               align="center"
@@ -633,9 +633,9 @@ export default function DualisKepzohelyekSzama() {
                                   : "inherit",
                               }}
                             >
-                              <TextField
+                              <ZeroHidingTextField
                                 type="text"
-                                value={szama}
+                                value={szama || 0}
                                 onChange={(e) =>
                                   handleDataChange(
                                     name,
@@ -648,7 +648,7 @@ export default function DualisKepzohelyekSzama() {
                                 placeholder="10"
                                 inputProps={{ style: { textAlign: "center" } }}
                                 sx={{ width: "100%" }}
-                              />
+                               placeholder="0"/>
                             </TableCell>
                             <TableCell
                               align="center"
@@ -667,9 +667,9 @@ export default function DualisKepzohelyekSzama() {
                                   : "inherit",
                               }}
                             >
-                              <TextField
+                              <ZeroHidingTextField
                                 type="text"
-                                value={egyeb}
+                                value={egyeb || 0}
                                 onChange={(e) =>
                                   handleDataChange(
                                     name,
@@ -684,7 +684,7 @@ export default function DualisKepzohelyekSzama() {
                                 sx={{ width: "100%" }}
                                 multiline
                                 maxRows={3}
-                              />
+                               placeholder="0"/>
                             </TableCell>
                           </React.Fragment>
                         );
@@ -729,14 +729,14 @@ export default function DualisKepzohelyekSzama() {
             <Box
               sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
             >
-              <TextField
+              <ZeroHidingTextField
                 fullWidth
                 label="Duális képzőhely megnevezése"
-                value={newActivityName}
+                value={newActivityName || 0}
                 onChange={(e) => setNewActivityName(e.target.value)}
                 placeholder="Pl. metALCOM Távközlési..."
                 autoFocus
-              />
+               placeholder="0"/>
             </Box>
           </DialogContent>
           <DialogActions sx={{ p: 2, pt: 0 }}>

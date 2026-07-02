@@ -13,7 +13,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -42,6 +41,7 @@ import TitleMuhelyiskolaiReszszakmat from "./title_muhelyiskolai_reszszakmat";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function MuhelyiskolaiReszszakmat() {
   const schoolYears = generateSchoolYears();
@@ -525,11 +525,9 @@ export default function MuhelyiskolaiReszszakmat() {
 
                             return (
                               <TableCell key={year} align="center">
-                                <TextField
+                                <ZeroHidingTextField
 
-                                  value={
-                                    workshopData.percentage_overall[year] || "0"
-                                  }
+                                  value={workshopData.percentage_overall[year] || 0}
                                   size="small"
                                   inputProps={{
                                     min: 0,
@@ -560,7 +558,7 @@ export default function MuhelyiskolaiReszszakmat() {
                                   }}
                                   placeholder="0-100"
                                   disabled // Auto-calculated field
-                                />
+                                 placeholder="0"/>
                                 {isOverLimit && (
                                   <Typography
                                     variant="caption"
@@ -629,11 +627,9 @@ export default function MuhelyiskolaiReszszakmat() {
                         <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                           {schoolYears.map((year) => (
                             <TableCell key={year} align="center">
-                              <TextField
+                              <ZeroHidingTextField
                                 type="number"
-                                value={
-                                  workshopData.participants_count[year] || "0"
-                                }
+                                value={workshopData.participants_count[year] || 0}
                                 onChange={(e) =>
                                   handleDataChange(
                                     "participants_count",
@@ -708,9 +704,9 @@ export default function MuhelyiskolaiReszszakmat() {
                         <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                           {schoolYears.map((year) => (
                             <TableCell key={year} align="center">
-                              <TextField
+                              <ZeroHidingTextField
 
-                                value={workshopData.total_students[year] || "0"}
+                                value={workshopData.total_students[year] || 0}
                                 size="small"
                                 inputProps={{
                                   min: 0,

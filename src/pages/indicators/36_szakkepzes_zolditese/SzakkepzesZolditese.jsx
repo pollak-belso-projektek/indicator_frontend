@@ -17,7 +17,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -49,6 +48,7 @@ import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 const CATEGORIES = [
   "A szakképzés zöldítéséhez kapcsolódó rendezvény/tevékenység megnevezése",
@@ -575,9 +575,9 @@ export default function SzakkepzesZolditese() {
                                 : "inherit",
                             }}
                           >
-                            <TextField
+                            <ZeroHidingTextField
                               type="text"
-                              value={rawVal}
+                              value={rawVal || 0}
                               onChange={(e) =>
                                 handleDataChange(key, year, e.target.value)
                               }
@@ -585,7 +585,7 @@ export default function SzakkepzesZolditese() {
                               placeholder="pl. 71"
                               inputProps={{ style: { textAlign: "center" } }}
                               sx={{ width: "100%", maxWidth: "120px" }}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                         );
                       })}
@@ -645,14 +645,14 @@ export default function SzakkepzesZolditese() {
                 </Select>
               </FormControl>
 
-              <TextField
+              <ZeroHidingTextField
                 fullWidth
                 label="Tevékenység megnevezése"
-                value={newActivityName}
+                value={newActivityName || 0}
                 onChange={(e) => setNewActivityName(e.target.value)}
                 placeholder="Pl. városi szemétgyűjtési akció"
                 multiline
-              />
+               placeholder="0"/>
             </Box>
           </DialogContent>
           <DialogActions sx={{ p: 2, pt: 0 }}>

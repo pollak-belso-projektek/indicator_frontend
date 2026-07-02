@@ -9,7 +9,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Button,
   Stack,
   Typography,
@@ -41,6 +40,7 @@ import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 const evszamok = generateSchoolYears();
 
@@ -1519,7 +1519,7 @@ export default function TanuloLetszam() {
                                         align="center"
                                         sx={{ backgroundColor: "#f0f8ff20" }}
                                       >
-                                        <TextField
+                                        <ZeroHidingTextField
                                           type="number"
                                           value={data?.tanuloi_jogviszony || 0}
                                           onChange={(e) =>
@@ -1536,7 +1536,7 @@ export default function TanuloLetszam() {
                                             style: { textAlign: "center" },
                                           }}
                                           sx={{ width: "70px" }}
-                                        />
+                                         placeholder="0"/>
                                       </TableCell>
                                     );
                                   })}
@@ -1554,11 +1554,9 @@ export default function TanuloLetszam() {
                                         align="center"
                                         sx={{ backgroundColor: "#f3e5f520" }}
                                       >
-                                        <TextField
+                                        <ZeroHidingTextField
                                           type="number"
-                                          value={
-                                            data?.felnottkepzesi_jogviszony || 0
-                                          }
+                                          value={data?.felnottkepzesi_jogviszony || 0}
                                           onChange={(e) =>
                                             handleDataChange(
                                               subType,
@@ -1573,7 +1571,7 @@ export default function TanuloLetszam() {
                                             style: { textAlign: "center" },
                                           }}
                                           sx={{ width: "70px" }}
-                                        />
+                                         placeholder="0"/>
                                       </TableCell>
                                     );
                                   })}
@@ -1796,11 +1794,9 @@ export default function TanuloLetszam() {
                                           align="center"
                                           sx={{ backgroundColor: "#f0f8ff20" }}
                                         >
-                                          <TextField
+                                          <ZeroHidingTextField
                                             type="number"
-                                            value={
-                                              data?.tanuloi_jogviszony || 0
-                                            }
+                                            value={data?.tanuloi_jogviszony || 0}
                                             onChange={(e) =>
                                               handleDataChange(
                                                 subType,
@@ -1815,7 +1811,7 @@ export default function TanuloLetszam() {
                                               style: { textAlign: "center" },
                                             }}
                                             sx={{ width: "70px" }}
-                                          />
+                                           placeholder="0"/>
                                         </TableCell>
                                       );
                                     }
@@ -1888,12 +1884,9 @@ export default function TanuloLetszam() {
                                           align="center"
                                           sx={{ backgroundColor: "#f3e5f520" }}
                                         >
-                                          <TextField
+                                          <ZeroHidingTextField
                                             type="number"
-                                            value={
-                                              data?.felnottkepzesi_jogviszony ||
-                                              0
-                                            }
+                                            value={data?.felnottkepzesi_jogviszony || 0}
                                             onChange={(e) =>
                                               handleDataChange(
                                                 subType,
@@ -1908,7 +1901,7 @@ export default function TanuloLetszam() {
                                               style: { textAlign: "center" },
                                             }}
                                             sx={{ width: "70px" }}
-                                          />
+                                           placeholder="0"/>
                                         </TableCell>
                                       );
                                     }

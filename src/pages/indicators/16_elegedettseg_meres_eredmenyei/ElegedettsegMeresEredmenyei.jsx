@@ -17,7 +17,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -40,6 +39,7 @@ import TitleElegedettsegMeres from "./title_elegedettseg_meres_eredmenyei";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 const evszamok = generateSchoolYears();
 
 // Mapping for the exact JSON properties the backend expects
@@ -461,10 +461,10 @@ export default function ElegedettsegMeresEredmenyei() {
                                   : "1px solid #e0e0e0",
                             }}
                           >
-                            <TextField
+                            <ZeroHidingTextField
                               type="text"
                               size="small"
-                              value={tableData[year]?.[category.key] ?? ""}
+                              value={tableData[year]?.[category.key] || 0}
                               onChange={(e) =>
                                 handleDataChange(
                                   year,
@@ -491,7 +491,7 @@ export default function ElegedettsegMeresEredmenyei() {
                               sx={{ width: "98px", backgroundColor: "#fff" }}
                               placeholder="0.0"
                               disabled={!selectedSchool}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                         );
                       })}

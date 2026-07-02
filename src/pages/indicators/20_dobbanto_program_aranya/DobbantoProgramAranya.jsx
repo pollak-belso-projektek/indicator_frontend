@@ -10,7 +10,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -42,6 +41,7 @@ import TitleDobbantoProgramAranya from "./title_dobbanto_program_aranya";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function DobbantoProgramAránya() {
   const schoolYears = generateSchoolYears();
@@ -630,11 +630,9 @@ export default function DobbantoProgramAránya() {
                           <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                             {schoolYears.map((year) => (
                               <TableCell key={year} align="center">
-                                <TextField
+                                <ZeroHidingTextField
                                   type="number"
-                                  value={
-                                    dobbantoData.dobbanto_students[year] || "0"
-                                  }
+                                  value={dobbantoData.dobbanto_students[year] || 0}
                                   onChange={(e) =>
                                     handleDataChange(
                                       "dobbanto_students",

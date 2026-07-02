@@ -11,7 +11,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -61,6 +60,7 @@ import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function SajatosNevelesiIgenyuTanulokAranya() {
   const schoolYears = generateSchoolYears();
@@ -569,11 +569,9 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                                               backgroundColor: "#fff3e040",
                                             }}
                                           >
-                                            <TextField
+                                            <ZeroHidingTextField
                                               type="number"
-                                              value={
-                                                data.sni_tanulok_szama || 0
-                                              }
+                                              value={data.sni_tanulok_szama || 0}
                                               onChange={(e) =>
                                                 handleDataChange(
                                                   data.id,
@@ -587,7 +585,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                                                 style: { textAlign: "center" },
                                               }}
                                               sx={{ width: "80px" }}
-                                            />
+                                             placeholder="0"/>
                                           </TableCell>
                                           <TableCell
                                             align="center"
@@ -595,7 +593,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                                               backgroundColor: "#e8f5e840",
                                             }}
                                           >
-                                            <TextField
+                                            <ZeroHidingTextField
                                               type="number"
                                               value={data.tanulok_osszesen || 0}
                                               size="small"
@@ -612,7 +610,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                                                 },
                                               }}
                                               disabled
-                                            />
+                                             placeholder="0"/>
                                           </TableCell>
                                           <TableCell
                                             align="center"
@@ -847,11 +845,11 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                       </Grid>
 
                       <Grid item xs={12} md={6}>
-                        <TextField
+                        <ZeroHidingTextField
                           fullWidth
                           label="SNI tanulók száma (fő)"
                           type="number"
-                          value={addDialog.newRecord.sni_tanulok_szama}
+                          value={addDialog.newRecord.sni_tanulok_szama || 0}
                           onChange={(e) =>
                             handleNewRecordChange(
                               "sni_tanulok_szama",
@@ -860,15 +858,15 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                           }
                           inputProps={{ min: 0 }}
                           helperText="Sajátos nevelési igényű tanulók száma"
-                        />
+                         placeholder="0"/>
                       </Grid>
 
                       <Grid item xs={12} md={6}>
-                        <TextField
+                        <ZeroHidingTextField
                           fullWidth
                           label="Összes tanuló száma (fő)"
                           type="number"
-                          value={addDialog.newRecord.tanulok_osszesen}
+                          value={addDialog.newRecord.tanulok_osszesen || 0}
                           inputProps={{
                             min: 0,
                             readOnly: true,
@@ -881,7 +879,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                               cursor: "not-allowed",
                             },
                           }}
-                        />
+                         placeholder="0"/>
                       </Grid>
 
                       <div className="flex w-full items-center justify-center">

@@ -10,7 +10,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Button,
   Stack,
   Typography,
@@ -38,6 +37,7 @@ import InfoLemorzsolodas from "./info_lemorzsolodas";
 import TitleLemorzsolodas from "./title_lemorzsolodas";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function Lemorzsolodas() {
   const selectedSchool = useSelector(selectSelectedSchool);
@@ -634,13 +634,11 @@ export default function Lemorzsolodas() {
                                   key={`lem-szakma-${szakma.szakma_id}-${year}`}
                                   align="center"
                                 >
-                                  <TextField
+                                  <ZeroHidingTextField
                                     size="small"
                                     type="number"
-                                    value={
-                                      examData[szakma.szakma_id]?.[year]
-                                        ?.lemorzsolodo ?? "0"
-                                    }
+                                    value={examData[szakma.szakma_id]?.[year]
+                                        ?.lemorzsolodo || 0}
                                     onChange={(e) =>
                                       handleDataChange(
                                         szakma.szakma_id,
@@ -660,7 +658,7 @@ export default function Lemorzsolodas() {
                                       width: "70px",
                                       backgroundColor: "#fff3e0",
                                     }}
-                                  />
+                                   placeholder="0"/>
                                 </TableCell>
                               );
                             })}
@@ -673,13 +671,11 @@ export default function Lemorzsolodas() {
                                   key={`okt-szakma-${szakma.szakma_id}-${year}`}
                                   align="center"
                                 >
-                                  <TextField
+                                  <ZeroHidingTextField
                                     size="small"
                                     type="number"
-                                    value={
-                                      examData[szakma.szakma_id]?.[year]
-                                        ?.oktober ?? "0"
-                                    }
+                                    value={examData[szakma.szakma_id]?.[year]
+                                        ?.oktober || 0}
                                     onChange={(e) =>
                                       handleDataChange(
                                         szakma.szakma_id,
@@ -699,7 +695,7 @@ export default function Lemorzsolodas() {
                                       width: "70px",
                                       backgroundColor: "#f0f8ff",
                                     }}
-                                  />
+                                   placeholder="0"/>
                                 </TableCell>
                               );
                             })}

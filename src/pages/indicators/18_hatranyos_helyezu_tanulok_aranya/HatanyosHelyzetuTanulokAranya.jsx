@@ -13,7 +13,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -50,6 +49,7 @@ import TitleHatranyosHelyzetu from "../18_hatranyos_helyezu_tanulok_aranya/title
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function HatanyosHelyzetuTanulokAranya() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -1084,11 +1084,9 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     align="center"
                                     sx={{ py: 2 }}
                                   >
-                                    <TextField
+                                    <ZeroHidingTextField
                                       type="number"
-                                      value={
-                                        hhStudentsCount.daytime?.[year] || ""
-                                      }
+                                      value={hhStudentsCount.daytime?.[year] || 0}
                                       onChange={(e) =>
                                         handleHhStudentsChange(
                                           "daytime",
@@ -1128,11 +1126,9 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     align="center"
                                     sx={{ py: 2 }}
                                   >
-                                    <TextField
+                                    <ZeroHidingTextField
                                       type="number"
-                                      value={
-                                        hhStudentsCount.adult?.[year] || ""
-                                      }
+                                      value={hhStudentsCount.adult?.[year] || 0}
                                       onChange={(e) =>
                                         handleHhStudentsChange(
                                           "adult",
@@ -1738,11 +1734,9 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     align="center"
                                     sx={{ py: 2 }}
                                   >
-                                    <TextField
+                                    <ZeroHidingTextField
                                       type="number"
-                                      value={
-                                        hhhStudentsCount.daytime?.[year] || ""
-                                      }
+                                      value={hhhStudentsCount.daytime?.[year] || 0}
                                       onChange={(e) =>
                                         handleHhhStudentsChange(
                                           "daytime",
@@ -1782,11 +1776,9 @@ export default function HatanyosHelyzetuTanulokAranya() {
                                     align="center"
                                     sx={{ py: 2 }}
                                   >
-                                    <TextField
+                                    <ZeroHidingTextField
                                       type="number"
-                                      value={
-                                        hhhStudentsCount.adult?.[year] || ""
-                                      }
+                                      value={hhhStudentsCount.adult?.[year] || 0}
                                       onChange={(e) =>
                                         handleHhhStudentsChange(
                                           "adult",

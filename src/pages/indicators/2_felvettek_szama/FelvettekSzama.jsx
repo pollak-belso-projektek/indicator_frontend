@@ -11,7 +11,6 @@ import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
 import {
   Alert,
-  TextField,
   Button,
   Stack,
   Container,
@@ -38,6 +37,7 @@ import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 const evszamok = generateSchoolYears();
 
@@ -1161,9 +1161,9 @@ const FelvettekSzama = () => {
                                 align="center"
                                 sx={{ backgroundColor: "#f3e5f520" }}
                               >
-                                <TextField
+                                <ZeroHidingTextField
                                   type="number"
-                                  value={displayValue}
+                                  value={displayValue || 0}
                                   onChange={(e) => {
                                     if (!isReadOnly) {
                                       handleDataChange(
@@ -1210,7 +1210,7 @@ const FelvettekSzama = () => {
                                       },
                                     },
                                   }}
-                                />
+                                 placeholder="0"/>
                               </TableCell>
                             );
                           })}
@@ -1241,9 +1241,9 @@ const FelvettekSzama = () => {
                                 align="center"
                                 sx={{ backgroundColor: "#e8f5e820" }}
                               >
-                                <TextField
+                                <ZeroHidingTextField
                                   type="number"
-                                  value={displayValue}
+                                  value={displayValue || 0}
                                   onChange={(e) => {
                                     if (!isReadOnly) {
                                       handleDataChange(
@@ -1290,7 +1290,7 @@ const FelvettekSzama = () => {
                                       },
                                     },
                                   }}
-                                />
+                                 placeholder="0"/>
                               </TableCell>
                             );
                           })}
@@ -1321,9 +1321,9 @@ const FelvettekSzama = () => {
                                 align="center"
                                 sx={{ backgroundColor: "#fff3e020" }}
                               >
-                                <TextField
+                                <ZeroHidingTextField
                                   type="number"
-                                  value={displayValue}
+                                  value={displayValue || 0}
                                   onChange={(e) => {
                                     if (!isReadOnly) {
                                       handleDataChange(
@@ -1370,7 +1370,7 @@ const FelvettekSzama = () => {
                                       },
                                     },
                                   }}
-                                />
+                                 placeholder="0"/>
                               </TableCell>
                             );
                           })}

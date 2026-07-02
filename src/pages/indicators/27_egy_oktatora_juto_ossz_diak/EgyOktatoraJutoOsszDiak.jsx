@@ -11,7 +11,6 @@ import {
   TableRow,
   Alert,
   Typography,
-  TextField,
   Snackbar,
   Stack,
   Button,
@@ -35,6 +34,7 @@ import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import HistoryDialog from "../../../components/HistoryDialog";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 const schoolYears = generateSchoolYears();
 
@@ -251,15 +251,15 @@ export default function EgyOktatoraJutoOsszDiak() {
           }}
         >
           {isEditable ? (
-            <TextField
+            <ZeroHidingTextField
               size="small"
               type="number"
               variant="outlined"
-              value={yearlyData[year]?.[dataKey] ?? ""}
+              value={yearlyData[year]?.[dataKey] || 0}
               onChange={(e) => handleChange(year, dataKey, e.target.value)}
               inputProps={{ style: { textAlign: "center" } }}
               sx={{ width: "80px", backgroundColor: "white" }}
-            />
+             placeholder="0"/>
           ) : (
             yearlyData[year]?.[dataKey] ?? ""
           )}

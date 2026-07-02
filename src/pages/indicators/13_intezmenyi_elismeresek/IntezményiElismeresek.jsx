@@ -21,7 +21,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -49,6 +48,7 @@ import TitleIntézményiElismeresek from "./title_intezmenyi_elismeresek";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 // Fix munkavállalói kategóriák (a képernyőkép alapján)
 const MUNKAVALLALOI_KATEGORIAK = [
@@ -633,8 +633,8 @@ export default function IntézményiElismeresek() {
                           }}
                         >
                           <TableCell>
-                            <TextField
-                              value={group.dij_neve}
+                            <ZeroHidingTextField
+                              value={group.dij_neve || 0}
                               onChange={(e) =>
                                 handleIntezményiNameChange(
                                   group.groupId,
@@ -646,7 +646,7 @@ export default function IntézményiElismeresek() {
                               fullWidth
                               inputProps={{ style: { fontSize: "0.875rem" } }}
                               disabled={!selectedSchool}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                           <TableCell
                             align="center"
@@ -669,9 +669,9 @@ export default function IntézményiElismeresek() {
                             const val = group.years[startYear]?.darabszam ?? 0;
                             return (
                               <TableCell key={yr} align="center">
-                                <TextField
+                                <ZeroHidingTextField
                                   type="number"
-                                  value={val}
+                                  value={val || 0}
                                   onChange={(e) =>
                                     handleIntezményiCountChange(
                                       group.groupId,
@@ -686,7 +686,7 @@ export default function IntézményiElismeresek() {
                                   }}
                                   sx={{ width: 70 }}
                                   disabled={!selectedSchool}
-                                />
+                                 placeholder="0"/>
                               </TableCell>
                             );
                           })}
@@ -887,9 +887,9 @@ export default function IntézményiElismeresek() {
                           munkavallalokData[startYear]?.[kat.key] ?? 0;
                         return (
                           <TableCell key={yearStr} align="center">
-                            <TextField
+                            <ZeroHidingTextField
                               type="number"
-                              value={val}
+                              value={val || 0}
                               onChange={(e) =>
                                 handleMunkavallalokChange(
                                   startYear,
@@ -929,15 +929,15 @@ export default function IntézményiElismeresek() {
         <DialogTitle>Új intézményi díj / elismerés hozzáadása</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField
+            <ZeroHidingTextField
               label="Díj / elismerés neve"
-              value={newDijNeve}
+              value={newDijNeve || 0}
               onChange={(e) => setNewDijNeve(e.target.value)}
               fullWidth
               required
               autoFocus
               placeholder="pl. Szakképzési Kiválóság Díja"
-            />
+             placeholder="0"/>
           </Stack>
         </DialogContent>
         <DialogActions>

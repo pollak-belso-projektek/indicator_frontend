@@ -19,7 +19,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -56,6 +55,7 @@ import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function SzakmaiEredmenyek() {
   // Predefined competition categories
@@ -777,13 +777,11 @@ export default function SzakmaiEredmenyek() {
                             key={`${year}-${placement.key}`}
                             align="center"
                           >
-                            <TextField
+                            <ZeroHidingTextField
                               type="number"
-                              value={
-                                competitionData[category][competition][year]?.[
+                              value={competitionData[category][competition][year]?.[
                                   placement.key
-                                ] || "0"
-                              }
+                                ] || 0}
                               onChange={(e) =>
                                 handleDataChange(
                                   category,
@@ -809,7 +807,7 @@ export default function SzakmaiEredmenyek() {
                                   ? "#fff9c4"
                                   : "inherit",
                               }}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                         )),
                       )}
@@ -905,7 +903,7 @@ export default function SzakmaiEredmenyek() {
                             : "2px solid #e0e0e0",
                       }}
                     >
-                      <TextField
+                      <ZeroHidingTextField
                         type="number"
                         size="small"
                         value={tanuloiLetszamByYear[startYear] || 0}
@@ -914,7 +912,7 @@ export default function SzakmaiEredmenyek() {
                           style: { textAlign: "center" },
                         }}
                         sx={{ width: "90px" }}
-                      />
+                       placeholder="0"/>
                     </TableCell>
                   );
                 })}
@@ -971,15 +969,15 @@ export default function SzakmaiEredmenyek() {
                   ))}
                 </Select>
               </FormControl>
-              <TextField
+              <ZeroHidingTextField
                 fullWidth
                 label="Verseny neve"
-                value={newCompetition.name}
+                value={newCompetition.name || 0}
                 onChange={(e) =>
                   setNewCompetition({ ...newCompetition, name: e.target.value })
                 }
                 placeholder="pl. Új verseny neve"
-              />
+               placeholder="0"/>
             </Stack>
           </DialogContent>
           <DialogActions>

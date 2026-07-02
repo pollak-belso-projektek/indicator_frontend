@@ -10,7 +10,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -37,6 +36,7 @@ import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 const evszamok = generateSchoolYears();
 
@@ -469,15 +469,13 @@ export default function VegzettekElegedettsege() {
                                 p: 0.5,
                               }}
                             >
-                              <TextField
+                              <ZeroHidingTextField
                                 type="text"
                                 size="small"
                                 disabled={!selectedSchool}
-                                value={
-                                  String(
+                                value={String(
                                     tableData[row.key]?.[startYear]?.munkaadok_elegedettsege ?? ""
-                                  ).replace(".", ",")
-                                }
+                                  ).replace(".", ",") || 0}
                                 onChange={(e) =>
                                   handleDataChange(
                                     row.key,
@@ -501,7 +499,7 @@ export default function VegzettekElegedettsege() {
                                     : "#fff",
                                 }}
                                 placeholder=""
-                              />
+                               placeholder="0"/>
                             </TableCell>
                           );
                         })}
