@@ -39,6 +39,8 @@ import TitleLemorzsolodas from "./title_lemorzsolodas";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
+import HistoryDialog from "../../../components/HistoryDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 export default function Lemorzsolodas() {
   const selectedSchool = useSelector(selectSelectedSchool);
@@ -120,6 +122,7 @@ export default function Lemorzsolodas() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // Load data
   useEffect(() => {
@@ -381,6 +384,15 @@ export default function Lemorzsolodas() {
                   disabled={!isModified || !savedData || isSaving}
                 >
                   Visszaállítás
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={() => setHistoryOpen(true)}
+                  startIcon={<HistoryIcon />}
+                >
+                  Előzmények
                 </Button>
               </LockedTableWrapper>
             </Card>
@@ -743,6 +755,13 @@ export default function Lemorzsolodas() {
           </Box>
         </Fade>
       </PageWrapper>
+
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        tableName="lemorzsolodas"
+        alapadatokId={selectedSchool?.id}
+      />
     </Container>
   );
 }
