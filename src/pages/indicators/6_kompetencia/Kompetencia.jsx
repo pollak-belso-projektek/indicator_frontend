@@ -45,6 +45,8 @@ export default function Kompetencia() {
   const {
     data: apiData,
     isLoading,
+    isFetching,
+    refetch: refetchKompetencia,
     error,
   } = useGetKompetenciaQuery(
     { id: selectedSchool?.id },
@@ -261,9 +263,7 @@ export default function Kompetencia() {
     }
   };
 
-  if (isLoading) {
-    return <PageLoadingOverlay isLoading={true} />;
-  }
+  const _shouldShowOverlay = isLoading || isFetching;
 
   if (error) {
     return (
@@ -271,6 +271,7 @@ export default function Kompetencia() {
         titleContent={<TitleKompetencia />}
         infoContent={<InfoKompetencia />}
       >
+        <PageLoadingOverlay isLoading={_shouldShowOverlay} />
         <Alert severity="error">
           Hiba történt az adatok betöltésekor: {JSON.stringify(error)}
         </Alert>
@@ -704,6 +705,7 @@ export default function Kompetencia() {
         tableName="kompetencia"
         onRollbackSuccess={() => {
           setSaveSuccess(true);
+          refetchKompetencia();
           setTimeout(() => setSaveSuccess(false), 3000);
         }}
       />

@@ -286,17 +286,11 @@ export default function VegzettekElegedettsege() {
     setSnackbarOpen(false);
   };
 
-  if (
-    isFetching ||
-    isLoadingSchools ||
-    isLoadingElegedettseg ||
-    isFetchingElegedettseg
-  ) {
-    return <PageLoadingOverlay isLoading={true} />;
-  }
+  const _shouldShowOverlay = isFetching || isLoadingSchools || isLoadingElegedettseg || isFetchingElegedettseg;
 
   return (
     <Container maxWidth="xl">
+      <PageLoadingOverlay isLoading={_shouldShowOverlay} />
       <PageWrapper
         titleContent={<TitleVegzettekElegedettsege />}
         infoContent={<InfoVegzettekElegedettsege />}
