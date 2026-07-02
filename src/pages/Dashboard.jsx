@@ -21,27 +21,25 @@ import {
   FormControlLabel,
   IconButton,
 } from "@mui/material";
-import {
-  School as SchoolIcon,
-  Group as GroupIcon,
-  Assessment as AssessmentIcon,
-  TrendingUp as TrendingUpIcon,
-  Star as StarIcon,
-  Work as WorkIcon,
-  Person as PersonIcon,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
-  Dashboard as DashboardIcon,
-  DataUsage as DataIcon,
-  Settings as SettingsIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  Storage as StorageIcon,
-  Timer as TimerIcon,
-  History as HistoryIcon,
-  Close as CloseIcon,
-  SupervisorAccount as SupervisorAccountIcon,
-} from "@mui/icons-material";
+import SchoolIcon from "@mui/icons-material/School";
+import GroupIcon from "@mui/icons-material/Group";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import StarIcon from "@mui/icons-material/Star";
+import WorkIcon from "@mui/icons-material/Work";
+import PersonIcon from "@mui/icons-material/Person";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import DataIcon from "@mui/icons-material/DataUsage";
+import SettingsIcon from "@mui/icons-material/Settings";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ErrorIcon from "@mui/icons-material/Error";
+import StorageIcon from "@mui/icons-material/Storage";
+import TimerIcon from "@mui/icons-material/Timer";
+import HistoryIcon from "@mui/icons-material/History";
+import CloseIcon from "@mui/icons-material/Close";
+import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
 import {
   MdPerson,
   MdMenu,
@@ -137,12 +135,7 @@ const NavigationCategories = {
         link: "/kompetencia",
         tableName: "kompetencia",
       },
-      {
-        name: "Országos kompetenciamérés",
-        icon: MdAssessment,
-        link: "/orszagos-kompetenciameres",
-        tableName: "kompetencia",
-      },
+
       {
         name: "NSZFH mérések",
         icon: MdAssessment,

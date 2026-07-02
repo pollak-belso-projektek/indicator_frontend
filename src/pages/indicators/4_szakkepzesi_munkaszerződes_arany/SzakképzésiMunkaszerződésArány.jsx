@@ -24,12 +24,10 @@ import {
   Container,
   Fade,
 } from "@mui/material";
-import {
-  Save as SaveIcon,
-  Refresh as RefreshIcon,
-  ExpandMore as ExpandMoreIcon,
-  Description as DescriptionIcon,
-} from "@mui/icons-material";
+import SaveIcon from "@mui/icons-material/Save";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import DescriptionIcon from "@mui/icons-material/Description";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import {
   useGetTanugyiAdatokQuery,

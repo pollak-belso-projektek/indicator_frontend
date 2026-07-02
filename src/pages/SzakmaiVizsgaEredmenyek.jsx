@@ -34,14 +34,12 @@ import {
   InputLabel,
   Grid,
 } from "@mui/material";
-import {
-  Save as SaveIcon,
-  Refresh as RefreshIcon,
-  ExpandMore as ExpandMoreIcon,
-  Delete as DeleteIcon,
-  Close as CloseIcon,
-  Add as AddIcon,
-} from "@mui/icons-material";
+import SaveIcon from "@mui/icons-material/Save";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CloseIcon from "@mui/icons-material/Close";
+import AddIcon from "@mui/icons-material/Add";
 import { generateSchoolYears } from "../utils/schoolYears";
 import {
   useGetAllSzakmaiVizsgaEredmenyekQuery,

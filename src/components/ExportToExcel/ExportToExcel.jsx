@@ -6,7 +6,7 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import { Download as DownloadIcon } from "@mui/icons-material";
+import DownloadIcon from "@mui/icons-material/Download";
 import ExcelJS from "exceljs";
 
 /**

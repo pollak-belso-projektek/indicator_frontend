@@ -134,12 +134,7 @@ const NavigationCategories = {
         link: "/kompetencia",
         tableName: "kompetencia",
       },
-      {
-        name: "Országos kompetenciamérés",
-        icon: MdAssessment,
-        link: "/orszagos-kompetenciameres",
-        tableName: "kompetencia",
-      },
+
       {
         name: "NSZFH mérések",
         icon: MdAssessment,

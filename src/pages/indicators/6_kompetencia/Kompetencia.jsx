@@ -18,7 +18,8 @@ import {
   CircularProgress,
   Chip,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import SaveIcon from "@mui/icons-material/Save";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
 import LockedTableWrapper from "../../../components/LockedTableWrapper";

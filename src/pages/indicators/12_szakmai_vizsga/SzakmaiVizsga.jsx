@@ -21,7 +21,8 @@ import {
   Card,
   CardContent,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import SaveIcon from "@mui/icons-material/Save";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import {

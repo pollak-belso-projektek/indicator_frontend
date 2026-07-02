@@ -37,9 +37,7 @@ const SchoolsPage = lazy(() => import("../pages/Schools.jsx"));
 const FelnottkepzesPage = lazy(
   () => import("../pages/indicators/5_felnottkepzes/Felnottkepzes.jsx"),
 );
-const OrszagosKompetenciameresPage = lazy(
-  () => import("../pages/OrszagosKompetenciameres.jsx"),
-);
+
 const NszfhMeresekPage = lazy(
   () => import("../pages/indicators/7_nszfh_meresek/NszfhMeresek.jsx"),
 );
@@ -154,7 +152,6 @@ const SCHOOL_REQUIRED_PAGES = [
   "/sajatos-nevelesi-igenyu-tanulok-aranya",
   "/hatranyos-helyezu-tanulok-aranya",
   "/kompetencia",
-  "/orszagos-kompetenciameres",
   "/nszfh-meresek",
   "/vizsgaeredmenyek",
   "/elegedettseg-meres-eredmenyei",
@@ -349,19 +346,7 @@ export default function Router() {
                   </TableProtectedRoute>
                 }
               />
-              <Route
-                path="/orszagos-kompetenciameres"
-                element={
-                  <TableProtectedRoute>
-                    <NavigationWithLoading>
-                      {withSchoolRequired(
-                        <OrszagosKompetenciameresPage />,
-                        "/orszagos-kompetenciameres",
-                      )}
-                    </NavigationWithLoading>
-                  </TableProtectedRoute>
-                }
-              />
+
               <Route
                 path="/nszfh-meresek"
                 element={

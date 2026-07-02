@@ -17,11 +17,9 @@ import {
   Typography,
   Chip,
 } from "@mui/material";
-import {
-  Person as PersonIcon,
-  School as SchoolIcon,
-  Email as EmailIcon,
-} from "@mui/icons-material";
+import PersonIcon from "@mui/icons-material/Person";
+import SchoolIcon from "@mui/icons-material/School";
+import EmailIcon from "@mui/icons-material/Email";
 import { useGetUsersQuery } from "../store/api/apiSlice";
 import {
   getUserTypeLabel,

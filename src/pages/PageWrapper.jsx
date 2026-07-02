@@ -1,10 +1,8 @@
 import { Box, Paper, Typography, Collapse, IconButton } from "@mui/material";
 import { useState } from "react";
-import {
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
-  Info as InfoIcon,
-} from "@mui/icons-material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import InfoIcon from "@mui/icons-material/Info";
 
 /**
  * PageWrapper - A reusable wrapper component for pages

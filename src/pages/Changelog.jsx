@@ -19,7 +19,8 @@ import {
     DialogContent,
     DialogActions,
 } from "@mui/material";
-import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import { useSelector } from "react-redux";
 import { selectUserPermissions } from "../store/slices/authSlice";
 import {

@@ -20,13 +20,11 @@ import {
   styled,
   useTheme,
 } from "@mui/material";
-import {
-  Shield as ShieldIcon,
-  Security as SecurityIcon,
-  Person as PersonIcon,
-  VpnKey as VpnKeyIcon,
-  TableChart as TableChartIcon,
-} from "@mui/icons-material";
+import ShieldIcon from "@mui/icons-material/Shield";
+import SecurityIcon from "@mui/icons-material/Security";
+import PersonIcon from "@mui/icons-material/Person";
+import VpnKeyIcon from "@mui/icons-material/VpnKey";
+import TableChartIcon from "@mui/icons-material/TableChart";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   TABLE_ACCESS_LEVELS,

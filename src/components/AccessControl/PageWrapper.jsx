@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { Alert, Box, Button, Typography } from "@mui/material";
-import { Lock as LockIcon, Home as HomeIcon } from "@mui/icons-material";
+import LockIcon from "@mui/icons-material/Lock";
+import HomeIcon from "@mui/icons-material/Home";
 import { useAccessControl } from "../../hooks/useAccessControl";
 import NotificationSnackbar from "../shared/NotificationSnackbar";
 

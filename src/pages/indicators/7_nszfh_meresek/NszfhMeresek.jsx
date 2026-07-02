@@ -20,11 +20,9 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
-import {
-  Save as SaveIcon,
-  Refresh as RefreshIcon,
-  UploadFile as UploadFileIcon,
-} from "@mui/icons-material";
+import SaveIcon from "@mui/icons-material/Save";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import * as XLSX from "xlsx";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";

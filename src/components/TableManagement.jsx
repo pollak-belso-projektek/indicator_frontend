@@ -25,12 +25,10 @@ import {
   CircularProgress,
   Input,
 } from "@mui/material";
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Lock as LockIcon,
-  LockOpen as UnlockIcon,
-} from "@mui/icons-material";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import LockIcon from "@mui/icons-material/Lock";
+import UnlockIcon from "@mui/icons-material/LockOpen";
 import TableSortLabel from "@mui/material/TableSortLabel";
 import NotificationSnackbar from "./shared/NotificationSnackbar";
 import {

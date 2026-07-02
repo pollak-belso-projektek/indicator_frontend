@@ -7,12 +7,10 @@ import {
   IconButton,
   Collapse,
 } from "@mui/material";
-import {
-  ExitToApp as ExitIcon,
-  Person as PersonIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
-} from "@mui/icons-material";
+import ExitIcon from "@mui/icons-material/ExitToApp";
+import PersonIcon from "@mui/icons-material/Person";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { useDispatch, useSelector } from "react-redux";
 import {
   disableAliasMode,

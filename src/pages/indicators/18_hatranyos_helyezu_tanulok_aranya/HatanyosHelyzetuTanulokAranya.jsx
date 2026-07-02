@@ -24,13 +24,11 @@ import {
   Container,
   Fade,
 } from "@mui/material";
-import {
-  Save as SaveIcon,
-  Refresh as RefreshIcon,
-  BarChart as BarChartIcon,
-  Assessment as AssessmentIcon,
-  TrendingUp as TrendingUpIcon,
-} from "@mui/icons-material";
+import SaveIcon from "@mui/icons-material/Save";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import {

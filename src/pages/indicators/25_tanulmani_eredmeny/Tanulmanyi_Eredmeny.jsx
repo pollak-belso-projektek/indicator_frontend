@@ -15,10 +15,8 @@ import {
   Alert,
   Snackbar,
 } from "@mui/material";
-import {
-  Save as SaveIcon,
-  RestartAlt as RestartAltIcon,
-} from "@mui/icons-material";
+import SaveIcon from "@mui/icons-material/Save";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import {
   useGetAllAlapadatokQuery,

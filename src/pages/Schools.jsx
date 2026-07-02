@@ -29,16 +29,14 @@ import {
   CardContent,
   Stack,
 } from "@mui/material";
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  DeleteForever as DeleteForeverIcon,
-  ExpandMore as ExpandMoreIcon,
-  School as SchoolIcon,
-  Work as WorkIcon,
-  Remove as RemoveIcon,
-} from "@mui/icons-material";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import SchoolIcon from "@mui/icons-material/School";
+import WorkIcon from "@mui/icons-material/Work";
+import RemoveIcon from "@mui/icons-material/Remove";
 import { useEffect, useState } from "react";
 import {
   useGetAllAlapadatokQuery,

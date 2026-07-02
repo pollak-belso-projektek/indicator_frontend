@@ -7,7 +7,9 @@
 
 import React from 'react';
 import { Button, TextField, Card, CardContent, Typography } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { 
   PageWrapper, 
   PermissionGate, 

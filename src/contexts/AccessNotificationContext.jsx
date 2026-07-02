@@ -50,7 +50,7 @@ export const AccessNotificationProvider = ({ children }) => {
         "/logs": "Naplók",
         "/alapadatok": "Alapadatok",
         "/felnottkepzes": "Felnőttképzés",
-        "/orszagos-kompetenciameres": "Országos kompetenciamérés",
+
         "/nszfh-meresek": "NSZFH mérések",
         "/szakmai-eredmenyek": "Szakmai eredmények",
         "/elhelyezkedesi-mutato": "Elhelyezkedési mutató",

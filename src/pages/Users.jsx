@@ -9,7 +9,8 @@ import {
   Stack,
   Container,
 } from "@mui/material";
-import { Add as AddIcon, Group as GroupIcon } from "@mui/icons-material";
+import AddIcon from "@mui/icons-material/Add";
+import GroupIcon from "@mui/icons-material/Group";
 import { useState } from "react";
 import NotificationSnackbar from "../components/shared/NotificationSnackbar";
 import { useUserManagement } from "../hooks/useUserManagement";

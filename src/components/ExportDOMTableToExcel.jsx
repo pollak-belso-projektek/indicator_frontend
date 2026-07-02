@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button, CircularProgress, Tooltip, Snackbar, Alert } from "@mui/material";
-import { Download as DownloadIcon } from "@mui/icons-material";
+import DownloadIcon from "@mui/icons-material/Download";
 import ExcelJS from "exceljs";
 
 export default function ExportDOMTableToExcel({

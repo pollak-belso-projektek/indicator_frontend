@@ -29,13 +29,11 @@ import {
   Card,
   CardContent,
 } from "@mui/material";
-import {
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
-  Visibility as VisibilityIcon,
-  FilterList as FilterListIcon,
-  Clear as ClearIcon,
-} from "@mui/icons-material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import ClearIcon from "@mui/icons-material/Clear";
 import { useSelector } from "react-redux";
 import { format, parseISO } from "date-fns";
 import { hu } from "date-fns/locale";

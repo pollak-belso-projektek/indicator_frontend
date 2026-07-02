@@ -1,5 +1,5 @@
 import { Button, Box, Tooltip } from "@mui/material";
-import { Restore as RestoreIcon } from "@mui/icons-material";
+import RestoreIcon from "@mui/icons-material/Restore";
 import { MdSettings } from "react-icons/md";
 
 export const TableResizeControls = ({ table, onResetColumnSizing }) => {

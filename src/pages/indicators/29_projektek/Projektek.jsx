@@ -39,12 +39,10 @@ import {
   ListItemText,
   OutlinedInput,
 } from "@mui/material";
-import {
-  Save as SaveIcon,
-  Refresh as RefreshIcon,
-  Add as AddIcon,
-  Delete as DeleteIcon,
-} from "@mui/icons-material";
+import SaveIcon from "@mui/icons-material/Save";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";

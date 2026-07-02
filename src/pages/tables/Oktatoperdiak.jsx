@@ -20,7 +20,9 @@ import {
   Chip,
   Tooltip,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon, Calculate as CalculateIcon } from "@mui/icons-material";
+import SaveIcon from "@mui/icons-material/Save";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import CalculateIcon from "@mui/icons-material/Calculate";
 import { useEffect, useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import {

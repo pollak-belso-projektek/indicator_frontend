@@ -13,7 +13,11 @@ import {
   useTheme,
   alpha
 } from "@mui/material";
-import { School, TrendingUp, Group, Business, Class } from "@mui/icons-material";
+import School from "@mui/icons-material/School";
+import TrendingUp from "@mui/icons-material/TrendingUp";
+import Group from "@mui/icons-material/Group";
+import Business from "@mui/icons-material/Business";
+import Class from "@mui/icons-material/Class";
 import { motion } from "framer-motion";
 import {
   BarChart,

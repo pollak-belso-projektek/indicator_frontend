@@ -14,7 +14,9 @@ import {
   alpha,
   styled,
 } from "@mui/material";
-import { Close as CloseIcon, Email as EmailIcon, LockReset as LockResetIcon } from "@mui/icons-material";
+import CloseIcon from "@mui/icons-material/Close";
+import EmailIcon from "@mui/icons-material/Email";
+import LockResetIcon from "@mui/icons-material/LockReset";
 import { useForgotPasswordMutation } from "../store/api/apiSlice";
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({

@@ -11,14 +11,12 @@ import {
   useTheme,
   Button,
 } from "@mui/material";
-import {
-  History as HistoryIcon,
-  ArrowDropDown as ArrowDropDownIcon,
-  ArrowDropUp as ArrowDropUpIcon,
-  Keyboard as KeyboardIcon,
-  ExpandLess as ExpandLessIcon,
-  Close as CloseIcon,
-} from "@mui/icons-material";
+import HistoryIcon from "@mui/icons-material/History";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
+import KeyboardIcon from "@mui/icons-material/Keyboard";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import CloseIcon from "@mui/icons-material/Close";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const RecentPagesDropdown = ({ recentPages, onRemovePage, onClearAll }) => {

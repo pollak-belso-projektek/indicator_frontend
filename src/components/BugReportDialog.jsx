@@ -19,16 +19,14 @@ import {
   Collapse
 } from "@mui/material";
 
-import { 
-  Close as CloseIcon, 
-  CheckCircle as CheckCircleIcon, 
-  AttachFile as AttachFileIcon, 
-  Assignment as AssignmentIcon,
-  ErrorOutline as ErrorOutlineIcon,
-  Check as CheckIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon
-} from "@mui/icons-material";
+import CloseIcon from "@mui/icons-material/Close";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import CheckIcon from "@mui/icons-material/Check";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { useSubmitBugReportMutation, useGetReportedBugsQuery, useUpdateBugStatusMutation } from "../store/api/apiSlice";
 import { selectUserPermissions, selectAccessToken } from "../store/slices/authSlice";
 import config from "../config";

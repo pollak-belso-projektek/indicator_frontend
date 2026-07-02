@@ -1,5 +1,5 @@
 import { Alert, Box, Chip } from "@mui/material";
-import { Lock as LockIcon } from "@mui/icons-material";
+import LockIcon from "@mui/icons-material/Lock";
 import { useTableLockStatus } from "../hooks/useTableLock";
 
 /**

@@ -29,7 +29,8 @@ import {
   Chip,
   InputAdornment,
 } from "@mui/material";
-import { Save as SaveIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import SaveIcon from "@mui/icons-material/Save";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import PageWrapper from "../../PageWrapper";
 import LockStatusIndicator from "../../../components/LockStatusIndicator";
