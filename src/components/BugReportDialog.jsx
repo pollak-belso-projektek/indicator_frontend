@@ -30,7 +30,8 @@ import {
   ExpandLess as ExpandLessIcon
 } from "@mui/icons-material";
 import { useSubmitBugReportMutation, useGetReportedBugsQuery, useResolveBugReportMutation } from "../store/api/apiSlice";
-import { selectUserPermissions } from "../store/slices/authSlice";
+import { selectUserPermissions, selectAccessToken } from "../store/slices/authSlice";
+import config from "../config";
 
 const SEVERITY_OPTIONS = [
   { value: "low", label: "Alacsony – Kisebb kellemetlenség" },
@@ -53,6 +54,7 @@ export default function BugReportDialog({ open, onClose }) {
   const [expandedBugId, setExpandedBugId] = useState(null);
   
   const userPermissions = useSelector(selectUserPermissions);
+  const accessToken = useSelector(selectAccessToken);
   const isDeveloper = userPermissions?.isSuperadmin;
 
   const renderFormattedText = (text) => {
@@ -233,13 +235,15 @@ export default function BugReportDialog({ open, onClose }) {
                               Csatolmányok ({bug.attachments.length}):
                             </Typography>
                             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                              {bug.attachments.map(att => (
+                              {bug.attachments.map(att => {
+                                const proxiedUrl = `${config.apiBaseUrl}api/v1/bug-report/attachment/${bug.id}/${att.id}?access_token=${accessToken}`;
+                                return (
                                 <Box key={att.id}>
                                   {att.mimeType?.startsWith('image/') ? (
-                                    <a href={att.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
+                                    <a href={proxiedUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
                                       <Box
                                         component="img"
-                                        src={att.previews?.[3]?.url || att.previews?.[2]?.url || att.url} 
+                                        src={proxiedUrl} 
                                         alt={att.name}
                                         sx={{ 
                                           width: 80, 
@@ -253,17 +257,18 @@ export default function BugReportDialog({ open, onClose }) {
                                       />
                                     </a>
                                   ) : (
-                                    <Button size="small" variant="outlined" href={att.url} target="_blank" startIcon={<AttachFileIcon />} sx={{ fontSize: '0.7rem', py: 0.5 }}>
+                                    <Button size="small" variant="outlined" href={proxiedUrl} target="_blank" startIcon={<AttachFileIcon />} sx={{ fontSize: '0.7rem', py: 0.5 }}>
                                       {att.name}
                                     </Button>
                                   )}
                                 </Box>
-                              ))}
+                                );
+                              })}
                             </Stack>
                           </Box>
                         )}
 
-                        {isDeveloper && (
+                        {isDeveloper && (!bug.labels || !bug.labels.some(l => l.name === 'Kész')) && (
                           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                             <Button
                               size="small"
