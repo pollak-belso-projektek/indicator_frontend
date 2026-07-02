@@ -28,7 +28,7 @@ import {
   useGetTanuloLetszamQuery,
   useAddMuhelyiskolaMutation,
   useUpdateMuhelyiskolaMutation,
-  useGetMuhelyiskolaQuery,
+  useLazyGetMuhelyiskolaQuery,
 } from "../../../store/api/apiSlice";
 import {
   TableLoadingOverlay,
@@ -54,29 +54,27 @@ export default function MuhelyiskolaiReszszakmat() {
       { skip: !selectedSchool?.id }, // Skip the query if no school is selected
     );
 
-  // Fetch existing workshop school data from API for all years
-  const workshopQueries = schoolYears.map((yearRange) => {
-    const startYear = parseInt(yearRange.split("/")[0]);
-    return useGetMuhelyiskolaQuery(
-      {
-        alapadatok_id: selectedSchool?.id,
-        tanev: startYear,
-      },
-      { skip: !selectedSchool?.id },
-    );
-  });
+  const [triggerGetWorkshop] = useLazyGetMuhelyiskolaQuery();
+  const [existingWorkshopData, setExistingWorkshopData] = useState([]);
+  const [isWorkshopFetching, setIsWorkshopFetching] = useState(false);
 
-  // Memoize combined workshop data and loading states to prevent infinite loops
-  const existingWorkshopData = useMemo(() => {
-    return workshopQueries.flatMap((query) => query.data || []);
-  }, [
-    workshopQueries.map((q) => q.data?.length).join(","),
-    selectedSchool?.id,
-  ]);
-
-  const isWorkshopFetching = useMemo(() => {
-    return workshopQueries.some((query) => query.isLoading);
-  }, [workshopQueries.map((q) => q.isLoading).join(",")]);
+  useEffect(() => {
+    if (selectedSchool?.id) {
+      setIsWorkshopFetching(true);
+      Promise.all(
+        schoolYears.map((yearRange) => {
+          const startYear = parseInt(yearRange.split("/")[0]);
+          return triggerGetWorkshop({
+            alapadatok_id: selectedSchool.id,
+            tanev: startYear,
+          }).unwrap().catch(() => []);
+        })
+      ).then((results) => {
+        setExistingWorkshopData(results.flat());
+        setIsWorkshopFetching(false);
+      });
+    }
+  }, [selectedSchool?.id, schoolYears.join(",")]);
 
   // Mutations for saving workshop data
   const [addWorkshop, { isLoading: isAdding, error: addError }] =
@@ -87,9 +85,10 @@ export default function MuhelyiskolaiReszszakmat() {
   const isSaving = isAdding || isUpdating;
   const saveError = addError || updateError;
 
+  const [historyOpen, setHistoryOpen] = useState(false);
+
   // Data structure for the three main sections
   const [workshopData, setWorkshopData] = useState(() => {
-    const [historyOpen, setHistoryOpen] = useState(false);
     const initialData = {
       percentage_overall: {},
       participants_count: {},
@@ -527,7 +526,7 @@ export default function MuhelyiskolaiReszszakmat() {
                             return (
                               <TableCell key={year} align="center">
                                 <TextField
-                                  type="number"
+
                                   value={
                                     workshopData.percentage_overall[year] || "0"
                                   }
@@ -710,7 +709,7 @@ export default function MuhelyiskolaiReszszakmat() {
                           {schoolYears.map((year) => (
                             <TableCell key={year} align="center">
                               <TextField
-                                type="number"
+
                                 value={workshopData.total_students[year] || "0"}
                                 size="small"
                                 inputProps={{
