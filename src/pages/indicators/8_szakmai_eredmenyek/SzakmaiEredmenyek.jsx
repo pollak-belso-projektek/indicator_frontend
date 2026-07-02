@@ -115,6 +115,7 @@ export default function SzakmaiEredmenyek() {
     data: rawDbData,
     isLoading,
     isFetching,
+    refetch: refetchVersenyek,
   } = useGetVersenyekQuery(
     { alapadatok_id: selectedSchool?.id },
     { skip: !selectedSchool },
@@ -1077,6 +1078,7 @@ export default function SzakmaiEredmenyek() {
           setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
           setSnackbarSeverity("success");
           setSnackbarOpen(true);
+          refetchVersenyek();
         }}
       />
     </PageWrapper>

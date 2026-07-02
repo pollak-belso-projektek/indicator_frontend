@@ -89,6 +89,7 @@ export default function ElegedettsegMeresEredmenyei() {
     data: apiDataRaw,
     isLoading,
     isFetching,
+    refetch: refetchElegedettsegMeres,
   } = useGetElegedettsegMeresQuery(
     { alapadatok_id: selectedSchool?.id },
     { skip: !selectedSchool },
@@ -709,6 +710,7 @@ export default function ElegedettsegMeresEredmenyei() {
           setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
           setSnackbarSeverity("success");
           setSnackbarOpen(true);
+          refetchElegedettsegMeres();
         }}
       />
     </PageWrapper>

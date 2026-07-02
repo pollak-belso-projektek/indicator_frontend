@@ -536,6 +536,7 @@ export default function VegzettekElegedettsege() {
             setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
             setSnackbarSeverity("success");
             setSnackbarOpen(true);
+            refetchElegedettseg();
           }}
         />
       </PageWrapper>
