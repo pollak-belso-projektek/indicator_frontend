@@ -1,5 +1,4 @@
-import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import {
   Box,
@@ -10,449 +9,366 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
-  Button,
-  Stack,
   Alert,
-  Snackbar,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Typography,
+  TextField,
+  Snackbar,
 } from "@mui/material";
-import {
-  Save as SaveIcon,
-  RestartAlt as RestartAltIcon,
-} from "@mui/icons-material";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import {
-  useGetAllAlapadatokQuery,
-  useGetEgyOktatoraJutoTanuloByAlapadatokQuery,
-  useAddEgyOktatoraJutoTanuloMutation,
-  useUpdateEgyOktatoraJutoTanuloMutation,
-  useGetTanugyiAdatokQuery,
-  useGetAlkalmazottAdatokQuery,
+  useLazyGetTanugyiAdatokQuery,
+  useLazyGetAlkalmazottAdatokQuery,
+  useLazyGetEngedelyezettOratomegQuery,
+  useUpsertEngedelyezettOratomegMutation,
 } from "../../../store/api/apiSlice";
-import {
-  generateSchoolYears,
-  getCurrentSchoolYear,
-} from "../../../utils/schoolYears";
+import { generateSchoolYears } from "../../../utils/schoolYears";
 import PageWrapper from "../../PageWrapper";
 import InfoEgyOktatoraJutoOsszDiak from "./info_egy_oktatora_juto_ossz_diak";
 import TitleEgyOktatoraJutoOsszDiak from "./title_egy_oktatora_juto_ossz_diak";
-import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
-import HistoryDialog from "../../../components/HistoryDialog";
-import HistoryIcon from "@mui/icons-material/History";
+import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 
-const evszamok = generateSchoolYears();
+const schoolYears = generateSchoolYears();
 
 export default function EgyOktatoraJutoOsszDiak() {
   const selectedSchool = useSelector(selectSelectedSchool);
-  const { data: schoolsData } = useGetAllAlapadatokQuery();
 
-  const [selectedYear, setSelectedYear] = useState(getCurrentSchoolYear());
-  const [tableData, setTableData] = useState({});
-  const [originalData, setOriginalData] = useState({});
-  const [isModified, setIsModified] = useState(false);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [triggerTanugyi] = useLazyGetTanugyiAdatokQuery();
+  const [triggerAlkalmazott] = useLazyGetAlkalmazottAdatokQuery();
+  const [triggerOratomeg] = useLazyGetEngedelyezettOratomegQuery();
+  const [upsertOratomeg] = useUpsertEngedelyezettOratomegMutation();
+
+  const [yearlyData, setYearlyData] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-  const [isSaving, setIsSaving] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
 
-  const [addEgyOktatora] = useAddEgyOktatoraJutoTanuloMutation();
-  const [updateEgyOktatora] = useUpdateEgyOktatoraJutoTanuloMutation();
-
-  const formattedYear = selectedYear
-    ? parseInt(selectedYear.split("/")[0])
-    : new Date().getFullYear();
-
-  // Fetch saved data
-  const {
-    data: egyOktatoraData,
-    isFetching: isEgyOktatoraFetching,
-    refetch: refetchEgyOktatora,
-  } = useGetEgyOktatoraJutoTanuloByAlapadatokQuery(
-    { alapadatok_id: selectedSchool?.id, year: formattedYear },
-    { skip: !selectedSchool || !selectedYear },
-  );
-
-  // Fetch Tanügyi adatok (student data)
-  const { data: tanugyiData } = useGetTanugyiAdatokQuery(
-    { alapadatok_id: selectedSchool?.id, ev: formattedYear },
-    { skip: !selectedSchool || !selectedYear },
-  );
-
-  // Fetch Alkalmazott adatok (teacher/staff data)
-  const { data: alkalmazottData } = useGetAlkalmazottAdatokQuery(
-    { alapadatok_id: selectedSchool?.id, tanev_kezdete: formattedYear },
-    { skip: !selectedSchool || !selectedYear },
-  );
-
-  // Count students from Tanügyi adatok (only for selected year)
-  const studentCount = useMemo(() => {
-    if (!tanugyiData || !Array.isArray(tanugyiData)) return 0;
-    return tanugyiData.filter((s) => s.tanev_kezdete === formattedYear).length;
-  }, [tanugyiData, formattedYear]);
-
-  // Count teachers from Alkalmazott adatok
-  const teacherCount = useMemo(() => {
-    if (!alkalmazottData || !Array.isArray(alkalmazottData)) return 0;
-    return alkalmazottData.filter((a) => a.TanevKezdete === formattedYear)
-      .length;
-  }, [alkalmazottData, formattedYear]);
-
-  // Calculate ratio
-  const calculatedRatio = useMemo(() => {
-    if (teacherCount === 0) return 0;
-    return parseFloat((studentCount / teacherCount).toFixed(2));
-  }, [studentCount, teacherCount]);
-
-  // Populate table from fetched data
   useEffect(() => {
-    if (egyOktatoraData && !isEgyOktatoraFetching) {
-      const formattedData = {};
-      const originalFormattedData = {};
+    if (!selectedSchool?.id) return;
 
-      formattedData[selectedYear] = { id: null, letszam: "" };
-      originalFormattedData[selectedYear] = { id: null, letszam: "" };
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const dataPromises = schoolYears.map(async (yearStr) => {
+          const year = parseInt(yearStr.split("/")[0]);
 
-      if (Array.isArray(egyOktatoraData)) {
-        egyOktatoraData.forEach((item) => {
-          if (item.tanev_kezdete !== formattedYear) return;
-          formattedData[selectedYear] = {
-            id: item.id,
-            letszam: parseFloat(item.letszam) || "",
-          };
-          originalFormattedData[selectedYear] = {
-            id: item.id,
-            letszam: parseFloat(item.letszam) || "",
+          const [tanugyiResponse, alkalmazottResponse, oratomegResponse] =
+            await Promise.all([
+              triggerTanugyi({ alapadatok_id: selectedSchool.id, ev: year }),
+              triggerAlkalmazott({
+                alapadatok_id: selectedSchool.id,
+                tanev_kezdete: year,
+              }),
+              triggerOratomeg({
+                alapadatok_id: selectedSchool.id,
+                tanev_kezdete: year,
+              }),
+            ]);
+
+          const tanugyiData = tanugyiResponse.data || [];
+          const alkalmazottData = alkalmazottResponse.data || [];
+          const oratomegData = oratomegResponse.data || {};
+
+          const tanuloi = tanugyiData.filter(
+            (s) =>
+              s.tanev_kezdete === year &&
+              s.tanulo_jogviszonya === "Tanulói jogviszony"
+          ).length;
+
+          const felnott = tanugyiData.filter(
+            (s) =>
+              s.tanev_kezdete === year &&
+              s.tanulo_jogviszonya === "Felnőttképzési jogviszony"
+          ).length;
+
+          const osszDiak = tanuloi + felnott;
+
+          const oktatoi = alkalmazottData.filter(
+            (a) => a.TanevKezdete === year
+          ).length;
+
+          const arany =
+            oktatoi > 0 ? parseFloat((osszDiak / oktatoi).toFixed(2)) : 0;
+
+          return {
+            year: yearStr,
+            tanuloi,
+            felnott,
+            osszDiak,
+            oktatoi,
+            arany,
+            orati_tanuloi: oratomegData.tanuloi_oratomeg ?? "",
+            orati_felnott: oratomegData.felnott_oratomeg ?? "",
           };
         });
+
+        const results = await Promise.all(dataPromises);
+
+        const newYearlyData = {};
+        results.forEach((res) => {
+          newYearlyData[res.year] = res;
+        });
+
+        setYearlyData(newYearlyData);
+      } catch (error) {
+        console.error("Hiba az adatok lekérdezésekor:", error);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      setTableData((prev) => ({
-        ...prev,
-        [selectedYear]: formattedData[selectedYear],
-      }));
-      setOriginalData((prev) => ({
-        ...prev,
-        [selectedYear]: originalFormattedData[selectedYear],
-      }));
-      setIsModified(false);
-    }
-  }, [egyOktatoraData, isEgyOktatoraFetching, selectedYear, formattedYear]);
+    fetchData();
+  }, [
+    selectedSchool?.id,
+    triggerTanugyi,
+    triggerAlkalmazott,
+    triggerOratomeg,
+  ]);
 
-  const handleReset = () => {
-    setTableData((prev) => ({
-      ...prev,
-      [selectedYear]: originalData[selectedYear]
-        ? JSON.parse(JSON.stringify(originalData[selectedYear]))
-        : { id: null, letszam: "" },
-    }));
-    setIsModified(false);
-  };
+  const handleBlur = async (yearStr, field, value) => {
+    if (!selectedSchool?.id) return;
+    const year = parseInt(yearStr.split("/")[0]);
 
-  const handleDataChange = (value) => {
-    if (value && isNaN(value)) return;
-    setTableData((prev) => ({
-      ...prev,
-      [selectedYear]: {
-        ...prev[selectedYear],
-        letszam: value === "" ? "" : parseFloat(value),
-      },
-    }));
-    setIsModified(true);
-  };
+    const updatedData = {
+      alapadatok_id: selectedSchool.id,
+      tanev_kezdete: year,
+      tanuloi_oratomeg: field === "orati_tanuloi" ? value : yearlyData[yearStr]?.orati_tanuloi,
+      felnott_oratomeg: field === "orati_felnott" ? value : yearlyData[yearStr]?.orati_felnott,
+    };
 
-  const isFieldModified = () => {
-    const orig = originalData[selectedYear]?.letszam ?? "";
-    const curr = tableData[selectedYear]?.letszam ?? "";
-    return orig !== curr;
-  };
-
-  const handleSaveData = async () => {
-    setIsSaving(true);
     try {
-      const yearPrefix = parseInt(selectedYear.split("/")[0]);
-      const id = originalData[selectedYear]?.id;
-      const letszam = tableData[selectedYear]?.letszam || calculatedRatio;
-
-      const recordData = {
-        alapadatok_id: selectedSchool.id,
-        tanev_kezdete: yearPrefix,
-        letszam: letszam,
-      };
-
-      if (id) {
-        await updateEgyOktatora({ id, ...recordData }).unwrap();
-        setSnackbarMessage("Sikeresen frissítve!");
-      } else {
-        await addEgyOktatora(recordData).unwrap();
-        setSnackbarMessage("Sikeresen mentve!");
-      }
-
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
-      setOriginalData(JSON.parse(JSON.stringify(tableData)));
-      setIsModified(false);
+      await upsertOratomeg(updatedData).unwrap();
+      setSnackbarMessage("Adat sikeresen mentve!");
     } catch (error) {
       console.error("Hiba a mentés során:", error);
-      setSnackbarMessage(
-        error?.data?.message || error?.message || "Hiba történt a mentés során",
-      );
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-    } finally {
-      setIsSaving(false);
+      setSnackbarMessage("Hiba a mentés során.");
     }
   };
 
-  const headerSx = {
-    fontWeight: "bold",
-    backgroundColor: "#60a5fa",
-    color: "#000",
-    textAlign: "center",
-    border: "1px solid #000",
-  };
-
-  const subHeaderSx = {
-    fontWeight: "bold",
-    backgroundColor: "#fcd34d",
-    color: "#000",
-    textAlign: "center",
-    border: "1px solid #000",
-    p: 1,
-  };
-
-  const cellSx = {
-    border: "1px solid #000",
-    p: 1,
-  };
+  const renderDataRow = (
+    title,
+    subtitle,
+    dataKey,
+    highlight = false,
+    isEditable = false
+  ) => (
+    <TableRow
+      hover
+      sx={{
+        backgroundColor: highlight ? "#f0fdf4" : "inherit",
+        "&:last-child td, &:last-child th": { border: 0 },
+      }}
+    >
+      <TableCell component="th" scope="row" sx={{ py: 2 }}>
+        <Typography
+          variant="body1"
+          sx={{ fontWeight: highlight ? 600 : 500 }}
+          color={highlight ? "success.dark" : "text.primary"}
+        >
+          {title}
+        </Typography>
+        {subtitle && (
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            display="block"
+            sx={{ mt: 0.5 }}
+          >
+            {subtitle}
+          </Typography>
+        )}
+      </TableCell>
+      {schoolYears.map((year) => (
+        <TableCell
+          key={year}
+          align="center"
+          sx={{
+            fontWeight: highlight ? 700 : 500,
+            fontSize: highlight ? "1.1rem" : "1rem",
+            color: highlight ? "success.dark" : "text.primary",
+          }}
+        >
+          {isEditable ? (
+            <TextField
+              size="small"
+              type="number"
+              variant="outlined"
+              value={yearlyData[year]?.[dataKey] ?? ""}
+              onChange={(e) =>
+                setYearlyData((prev) => ({
+                  ...prev,
+                  [year]: {
+                    ...prev[year],
+                    [dataKey]: e.target.value,
+                  },
+                }))
+              }
+              onBlur={(e) => handleBlur(year, dataKey, e.target.value)}
+              inputProps={{ style: { textAlign: "center" } }}
+              sx={{ width: "80px", backgroundColor: "white" }}
+            />
+          ) : (
+            yearlyData[year]?.[dataKey] ?? ""
+          )}
+        </TableCell>
+      ))}
+    </TableRow>
+  );
 
   return (
     <PageWrapper
       titleContent={<TitleEgyOktatoraJutoOsszDiak />}
       infoContent={<InfoEgyOktatoraJutoOsszDiak />}
     >
-      <Box sx={{ p: 2 }}>
-        <Stack
-          direction="row"
-          spacing={2}
-          alignItems="center"
-          sx={{ mb: 2, flexWrap: "wrap" }}
-        >
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>Válasszon tanévet</InputLabel>
-            <Select
-              value={selectedYear}
-              label="Válasszon tanévet"
-              onChange={(e) => setSelectedYear(e.target.value)}
-            >
-              {evszamok.map((year) => (
-                <MenuItem key={year} value={year}>
-                  {year}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+      <Box sx={{ p: 2, position: "relative" }}>
+        <PageLoadingOverlay isLoading={isLoading} />
 
-          <Stack direction="row" spacing={2}>
-            <Button
-              variant="outlined"
-              startIcon={<RestartAltIcon />}
-              onClick={handleReset}
-              disabled={!isModified}
-            >
-              Visszaállítás
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSaveData}
-              disabled={isSaving || !selectedSchool}
-            >
-              {isSaving ? "Mentés..." : "Mentés"}
-            </Button>
-            <Button
-              variant="outlined"
-              color="info"
-              startIcon={<HistoryIcon />}
-              onClick={() => setHistoryOpen(true)}
-              disabled={!selectedSchool}
-            >
-              Előzmények
-            </Button>
-          </Stack>
-          {isModified && (
-            <Alert severity="warning" sx={{ py: 0 }}>
-              Módosítás történt!
-            </Alert>
-          )}
-        </Stack>
+        <Snackbar
+          open={!!snackbarMessage}
+          autoHideDuration={3000}
+          onClose={() => setSnackbarMessage("")}
+          message={snackbarMessage}
+        />
 
         {!selectedSchool && (
-          <Alert severity="info" sx={{ mb: 2 }}>
+          <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }}>
             Kérjük, válasszon intézményt!
           </Alert>
         )}
 
-        <TableContainer component={Paper} sx={{ border: "1px solid #000" }}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell sx={headerSx} rowSpan={2}>
-                  Megnevezés
-                </TableCell>
-                <TableCell sx={headerSx} colSpan={1}>
-                  {selectedYear || ""}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={subHeaderSx}>Érték</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {/* Row 1: Tanulói létszám (from Tanügyi adatok) */}
-              <TableRow>
-                <TableCell
-                  sx={{
-                    ...cellSx,
-                    fontWeight: "bold",
-                    backgroundColor: "#e0f2fe",
-                  }}
-                >
-                  Tanulói létszám összesen (Tanügyi adatokból)
-                </TableCell>
-                <TableCell
-                  sx={{
-                    ...cellSx,
-                    textAlign: "right",
-                    backgroundColor: "#f0f9ff",
-                  }}
-                >
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {studentCount} fő
-                  </Typography>
-                </TableCell>
-              </TableRow>
-
-              {/* Row 2: Oktatói létszám (from Alkalmazottak) */}
-              <TableRow>
-                <TableCell
-                  sx={{
-                    ...cellSx,
-                    fontWeight: "bold",
-                    backgroundColor: "#e0f2fe",
-                  }}
-                >
-                  Oktatói létszám összesen (Alkalmazott adatokból)
-                </TableCell>
-                <TableCell
-                  sx={{
-                    ...cellSx,
-                    textAlign: "right",
-                    backgroundColor: "#f0f9ff",
-                  }}
-                >
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {teacherCount} fő
-                  </Typography>
-                </TableCell>
-              </TableRow>
-
-              {/* Row 3: Calculated ratio */}
-              <TableRow>
-                <TableCell
-                  sx={{
-                    ...cellSx,
-                    fontWeight: "bold",
-                    backgroundColor: "#dcfce7",
-                  }}
-                >
-                  Egy oktatóra jutó össz diák (számított)
-                </TableCell>
-                <TableCell
-                  sx={{
-                    ...cellSx,
-                    textAlign: "right",
-                    backgroundColor: "#f0fdf4",
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: 700, color: "#16a34a" }}
-                  >
-                    {calculatedRatio}
-                  </Typography>
-                </TableCell>
-              </TableRow>
-
-              {/* Row 4: Manually overrideable value (saved to DB) */}
-              <TableRow>
-                <TableCell
-                  sx={{
-                    ...cellSx,
-                    fontWeight: "bold",
-                    backgroundColor: "#fef9c3",
-                  }}
-                >
-                  Egy oktatóra jutó össz diák (mentett érték)
-                </TableCell>
-                <TableCell sx={cellSx}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    value={tableData[selectedYear]?.letszam ?? ""}
-                    onChange={(e) => handleDataChange(e.target.value)}
-                    placeholder={String(calculatedRatio)}
-                    sx={{
-                      "& input": {
-                        textAlign: "right",
-                        p: 1,
-                        backgroundColor: isFieldModified()
-                          ? "#fef08a"
-                          : "inherit",
-                      },
-                    }}
-                  />
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={4000}
-          onClose={() => setSnackbarOpen(false)}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-        >
-          <Alert
-            onClose={() => setSnackbarOpen(false)}
-            severity={snackbarSeverity}
-            variant="filled"
-            sx={{ width: "100%" }}
+        {selectedSchool && (
+          <TableContainer
+            component={Paper}
+            elevation={3}
+            sx={{ borderRadius: 2, overflow: "hidden", mt: 2 }}
           >
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
+            <Table sx={{ minWidth: 800 }}>
+              <TableHead sx={{ backgroundColor: "primary.main" }}>
+                <TableRow>
+                  <TableCell
+                    sx={{ color: "white", fontWeight: "bold", fontSize: "1rem" }}
+                  >
+                    Megnevezés
+                  </TableCell>
+                  {schoolYears.map((year) => (
+                    <TableCell
+                      key={year}
+                      align="center"
+                      sx={{
+                        color: "white",
+                        fontWeight: "bold",
+                        fontSize: "1rem",
+                      }}
+                    >
+                      {year}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
 
-        <HistoryDialog
-          open={historyOpen}
-          onClose={() => setHistoryOpen(false)}
-          alapadatokId={selectedSchool?.id}
-          tableName="egyOktatoraJutoTanulo"
-          onRollbackSuccess={() => {
-            setSnackbarMessage("Sikeres visszaállítás az előzményekből!");
-            setSnackbarSeverity("success");
-            setSnackbarOpen(true);
-            // We use RTK Query refetch to get the updated data smoothly without a page reload
-            refetchEgyOktatora();
-          }}
-        />
+              <TableBody>
+                {/* Main Indicator Row */}
+                <TableRow sx={{ backgroundColor: "#fffbeb" }}>
+                  <TableCell sx={{ py: 2.5 }}>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: 700, color: "#d97706" }}
+                    >
+                      Egy oktatóra jutó tanulók száma összesen
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "#d97706", opacity: 0.8 }}
+                    >
+                      (tanuló/oktató)
+                    </Typography>
+                  </TableCell>
+                  {schoolYears.map((year) => (
+                    <TableCell
+                      key={year}
+                      align="center"
+                      sx={{
+                        fontWeight: 800,
+                        fontSize: "1.25rem",
+                        color: "#b45309",
+                      }}
+                    >
+                      {yearlyData[year]?.arany ?? ""}
+                    </TableCell>
+                  ))}
+                </TableRow>
+
+                {/* Section Header */}
+                <TableRow sx={{ backgroundColor: "#f8fafc" }}>
+                  <TableCell colSpan={schoolYears.length + 1} sx={{ py: 1.5 }}>
+                    <Typography
+                      variant="overline"
+                      sx={{
+                        fontWeight: "bold",
+                        color: "text.secondary",
+                        letterSpacing: 1.2,
+                      }}
+                    >
+                      Részletezés export adatokból
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+
+                {/* Data Breakdown Rows */}
+                {renderDataRow(
+                  "Tanulói jogviszonyú tanulók száma",
+                  "(fő)",
+                  "tanuloi"
+                )}
+                {renderDataRow(
+                  "Felnőttképzési jogviszonyú tanulók száma",
+                  "(felnőttképzési jogviszony) (fő)",
+                  "felnott"
+                )}
+                {renderDataRow(
+                  "Szakmai oktatásban tanulók összlétszáma",
+                  "(tanulói + felnőttképzési jogviszony) (fő)",
+                  "osszDiak",
+                  true
+                )}
+                {renderDataRow(
+                  "Számított oktatói létszám",
+                  "(fő)",
+                  "oktatoi"
+                )}
+
+                {/* Section Header for unused DB fields */}
+                <TableRow sx={{ backgroundColor: "#f8fafc" }}>
+                  <TableCell colSpan={schoolYears.length + 1} sx={{ py: 1.5 }}>
+                    <Typography
+                      variant="overline"
+                      sx={{
+                        fontWeight: "bold",
+                        color: "text.secondary",
+                        letterSpacing: 1.2,
+                      }}
+                    >
+                      Engedélyezett óratömegek
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+
+                {renderDataRow(
+                  "Fenntartó által engedélyezett heti óratömeg",
+                  "(tanulói jogviszony) (óra)",
+                  "orati_tanuloi",
+                  false,
+                  true // isEditable
+                )}
+                {renderDataRow(
+                  "Fenntartó által engedélyezett heti óratömeg",
+                  "(felnőttképzési jogviszony) (óra)",
+                  "orati_felnott",
+                  false,
+                  true // isEditable
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Box>
     </PageWrapper>
   );

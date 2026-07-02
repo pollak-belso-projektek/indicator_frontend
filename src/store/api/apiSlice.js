@@ -220,6 +220,22 @@ export const indicatorApi = createApi({
         { type: "TanugyiAdatok", id: `${params.alapadatok_id}_${params.ev}` },
       ],
     }),
+    getEngedelyezettOratomeg: build.query({
+      query: (params) => `engedelyezett_oratomeg/${params.alapadatok_id}/${params.tanev_kezdete}`,
+      providesTags: (result, error, params) => [
+        { type: "EngedelyezettOratomeg", id: `${params.alapadatok_id}_${params.tanev_kezdete}` },
+      ],
+    }),
+    upsertEngedelyezettOratomeg: build.mutation({
+      query: (data) => ({
+        url: `engedelyezett_oratomeg`,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: (result, error, { alapadatok_id, tanev_kezdete }) => [
+        { type: "EngedelyezettOratomeg", id: `${alapadatok_id}_${tanev_kezdete}` },
+      ],
+    }),
     getAlapadatok: build.query({
       query: (params) => `alapadatok/${params.id}`,
       providesTags: (result, error, params) => [
@@ -1844,8 +1860,12 @@ export const indicatorApi = createApi({
 // auto-generated based on the defined endpoints
 export const {
   useGetTanugyiAdatokQuery,
+  useLazyGetTanugyiAdatokQuery,
   useAddTanugyiAdatokMutation,
   useGetAlkalmazottAdatokQuery,
+  useLazyGetAlkalmazottAdatokQuery,
+  useLazyGetEngedelyezettOratomegQuery,
+  useUpsertEngedelyezettOratomegMutation,
   useAddAlkalmazottAdatokMutation,
   useGetAlapadatokQuery,
   useGetAllAlapadatokQuery,
