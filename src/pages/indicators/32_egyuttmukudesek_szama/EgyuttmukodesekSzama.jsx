@@ -17,7 +17,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -46,6 +45,7 @@ import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 // Táblázat 1 mezői: felsőoktatási intézménnyel való együttműködések
 // Táblázat 2 mezői: felsőoktatásba továbbtanulók
@@ -742,12 +742,9 @@ export default function EgyuttmukodesekSzama() {
                                 : "inherit",
                             }}
                           >
-                            <TextField
+                            <ZeroHidingTextField
                               type="text"
-                              value={
-                                table1Data[name][year]?.egyuttmukodes_formaja ||
-                                ""
-                              }
+                              value={table1Data[name][year]?.egyuttmukodes_formaja || 0}
                               onChange={(e) =>
                                 handleTable1Change(
                                   name,
@@ -762,7 +759,7 @@ export default function EgyuttmukodesekSzama() {
                               placeholder="pl. közös képzés"
                               inputProps={{ style: { textAlign: "center" } }}
                               sx={{ width: "100%", maxWidth: "200px" }}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                           <TableCell
                             align="center"
@@ -778,11 +775,9 @@ export default function EgyuttmukodesekSzama() {
                                 : "inherit",
                             }}
                           >
-                            <TextField
+                            <ZeroHidingTextField
                               type="text"
-                              value={
-                                table1Data[name][year]?.erintett_evfolyam || ""
-                              }
+                              value={table1Data[name][year]?.erintett_evfolyam || 0}
                               onChange={(e) =>
                                 handleTable1Change(
                                   name,
@@ -795,7 +790,7 @@ export default function EgyuttmukodesekSzama() {
                               placeholder="pl. 9-10-11"
                               inputProps={{ style: { textAlign: "center" } }}
                               sx={{ width: "100%", maxWidth: "130px" }}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                           <TableCell
                             align="center"
@@ -814,12 +809,10 @@ export default function EgyuttmukodesekSzama() {
                                 : "inherit",
                             }}
                           >
-                            <TextField
+                            <ZeroHidingTextField
                               type="number"
-                              value={
-                                table1Data[name][year]
-                                  ?.erintett_tanulok_szama || ""
-                              }
+                              value={table1Data[name][year]
+                                  ?.erintett_tanulok_szama || 0}
                               onChange={(e) =>
                                 handleTable1Change(
                                   name,
@@ -834,7 +827,7 @@ export default function EgyuttmukodesekSzama() {
                                 min: 0,
                               }}
                               sx={{ width: "90px" }}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                         </React.Fragment>
                       ))}
@@ -1030,12 +1023,10 @@ export default function EgyuttmukodesekSzama() {
                                 : "inherit",
                             }}
                           >
-                            <TextField
+                            <ZeroHidingTextField
                               type="number"
-                              value={
-                                table2Data[name][year]
-                                  ?.felsooktataba_lepo_szama || ""
-                              }
+                              value={table2Data[name][year]
+                                  ?.felsooktataba_lepo_szama || 0}
                               onChange={(e) =>
                                 handleTable2Change(
                                   name,
@@ -1050,7 +1041,7 @@ export default function EgyuttmukodesekSzama() {
                                 min: 0,
                               }}
                               sx={{ width: "90px" }}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1066,12 +1057,10 @@ export default function EgyuttmukodesekSzama() {
                                 : "inherit",
                             }}
                           >
-                            <TextField
+                            <ZeroHidingTextField
                               type="number"
-                              value={
-                                table2Data[name][year]
-                                  ?.vegzos_technikumi_szama || ""
-                              }
+                              value={table2Data[name][year]
+                                  ?.vegzos_technikumi_szama || 0}
                               onChange={(e) =>
                                 handleTable2Change(
                                   name,
@@ -1086,7 +1075,7 @@ export default function EgyuttmukodesekSzama() {
                                 min: 0,
                               }}
                               sx={{ width: "90px" }}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1105,12 +1094,9 @@ export default function EgyuttmukodesekSzama() {
                                 : "inherit",
                             }}
                           >
-                            <TextField
+                            <ZeroHidingTextField
                               type="text"
-                              value={
-                                table2Data[name][year]?.tovabbtanulok_aranya ||
-                                ""
-                              }
+                              value={table2Data[name][year]?.tovabbtanulok_aranya || 0}
                               onChange={(e) =>
                                 handleTable2Change(
                                   name,
@@ -1123,7 +1109,7 @@ export default function EgyuttmukodesekSzama() {
                               placeholder="pl. 49%"
                               inputProps={{ style: { textAlign: "center" } }}
                               sx={{ width: "90px" }}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                         </React.Fragment>
                       ))}
@@ -1168,14 +1154,14 @@ export default function EgyuttmukodesekSzama() {
             <Box
               sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
             >
-              <TextField
+              <ZeroHidingTextField
                 fullWidth
                 label="Felsőoktatási intézmény megnevezése"
-                value={newRowName}
+                value={newRowName || 0}
                 onChange={(e) => setNewRowName(e.target.value)}
                 placeholder="Pl. Neumann János Egyetem"
                 autoFocus
-              />
+               placeholder="0"/>
             </Box>
           </DialogContent>
           <DialogActions sx={{ p: 2, pt: 0 }}>

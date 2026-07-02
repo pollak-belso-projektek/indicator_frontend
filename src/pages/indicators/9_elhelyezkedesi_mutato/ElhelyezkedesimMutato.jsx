@@ -10,7 +10,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -35,6 +34,7 @@ import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 const evszamok = generateSchoolYears();
 
@@ -736,12 +736,10 @@ export default function ElhelyezkedesimMutato() {
                                       p: 0.5,
                                     }}
                                   >
-                                    <TextField
+                                    <ZeroHidingTextField
                                       size="small"
-                                      value={
-                                        tableData[key]?.[startYear]
-                                          ?.elhelyezkedok_szama ?? ""
-                                      }
+                                      value={tableData[key]?.[startYear]
+                                          ?.elhelyezkedok_szama || 0}
                                       onChange={(e) =>
                                         handleDataChange(
                                           key,
@@ -761,7 +759,7 @@ export default function ElhelyezkedesimMutato() {
                                         width: "60px",
                                         backgroundColor: "#fff",
                                       }}
-                                    />
+                                     placeholder="0"/>
                                   </TableCell>
                                 );
                               })}
@@ -785,13 +783,10 @@ export default function ElhelyezkedesimMutato() {
                                       p: 0.5,
                                     }}
                                   >
-                                    <TextField
+                                    <ZeroHidingTextField
                                       size="small"
-                                      value={
-                                        tableData[key]?.[startYear]
-                                          ?.szakmai_okatatasban_sikeresen_vegzettek_szama ??
-                                        ""
-                                      }
+                                      value={tableData[key]?.[startYear]
+                                          ?.szakmai_okatatasban_sikeresen_vegzettek_szama || 0}
                                       onChange={(e) =>
                                         handleDataChange(
                                           key,
@@ -811,7 +806,7 @@ export default function ElhelyezkedesimMutato() {
                                         width: "60px",
                                         backgroundColor: "#fff",
                                       }}
-                                    />
+                                     placeholder="0"/>
                                   </TableCell>
                                 );
                               })}

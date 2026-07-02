@@ -18,7 +18,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -56,6 +55,7 @@ import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function Projektek() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -492,10 +492,10 @@ export default function Projektek() {
                             {row.agazat_szakma}
                           </TableCell>
                           <TableCell sx={{ borderBottom: "1px solid #f5f5f5" }}>
-                            <TextField
+                            <ZeroHidingTextField
                               fullWidth
                               size="small"
-                              value={row.projekthetek_neve}
+                              value={row.projekthetek_neve || 0}
                               onChange={(e) =>
                                 handleDataChange(
                                   year,
@@ -517,13 +517,13 @@ export default function Projektek() {
                                   transition: "background-color 0.3s ease",
                                 },
                               }}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                           <TableCell sx={{ borderBottom: "1px solid #f5f5f5" }}>
-                            <TextField
+                            <ZeroHidingTextField
                               fullWidth
                               size="small"
-                              value={row.projekthetek_ora}
+                              value={row.projekthetek_ora || 0}
                               onChange={(e) =>
                                 handleDataChange(
                                   year,
@@ -546,13 +546,13 @@ export default function Projektek() {
                                   transition: "background-color 0.3s ease",
                                 },
                               }}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                           <TableCell sx={{ borderBottom: "1px solid #f5f5f5" }}>
-                            <TextField
+                            <ZeroHidingTextField
                               fullWidth
                               size="small"
-                              value={row.projektnapok_neve}
+                              value={row.projektnapok_neve || 0}
                               onChange={(e) =>
                                 handleDataChange(
                                   year,
@@ -574,13 +574,13 @@ export default function Projektek() {
                                   transition: "background-color 0.3s ease",
                                 },
                               }}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                           <TableCell sx={{ borderBottom: "1px solid #f5f5f5" }}>
-                            <TextField
+                            <ZeroHidingTextField
                               fullWidth
                               size="small"
-                              value={row.projektnapok_ora}
+                              value={row.projektnapok_ora || 0}
                               onChange={(e) =>
                                 handleDataChange(
                                   year,
@@ -603,7 +603,7 @@ export default function Projektek() {
                                   transition: "background-color 0.3s ease",
                                 },
                               }}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                           <TableCell
                             align="center"

@@ -12,7 +12,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Alert,
   CircularProgress,
@@ -41,6 +40,7 @@ import {
 } from "../../../store/api/apiSlice";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 const categories = [
   {
@@ -760,11 +760,9 @@ export default function IntezményiNevelesiMutatok() {
                             {className}
                           </TableCell>
                           <TableCell align="center">
-                            <TextField
+                            <ZeroHidingTextField
                               type="number"
-                              value={
-                                classRows[className]?.igazolatlanOra || "0"
-                              }
+                              value={classRows[className]?.igazolatlanOra || 0}
                               onChange={(e) =>
                                 handleIgazolatlanChange(
                                   className,
@@ -778,7 +776,7 @@ export default function IntezményiNevelesiMutatok() {
                               }}
                               sx={{ width: "60px" }}
                               disabled={isSaving}
-                            />
+                             placeholder="0"/>
                           </TableCell>
                           {categories.map((category) =>
                             category.subcategories.map((subcategory) => {
@@ -788,10 +786,9 @@ export default function IntezményiNevelesiMutatok() {
                                   key={`${category.name}-${subcategory}-${index}`}
                                   align="center"
                                 >
-                                  <TextField
+                                  <ZeroHidingTextField
                                     type="number"
-                                    value={
-                                      isTotalCell
+                                    value={isTotalCell
                                         ? String(
                                           getCategoryTotal(
                                             classRows[className],
@@ -800,8 +797,7 @@ export default function IntezményiNevelesiMutatok() {
                                         )
                                         : classRows[className]?.[
                                         category.name
-                                        ]?.[subcategory] || "0"
-                                    }
+                                        ]?.[subcategory] || 0}
                                     onChange={
                                       isTotalCell
                                         ? undefined
@@ -820,7 +816,7 @@ export default function IntezményiNevelesiMutatok() {
                                     }}
                                     sx={{ width: "60px" }}
                                     disabled={isSaving || isTotalCell}
-                                  />
+                                   placeholder="0"/>
                                 </TableCell>
                               );
                             }),
@@ -842,9 +838,9 @@ export default function IntezményiNevelesiMutatok() {
                           összesen
                         </TableCell>
                         <TableCell align="center">
-                          <TextField
+                          <ZeroHidingTextField
 
-                            value={summaryData.igazolatlanOra}
+                            value={summaryData.igazolatlanOra || 0}
                             size="small"
                             inputProps={{
                               min: 0,
@@ -855,7 +851,7 @@ export default function IntezményiNevelesiMutatok() {
                             }}
                             sx={{ width: "60px" }}
                             disabled
-                          />
+                           placeholder="0"/>
                         </TableCell>
                         {categories.map((category) =>
                           category.subcategories.map((subcategory) => (
@@ -863,12 +859,9 @@ export default function IntezményiNevelesiMutatok() {
                               key={`${category.name}-${subcategory}-summary`}
                               align="center"
                             >
-                              <TextField
+                              <ZeroHidingTextField
 
-                                value={
-                                  summaryData[category.name]?.[subcategory] ||
-                                  "0"
-                                }
+                                value={summaryData[category.name]?.[subcategory] || 0}
                                 size="small"
                                 inputProps={{
                                   min: 0,
@@ -879,7 +872,7 @@ export default function IntezményiNevelesiMutatok() {
                                 }}
                                 sx={{ width: "60px" }}
                                 disabled
-                              />
+                               placeholder="0"/>
                             </TableCell>
                           )),
                         )}

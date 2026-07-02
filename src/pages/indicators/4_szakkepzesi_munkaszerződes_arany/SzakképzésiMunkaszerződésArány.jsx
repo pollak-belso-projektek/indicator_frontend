@@ -15,7 +15,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -47,6 +46,7 @@ import TitleSzakkepzesiMunkaszerzodes from "./title_szakkepzesi_munkaszerződes_
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function SzakképzésiMunkaszerződésArány() {
   const schoolYears = generateSchoolYears();
@@ -1481,13 +1481,11 @@ export default function SzakképzésiMunkaszerződésArány() {
                               </TableCell>
                               {schoolYears.map((year) => (
                                 <TableCell key={year} align="center">
-                                  <TextField
+                                  <ZeroHidingTextField
                                     type="number"
-                                    value={
-                                      szakképzésiData[dataKey][
+                                    value={szakképzésiData[dataKey][
                                         institutionKey
-                                      ]?.[itemObj.dataKey]?.[year] || "0"
-                                    }
+                                      ]?.[itemObj.dataKey]?.[year] || 0}
                                     onChange={(e) =>
                                       dataKey === "percentage" ||
                                       itemObj.type === "subcategory" ||
@@ -1541,7 +1539,7 @@ export default function SzakképzésiMunkaszerződésArány() {
                                             ? "0"
                                             : "0"
                                     }
-                                  />
+                                   placeholder="0"/>
                                 </TableCell>
                               ))}
                             </TableRow>

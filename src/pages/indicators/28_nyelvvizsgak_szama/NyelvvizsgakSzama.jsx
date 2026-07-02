@@ -15,7 +15,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -31,6 +30,7 @@ import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 // Fixed class list
 const FIXED_CLASSES = [
@@ -516,11 +516,11 @@ export default function NyelvvizsgakSzama() {
 
                       {/* Középfokú angol */}
                       <TableCell sx={cellSx}>
-                        <TextField
+                        <ZeroHidingTextField
                           size="small"
                           type="number"
                           fullWidth
-                          value={tableData[cls]?.[year]?.kozepfoku_angol ?? ""}
+                          value={tableData[cls]?.[year]?.kozepfoku_angol || 0}
                           onChange={(e) =>
                             handleDataChange(
                               cls,
@@ -535,16 +535,16 @@ export default function NyelvvizsgakSzama() {
                           }}
                           disabled={!selectedSchool}
                           sx={getFieldSx(cls, year, "kozepfoku_angol")}
-                        />
+                         placeholder="0"/>
                       </TableCell>
 
                       {/* Felsőfokú angol */}
                       <TableCell sx={cellSx}>
-                        <TextField
+                        <ZeroHidingTextField
                           size="small"
                           type="number"
                           fullWidth
-                          value={tableData[cls]?.[year]?.felsofoku_angol ?? ""}
+                          value={tableData[cls]?.[year]?.felsofoku_angol || 0}
                           onChange={(e) =>
                             handleDataChange(
                               cls,
@@ -559,16 +559,16 @@ export default function NyelvvizsgakSzama() {
                           }}
                           disabled={!selectedSchool}
                           sx={getFieldSx(cls, year, "felsofoku_angol")}
-                        />
+                         placeholder="0"/>
                       </TableCell>
 
                       {/* Középfokú német */}
                       <TableCell sx={cellSx}>
-                        <TextField
+                        <ZeroHidingTextField
                           size="small"
                           type="number"
                           fullWidth
-                          value={tableData[cls]?.[year]?.kozepfoku_nemet ?? ""}
+                          value={tableData[cls]?.[year]?.kozepfoku_nemet || 0}
                           onChange={(e) =>
                             handleDataChange(
                               cls,
@@ -583,16 +583,16 @@ export default function NyelvvizsgakSzama() {
                           }}
                           disabled={!selectedSchool}
                           sx={getFieldSx(cls, year, "kozepfoku_nemet")}
-                        />
+                         placeholder="0"/>
                       </TableCell>
 
                       {/* Felsőfokú német */}
                       <TableCell sx={cellSx}>
-                        <TextField
+                        <ZeroHidingTextField
                           size="small"
                           type="number"
                           fullWidth
-                          value={tableData[cls]?.[year]?.felsofoku_nemet ?? ""}
+                          value={tableData[cls]?.[year]?.felsofoku_nemet || 0}
                           onChange={(e) =>
                             handleDataChange(
                               cls,
@@ -607,16 +607,16 @@ export default function NyelvvizsgakSzama() {
                           }}
                           disabled={!selectedSchool}
                           sx={getFieldSx(cls, year, "felsofoku_nemet")}
-                        />
+                         placeholder="0"/>
                       </TableCell>
 
                       {/* Egyéb nyelv megnevezés */}
                       <TableCell sx={cellSx}>
-                        <TextField
+                        <ZeroHidingTextField
                           size="small"
                           type="text"
                           fullWidth
-                          value={tableData[cls]?.[year]?.egyeb_nyelv ?? ""}
+                          value={tableData[cls]?.[year]?.egyeb_nyelv || 0}
                           onChange={(e) =>
                             handleDataChange(
                               cls,
@@ -628,16 +628,16 @@ export default function NyelvvizsgakSzama() {
                           disabled={!selectedSchool}
                           inputProps={{ style: { textAlign: "center" } }}
                           sx={getFieldSx(cls, year, "egyeb_nyelv")}
-                        />
+                         placeholder="0"/>
                       </TableCell>
 
                       {/* Egyéb fő */}
                       <TableCell sx={cellSx}>
-                        <TextField
+                        <ZeroHidingTextField
                           size="small"
                           type="number"
                           fullWidth
-                          value={tableData[cls]?.[year]?.egyeb_fo ?? ""}
+                          value={tableData[cls]?.[year]?.egyeb_fo || 0}
                           onChange={(e) =>
                             handleDataChange(
                               cls,
@@ -652,7 +652,7 @@ export default function NyelvvizsgakSzama() {
                           }}
                           disabled={!selectedSchool}
                           sx={getFieldSx(cls, year, "egyeb_fo")}
-                        />
+                         placeholder="0"/>
                       </TableCell>
 
                       {/* Row total */}

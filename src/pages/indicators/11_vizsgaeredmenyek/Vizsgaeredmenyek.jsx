@@ -10,7 +10,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Button,
   Stack,
   Typography,
@@ -38,6 +37,7 @@ import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function Vizsgaeredmenyek() {
   const selectedSchool = useSelector(selectSelectedSchool);
@@ -632,13 +632,11 @@ export default function Vizsgaeredmenyek() {
                                   p: 0.5,
                                 }}
                               >
-                                <TextField
+                                <ZeroHidingTextField
                                   size="small"
-                                  value={
-                                    examData[categoryData.category]?.[
+                                  value={examData[categoryData.category]?.[
                                       subject.key
-                                    ]?.[startYear] ?? "0"
-                                  }
+                                    ]?.[startYear] || 0}
                                   onChange={(e) =>
                                     handleDataChange(
                                       categoryData.category,
@@ -658,7 +656,7 @@ export default function Vizsgaeredmenyek() {
                                     width: "60px",
                                     backgroundColor: "#fff",
                                   }}
-                                />
+                                 placeholder="0"/>
                               </TableCell>
                             );
                           })}

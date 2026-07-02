@@ -12,7 +12,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -36,6 +35,7 @@ import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function Kompetencia() {
   const selectedSchool = useSelector(selectSelectedSchool);
@@ -416,11 +416,11 @@ export default function Kompetencia() {
                           align="center"
                           sx={{ borderLeft: "1px solid #e0e0e0" }}
                         >
-                          <TextField
+                          <ZeroHidingTextField
                             type="number"
                             size="small"
                             variant="outlined"
-                            value={tableData[year]?.technikum.mat_orsz ?? ""}
+                            value={tableData[year]?.technikum.mat_orsz || 0}
                             onChange={(e) =>
                               handleDataChange(
                                 year,
@@ -434,14 +434,14 @@ export default function Kompetencia() {
                               style: { textAlign: "center" },
                               min: 0,
                             }}
-                          />
+                           placeholder="0"/>
                         </TableCell>
                         <TableCell align="center">
-                          <TextField
+                          <ZeroHidingTextField
                             type="number"
                             size="small"
                             variant="outlined"
-                            value={tableData[year]?.technikum.mat_int ?? ""}
+                            value={tableData[year]?.technikum.mat_int || 0}
                             onChange={(e) =>
                               handleDataChange(
                                 year,
@@ -458,7 +458,7 @@ export default function Kompetencia() {
                               style: { textAlign: "center" },
                               min: 0,
                             }}
-                          />
+                           placeholder="0"/>
                         </TableCell>
                       </React.Fragment>
                     ))}
@@ -474,11 +474,11 @@ export default function Kompetencia() {
                           align="center"
                           sx={{ borderLeft: "1px solid #e0e0e0" }}
                         >
-                          <TextField
+                          <ZeroHidingTextField
                             type="number"
                             size="small"
                             variant="outlined"
-                            value={tableData[year]?.technikum.szoveg_orsz ?? ""}
+                            value={tableData[year]?.technikum.szoveg_orsz || 0}
                             onChange={(e) =>
                               handleDataChange(
                                 year,
@@ -492,14 +492,14 @@ export default function Kompetencia() {
                               style: { textAlign: "center" },
                               min: 0,
                             }}
-                          />
+                           placeholder="0"/>
                         </TableCell>
                         <TableCell align="center">
-                          <TextField
+                          <ZeroHidingTextField
                             type="number"
                             size="small"
                             variant="outlined"
-                            value={tableData[year]?.technikum.szoveg_int ?? ""}
+                            value={tableData[year]?.technikum.szoveg_int || 0}
                             onChange={(e) =>
                               handleDataChange(
                                 year,
@@ -516,7 +516,7 @@ export default function Kompetencia() {
                               style: { textAlign: "center" },
                               min: 0,
                             }}
-                          />
+                           placeholder="0"/>
                         </TableCell>
                       </React.Fragment>
                     ))}
@@ -548,11 +548,11 @@ export default function Kompetencia() {
                           align="center"
                           sx={{ borderLeft: "1px solid #e0e0e0" }}
                         >
-                          <TextField
+                          <ZeroHidingTextField
                             type="number"
                             size="small"
                             variant="outlined"
-                            value={tableData[year]?.szakkepzo.mat_orsz ?? ""}
+                            value={tableData[year]?.szakkepzo.mat_orsz || 0}
                             onChange={(e) =>
                               handleDataChange(
                                 year,
@@ -566,14 +566,14 @@ export default function Kompetencia() {
                               style: { textAlign: "center" },
                               min: 0,
                             }}
-                          />
+                           placeholder="0"/>
                         </TableCell>
                         <TableCell align="center">
-                          <TextField
+                          <ZeroHidingTextField
                             type="number"
                             size="small"
                             variant="outlined"
-                            value={tableData[year]?.szakkepzo.mat_int ?? ""}
+                            value={tableData[year]?.szakkepzo.mat_int || 0}
                             onChange={(e) =>
                               handleDataChange(
                                 year,
@@ -590,7 +590,7 @@ export default function Kompetencia() {
                               style: { textAlign: "center" },
                               min: 0,
                             }}
-                          />
+                           placeholder="0"/>
                         </TableCell>
                       </React.Fragment>
                     ))}
@@ -606,11 +606,11 @@ export default function Kompetencia() {
                           align="center"
                           sx={{ borderLeft: "1px solid #e0e0e0" }}
                         >
-                          <TextField
+                          <ZeroHidingTextField
                             type="number"
                             size="small"
                             variant="outlined"
-                            value={tableData[year]?.szakkepzo.szoveg_orsz ?? ""}
+                            value={tableData[year]?.szakkepzo.szoveg_orsz || 0}
                             onChange={(e) =>
                               handleDataChange(
                                 year,
@@ -624,14 +624,14 @@ export default function Kompetencia() {
                               style: { textAlign: "center" },
                               min: 0,
                             }}
-                          />
+                           placeholder="0"/>
                         </TableCell>
                         <TableCell align="center">
-                          <TextField
+                          <ZeroHidingTextField
                             type="number"
                             size="small"
                             variant="outlined"
-                            value={tableData[year]?.szakkepzo.szoveg_int ?? ""}
+                            value={tableData[year]?.szakkepzo.szoveg_int || 0}
                             onChange={(e) =>
                               handleDataChange(
                                 year,
@@ -648,7 +648,7 @@ export default function Kompetencia() {
                               style: { textAlign: "center" },
                               min: 0,
                             }}
-                          />
+                           placeholder="0"/>
                         </TableCell>
                       </React.Fragment>
                     ))}

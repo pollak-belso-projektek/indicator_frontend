@@ -12,7 +12,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -35,6 +34,7 @@ import { getCurrentSchoolYearStart } from "../../../utils/dateUtils";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function SzakmaiBemutatokKonferenciak() {
   const selectedSchool = useSelector((state) => state.auth.selectedSchool);
@@ -432,14 +432,11 @@ export default function SzakmaiBemutatokKonferenciak() {
                       </TableCell>
                       {yearNumbers.map((year) => (
                         <TableCell key={`neve-${year}`} align="center">
-                          <TextField
+                          <ZeroHidingTextField
                             multiline
                             minRows={1}
                             maxRows={4}
-                            value={
-                              eventData[categoryData.category]?.neve?.[year] ||
-                              ""
-                            }
+                            value={eventData[categoryData.category]?.neve?.[year] || 0}
                             onChange={(e) =>
                               handleDataChange(
                                 categoryData.category,
@@ -452,7 +449,7 @@ export default function SzakmaiBemutatokKonferenciak() {
                             fullWidth
                             placeholder="rendezvény neve kerül ide"
                             disabled={!selectedSchool}
-                          />
+                           placeholder="0"/>
                         </TableCell>
                       ))}
                     </TableRow>
@@ -470,13 +467,11 @@ export default function SzakmaiBemutatokKonferenciak() {
                       </TableCell>
                       {yearNumbers.map((year) => (
                         <TableCell key={`letszam-${year}`} align="center">
-                          <TextField
+                          <ZeroHidingTextField
                             type="number"
-                            value={
-                              eventData[categoryData.category]?.letszam?.[
+                            value={eventData[categoryData.category]?.letszam?.[
                                 year
-                              ] || "0"
-                            }
+                              ] || 0}
                             onChange={(e) =>
                               handleDataChange(
                                 categoryData.category,
@@ -494,7 +489,7 @@ export default function SzakmaiBemutatokKonferenciak() {
                             sx={{ width: "80px" }}
                             placeholder="létszám"
                             disabled={!selectedSchool}
-                          />
+                           placeholder="0"/>
                         </TableCell>
                       ))}
                     </TableRow>

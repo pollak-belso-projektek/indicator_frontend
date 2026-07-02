@@ -10,7 +10,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -43,6 +42,7 @@ import TitleHianyzas from "./title_hianyzas";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 const evszamok = generateSchoolYears();
 
@@ -589,7 +589,7 @@ export default function Hianyzas() {
 
                       {/* Semester 1 inputs */}
                       <TableCell sx={cellSx}>
-                        <TextField
+                        <ZeroHidingTextField
                           size="small"
                           type="number"
                           fullWidth
@@ -598,7 +598,7 @@ export default function Hianyzas() {
                             jogv,
                             "felev1",
                             "igazolt",
-                          )}
+                          ) || 0}
                           onChange={(e) =>
                             handleDataChange(
                               instType,
@@ -609,10 +609,10 @@ export default function Hianyzas() {
                             )
                           }
                           sx={getFieldSx(instType, jogv, "felev1", "igazolt")}
-                        />
+                         placeholder="0"/>
                       </TableCell>
                       <TableCell sx={cellSx}>
-                        <TextField
+                        <ZeroHidingTextField
                           size="small"
                           type="number"
                           fullWidth
@@ -621,7 +621,7 @@ export default function Hianyzas() {
                             jogv,
                             "felev1",
                             "igazolatlan",
-                          )}
+                          ) || 0}
                           onChange={(e) =>
                             handleDataChange(
                               instType,
@@ -637,7 +637,7 @@ export default function Hianyzas() {
                             "felev1",
                             "igazolatlan",
                           )}
-                        />
+                         placeholder="0"/>
                       </TableCell>
                       <TableCell sx={{ ...cellSx, textAlign: "right" }}>
                         {calculateRowTotal(instType, jogv, "felev1")}
@@ -654,7 +654,7 @@ export default function Hianyzas() {
 
                       {/* Semester 2 inputs */}
                       <TableCell sx={cellSx}>
-                        <TextField
+                        <ZeroHidingTextField
                           size="small"
                           type="number"
                           fullWidth
@@ -663,7 +663,7 @@ export default function Hianyzas() {
                             jogv,
                             "felev2",
                             "igazolt",
-                          )}
+                          ) || 0}
                           onChange={(e) =>
                             handleDataChange(
                               instType,
@@ -674,10 +674,10 @@ export default function Hianyzas() {
                             )
                           }
                           sx={getFieldSx(instType, jogv, "felev2", "igazolt")}
-                        />
+                         placeholder="0"/>
                       </TableCell>
                       <TableCell sx={cellSx}>
-                        <TextField
+                        <ZeroHidingTextField
                           size="small"
                           type="number"
                           fullWidth
@@ -686,7 +686,7 @@ export default function Hianyzas() {
                             jogv,
                             "felev2",
                             "igazolatlan",
-                          )}
+                          ) || 0}
                           onChange={(e) =>
                             handleDataChange(
                               instType,
@@ -702,7 +702,7 @@ export default function Hianyzas() {
                             "felev2",
                             "igazolatlan",
                           )}
-                        />
+                         placeholder="0"/>
                       </TableCell>
                       <TableCell sx={{ ...cellSx, textAlign: "right" }}>
                         {calculateRowTotal(instType, jogv, "felev2")}

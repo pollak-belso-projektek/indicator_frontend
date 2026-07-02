@@ -12,7 +12,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -48,6 +47,7 @@ import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function NszfhMeresek() {
   const selectedSchool = useSelector(selectSelectedSchool);
@@ -973,10 +973,10 @@ export default function NszfhMeresek() {
                                         : "inherit",
                                     }}
                                   >
-                                    <TextField
+                                    <ZeroHidingTextField
                                       size="small"
                                       variant="outlined"
-                                      value={percent}
+                                      value={percent || 0}
                                       disabled
                                       inputProps={{
                                         style: {
@@ -994,7 +994,7 @@ export default function NszfhMeresek() {
                                           borderColor: "transparent",
                                         },
                                       }}
-                                    />
+                                     placeholder="0"/>
                                   </TableCell>
                                 );
                               })}
@@ -1025,10 +1025,10 @@ export default function NszfhMeresek() {
                                         : "inherit",
                                     }}
                                   >
-                                    <TextField
+                                    <ZeroHidingTextField
                                       size="small"
                                       variant="outlined"
-                                      value={val}
+                                      value={val || 0}
                                       disabled={isParent}
                                       InputProps={{
                                         readOnly: true,
@@ -1056,7 +1056,7 @@ export default function NszfhMeresek() {
                                             },
                                         }),
                                       }}
-                                    />
+                                     placeholder="0"/>
                                   </TableCell>
                                 );
                               })}

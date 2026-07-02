@@ -16,7 +16,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -34,6 +33,7 @@ import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function DigitalisKompetencia() {
   const schoolYears = useMemo(() => generateSchoolYears(), []);
@@ -350,16 +350,16 @@ export default function DigitalisKompetencia() {
                         : "inherit",
                     }}
                   >
-                    <TextField
+                    <ZeroHidingTextField
                       type="number"
-                      value={tableData[year]?.fejleszto || ""}
+                      value={tableData[year]?.fejleszto || 0}
                       onChange={(e) =>
                         handleDataChange(year, "fejleszto", e.target.value)
                       }
                       size="small"
                       inputProps={{ style: { textAlign: "center" }, min: 0 }}
                       sx={{ width: "100px" }}
-                    />
+                     placeholder="0"/>
                   </TableCell>
                 ))}
               </TableRow>
@@ -388,16 +388,16 @@ export default function DigitalisKompetencia() {
                         : "inherit",
                     }}
                   >
-                    <TextField
+                    <ZeroHidingTextField
                       type="number"
-                      value={tableData[year]?.hasznalo || ""}
+                      value={tableData[year]?.hasznalo || 0}
                       onChange={(e) =>
                         handleDataChange(year, "hasznalo", e.target.value)
                       }
                       size="small"
                       inputProps={{ style: { textAlign: "center" }, min: 0 }}
                       sx={{ width: "100px" }}
-                    />
+                     placeholder="0"/>
                   </TableCell>
                 ))}
               </TableRow>

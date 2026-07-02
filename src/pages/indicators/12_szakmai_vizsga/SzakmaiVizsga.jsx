@@ -10,7 +10,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -40,6 +39,7 @@ import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 const evszamok = generateSchoolYears();
 const numberFormatter = new Intl.NumberFormat("hu-HU");
@@ -562,13 +562,11 @@ export default function SzakmaiVizsga() {
                                 {getRatio(row.key, startYear)}%
                               </TableCell>
                               <TableCell align="center">
-                                <TextField
+                                <ZeroHidingTextField
                                   type="number"
                                   size="small"
-                                  value={
-                                    tableData[row.key]?.[startYear]
-                                      ?.sikeres_vizsgazok_szama ?? ""
-                                  }
+                                  value={tableData[row.key]?.[startYear]
+                                      ?.sikeres_vizsgazok_szama || 0}
                                   onChange={(e) =>
                                     handleDataChange(
                                       row.key,
@@ -590,7 +588,7 @@ export default function SzakmaiVizsga() {
                                     backgroundColor: "#fff",
                                   }}
                                   placeholder=""
-                                />
+                                 placeholder="0"/>
                               </TableCell>
                               <TableCell
                                 align="center"
@@ -601,13 +599,11 @@ export default function SzakmaiVizsga() {
                                       : "2px solid #e0e0e0",
                                 }}
                               >
-                                <TextField
+                                <ZeroHidingTextField
                                   type="number"
                                   size="small"
-                                  value={
-                                    tableData[row.key]?.[startYear]
-                                      ?.vizsgara_bocsathatoak_szama ?? ""
-                                  }
+                                  value={tableData[row.key]?.[startYear]
+                                      ?.vizsgara_bocsathatoak_szama || 0}
                                   onChange={(e) =>
                                     handleDataChange(
                                       row.key,
@@ -629,7 +625,7 @@ export default function SzakmaiVizsga() {
                                     backgroundColor: "#fff",
                                   }}
                                   placeholder=""
-                                />
+                                 placeholder="0"/>
                               </TableCell>
                             </React.Fragment>
                           );

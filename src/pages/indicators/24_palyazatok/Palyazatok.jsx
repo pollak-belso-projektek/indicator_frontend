@@ -17,7 +17,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -51,6 +50,7 @@ import ExportToExcel from "../../../components/ExportToExcel";
 import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 const formatMoney = (val) => {
   if (val === undefined || val === null) return "0";
@@ -815,9 +815,9 @@ export default function Palyazatok() {
                                   : "inherit",
                               }}
                             >
-                              <TextField
+                              <ZeroHidingTextField
                                 type={isMoney ? "text" : "number"}
-                                value={displayVal}
+                                value={displayVal || 0}
                                 onChange={(e) => {
                                   let val = e.target.value;
                                   if (isMoney) val = val.replace(/\s/g, "");
@@ -835,7 +835,7 @@ export default function Palyazatok() {
                                   style: { textAlign: "center" },
                                 }}
                                 sx={{ width: isMoney ? "110px" : "70px" }}
-                              />
+                               placeholder="0"/>
                             </TableCell>
                           );
                         }),
@@ -937,11 +937,11 @@ export default function Palyazatok() {
                           : "inherit",
                       }}
                     >
-                      <TextField
+                      <ZeroHidingTextField
                         type="text"
                         value={formatMoney(
                           eloiranyzatData[year]?.osszeg_ft || "0",
-                        )}
+                        ) || 0}
                         onChange={(e) =>
                           handleEloiranyzatChange(
                             year,
@@ -954,7 +954,7 @@ export default function Palyazatok() {
                           style: { textAlign: "center", fontWeight: "bold" },
                         }}
                         sx={{ width: "110px" }}
-                      />
+                       placeholder="0"/>
                     </TableCell>
                     <TableCell
                       sx={{
@@ -1108,12 +1108,12 @@ export default function Palyazatok() {
                 )}
 
               {newPalyazatCategory && newPalyazatSelectionType === "custom" && (
-                <TextField
+                <ZeroHidingTextField
                   fullWidth
                   label="Egyéni pályázat megnevezése"
-                  value={customPalyazatName}
+                  value={customPalyazatName || 0}
                   onChange={(e) => setCustomPalyazatName(e.target.value)}
-                />
+                 placeholder="0"/>
               )}
             </Box>
           </DialogContent>

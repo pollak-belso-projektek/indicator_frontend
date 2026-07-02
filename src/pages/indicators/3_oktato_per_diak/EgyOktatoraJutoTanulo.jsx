@@ -11,7 +11,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
   Button,
   Stack,
   Alert,
@@ -64,6 +63,7 @@ import TitleEgyOktatoraJutoTanulo from "./title_oktato_per_diak";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
+import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
 
 export default function EgyOktatoraJutoTanulo() {
   const schoolYears = generateSchoolYears();
@@ -626,7 +626,7 @@ export default function EgyOktatoraJutoTanulo() {
                                         align="center"
                                         sx={{ backgroundColor: "#e8f5e840" }}
                                       >
-                                        <TextField
+                                        <ZeroHidingTextField
                                           type="number"
                                           value={data.tanulok_szama || 0}
                                           onChange={(e) =>
@@ -642,13 +642,13 @@ export default function EgyOktatoraJutoTanulo() {
                                             style: { textAlign: "center" },
                                           }}
                                           sx={{ width: "80px" }}
-                                        />
+                                         placeholder="0"/>
                                       </TableCell>
                                       <TableCell
                                         align="center"
                                         sx={{ backgroundColor: "#f0f8ff40" }}
                                       >
-                                        <TextField
+                                        <ZeroHidingTextField
                                           type="number"
                                           value={data.oktatok_szama || 0}
                                           onChange={(e) =>
@@ -664,7 +664,7 @@ export default function EgyOktatoraJutoTanulo() {
                                             style: { textAlign: "center" },
                                           }}
                                           sx={{ width: "80px" }}
-                                        />
+                                         placeholder="0"/>
                                       </TableCell>
                                       <TableCell
                                         align="center"
@@ -957,31 +957,31 @@ export default function EgyOktatoraJutoTanulo() {
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <TextField
+                <ZeroHidingTextField
                   fullWidth
                   label="Tanulók száma (fő)"
                   type="number"
-                  value={addDialog.newRecord.tanulok_szama}
+                  value={addDialog.newRecord.tanulok_szama || 0}
                   onChange={(e) =>
                     handleNewRecordChange("tanulok_szama", e.target.value)
                   }
                   inputProps={{ min: 0 }}
                   helperText="Az intézményben tanuló diákok száma"
-                />
+                 placeholder="0"/>
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <TextField
+                <ZeroHidingTextField
                   fullWidth
                   label="Oktatók száma (fő)"
                   type="number"
-                  value={addDialog.newRecord.oktatok_szama}
+                  value={addDialog.newRecord.oktatok_szama || 0}
                   onChange={(e) =>
                     handleNewRecordChange("oktatok_szama", e.target.value)
                   }
                   inputProps={{ min: 0 }}
                   helperText="Az intézményben dolgozó oktatók száma"
-                />
+                 placeholder="0"/>
               </Grid>
 
               <Grid item xs={12}>
