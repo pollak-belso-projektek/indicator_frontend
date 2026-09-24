@@ -37,7 +37,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SchoolIcon from "@mui/icons-material/School";
 import WorkIcon from "@mui/icons-material/Work";
 import RemoveIcon from "@mui/icons-material/Remove";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   useGetAllAlapadatokQuery,
   useAddAlapadatokMutation,
@@ -81,6 +81,23 @@ const Schools = () => {
     useGetSzakiranyListQuery();
   const { data: szakmaOptions = [], isLoading: isSzakmaLoading } =
     useGetSzakmaListQuery();
+
+  // Sort szakirány (ágazat) and szakma options in Hungarian alphabetical order
+  const sortedSzakiranyOptions = useMemo(() => {
+    return [...szakiranyOptions].sort((a, b) => {
+      const nameA = a?.nev || a?.label || a?.value || (typeof a === "string" ? a : "");
+      const nameB = b?.nev || b?.label || b?.value || (typeof b === "string" ? b : "");
+      return nameA.localeCompare(nameB, "hu");
+    });
+  }, [szakiranyOptions]);
+
+  const sortedSzakmaOptions = useMemo(() => {
+    return [...szakmaOptions].sort((a, b) => {
+      const nameA = a?.nev || a?.label || a?.value || (typeof a === "string" ? a : "");
+      const nameB = b?.nev || b?.label || b?.value || (typeof b === "string" ? b : "");
+      return nameA.localeCompare(nameB, "hu");
+    });
+  }, [szakmaOptions]);
   const [addSchool, { isLoading: isAdding }] = useAddAlapadatokMutation();
   const [updateSchool, { isLoading: isUpdating }] =
     useUpdateAlapadatokMutation();
@@ -491,8 +508,14 @@ const Schools = () => {
                           </Alert>
 
                           {school.alapadatok_szakirany?.length > 0 ? (
-                            school.alapadatok_szakirany.map(
-                              (szakiranyData) => (
+                            [...school.alapadatok_szakirany]
+                              .sort((a, b) =>
+                                (a.szakirany?.nev || "").localeCompare(
+                                  b.szakirany?.nev || "",
+                                  "hu"
+                                )
+                              )
+                              .map((szakiranyData) => (
                                 <Accordion
                                   key={szakiranyData.szakirany_id}
                                   sx={{ mb: 1 }}
@@ -543,8 +566,14 @@ const Schools = () => {
                                       Szakmák:
                                     </Typography>
                                     <List dense>
-                                      {szakiranyData.szakirany.szakma?.map(
-                                        (szakmaData) => (
+                                      {[...(szakiranyData.szakirany.szakma || [])]
+                                        .sort((a, b) =>
+                                          (a.szakma?.nev || "").localeCompare(
+                                            b.szakma?.nev || "",
+                                            "hu"
+                                          )
+                                        )
+                                        .map((szakmaData) => (
                                           <ListItem
                                             key={szakmaData.szakma.id}
                                             sx={{
@@ -699,7 +728,7 @@ const Schools = () => {
                 >
                   <Box>
                     <Typography variant="h6" sx={{ pt: 1 }}>
-                      Szakirányok ({formData.alapadatok_szakirany.length})
+                      Szakirányok / Ágazatok ({formData.alapadatok_szakirany.length})
                     </Typography>
                     <Typography variant="caption" color="textSecondary">
                       Itt csak a kapcsolatok módosíthatók. Végleges törléshez
@@ -708,9 +737,9 @@ const Schools = () => {
                   </Box>
                   <Box sx={{ width: 300 }}>
                     <CustomCreatableSelect
-                      options={szakiranyOptions}
-                      placeholder="Válasszon vagy hozzon létre szakirányt"
-                      label="Új szakirány"
+                      options={sortedSzakiranyOptions}
+                      placeholder="Válasszon vagy hozzon létre szakirányt / ágazatot"
+                      label="Új szakirány (ágazat)"
                       isLoading={isSzakiranyLoading}
                       onChange={addSzakirany}
                       value={null}
@@ -729,7 +758,14 @@ const Schools = () => {
                   </Typography>
                 ) : (
                   <Stack spacing={2}>
-                    {formData.alapadatok_szakirany.map((szakiranyData) => (
+                    {[...formData.alapadatok_szakirany]
+                      .sort((a, b) =>
+                        (a.szakirany?.nev || "").localeCompare(
+                          b.szakirany?.nev || "",
+                          "hu"
+                        )
+                      )
+                      .map((szakiranyData) => (
                       <Card
                         key={szakiranyData.szakirany_id}
                         variant="outlined"
@@ -787,7 +823,7 @@ const Schools = () => {
                               </Box>
                               <Box sx={{ width: 250 }}>
                                 <CustomCreatableSelect
-                                  options={szakmaOptions}
+                                  options={sortedSzakmaOptions}
                                   placeholder="Válasszon vagy hozzon létre szakmát"
                                   label="Új szakma"
                                   isLoading={isSzakmaLoading}
@@ -814,8 +850,14 @@ const Schools = () => {
                               </Typography>
                             ) : (
                               <List dense>
-                                {szakiranyData.szakirany.szakma.map(
-                                  (szakmaData) => (
+                                {[...(szakiranyData.szakirany.szakma || [])]
+                                  .sort((a, b) =>
+                                    (a.szakma?.nev || "").localeCompare(
+                                      b.szakma?.nev || "",
+                                      "hu"
+                                    )
+                                  )
+                                  .map((szakmaData) => (
                                     <ListItem
                                       key={szakmaData.szakma_id}
                                       sx={{

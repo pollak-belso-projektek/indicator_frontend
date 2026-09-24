@@ -45,7 +45,7 @@ import {
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useLogoutMutation, indicatorApi } from "../store/api/apiSlice";
+import { useLogoutMutation, useGetTableListQuery, indicatorApi } from "../store/api/apiSlice";
 import {
   logout,
   selectUser,
@@ -62,6 +62,7 @@ import {
   InputAdornment,
   IconButton as MuiIconButton,
   Tooltip,
+  Chip,
 } from "@mui/material";
 import { useRecentPages } from "../hooks/useRecentPages";
 import AliasModeBanner from "./AliasModeBanner";
@@ -495,9 +496,9 @@ const AllLinkItems = Object.values(NavigationCategories).reduce(
   [],
 );
 
-// Function to filter navigation items based on user's table access
-const getAccessibleNavItems = (tableAccess, userPermissions) => {
-  // Superadmin bypasses all permission checks and gets all items
+// Function to filter navigation items based on user's table access and global table availability
+const getAccessibleNavItems = (tableAccess, userPermissions, tableList = []) => {
+  // Superadmin bypasses all permission checks and gets all items (inactive ones will be visually flagged)
   if (userPermissions?.isSuperadmin) {
     return AllLinkItems;
   }
@@ -508,6 +509,14 @@ const getAccessibleNavItems = (tableAccess, userPermissions) => {
   }
 
   const accessibleTableNames = tableAccess.map((access) => access.tableName);
+
+  // Quick lookup for table availability from live API table list
+  const tableMap = new Map();
+  if (Array.isArray(tableList)) {
+    tableList.forEach((t) => {
+      if (t.name) tableMap.set(t.name, t);
+    });
+  }
 
   return AllLinkItems.filter((item) => {
     // Always show dashboard
@@ -533,7 +542,7 @@ const getAccessibleNavItems = (tableAccess, userPermissions) => {
         );
       }
 
-      // Table management - only for superadmins
+      // Table management - only for superadmins and HSZC admins
       if (item.link === "/table-management") {
         return (
           userPermissions?.isSuperadmin ||
@@ -567,14 +576,20 @@ const getAccessibleNavItems = (tableAccess, userPermissions) => {
       );
     }
 
+    // Check if table is marked unavailable globally in tableList
+    const tableObj = tableMap.get(item.tableName);
+    if (tableObj && tableObj.isAvailable === false) {
+      return false;
+    }
+
     // Show items that the user has table access to
     return accessibleTableNames.includes(item.tableName);
   });
 };
 
 // Function to organize accessible items by categories
-const getOrganizedAccessibleItems = (tableAccess, userPermissions) => {
-  const accessibleItems = getAccessibleNavItems(tableAccess, userPermissions);
+const getOrganizedAccessibleItems = (tableAccess, userPermissions, tableList = []) => {
+  const accessibleItems = getAccessibleNavItems(tableAccess, userPermissions, tableList);
   const organizedCategories = {};
 
   // Group accessible items by category
@@ -668,7 +683,16 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
   const tableAccess = useSelector(selectUserTableAccess);
   const userPermissions = useSelector(selectUserPermissions);
+  const { data: tableList = [] } = useGetTableListQuery();
 
+  const isTableUnavailable = useCallback(
+    (tableName) => {
+      if (!tableName || !Array.isArray(tableList)) return false;
+      const table = tableList.find((t) => t.name === tableName);
+      return table ? table.isAvailable === false : false;
+    },
+    [tableList],
+  );
 
   // Add keyboard shortcuts for navigation
   useEffect(() => {
@@ -715,8 +739,8 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
   // Get navigation items that the user has access to
   const accessibleNavItems = useMemo(() => {
-    return getAccessibleNavItems(tableAccess, userPermissions);
-  }, [tableAccess, userPermissions]);
+    return getAccessibleNavItems(tableAccess, userPermissions, tableList);
+  }, [tableAccess, userPermissions, tableList]);
 
   // Initialize recent pages hook
   useRecentPages(NavigationCategories);
@@ -738,8 +762,8 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
   // Get organized categories
   const organizedCategories = useMemo(() => {
-    return getOrganizedAccessibleItems(tableAccess, userPermissions);
-  }, [tableAccess, userPermissions]);
+    return getOrganizedAccessibleItems(tableAccess, userPermissions, tableList);
+  }, [tableAccess, userPermissions, tableList]);
 
   // Find which category contains the current active page and expand it
   useEffect(() => {
@@ -1090,7 +1114,14 @@ const SidebarContent = ({ onClose, ...rest }) => {
               <Collapse in={expandedCategories[categoryKey]} timeout="auto" unmountOnExit appear={false}>
                 <List component="div" disablePadding sx={{ mt: 0.5 }}>
                   {category.items.map((link) => (
-                    <NavItem key={link.name} icon={link.icon} to={link.link} link={link.link} onClick={() => onClose()}>
+                    <NavItem
+                      key={link.name}
+                      icon={link.icon}
+                      to={link.link}
+                      link={link.link}
+                      isInactive={isTableUnavailable(link.tableName)}
+                      onClick={() => onClose()}
+                    >
                       {getDisplayName(link)}
                     </NavItem>
                   ))}
@@ -1115,7 +1146,14 @@ const SidebarContent = ({ onClose, ...rest }) => {
               return a.name.localeCompare(b.name);
             })
             .map((link) => (
-              <NavItem key={link.name} icon={link.icon} to={link.link} link={link.link} onClick={() => onClose()}>
+              <NavItem
+                key={link.name}
+                icon={link.icon}
+                to={link.link}
+                link={link.link}
+                isInactive={isTableUnavailable(link.tableName)}
+                onClick={() => onClose()}
+              >
                 {getDisplayName(link)}
               </NavItem>
             ))}
@@ -1141,7 +1179,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
   );
 };
 
-const NavItem = ({ icon, children, onClick, ...rest }) => {
+const NavItem = ({ icon, children, onClick, isInactive = false, ...rest }) => {
   const location = useLocation();
   const { to, link, ...otherProps } = rest;
   const targetLink = to || link;
@@ -1153,7 +1191,7 @@ const NavItem = ({ icon, children, onClick, ...rest }) => {
 
   const IconComponent = icon;
 
-  return (
+  const itemButton = (
     <ListItemButton
       component={Link}
       to={targetLink}
@@ -1165,42 +1203,103 @@ const NavItem = ({ icon, children, onClick, ...rest }) => {
         mb: 0.5,
         p: 1.5,
         transition: "all 0.2s ease-in-out",
+        opacity: isInactive && !isActive ? 0.75 : 1,
         ...(isActive && {
           bgcolor: "primary.50",
           borderLeft: "4px solid",
-          borderColor: "primary.main",
+          borderColor: isInactive ? "warning.main" : "primary.main",
           color: "primary.main",
           "&:hover": {
             bgcolor: "primary.100",
-          }
+          },
         }),
         ...(!isActive && {
           color: "text.secondary",
           "&:hover": {
             bgcolor: "grey.50",
             transform: "translateX(4px)",
-          }
-        })
+            opacity: 1,
+          },
+        }),
       }}
       {...otherProps}
     >
       {IconComponent && (
-        <ListItemIcon sx={{
-          minWidth: 40,
-          color: isActive ? "primary.main" : "grey.500"
-        }}>
+        <ListItemIcon
+          sx={{
+            minWidth: 40,
+            color: isActive
+              ? isInactive
+                ? "warning.main"
+                : "primary.main"
+              : isInactive
+                ? "warning.main"
+                : "grey.500",
+          }}
+        >
           <IconComponent size={20} />
         </ListItemIcon>
       )}
       <ListItemText
-        primary={children}
-        primaryTypographyProps={{
-          fontSize: "0.875rem",
-          fontWeight: isActive ? 600 : 500,
-        }}
+        primary={
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              width: "100%",
+              gap: 0.5,
+            }}
+          >
+            <Text
+              component="span"
+              sx={{
+                fontSize: "0.875rem",
+                fontWeight: isActive ? 600 : 500,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                color: isInactive && !isActive ? "text.secondary" : "inherit",
+              }}
+            >
+              {children}
+            </Text>
+            {isInactive && (
+              <Chip
+                label="Inaktív"
+                size="small"
+                sx={{
+                  height: 18,
+                  fontSize: "0.625rem",
+                  fontWeight: 600,
+                  bgcolor: "warning.50",
+                  color: "warning.dark",
+                  border: "1px solid",
+                  borderColor: "warning.200",
+                  pointerEvents: "none",
+                  flexShrink: 0,
+                }}
+              />
+            )}
+          </Box>
+        }
       />
     </ListItemButton>
   );
+
+  if (isInactive) {
+    return (
+      <Tooltip
+        title="Inaktív tábla (az intézményi felhasználók számára el van rejtve)"
+        placement="right"
+        arrow
+      >
+        <Box component="div">{itemButton}</Box>
+      </Tooltip>
+    );
+  }
+
+  return itemButton;
 };
 
 const MobileNav = ({ onOpen, ...rest }) => {

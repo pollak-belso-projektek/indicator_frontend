@@ -373,6 +373,13 @@ const TableManagement = () => {
             label="Elérhető"
             sx={{ mt: 2 }}
           />
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: "block", mt: 0.5 }}
+          >
+            Ha kikapcsolja, az indikátor inaktívvá válik: elrejtésre kerül az intézményi felhasználók menüjéből, és nem fognak hozzáférni az adatokhoz. Szuperadminok számára a menüben és az oldalon „Inaktív” jelzéssel továbbra is elérhető marad.
+          </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseCreate}>Mégse</Button>
@@ -416,6 +423,13 @@ const TableManagement = () => {
             label="Elérhető"
             sx={{ mt: 2 }}
           />
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: "block", mt: 0.5 }}
+          >
+            Ha kikapcsolja, az indikátor inaktívvá válik: elrejtésre kerül az intézményi felhasználók menüjéből, és nem fognak hozzáférni az adatokhoz. Szuperadminok számára a menüben és az oldalon „Inaktív” jelzéssel továbbra is elérhető marad.
+          </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseEdit}>Mégse</Button>
@@ -569,7 +583,8 @@ const TableManagement = () => {
                           label={
                             table.isAvailable ? "Elérhető" : "Nem elérhető"
                           }
-                          color={table.isAvailable ? "success" : "default"}
+                          color={table.isAvailable ? "success" : "warning"}
+                          variant={table.isAvailable ? "filled" : "outlined"}
                           size="small"
                         />
                       </TableCell>

@@ -11,6 +11,7 @@ import {
 import { getTableNameFromRoute, hasTableAccess } from "../utils/tableValues";
 import { useTokenValidation } from "../hooks/useTokenValidation";
 import { useAccessNotification } from "../contexts/AccessNotificationContext";
+import { useGetTableListQuery } from "../store/api/apiSlice";
 
 /**
  * TableProtectedRoute component that enforces both authentication and table access permissions
@@ -25,8 +26,12 @@ export default function TableProtectedRoute({ children, tableName = null }) {
   const mustChangePassword = useSelector(selectMustChangePassword);
   const location = useLocation();
   const { validateToken } = useTokenValidation();
-  const { notifyAccessDenied, notifyInsufficientPermissions } =
-    useAccessNotification();
+  const {
+    notifyAccessDenied,
+    notifyInsufficientPermissions,
+    notifyTableUnavailable,
+  } = useAccessNotification();
+  const { data: tableList = [] } = useGetTableListQuery();
 
   // Debug logging
   console.log("TableProtectedRoute Debug:", {
@@ -250,6 +255,36 @@ export default function TableProtectedRoute({ children, tableName = null }) {
       );
     }
     return children;
+  }
+
+  // Check if table is marked unavailable globally in tableList
+  if (targetTableName && Array.isArray(tableList) && tableList.length > 0) {
+    const currentTable = tableList.find((t) => t.name === targetTableName);
+    if (currentTable && currentTable.isAvailable === false) {
+      console.warn(
+        `Access denied - table ${targetTableName} is currently unavailable for route: ${location.pathname}`
+      );
+
+      setTimeout(() => {
+        if (notifyTableUnavailable) {
+          notifyTableUnavailable(location.pathname, targetTableName);
+        } else {
+          notifyAccessDenied(location.pathname, targetTableName);
+        }
+      }, 100);
+
+      return (
+        <Navigate
+          to="/dashboard"
+          state={{
+            redirectReason: "table_unavailable",
+            fromRoute: location.pathname,
+            tableName: targetTableName,
+          }}
+          replace
+        />
+      );
+    }
   }
 
   if (targetTableName && !hasTableAccess(tableAccess, targetTableName)) {

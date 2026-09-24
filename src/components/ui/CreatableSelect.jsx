@@ -15,9 +15,9 @@ const CustomCreatableSelect = ({
   helperText = "",
   ...props
 }) => {
-  // Transform options to react-select format if needed
+  // Transform options to react-select format if needed and sort in Hungarian alphabetical order
   const selectOptions = useMemo(() => {
-    return options.map((option) => {
+    const transformed = options.map((option) => {
       if (typeof option === "string") {
         return { value: option, label: option };
       }
@@ -25,6 +25,12 @@ const CustomCreatableSelect = ({
         return { value: option.nev, label: option.nev, id: option.id };
       }
       return option;
+    });
+
+    return transformed.sort((a, b) => {
+      const labelA = a?.label || a?.value || "";
+      const labelB = b?.label || b?.value || "";
+      return labelA.localeCompare(labelB, "hu");
     });
   }, [options]);
 

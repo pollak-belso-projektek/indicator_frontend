@@ -73,6 +73,7 @@ export const AccessNotificationProvider = ({ children }) => {
         "/oktatok-egyeb-tev": "Oktatók egyéb tevékenysége",
         "/adat-import": "Adatok importálása",
         "/schools": "Iskolák",
+        "/lemorzsolodas": "Lemorzsolódás",
       };
 
       const pageName = routeNames[route] || "Az oldal";
@@ -86,6 +87,48 @@ export const AccessNotificationProvider = ({ children }) => {
       const message = `🚫 Hozzáférés megtagadva: "${pageName}" ${actionLabel} nincs jogosultsága!`;
 
       showNotification(message, "error");
+    },
+    [showNotification]
+  );
+
+  const notifyTableUnavailable = useCallback(
+    (route, tableName) => {
+      const routeNames = {
+        "/tanulo_letszam": "Tanulólétszám",
+        "/kompetencia": "Kompetenciamérés",
+        "/versenyek": "Versenyek",
+        "/users": "Felhasználókezelés",
+        "/table-management": "Táblakezelés",
+        "/logs": "Naplók",
+        "/alapadatok": "Alapadatok",
+        "/felnottkepzes": "Felnőttképzés",
+        "/nszfh-meresek": "NSZFH mérések",
+        "/szakmai-eredmenyek": "Szakmai eredmények",
+        "/elhelyezkedesi-mutato": "Elhelyezkedési mutató",
+        "/vegzettek-elegedettsege": "Végzettek elégedettsége",
+        "/vizsgaeredmenyek": "Vizsgaeredmények",
+        "/intezmenyi-elismeresek": "Intézményi elismerések",
+        "/szakmai-bemutatok-konferenciak": "Szakmai bemutatók és konferenciák",
+        "/elegedettseg-meres-eredmenyei": "Elégedettségmérés eredményei",
+        "/muhelyiskolai-reszszakmat": "Műhelyiskolai részszakma",
+        "/dobbanto-program-aranya": "Dobbantó program aránya",
+        "/sajatos-nevelesi-igenyu-tanulok-aranya":
+          "Sajátos nevelési igényű tanulók aránya",
+        "/hatranyos-helyezu-tanulok-aranya":
+          "Hátrányos helyzetű tanulók aránya",
+        "/intezmenyi-nevelesi-mutatok": "Intézményi nevelési mutatók",
+        "/szakkepzesi-munkaszerződes-arany": "Szakképzési munkaszerződés arány",
+        "/hianyzas": "Hiányzás",
+        "/szakmai-tovabbkepzesek": "Szakmai továbbképzések",
+        "/tanulmani-eredmeny": "Tanulmányi eredmény",
+        "/oktatok-egyeb-tev": "Oktatók egyéb tevékenysége",
+        "/adat-import": "Adatok importálása",
+        "/schools": "Iskolák",
+        "/lemorzsolodas": "Lemorzsolódás",
+      };
+      const pageName = routeNames[route] || tableName || "Ez az indikátor";
+      const message = `⚠️ A(z) "${pageName}" indikátor jelenleg inaktív (nem elérhető).`;
+      showNotification(message, "warning");
     },
     [showNotification]
   );
@@ -111,6 +154,7 @@ export const AccessNotificationProvider = ({ children }) => {
     showNotification,
     hideNotification,
     notifyAccessDenied,
+    notifyTableUnavailable,
     notifyInsufficientPermissions,
   };
 

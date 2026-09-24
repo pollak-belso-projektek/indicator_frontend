@@ -19,6 +19,10 @@ export const useTableLockStatus = (tableName) => {
   const userPermissions = useSelector(selectUserPermissions);
 
   const isSuperadmin = userPermissions?.isSuperadmin || false;
+  const table = Array.isArray(tableList)
+    ? tableList.find((t) => t.name === tableName)
+    : null;
+  const isAvailable = table ? table.isAvailable !== false : true;
   const locked = isTableLocked(tableList, tableName);
   const modifyResult = canModifyTable(
     tableList,
@@ -28,9 +32,11 @@ export const useTableLockStatus = (tableName) => {
   );
 
   console.log(
-    `useTableLockStatus for table "${tableName}": isLocked=${locked}, canModify=${modifyResult.canModify}, lockMessage=${modifyResult.reason}, isLoading=${isLoading}`
+    `useTableLockStatus for table "${tableName}": isLocked=${locked}, isAvailable=${isAvailable}, canModify=${modifyResult.canModify}, lockMessage=${modifyResult.reason}, isLoading=${isLoading}`
   );
   return {
+    table,
+    isAvailable,
     isLocked: locked,
     canModify: modifyResult.canModify,
     lockMessage: modifyResult.reason,
