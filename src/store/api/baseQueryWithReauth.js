@@ -30,12 +30,33 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
+let isRefreshing = false;
+let refreshPromise = null;
+
 // Enhanced base query with token refresh logic
 const baseQueryWithReauth = async (args, api, extraOptions) => {
+  // Wait if a refresh is currently in progress
+  if (isRefreshing) {
+    try {
+      await refreshPromise;
+    } catch (e) {
+      // ignore
+    }
+  }
+
   let result = await baseQuery(args, api, extraOptions);
 
   // If we get a 401 error, try to refresh the token
   if (result.error && result.error.status === 401) {
+    if (isRefreshing) {
+      try {
+        await refreshPromise;
+      } catch (e) {
+        // ignore
+      }
+      return baseQuery(args, api, extraOptions);
+    }
+
     const refreshToken = api.getState().auth?.refreshToken;
     console.log(
       "Got 401, attempting refresh with token:",
@@ -43,47 +64,65 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
     );
 
     if (refreshToken) {
-      // Try to refresh the token - send refresh token in body for backend compatibility
-      const refreshResult = await baseQuery(
-        {
-          url: "auth/refresh",
-          method: "POST",
-          body: { refreshToken },
-        },
-        api,
-        extraOptions
-      );
-
-      console.log("Refresh result:", refreshResult);
-
-      // Check if refresh was successful
-      if (refreshResult.data) {
-        const refreshData = refreshResult.data;
-
-        // Debug: Log the refresh response to see its structure
-        console.log("Refresh response data:", refreshData);
-
-        // Check if we have the required tokens
-        if (refreshData.accessToken) {
-          // Store the new tokens
-          api.dispatch(refreshTokenSuccess(refreshData));
-          console.log("Token refresh successful, retrying original request");
-
-          // Retry the original request with the new token
-          result = await baseQuery(args, api, extraOptions);
-        } else {
-          console.log("Refresh response missing accessToken:", refreshData);
-          // Refresh response doesn't contain accessToken, logout
-          api.dispatch(logout());
-        }
-      } else {
-        // Debug: Log refresh failure
-        console.log(
-          "Refresh failed - no data or error:",
-          refreshResult.error || "Empty response"
+      isRefreshing = true;
+      refreshPromise = (async () => {
+        // Try to refresh the token - send refresh token in body for backend compatibility
+        const refreshResult = await baseQuery(
+          {
+            url: "auth/refresh",
+            method: "POST",
+            body: { refreshToken },
+          },
+          api,
+          extraOptions
         );
-        // Refresh failed, logout the user
-        api.dispatch(logout());
+
+        console.log("Refresh result:", refreshResult);
+
+        // Check if refresh was successful
+        if (refreshResult.data) {
+          const refreshData = refreshResult.data;
+
+          // Check if we have the required tokens
+          if (refreshData.accessToken) {
+            // Store the new tokens
+            api.dispatch(refreshTokenSuccess(refreshData));
+            console.log("Token refresh successful, retrying original request");
+          } else {
+            console.log("Refresh response missing accessToken:", refreshData);
+            api.dispatch(logout());
+            throw new Error("Missing accessToken");
+          }
+        } else {
+          // Check if the request was aborted or a network error occurred
+          const isFetchError = refreshResult.error?.status === "FETCH_ERROR";
+          const isTimeoutError = refreshResult.error?.status === "TIMEOUT_ERROR";
+          
+          if (isFetchError || isTimeoutError) {
+             console.log("Refresh aborted or network error, skipping logout.", refreshResult.error);
+             // We do not log out here because this could be caused by component unmount (AbortError)
+             // The next API call will retry the refresh.
+             throw new Error("Network or Abort Error");
+          } else {
+            console.log(
+              "Refresh failed - no data or error:",
+              refreshResult.error || "Empty response"
+            );
+            api.dispatch(logout());
+            throw new Error("Refresh failed");
+          }
+        }
+      })();
+
+      try {
+        await refreshPromise;
+        // Retry the original request with the new token
+        result = await baseQuery(args, api, extraOptions);
+      } catch (err) {
+        // Refresh failed (either logged out or aborted), result remains the 401 error
+      } finally {
+        isRefreshing = false;
+        refreshPromise = null;
       }
     } else {
       console.log("No refresh token available, logging out");
