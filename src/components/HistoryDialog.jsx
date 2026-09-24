@@ -70,6 +70,13 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
     return [...historyList].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [historyList]);
 
+  // Compute effective active history id (defaults to newest version if none explicitly restored)
+  const effectiveActiveId = useMemo(() => {
+    if (!sortedHistoryList || sortedHistoryList.length === 0) return null;
+    const exists = sortedHistoryList.some(item => String(item.id) === String(activeHistoryId));
+    return exists ? String(activeHistoryId) : String(sortedHistoryList[0].id);
+  }, [sortedHistoryList, activeHistoryId]);
+
   // Smart active state management
   useEffect(() => {
     if (sortedHistoryList.length > 0 && storageKeyActive && storageKeyLatest) {
@@ -195,19 +202,92 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
         ) : isError ? (
           <Alert severity="error" sx={{ borderRadius: 2 }}>Hiba történt az előzmények lekérdezésekor.</Alert>
         ) : !sortedHistoryList || sortedHistoryList.length === 0 ? (
-          <Box py={8} textAlign="center">
-            <HistoryIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-            <Typography variant="h6" color="textSecondary" gutterBottom>
-              Nincsenek elérhető előzmények
-            </Typography>
-            <Typography variant="body2" color="text.disabled">
-              Ehhez az űrlaphoz még nem történt mentés.
-            </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box
+              sx={{
+                p: 2.5,
+                borderRadius: 3,
+                border: '2px solid',
+                borderColor: 'success.main',
+                bgcolor: 'background.paper',
+                boxShadow: '0 4px 20px rgba(46, 125, 50, 0.15)',
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                justifyContent: 'space-between',
+                alignItems: { xs: 'flex-start', sm: 'center' },
+                gap: 2,
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <Box 
+                sx={{ 
+                  position: 'absolute', 
+                  left: 0, 
+                  top: 0, 
+                  bottom: 0, 
+                  width: 6, 
+                  bgcolor: 'success.main' 
+                }} 
+              />
+              <Box sx={{ pl: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Box display="flex" alignItems="center" gap={1.5} flexWrap="wrap">
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: 'success.dark', fontSize: '1.1rem' }}>
+                    Jelenlegi állapot
+                  </Typography>
+                  <Chip 
+                    size="small" 
+                    color="success" 
+                    label="Aktív Állapot (Aktuális)" 
+                    sx={{ fontWeight: 'bold' }} 
+                  />
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  Ezt az állapotot látod jelenleg a képernyőn, ez az aktuális verzió.
+                </Typography>
+              </Box>
+              <Button 
+                variant="contained" 
+                color="success" 
+                disabled
+                sx={{ 
+                  minWidth: { xs: '100%', sm: 160 },
+                  borderRadius: 2,
+                  py: 1,
+                  fontWeight: 'bold',
+                  textTransform: 'none',
+                  fontSize: '0.95rem',
+                  boxShadow: 'none'
+                }}
+              >
+                Jelenleg aktív
+              </Button>
+            </Box>
+
+            <Box 
+              sx={{ 
+                p: 3, 
+                textAlign: 'center', 
+                bgcolor: 'background.paper', 
+                borderRadius: 2,
+                border: '1px dashed',
+                borderColor: 'divider',
+                mt: 1
+              }}
+            >
+              <HistoryIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1, opacity: 0.7 }} />
+              <Typography variant="subtitle1" color="textPrimary" fontWeight="500" gutterBottom>
+                Nincsenek korábbi előzmények
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                Ehhez az űrlaphoz még nem készült korábbi visszaállítási pont. A táblázat mentésekor automatikusan létrejön az előzmény.
+              </Typography>
+            </Box>
           </Box>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {sortedHistoryList.map((item, index) => {
-              const isActive = String(item.id) === String(activeHistoryId);
+              const isActive = String(item.id) === String(effectiveActiveId);
               const isFirst = index === 0;
 
               return (
@@ -307,6 +387,24 @@ export default function HistoryDialog({ open, onClose, alapadatokId, tableName, 
                 </Box>
               );
             })}
+
+            {sortedHistoryList.length === 1 && (
+              <Box 
+                sx={{ 
+                  p: 2, 
+                  textAlign: 'center', 
+                  bgcolor: 'background.paper', 
+                  borderRadius: 2,
+                  border: '1px dashed',
+                  borderColor: 'divider',
+                  mt: 0.5
+                }}
+              >
+                <Typography variant="body2" color="textSecondary">
+                  Nincsenek korábbi előzmények. Ez az egyetlen mentett változat a rendszerben.
+                </Typography>
+              </Box>
+            )}
           </Box>
         )}
       </DialogContent>
