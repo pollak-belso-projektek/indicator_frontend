@@ -10,7 +10,6 @@ import {
 } from '@mui/material'
 import { useDropzone } from 'react-dropzone'
 import { FiUpload, FiFile, FiX, FiDatabase } from 'react-icons/fi'
-import * as XLSX from 'xlsx'
 import type { CustomSheetUploaderProps, FilePreviewData, ProcessedSheetData } from './types'
 
 export const CustomSheetUploader: React.FC<CustomSheetUploaderProps> = ({
@@ -36,6 +35,7 @@ export const CustomSheetUploader: React.FC<CustomSheetUploaderProps> = ({
     setError(null)
     
     try {
+      const XLSX = await import('xlsx')
       const arrayBuffer = await file.arrayBuffer()
       let workbook: any
       

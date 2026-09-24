@@ -43,5 +43,26 @@ export default defineConfig({
     cssCodeSplit: true,
     // Source maps for debugging (optional, remove in production)
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("@mui") || id.includes("@emotion")) {
+              return "vendor-mui";
+            }
+            if (id.includes("recharts")) {
+              return "vendor-charts";
+            }
+            if (
+              id.includes("@tanstack") ||
+              id.includes("react-data-grid") ||
+              id.includes("react-spreadsheet-import")
+            ) {
+              return "vendor-tables";
+            }
+          }
+        },
+      },
+    },
   },
 });

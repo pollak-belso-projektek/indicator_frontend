@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Button, CircularProgress, Tooltip, Snackbar, Alert } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
-import ExcelJS from "exceljs";
 
 export default function ExportDOMTableToExcel({
   tableId,
@@ -29,6 +28,8 @@ export default function ExportDOMTableToExcel({
         return;
       }
 
+      const excelModule = await import("exceljs");
+      const ExcelJS = excelModule.default || excelModule;
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet(sheetName);
 

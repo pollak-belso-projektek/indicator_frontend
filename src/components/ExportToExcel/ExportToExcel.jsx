@@ -7,7 +7,6 @@ import {
   Alert,
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
-import ExcelJS from "exceljs";
 
 /**
  * ExportToExcel - Újrahasználható Excel export gomb komponens
@@ -72,6 +71,8 @@ export default function ExportToExcel({
 
     setIsExporting(true);
     try {
+      const excelModule = await import("exceljs");
+      const ExcelJS = excelModule.default || excelModule;
       const workbook = new ExcelJS.Workbook();
       workbook.creator = "Indikátor Rendszer";
       workbook.created = new Date();

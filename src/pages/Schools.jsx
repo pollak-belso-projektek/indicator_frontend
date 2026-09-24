@@ -37,7 +37,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SchoolIcon from "@mui/icons-material/School";
 import WorkIcon from "@mui/icons-material/Work";
 import RemoveIcon from "@mui/icons-material/Remove";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   useGetAllAlapadatokQuery,
   useAddAlapadatokMutation,
@@ -98,6 +98,93 @@ const Schools = () => {
       return nameA.localeCompare(nameB, "hu");
     });
   }, [szakmaOptions]);
+
+  // Get szakmák that belong to the given ágazat (szakirány)
+  const getFilteredSzakmaOptions = useCallback(
+    (szakiranyData) => {
+      const targetId =
+        szakiranyData?.szakirany?.id || szakiranyData?.szakirany_id;
+      const targetNev = (
+        szakiranyData?.szakirany?.nev || ""
+      ).trim().toLowerCase();
+
+      // Collect all szakmák associated with this ágazat
+      const associatedSzakmakMap = new Map();
+
+      // 1. From szakiranyOptions (which includes szakma relations from backend)
+      const matchingSzakirany = szakiranyOptions.find(
+        (s) =>
+          (targetId && s.id === targetId) ||
+          (targetNev && (s.nev || "").trim().toLowerCase() === targetNev)
+      );
+
+      const szakiranySzakmak =
+        matchingSzakirany?.szakmak ||
+        matchingSzakirany?.szakma ||
+        [];
+
+      szakiranySzakmak.forEach((s) => {
+        const item = s.szakma || s;
+        if (item && item.nev) {
+          associatedSzakmakMap.set(item.nev.trim().toLowerCase(), item);
+        }
+      });
+
+      // 2. From szakmaOptions (if it has szakirany_ids / szakiranyok)
+      szakmaOptions.forEach((s) => {
+        const belongsToThis =
+          (targetId && s.szakirany_ids?.includes(targetId)) ||
+          (targetNev &&
+            s.szakiranyok?.some(
+              (ir) => (ir.nev || "").trim().toLowerCase() === targetNev
+            ));
+
+        if (belongsToThis && s.nev) {
+          associatedSzakmakMap.set(s.nev.trim().toLowerCase(), s);
+        }
+      });
+
+      // 3. From all existing schools data (alapadatok_szakirany)
+      if (schools && Array.isArray(schools)) {
+        schools.forEach((school) => {
+          (school.alapadatok_szakirany || []).forEach((rel) => {
+            const relNev = (rel.szakirany?.nev || "").trim().toLowerCase();
+            const relId = rel.szakirany_id || rel.szakirany?.id;
+            if (
+              (targetId && relId === targetId) ||
+              (targetNev && relNev === targetNev)
+            ) {
+              (rel.szakirany?.szakma || []).forEach((item) => {
+                const s = item.szakma || item;
+                if (s && s.nev) {
+                  associatedSzakmakMap.set(s.nev.trim().toLowerCase(), s);
+                }
+              });
+            }
+          });
+        });
+      }
+
+      // Exclude szakmák already added to THIS ágazat in the current form
+      const alreadyAddedNames = new Set(
+        (szakiranyData?.szakirany?.szakma || []).map((s) =>
+          (s.szakma?.nev || s.nev || "").trim().toLowerCase()
+        )
+      );
+
+      const availableOptions = Array.from(associatedSzakmakMap.values()).filter(
+        (item) => !alreadyAddedNames.has((item.nev || "").trim().toLowerCase())
+      );
+
+      // Sort alphabetically in Hungarian
+      return availableOptions.sort((a, b) => {
+        const nameA = a?.nev || a?.label || a?.value || "";
+        const nameB = b?.nev || b?.label || b?.value || "";
+        return nameA.localeCompare(nameB, "hu");
+      });
+    },
+    [szakiranyOptions, szakmaOptions, schools]
+  );
   const [addSchool, { isLoading: isAdding }] = useAddAlapadatokMutation();
   const [updateSchool, { isLoading: isUpdating }] =
     useUpdateAlapadatokMutation();
@@ -119,15 +206,18 @@ const Schools = () => {
   const addSzakirany = (selectedOption) => {
     if (!selectedOption || !selectedOption.value) return;
 
-    // Generate a temporary unique ID for new szakirány
+    // Generate a temporary unique ID for new szakirány if not existing
     const tempId = `temp_${Date.now()}_${Math.random()
       .toString(36)
       .substr(2, 9)}`;
 
+    const szakiranyId = selectedOption.id || tempId;
+
     const newSzakiranyData = {
-      szakirany_id: tempId,
+      szakirany_id: szakiranyId,
       alapadatok_id: selectedSchool?.id || "",
       szakirany: {
+        id: selectedOption.id || undefined,
         nev: selectedOption.value,
         szakma: [],
       },
@@ -184,8 +274,8 @@ const Schools = () => {
   const addSzakmaToSzakirany = (szakiranyId, selectedOption) => {
     if (!selectedOption || !selectedOption.value) return;
 
-    // Generate a temporary unique ID for new szakma
-    const tempSzakmaId = `temp_szakma_${Date.now()}_${Math.random()
+    // Generate a temporary unique ID for new szakma if not existing
+    const tempSzakmaId = selectedOption.id || `temp_szakma_${Date.now()}_${Math.random()
       .toString(36)
       .substr(2, 9)}`;
 
@@ -193,6 +283,7 @@ const Schools = () => {
       szakma_id: tempSzakmaId,
       szakirany_id: szakiranyId,
       szakma: {
+        id: selectedOption.id || undefined,
         nev: selectedOption.value,
       },
     };
@@ -823,10 +914,10 @@ const Schools = () => {
                               </Box>
                               <Box sx={{ width: 250 }}>
                                 <CustomCreatableSelect
-                                  options={sortedSzakmaOptions}
+                                  options={getFilteredSzakmaOptions(szakiranyData)}
                                   placeholder="Válasszon vagy hozzon létre szakmát"
                                   label="Új szakma"
-                                  isLoading={isSzakmaLoading}
+                                  isLoading={isSzakmaLoading || isSzakiranyLoading}
                                   onChange={(selectedOption) =>
                                     addSzakmaToSzakirany(
                                       szakiranyData.szakirany_id,

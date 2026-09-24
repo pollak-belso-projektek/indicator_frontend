@@ -13,8 +13,8 @@ const getCurrentSchoolYearStart = () => {
 export const indicatorApi = createApi({
   reducerPath: "indicatorApi",
   baseQuery: baseQueryWithReauth,
-  keepUnusedDataFor: 0, // Don't keep any unused data
-  refetchOnMountOrArgChange: 30, // Refetch if data is older than 30 seconds
+  keepUnusedDataFor: 60, // Keep unused data in cache for 60 seconds to prevent refetch thrashing on route changes
+  refetchOnMountOrArgChange: 30, // Refetch in background if data is older than 30 seconds
   refetchOnReconnect: true, // Refetch when reconnecting
   refetchOnFocus: false, // Disable to prevent excessive refetching and race conditions
   tagTypes: [
@@ -259,7 +259,7 @@ export const indicatorApi = createApi({
         method: "POST",
         body: schoolData,
       }),
-      invalidatesTags: ["Alapadatok"],
+      invalidatesTags: ["Alapadatok", "Szakirany", "Szakma"],
     }),
     updateAlapadatok: build.mutation({
       query: ({ id, ...schoolData }) => ({
@@ -270,6 +270,8 @@ export const indicatorApi = createApi({
       invalidatesTags: (result, error, { id }) => [
         { type: "Alapadatok", id },
         "Alapadatok",
+        "Szakirany",
+        "Szakma",
       ],
     }),
     deleteAlapadatok: build.mutation({
@@ -277,7 +279,7 @@ export const indicatorApi = createApi({
         url: `alapadatok/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Alapadatok"],
+      invalidatesTags: ["Alapadatok", "Szakirany", "Szakma"],
     }),
     getKompetencia: build.query({
       query: (params) => `kompetencia/${params.id}`,
