@@ -177,12 +177,17 @@ export default function Lemorzsolodas() {
             transformedData[szakmaId] &&
             transformedData[szakmaId][year]
           ) {
+            const existingOktober = transformedData[szakmaId][year].oktober;
+            const existingLemorzsolodo = transformedData[szakmaId][year].lemorzsolodo;
+            
+            const apiOktober = item.oktober_es_belepett_tanulok_szama?.toString() || "0";
+            const apiLemorzsolodo = item.lemorzsolodo_tanulok_szama?.toString() || "0";
+
             transformedData[szakmaId][year] = {
               id: item.id,
               szakirany_id: item.szakirany_id,
-              lemorzsolodo: item.lemorzsolodo_tanulok_szama?.toString() || "0",
-              oktober:
-                item.oktober_es_belepett_tanulok_szama?.toString() || "0",
+              lemorzsolodo: apiLemorzsolodo !== "0" ? apiLemorzsolodo : existingLemorzsolodo,
+              oktober: apiOktober !== "0" ? apiOktober : existingOktober,
             };
           }
         });
