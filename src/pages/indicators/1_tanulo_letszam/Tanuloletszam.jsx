@@ -848,14 +848,14 @@ export default function TanuloLetszam() {
 
             // Use calculated values if existing values are zero and calculated values are greater than zero
             if (
-              existingValues.tanuloi_jogviszony === 0 &&
+              Number(existingValues.tanuloi_jogviszony) === 0 &&
               calculatedValues.tanuloi_jogviszony > 0
             ) {
               initialTableData[programType][year].tanuloi_jogviszony =
                 calculatedValues.tanuloi_jogviszony;
             }
             if (
-              existingValues.felnottkepzesi_jogviszony === 0 &&
+              Number(existingValues.felnottkepzesi_jogviszony) === 0 &&
               calculatedValues.felnottkepzesi_jogviszony > 0
             ) {
               initialTableData[programType][year].felnottkepzesi_jogviszony =

@@ -821,6 +821,40 @@ const FelvettekSzama = () => {
         }
       });
 
+      // Apply TanugyiAdatok fallback for zero values if TanugyiAdatok is available
+      if (hasTanugyiData) {
+        const calculatedData = calculateFromTanugyiData();
+        let fallbackApplied = false;
+
+        Object.keys(calculatedData).forEach((programType) => {
+          Object.keys(calculatedData[programType]).forEach((year) => {
+            const calculatedValues = calculatedData[programType][year];
+
+            if (!newTableData[programType]) {
+              newTableData[programType] = {};
+            }
+            if (!newTableData[programType][year]) {
+              newTableData[programType][year] = {
+                jelentkezok_szama_9: 0,
+                felvettek_letszam_9: 0,
+                felvettek_szama_9: 0,
+              };
+            }
+
+            const existingValues = newTableData[programType][year];
+
+            if (Number(existingValues.felvettek_szama_9) === 0 && calculatedValues.felvettek_szama_9 > 0) {
+              newTableData[programType][year].felvettek_szama_9 = calculatedValues.felvettek_szama_9;
+              fallbackApplied = true;
+            }
+          });
+        });
+
+        if (fallbackApplied) {
+          setDataSource("FelvettekSzama + TanugyiAdatok");
+        }
+      }
+
       console.log("Transformed API table data:", newTableData);
       setTableData(newTableData);
       setOriginalTableData(JSON.parse(JSON.stringify(newTableData))); // Save original for reset
