@@ -260,21 +260,35 @@ export default function NszfhMeresek() {
         const headers = Object.keys(rows[0]);
         const columnMap = {};
         let detectedYear = null;
+        
+        const hasKimeneti = headers.some((h) => /^K\d{2,4}(Matematika|Anyanyelv)$/i.test(h.trim()));
+
         headers.forEach((h) => {
           const trimmed = h.trim();
           const match = trimmed.match(
             /^([BK])(\d{2,4})(Matematika|Anyanyelv)$/i,
           );
           if (match) {
-            const type =
-              match[1].toUpperCase() === "B" ? "bemeneti" : "kimeneti";
+            const typeStr = match[1].toUpperCase();
+            
+            if (hasKimeneti && typeStr === "B") {
+              return; // Ignore bemeneti if kimeneti is present
+            }
+
+            const type = typeStr === "B" ? "bemeneti" : "kimeneti";
             let year = parseInt(match[2]);
             if (year < 100) year += 2000;
+            
+            let academicYearStart = year;
+            if (type === "kimeneti") {
+              academicYearStart -= 1;
+            }
+
             const subject =
               match[3].toLowerCase() === "matematika" ? "mat" : "szoveg";
             const key = `${subject}_${type}`;
             columnMap[key] = h;
-            detectedYear = year;
+            detectedYear = academicYearStart;
           }
         });
         if (Object.keys(columnMap).length === 0) {
