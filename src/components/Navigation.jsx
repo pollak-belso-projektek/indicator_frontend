@@ -68,6 +68,7 @@ import { useRecentPages } from "../hooks/useRecentPages";
 import AliasModeBanner from "./AliasModeBanner";
 import PageNumbering from "../common/PageNumbering";
 import BugReportDialog from "./BugReportDialog";
+import useStickyTableHeaders from "../hooks/useStickyTableHeaders";
 
 // Function to get the page number for a given link
 const getPageNumber = (link) => {
@@ -1442,6 +1443,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
 };
 
 export default function Navigation({ children }) {
+  useStickyTableHeaders();
   const [isOpen, setIsOpen] = useState(false);
   const appBackground = "#F3F4F6"; // MUI equivalent of gray.100
 

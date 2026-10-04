@@ -710,7 +710,11 @@ export default function TanuloLetszam() {
       }
 
       const evfolyam = student.evfolyam || "";
-      const year = student.tanev_kezdete || 2024;
+      const currentAcademicYear =
+        new Date().getMonth() >= 8
+          ? new Date().getFullYear()
+          : new Date().getFullYear() - 1;
+      const year = student.tanev_kezdete || currentAcademicYear;
 
       // Determine institution type from evfolyam - be more inclusive
       const isTechnikum = evfolyam.toLowerCase().includes("technikum");

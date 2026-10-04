@@ -46,6 +46,30 @@ const muiTheme = createTheme({
         },
       },
     },
+    MuiTableContainer: {
+      styleOverrides: {
+        root: {
+          maxHeight: "calc(100vh - 210px)",
+          overflow: "auto",
+        },
+      },
+    },
+    MuiTableHead: {
+      styleOverrides: {
+        root: {
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        head: {
+          backgroundColor: "#ffffff",
+        },
+      },
+    },
   },
 });
 

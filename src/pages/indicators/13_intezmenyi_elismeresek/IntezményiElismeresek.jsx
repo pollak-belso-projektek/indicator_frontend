@@ -428,7 +428,13 @@ export default function IntézményiElismeresek() {
 
   // ─── Export adatok ────────────────────────────────────────────────────────────
   const intezményiExportRows = useMemo(() => {
-    return Object.values(intezményiData).map((group) => {
+    const totalRow = { dij_neve: "Intézmény által elnyert díjak, elismerések – összesen" };
+    schoolYears.forEach((yearStr) => {
+      const startYear = parseInt(yearStr.split("/")[0], 10);
+      totalRow[yearStr] = intezményiByYear[startYear] ?? 0;
+    });
+
+    const rows = Object.values(intezményiData).map((group) => {
       const row = { dij_neve: group.dij_neve };
       schoolYears.forEach((yearStr) => {
         const startYear = parseInt(yearStr.split("/")[0], 10);
@@ -436,10 +442,22 @@ export default function IntézményiElismeresek() {
       });
       return row;
     });
-  }, [intezményiData, schoolYears]);
+
+    return [totalRow, ...rows];
+  }, [intezményiData, intezményiByYear, schoolYears]);
 
   const munkavallalokExportRows = useMemo(() => {
-    return MUNKAVALLALOI_KATEGORIAK.map((kat) => {
+    const totalRow = { kategoriak: "Munkavállalók (Oktatók) által elnyert díjak, elismerések – összesen" };
+    schoolYears.forEach((yearStr) => {
+      const startYear = parseInt(yearStr.split("/")[0], 10);
+      const rec = munkavallalokData[startYear] ?? {};
+      totalRow[yearStr] = MUNKAVALLALOI_KATEGORIAK.reduce(
+        (acc, k) => acc + (rec[k.key] || 0),
+        0
+      );
+    });
+
+    const categoryRows = MUNKAVALLALOI_KATEGORIAK.map((kat) => {
       const row = { kategoriak: kat.label };
       schoolYears.forEach((yearStr) => {
         const startYear = parseInt(yearStr.split("/")[0], 10);
@@ -447,6 +465,8 @@ export default function IntézményiElismeresek() {
       });
       return row;
     });
+
+    return [totalRow, ...categoryRows];
   }, [munkavallalokData, schoolYears]);
 
   const _shouldShowOverlay = intezményiLoading || munkavallalokLoading || intezményiFetching || munkavallalokFetching;
@@ -518,18 +538,38 @@ export default function IntézményiElismeresek() {
                   </Button>
                 </LockedTableWrapper>
                 <ExportToExcel
-                  fileName="intezmenyi_dijak"
-                  sheetName="Intézményi díjak"
-                  columns={[
-                    { header: "Díj neve", key: "dij_neve", width: 45 },
-                    ...schoolYears.map((yr) => ({
-                      header: yr,
-                      key: yr,
-                      width: 14,
-                    })),
+                  fileName="13_intezmenyi_es_oktatoi_elismeresek"
+                  sheets={[
+                    {
+                      sheetName: "Intézményi díjak",
+                      columns: [
+                        { header: "Díj neve", key: "dij_neve", width: 45 },
+                        ...schoolYears.map((yr) => ({
+                          header: yr,
+                          key: yr,
+                          width: 14,
+                        })),
+                      ],
+                      rows: intezményiExportRows,
+                    },
+                    {
+                      sheetName: "Oktatói elismerések",
+                      columns: [
+                        {
+                          header: "Elismerés típusa",
+                          key: "kategoriak",
+                          width: 45,
+                        },
+                        ...schoolYears.map((yr) => ({
+                          header: yr,
+                          key: yr,
+                          width: 14,
+                        })),
+                      ],
+                      rows: munkavallalokExportRows,
+                    },
                   ]}
-                  rows={intezményiExportRows}
-                  buttonLabel="Export"
+                  buttonLabel="Export (Összes elismerés)"
                   buttonSx={{ height: 30, fontSize: "0.75rem" }}
                 />
               </Stack>
@@ -762,22 +802,22 @@ export default function IntézményiElismeresek() {
                   </Button>
                 </LockedTableWrapper>
                 <ExportToExcel
-                  fileName="munkavallalok_elismeresek"
-                  sheetName="Munkavállalói díjak"
+                  fileName="oktatoi_elismeresek"
+                  sheetName="Oktatói elismerések"
                   columns={[
                     {
                       header: "Elismerés típusa",
                       key: "kategoriak",
-                      width: 40,
+                      width: 45,
                     },
                     ...schoolYears.map((yr) => ({
                       header: yr,
                       key: yr,
-                      width: 16,
+                      width: 14,
                     })),
                   ]}
                   rows={munkavallalokExportRows}
-                  buttonLabel="Export"
+                  buttonLabel="Export (Oktatói elismerések)"
                   buttonSx={{ height: 30, fontSize: "0.75rem" }}
                 />
               </Stack>
