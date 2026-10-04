@@ -81,13 +81,13 @@ export default function Alapadatok() {
   const summary = useMemo(() => {
     if (!studentData || !Array.isArray(studentData)) return null;
 
-    const years = generateSchoolYears().map((year) => parseInt(year.split("/")[0]));
+    const generatedYears = generateSchoolYears().map((year) => parseInt(year.split("/")[0]));
     const yearSummary = {};
 
     studentData.forEach((item) => {
-      const year = item.tanev_kezdete;
-      const jogvTipus = item.jogv_tipus;
-      const letszam = item.letszam || 0;
+      const year = Number(item.tanev_kezdete);
+      const jogvTipus = Number(item.jogv_tipus);
+      const letszam = Number(item.letszam) || 0;
 
       if (!yearSummary[year]) {
         yearSummary[year] = { total: 0, nappali: 0, esti: 0 };
@@ -101,19 +101,32 @@ export default function Alapadatok() {
       }
     });
 
-    const mostRecentYear = Math.max(...years);
-    const totalStudents = yearSummary[mostRecentYear]?.total || 0;
-    
-    // Prepare chart data
-    const chartData = years.map(year => ({
-      name: `${year}/${(year + 1).toString().slice(-2)}`,
-      yearValue: year,
-      Összes: yearSummary[year]?.total || 0,
-      Nappali: yearSummary[year]?.nappali || 0,
-      Esti: yearSummary[year]?.esti || 0,
-    })).filter(d => d.Összes > 0).sort((a, b) => a.yearValue - b.yearValue);
+    const allYears = Array.from(
+      new Set([
+        ...generatedYears,
+        ...Object.keys(yearSummary).map(Number),
+      ])
+    ).sort((a, b) => a - b);
 
-    return { yearSummary, totalStudents, years, chartData };
+    // Prepare chart data (ensure all standard 4 school years are present so current year is visible)
+    const chartData = allYears
+      .map((year) => ({
+        name: `${year}/${(year + 1).toString().slice(-2)}`,
+        yearValue: year,
+        Összes: yearSummary[year]?.total || 0,
+        Nappali: yearSummary[year]?.nappali || 0,
+        Esti: yearSummary[year]?.esti || 0,
+      }))
+      .filter((d) => generatedYears.includes(d.yearValue) || d.Összes > 0)
+      .sort((a, b) => a.yearValue - b.yearValue);
+
+    const populatedYears = chartData.filter((d) => d.Összes > 0);
+    const latestData = populatedYears.length > 0 
+      ? populatedYears[populatedYears.length - 1] 
+      : (chartData.length > 0 ? chartData[chartData.length - 1] : null);
+    const totalStudents = latestData ? latestData.Összes : 0;
+
+    return { yearSummary, totalStudents, years: allYears, chartData, latestData };
   }, [studentData]);
 
   if (!selectedSchool) {
@@ -312,16 +325,16 @@ export default function Alapadatok() {
                 <Typography variant="body1" color="textSecondary" fontWeight="500">
                   Összes tanuló
                 </Typography>
-                {summary && summary.chartData.length > 0 && (
+                {summary?.latestData && (
                   <Chip 
-                    label={`${summary.chartData[summary.chartData.length - 1].name} tanév`}
+                    label={`${summary.latestData.name} tanév`}
                     size="small"
                     sx={{ mt: 1.5, fontWeight: 500 }}
                   />
                 )}
               </Box>
 
-              {summary && summary.chartData.length > 0 && (
+              {summary?.latestData && (
                 <Box sx={{ mt: 'auto' }}>
                   <Typography variant="subtitle2" color="textSecondary" fontWeight="bold" textTransform="uppercase" sx={{ mb: 2 }}>
                     Tagozatok szerinti megoszlás
@@ -330,11 +343,13 @@ export default function Alapadatok() {
                     <Box>
                       <Stack direction="row" justifyContent="space-between" mb={1} alignItems="flex-end">
                         <Typography fontWeight="600" variant="body2">Nappali tagozat</Typography>
-                        <Typography fontWeight="700" variant="body1">{summary.chartData[summary.chartData.length - 1].Nappali} fő</Typography>
+                        <Typography fontWeight="700" variant="body1">{summary.latestData.Nappali} fő</Typography>
                       </Stack>
                       <Box sx={{ width: '100%', height: 6, bgcolor: alpha(theme.palette.primary.main, 0.1), borderRadius: 3, overflow: 'hidden' }}>
                         <Box sx={{ 
-                          width: `${(summary.chartData[summary.chartData.length - 1].Nappali / summary.chartData[summary.chartData.length - 1].Összes) * 100}%`, 
+                          width: summary.latestData.Összes > 0 
+                            ? `${(summary.latestData.Nappali / summary.latestData.Összes) * 100}%` 
+                            : '0%', 
                           height: '100%', 
                           bgcolor: 'primary.main',
                           borderRadius: 3
@@ -344,11 +359,13 @@ export default function Alapadatok() {
                     <Box>
                       <Stack direction="row" justifyContent="space-between" mb={1} alignItems="flex-end">
                         <Typography fontWeight="600" variant="body2">Esti tagozat</Typography>
-                        <Typography fontWeight="700" variant="body1">{summary.chartData[summary.chartData.length - 1].Esti} fő</Typography>
+                        <Typography fontWeight="700" variant="body1">{summary.latestData.Esti} fő</Typography>
                       </Stack>
                       <Box sx={{ width: '100%', height: 6, bgcolor: alpha(theme.palette.secondary.main, 0.1), borderRadius: 3, overflow: 'hidden' }}>
                         <Box sx={{ 
-                          width: `${(summary.chartData[summary.chartData.length - 1].Esti / summary.chartData[summary.chartData.length - 1].Összes) * 100}%`, 
+                          width: summary.latestData.Összes > 0 
+                            ? `${(summary.latestData.Esti / summary.latestData.Összes) * 100}%` 
+                            : '0%', 
                           height: '100%', 
                           bgcolor: 'secondary.main',
                           borderRadius: 3

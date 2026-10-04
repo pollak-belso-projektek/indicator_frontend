@@ -27,6 +27,8 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CheckIcon from "@mui/icons-material/Check";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
 import { useSubmitBugReportMutation, useGetReportedBugsQuery, useUpdateBugStatusMutation } from "../store/api/apiSlice";
 import { selectUserPermissions, selectAccessToken } from "../store/slices/authSlice";
 import config from "../config";
@@ -36,6 +38,17 @@ const SEVERITY_OPTIONS = [
   { value: "medium", label: "Közepes – Akadályozza a munkát" },
   { value: "high", label: "Magas – Kritikus, azonnali beavatkozás szükséges" },
 ];
+
+const getLabelColor = (color) => {
+  if (color === 'sky') return '#00c2e0';
+  if (color === 'orange') return '#ed6c02';
+  if (color === 'yellow') return '#f2d600';
+  if (color === 'red') return '#eb5a46';
+  if (color === 'purple') return '#c377e0';
+  if (color === 'blue') return '#0079bf';
+  if (color === 'green') return '#2e7d32';
+  return color || 'transparent';
+};
 
 export default function BugReportDialog({ open, onClose }) {
   const [title, setTitle] = useState("");
@@ -51,16 +64,56 @@ export default function BugReportDialog({ open, onClose }) {
   const [updateBugStatus, { isLoading: isUpdatingStatus }] = useUpdateBugStatusMutation();
   const [expandedBugId, setExpandedBugId] = useState(null);
 
+  const getBugCreationDate = (bug) => {
+    if (bug?.createdAt) {
+      const d = new Date(bug.createdAt);
+      if (!isNaN(d.getTime())) return d;
+    }
+    if (bug?.id && typeof bug.id === "string" && bug.id.length >= 8) {
+      const timestamp = parseInt(bug.id.substring(0, 8), 16) * 1000;
+      if (!isNaN(timestamp)) {
+        const d = new Date(timestamp);
+        if (!isNaN(d.getTime())) return d;
+      }
+    }
+    if (bug?.dateLastActivity) {
+      const d = new Date(bug.dateLastActivity);
+      if (!isNaN(d.getTime())) return d;
+    }
+    return null;
+  };
+
+  const formatBugDate = (bug) => {
+    const date = getBugCreationDate(bug);
+    if (!date) return null;
+    return date.toLocaleString("hu-HU", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  };
+
   const newBugs = [];
   const inProgressBugs = [];
+  const awaitingReviewBugs = [];
   const resolvedBugs = [];
 
   if (reportedBugs) {
-    reportedBugs.forEach(bug => {
+    const sortedBugs = [...reportedBugs].sort((a, b) => {
+      const timeA = getBugCreationDate(a)?.getTime() || 0;
+      const timeB = getBugCreationDate(b)?.getTime() || 0;
+      return timeB - timeA;
+    });
+
+    sortedBugs.forEach(bug => {
       const isResolved = bug.labels && bug.labels.some(l => l.name === 'Kész');
+      const isAwaitingReview = bug.labels && bug.labels.some(l => l.name === 'Ellenőrzésre vár');
       const isInProgress = bug.labels && bug.labels.some(l => l.name === 'Folyamatban');
       
       if (isResolved) resolvedBugs.push(bug);
+      else if (isAwaitingReview) awaitingReviewBugs.push(bug);
       else if (isInProgress) inProgressBugs.push(bug);
       else newBugs.push(bug);
     });
@@ -149,6 +202,7 @@ export default function BugReportDialog({ open, onClose }) {
 
   const renderBugCard = (bug) => {
     const isResolved = bug.labels && bug.labels.some(l => l.name === 'Kész');
+    const isAwaitingReview = bug.labels && bug.labels.some(l => l.name === 'Ellenőrzésre vár');
     const isInProgress = bug.labels && bug.labels.some(l => l.name === 'Folyamatban');
 
     return (
@@ -175,36 +229,57 @@ export default function BugReportDialog({ open, onClose }) {
           }}
         >
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1, lineHeight: 1.4, pr: 2 }}>
+            <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 0.5, lineHeight: 1.4, pr: 2 }}>
               {bug.name}
             </Typography>
             {expandedBugId === bug.id ? <ExpandLessIcon fontSize="small" color="action" /> : <ExpandMoreIcon fontSize="small" color="action" />}
           </Box>
           
-          {bug.labels && bug.labels.length > 0 && (
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
-              {bug.labels.map(l => (
-                <Chip 
-                  key={l.id} 
-                  label={l.name || 'Címke'} 
-                  size="small" 
-                  variant={l.color ? "filled" : "outlined"}
-                  sx={{ 
-                    fontSize: '0.7rem', 
-                    height: 22, 
-                    fontWeight: 600,
-                    bgcolor: l.color === 'sky' ? '#00c2e0' : (l.color || 'transparent'),
-                    color: l.color ? '#fff' : 'text.primary',
-                    borderColor: l.color === 'sky' ? '#00c2e0' : (l.color || 'divider')
-                  }} 
-                />
-              ))}
-            </Stack>
-          )}
+          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
+            {formatBugDate(bug) && (
+              <Box 
+                sx={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: 0.5, 
+                  color: 'text.secondary', 
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                  mr: 0.5
+                }}
+              >
+                <AccessTimeIcon sx={{ fontSize: '0.85rem' }} />
+                <span>{formatBugDate(bug)}</span>
+              </Box>
+            )}
+            {bug.labels && bug.labels.length > 0 && bug.labels.map(l => (
+              <Chip 
+                key={l.id} 
+                label={l.name || 'Címke'} 
+                size="small" 
+                variant={l.color ? "filled" : "outlined"}
+                sx={{ 
+                  fontSize: '0.7rem', 
+                  height: 22, 
+                  fontWeight: 600,
+                  bgcolor: getLabelColor(l.color),
+                  color: l.color === 'yellow' ? '#172b4d' : (l.color ? '#fff' : 'text.primary'),
+                  borderColor: getLabelColor(l.color) || 'divider'
+                }} 
+              />
+            ))}
+          </Stack>
         </Box>
 
         <Collapse in={expandedBugId === bug.id}>
           <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)', borderTop: 1, borderColor: 'divider' }}>
+            {!bug.desc?.includes('**Dátum:**') && formatBugDate(bug) && (
+              <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary', mb: 1.5, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box component="span" sx={{ fontWeight: 'bold', color: 'text.primary' }}>Bejelentve:</Box>
+                {formatBugDate(bug)}
+              </Typography>
+            )}
+
             <Box sx={{ mb: 2 }}>
               {renderFormattedText(bug.desc)}
             </Box>
@@ -234,51 +309,142 @@ export default function BugReportDialog({ open, onClose }) {
             )}
 
             {isDeveloper && (
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
-                {!isInProgress && !isResolved && (
-                  <Button
-                    size="small"
-                    variant="contained"
-                    color="primary"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      updateBugStatus({ id: bug.id, status: 'Folyamatban' });
-                    }}
-                    disabled={isUpdatingStatus}
-                    sx={{ boxShadow: 'none' }}
-                  >
-                    Folyamatba vétel
-                  </Button>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+                {!isInProgress && !isAwaitingReview && !isResolved && (
+                  <>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="primary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateBugStatus({ id: bug.id, status: 'Folyamatban' });
+                      }}
+                      disabled={isUpdatingStatus}
+                      sx={{ boxShadow: 'none' }}
+                    >
+                      Folyamatba vétel
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="warning"
+                      startIcon={<FactCheckIcon />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateBugStatus({ id: bug.id, status: 'Ellenőrzésre vár' });
+                      }}
+                      disabled={isUpdatingStatus}
+                      sx={{ boxShadow: 'none' }}
+                    >
+                      Ellenőrzésre küldés
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="success"
+                      startIcon={<CheckIcon />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateBugStatus({ id: bug.id, status: 'Kész' });
+                      }}
+                      disabled={isUpdatingStatus}
+                      sx={{ boxShadow: 'none' }}
+                    >
+                      Készre állítás
+                    </Button>
+                  </>
                 )}
-                {!isResolved && (
-                  <Button
-                    size="small"
-                    variant="contained"
-                    color="success"
-                    startIcon={<CheckIcon />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      updateBugStatus({ id: bug.id, status: 'Kész' });
-                    }}
-                    disabled={isUpdatingStatus}
-                    sx={{ boxShadow: 'none' }}
-                  >
-                    Készre állítás
-                  </Button>
+                {isInProgress && (
+                  <>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="warning"
+                      startIcon={<FactCheckIcon />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateBugStatus({ id: bug.id, status: 'Ellenőrzésre vár' });
+                      }}
+                      disabled={isUpdatingStatus}
+                      sx={{ boxShadow: 'none' }}
+                    >
+                      Ellenőrzésre küldés
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="success"
+                      startIcon={<CheckIcon />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateBugStatus({ id: bug.id, status: 'Kész' });
+                      }}
+                      disabled={isUpdatingStatus}
+                      sx={{ boxShadow: 'none' }}
+                    >
+                      Készre állítás
+                    </Button>
+                  </>
+                )}
+                {isAwaitingReview && (
+                  <>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="primary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateBugStatus({ id: bug.id, status: 'Folyamatban' });
+                      }}
+                      disabled={isUpdatingStatus}
+                    >
+                      Vissza: Folyamatban
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="success"
+                      startIcon={<CheckIcon />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateBugStatus({ id: bug.id, status: 'Kész' });
+                      }}
+                      disabled={isUpdatingStatus}
+                      sx={{ boxShadow: 'none' }}
+                    >
+                      Készre állítás
+                    </Button>
+                  </>
                 )}
                 {isResolved && (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="primary"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      updateBugStatus({ id: bug.id, status: 'Folyamatban' });
-                    }}
-                    disabled={isUpdatingStatus}
-                  >
-                    Újranyitás (Folyamatban)
-                  </Button>
+                  <>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="primary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateBugStatus({ id: bug.id, status: 'Folyamatban' });
+                      }}
+                      disabled={isUpdatingStatus}
+                    >
+                      Újranyitás (Folyamatban)
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="warning"
+                      startIcon={<FactCheckIcon />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateBugStatus({ id: bug.id, status: 'Ellenőrzésre vár' });
+                      }}
+                      disabled={isUpdatingStatus}
+                    >
+                      Vissza: Ellenőrzésre vár
+                    </Button>
+                  </>
                 )}
               </Box>
             )}
@@ -339,6 +505,15 @@ export default function BugReportDialog({ open, onClose }) {
                     <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'primary.main', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>Folyamatban lévő ({inProgressBugs.length})</Typography>
                     <Stack spacing={2}>
                       {inProgressBugs.map(renderBugCard)}
+                    </Stack>
+                  </Box>
+                )}
+
+                {awaitingReviewBugs.length > 0 && (
+                  <Box sx={{ mb: 4 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'warning.main', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>Ellenőrzésre vár ({awaitingReviewBugs.length})</Typography>
+                    <Stack spacing={2}>
+                      {awaitingReviewBugs.map(renderBugCard)}
                     </Stack>
                   </Box>
                 )}

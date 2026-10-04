@@ -121,13 +121,22 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       return 0;
     }
 
-    const yearStart = parseInt(year.split("/")[0]);
+    const yearStart = parseInt(year.toString().split("/")[0]);
 
-    // Sum all students with jogv_tipus === 0 for this year
-    return tanuloLetszamData
+    // Sum all students with jogv_tipus === 0 for this year (tanulói jogviszony)
+    const daytime = tanuloLetszamData
       .filter(
-        (item) => item.tanev_kezdete === yearStart && item.jogv_tipus === 0,
+        (item) =>
+          Number(item.tanev_kezdete) === yearStart &&
+          Number(item.jogv_tipus) === 0,
       )
+      .reduce((sum, item) => sum + (parseInt(item.letszam) || 0), 0);
+
+    if (daytime > 0) return daytime;
+
+    // Fallback: sum all students for this year regardless of jogv_tipus
+    return tanuloLetszamData
+      .filter((item) => Number(item.tanev_kezdete) === yearStart)
       .reduce((sum, item) => sum + (parseInt(item.letszam) || 0), 0);
   };
 
@@ -185,26 +194,25 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
 
   // Handle data changes
   const handleDataChange = (id, field, value) => {
-    // Prevent editing of tanulok_osszesen - it's auto-calculated
-    if (field === "tanulok_osszesen") {
-      return;
-    }
-
     setSniData((prev) =>
       prev.map((item) => {
         if (item.id === id) {
           const updatedItem = { ...item, [field]: value };
 
-          // Recalculate percentage when SNI students count changes
-          if (field === "sni_tanulok_szama") {
-            const sniTanulok = parseInt(value) || 0;
-            const osszesCanulok = parseInt(item.tanulok_osszesen) || 0;
+          // Recalculate percentage when either SNI count or total students changes
+          const sniTanulok =
+            parseInt(
+              field === "sni_tanulok_szama" ? value : item.sni_tanulok_szama,
+            ) || 0;
+          const osszesTanulok =
+            parseInt(
+              field === "tanulok_osszesen" ? value : item.tanulok_osszesen,
+            ) || 0;
 
-            updatedItem.sni_arany =
-              osszesCanulok > 0
-                ? ((sniTanulok / osszesCanulok) * 100).toFixed(2)
-                : 0;
-          }
+          updatedItem.sni_arany =
+            osszesTanulok > 0
+              ? ((sniTanulok / osszesTanulok) * 100).toFixed(2)
+              : 0;
 
           return updatedItem;
         }
@@ -592,20 +600,19 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                                             <ZeroHidingTextField
                                               type="number"
                                               value={data.tanulok_osszesen || 0}
+                                              onChange={(e) =>
+                                                handleDataChange(
+                                                  data.id,
+                                                  "tanulok_osszesen",
+                                                  e.target.value,
+                                                )
+                                              }
                                               size="small"
                                               inputProps={{
                                                 min: 0,
                                                 style: { textAlign: "center" },
-                                                readOnly: true,
                                               }}
-                                              sx={{
-                                                width: "80px",
-                                                "& .MuiInputBase-input": {
-                                                  backgroundColor: "#f5f5f5",
-                                                  cursor: "not-allowed",
-                                                },
-                                              }}
-                                              disabled
+                                              sx={{ width: "80px" }}
                                               placeholder="0" />
                                           </TableCell>
                                           <TableCell
@@ -868,18 +875,19 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                           label="Összes tanuló száma (fő)"
                           type="number"
                           value={addDialog.newRecord.tanulok_osszesen || 0}
-                          inputProps={{
-                            min: 0,
-                            readOnly: true,
-                          }}
-                          disabled
-                          helperText="Az intézmény teljes tanulói létszáma (automatikusan számítva)"
-                          sx={{
-                            "& .MuiInputBase-input": {
-                              backgroundColor: "#f5f5f5",
-                              cursor: "not-allowed",
-                            },
-                          }}
+                          onChange={(e) =>
+                            handleNewRecordChange(
+                              "tanulok_osszesen",
+                              e.target.value,
+                            )
+                          }
+                          inputProps={{ min: 0 }}
+                          error={!addDialog.newRecord.tanulok_osszesen || parseInt(addDialog.newRecord.tanulok_osszesen) <= 0}
+                          helperText={
+                            parseInt(addDialog.newRecord.tanulok_osszesen) > 0
+                              ? "Az intézmény teljes tanulói létszáma (szükség esetén szerkeszthető)"
+                              : "Ehhez a tanévhez nem található létszám az 1. Tanulólétszám indikátorból, kérjük adja meg manuálisan!"
+                          }
                           placeholder="0" />
                       </Grid>
 
@@ -916,7 +924,8 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                         selectedSchool?.id === undefined ||
                         !addDialog.newRecord.tanev_kezdete ||
                         isAdding ||
-                        sniData?.some((item) => item.tanev_kezdete === addDialog.newRecord.tanev_kezdete)
+                        sniData?.some((item) => item.tanev_kezdete === addDialog.newRecord.tanev_kezdete) ||
+                        !(parseInt(addDialog.newRecord.tanulok_osszesen) > 0)
                       }
                     >
                       {isAdding ? "Hozzáadás..." : "Hozzáadás"}

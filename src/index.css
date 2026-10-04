@@ -24,3 +24,46 @@ body {
 * {
   color-scheme: light !important;
 }
+
+/* Sticky table container & headers across all indicators */
+.MuiTableContainer-root {
+  max-height: calc(100vh - 210px);
+  overflow: auto;
+}
+
+/* First header row base sticky */
+.MuiTableHead-root tr:first-child th,
+.MuiTableHead-root tr:first-child td {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+/* Ensure opaque background for all header cells */
+.MuiTableHead-root th,
+.MuiTableHead-root td {
+  background-color: #ffffff;
+}
+
+/* Header sticky left cells (e.g. corner cells) have highest z-index */
+.MuiTableHead-root th[style*="left"],
+.MuiTableHead-root td[style*="left"],
+.MuiTableHead-root [data-sticky-left="true"] {
+  z-index: 35 !important;
+}
+
+/* Body sticky left cells */
+.MuiTableBody-root th[style*="left"],
+.MuiTableBody-root td[style*="left"] {
+  z-index: 5 !important;
+  background-color: #ffffff;
+}
+
+/* Print styles: allow full table expansion without scrollbars */
+@media print {
+  .MuiTableContainer-root {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+
