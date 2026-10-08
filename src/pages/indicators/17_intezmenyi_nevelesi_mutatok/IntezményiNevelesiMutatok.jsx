@@ -357,7 +357,8 @@ export default function IntezményiNevelesiMutatok() {
     const nextRows = {};
     classes.forEach((className) => {
       const existingRecord = apiRows.find(
-        (item) => getRecordClassLabel(item) === className,
+        (item) => getRecordClassLabel(item) === className &&
+          (item.tanev === currentSchoolYearStart || item.tanev_kezdete === currentSchoolYearStart)
       );
       nextRows[className] = mapApiRecordToRow(existingRecord);
     });
