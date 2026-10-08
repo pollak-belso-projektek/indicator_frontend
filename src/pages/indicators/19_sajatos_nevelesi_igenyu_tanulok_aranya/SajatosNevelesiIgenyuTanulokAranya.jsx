@@ -127,6 +127,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
     const daytime = tanuloLetszamData
       .filter(
         (item) =>
+          item.alapadatok_id === selectedSchool?.id &&
           Number(item.tanev_kezdete) === yearStart &&
           Number(item.jogv_tipus) === 0,
       )
@@ -173,15 +174,22 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
   // Load data from API
   useEffect(() => {
     if (apiSniData && Array.isArray(apiSniData)) {
+      // Filter out stale data from other schools (RTK Query cache artifact during transition)
+      const currentSchoolData = apiSniData.filter(
+        (item) => item.alapadatok_id === selectedSchool?.id
+      );
+
       // Enrich data with total students from tanuloLetszamData
-      const enrichedData = apiSniData.map((item) => {
+      const enrichedData = currentSchoolData.map((item) => {
         const year = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
         const totalStudents = getTotalStudentsForYear(year);
 
         return {
           ...item,
           tanulok_osszesen:
-            totalStudents > 0 ? totalStudents : item.tanulok_osszesen,
+            (!item.tanulok_osszesen || item.tanulok_osszesen === 0) && totalStudents > 0 
+              ? totalStudents 
+              : item.tanulok_osszesen,
         };
       });
 

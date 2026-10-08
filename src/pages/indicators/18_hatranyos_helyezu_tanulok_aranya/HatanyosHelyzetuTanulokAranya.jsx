@@ -503,17 +503,19 @@ export default function HatanyosHelyzetuTanulokAranya() {
 
       // Process the API data to sum up student counts by year
       apiStudentData.forEach((record) => {
-        const yearKey = `${record.tanev_kezdete}/${record.tanev_kezdete + 1}`;
-        const letszam = parseInt(record.letszam) || 0;
+        if (record.alapadatok_id === selectedSchool?.id) {
+          const yearKey = `${record.tanev_kezdete}/${record.tanev_kezdete + 1}`;
+          const letszam = parseInt(record.letszam) || 0;
 
-        if (schoolYears.includes(yearKey)) {
-          // jogv_tipus: 0 = nappali (daytime), 1 = felnőttképzési (adult education)
-          if (record.jogv_tipus === 0) {
-            // Daytime students (tanulói jogviszony)
-            newTotalStudents.daytime[yearKey] += letszam;
-          } else if (record.jogv_tipus === 1) {
-            // Adult education students (felnőttképzési jogviszony)
-            newTotalStudents.adult[yearKey] += letszam;
+          if (schoolYears.includes(yearKey)) {
+            // jogv_tipus: 0 = nappali (daytime), 1 = felnőttképzési (adult education)
+            if (record.jogv_tipus === 0) {
+              // Daytime students (tanulói jogviszony)
+              newTotalStudents.daytime[yearKey] += letszam;
+            } else if (record.jogv_tipus === 1) {
+              // Adult education students (felnőttképzési jogviszony)
+              newTotalStudents.adult[yearKey] += letszam;
+            }
           }
         }
       });
