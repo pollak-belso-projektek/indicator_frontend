@@ -852,6 +852,11 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
                               );
                             })}
                           </Select>
+                          <Typography variant="caption" sx={{ mt: 1, display: 'none' /* hidden in prod */ }}>
+                            DEBUG: {JSON.stringify(tanuloLetszamData ? tanuloLetszamData.length : 'null')} records loaded.
+                            YearStart: {parseInt(addDialog.newRecord.tanev_kezdete)},
+                            Calc: {getTotalStudentsForYear(`${addDialog.newRecord.tanev_kezdete}/${parseInt(addDialog.newRecord.tanev_kezdete) + 1}`)}
+                          </Typography>
                           {sniData?.some((item) => item.tanev_kezdete === addDialog.newRecord.tanev_kezdete) && (
                             <Typography variant="caption" color="error" sx={{ mt: 1 }}>
                               Ehhez a tanévhez már létezik adat!
