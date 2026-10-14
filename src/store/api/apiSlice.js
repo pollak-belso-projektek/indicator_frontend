@@ -389,6 +389,29 @@ export const indicatorApi = createApi({
         }
       },
     }),
+    syncTanuloLetszamFromTanugyi: build.mutation({
+      query: ({ alapadatok_id, year }) => ({
+        url: `tanulo_letszam/sync-from-tanugyi/${alapadatok_id}/${year}`,
+        method: "POST",
+      }),
+      invalidatesTags: (result, error, { alapadatok_id }) => [
+        { type: "TanuloLetszam", id: alapadatok_id },
+        "TanuloLetszam",
+      ],
+      async onQueryStarted({ alapadatok_id }, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          dispatch(
+            indicatorApi.util.invalidateTags([
+              "TanuloLetszam",
+              { type: "TanuloLetszam", id: alapadatok_id },
+            ]),
+          );
+        } catch (e) {
+          console.error("Error in syncTanuloLetszamFromTanugyi onQueryStarted:", e);
+        }
+      },
+    }),
     addTanugyiAdatok: build.mutation({
       query: (params) => ({
         url: "tanugyi_adatok/",
@@ -1889,6 +1912,7 @@ export const {
   useAddTanuloLetszamMutation,
   useUpdateTanuloLetszamMutation,
   useDeleteTanuloLetszamMutation,
+  useSyncTanuloLetszamFromTanugyiMutation,
   useGetUsersQuery,
   useGetFilteredUsersQuery,
   useGetUserByIdQuery,

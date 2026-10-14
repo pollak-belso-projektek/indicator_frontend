@@ -24,12 +24,14 @@ import {
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import SyncIcon from "@mui/icons-material/Sync";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import {
   useGetTanuloLetszamQuery,
   useAddTanuloLetszamBulkMutation,
   useGetTanugyiAdatokQuery,
   useGetAllAlapadatokQuery,
+  useSyncTanuloLetszamFromTanugyiMutation,
 } from "../../../store/api/apiSlice";
 import { generateSchoolYears } from "../../../utils/schoolYears";
 import TanuloLetszamChart from "../../../components/TanuloLetszamChart";
@@ -76,6 +78,8 @@ export default function TanuloLetszam() {
 
   const [addTanuloLetszamBulk, { isLoading: isUpdating }] =
     useAddTanuloLetszamBulkMutation();
+  const [syncTanuloLetszamFromTanugyi, { isLoading: isSyncing }] =
+    useSyncTanuloLetszamFromTanugyiMutation();
 
   // State for the integrated table data
   const [tableData, setTableData] = useState({});
@@ -86,7 +90,7 @@ export default function TanuloLetszam() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-  const [dataSource, setDataSource] = useState(null);
+  const [_dataSource, setDataSource] = useState(null);
 
   // Program types based on the selected school's actual data
   const programTypes = useMemo(() => {
@@ -657,6 +661,32 @@ export default function TanuloLetszam() {
     }
   };
 
+  const handleSyncFromTanugyi = async () => {
+    if (!selectedSchool?.id) return;
+    try {
+      const currentAcademicYear =
+        new Date().getMonth() >= 8
+          ? new Date().getFullYear()
+          : new Date().getFullYear() - 1;
+      const res = await syncTanuloLetszamFromTanugyi({
+        alapadatok_id: selectedSchool.id,
+        year: currentAcademicYear,
+      }).unwrap();
+      setSnackbarMessage(
+        res?.message || "Tanulólétszám sikeresen szinkronizálva a tanügyi adatokból!",
+      );
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+      await refetchTanuloLetszam();
+    } catch (err) {
+      setSnackbarMessage(
+        err?.data?.error || err?.message || "Hiba a szinkronizálás során",
+      );
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
+  };
+
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
@@ -889,6 +919,7 @@ export default function TanuloLetszam() {
 
         if (hasAppliedFallback) {
           setDataSource("TanuloLetszam + TanugyiAdatok ");
+          setIsModified(true);
         } else {
           setDataSource("TanuloLetszam");
         }
@@ -904,6 +935,7 @@ export default function TanuloLetszam() {
       setTableData(calculatedData);
       setSavedData(JSON.parse(JSON.stringify(calculatedData)));
       setDataSource("TanugyiAdatok");
+      setIsModified(true);
     }
   }, [apiStudentData, tanugyiData, calculateFromTanugyiData]);
 
@@ -1061,6 +1093,16 @@ export default function TanuloLetszam() {
                       disabled={!isModified || isUpdating || isSaving}
                     >
                       {isUpdating || isSaving ? "Mentés..." : "Mentés"}
+                    </Button>
+
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      startIcon={<SyncIcon />}
+                      onClick={handleSyncFromTanugyi}
+                      disabled={isSyncing || !selectedSchool || isUpdating || isSaving}
+                    >
+                      {isSyncing ? "Szinkronizálás..." : "Szinkronizálás tanügyből"}
                     </Button>
 
                     <Button

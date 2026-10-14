@@ -13,6 +13,7 @@ import {
   useAddOktatoAdatszolgaltatasMutation,
   useGetOktatoAdatszolgaltatasQuery,
 } from "../store/api/apiSlice";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Container,
@@ -24,6 +25,7 @@ import {
   Alert,
   AlertTitle,
   Chip,
+  Button,
 } from "@mui/material";
 import { CustomSheetUploader } from "../components/CustomSheetUploader";
 import { useSelector } from "react-redux";
@@ -55,8 +57,10 @@ export default function DataImport() {
     setOktatoAdatszolgaltatasValidationError,
   ] = useState(null);
 
+  const navigate = useNavigate();
   const currentUser = useSelector(selectUser);
   const selectedSchool = useSelector(selectSelectedSchool);
+  const [tanugyiSaveSuccess, setTanugyiSaveSuccess] = useState(false);
 
   // Always use the current school year start
   const currentYearStart =
@@ -65,7 +69,8 @@ export default function DataImport() {
       : new Date().getFullYear() - 1;
 
   // Tanügyi adatok API hooks
-  const [addTanugyiAdatok] = useAddTanugyiAdatokMutation();
+  const [addTanugyiAdatok, { isLoading: isTanugyiSaving }] =
+    useAddTanugyiAdatokMutation();
   const {
     data: tanugyiDataFromAPI,
     isLoading: tanugyiLoading,
@@ -108,6 +113,7 @@ export default function DataImport() {
   // Tanügyi adatok effect
   useEffect(() => {
     if (tanugyiData && !tanugyiValidationError) {
+      setTanugyiSaveSuccess(false);
       tanugyiData.forEach((item) => {
         if (!item.uj_Szkt_agazat_tipusa || !item.uj_szkt_szakma_tipusa) {
           setTanugyiValidationError("Tanügyi adatok validáció hiba");
@@ -119,7 +125,17 @@ export default function DataImport() {
         tanev_kezdete: currentYearStart,
         tanugyi_adatok: tanugyiData,
         userId: currentUser?.id,
-      });
+      })
+        .unwrap()
+        .then(() => {
+          setTanugyiSaveSuccess(true);
+        })
+        .catch((err) => {
+          setTanugyiValidationError(
+            "Mentési hiba: " +
+              (err?.data?.error || err?.message || "Ismeretlen hiba"),
+          );
+        });
     }
   }, [
     tanugyiData,
@@ -127,6 +143,7 @@ export default function DataImport() {
     tanugyiValidationError,
     selectedSchool,
     currentYearStart,
+    currentUser?.id,
   ]);
 
   // Alkalmazott adatok effect
@@ -461,10 +478,28 @@ export default function DataImport() {
                     loadingMessage="Tanügyi fájl feldolgozása..."
                   />
                   {tanugyiData && !tanugyiValidationError && (
-                    <Alert severity="success" sx={{ mt: 2 }}>
-                      <AlertTitle>Sikeresen feldolgozva!</AlertTitle>
-                      {tanugyiData.length} tanügyi adat lett feldolgozva.
-                    </Alert>
+                    <Box sx={{ mt: 3 }}>
+                      {isTanugyiSaving ? (
+                        <Alert severity="info" icon={<CircularProgress size={20} />}>
+                          <AlertTitle>Mentés és szinkronizálás folyamatban...</AlertTitle>
+                          Tanügyi adatok mentése és a tanulólétszám automatikus kiszámítása...
+                        </Alert>
+                      ) : tanugyiSaveSuccess ? (
+                        <Alert severity="success">
+                          <AlertTitle>Sikeresen mentve és szinkronizálva!</AlertTitle>
+                          {tanugyiData.length} tanügyi adat feltöltve. A tanulólétszám adatok automatikusan kiszámításra és mentésre kerültek a háttérben.
+                          <Box sx={{ mt: 2 }}>
+                            <Button
+                              variant="contained"
+                              size="small"
+                              onClick={() => navigate("/tanulo_letszam")}
+                            >
+                              Tanulólétszám megtekintése
+                            </Button>
+                          </Box>
+                        </Alert>
+                      ) : null}
+                    </Box>
                   )}
                 </Paper>
               </Box>
