@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -32,10 +32,15 @@ import {
 import { getTableDisplayName } from "../utils/tableValues";
 import {
   getAvailableTables,
-  getPermissionOptions,
   calculateAccessLevel,
-  formatAccessLevel,
 } from "../utils/tableAccessUtils";
+import {
+  USER_TABLE_PERMISSION_OPTIONS,
+  getPermissionSelection,
+  toggleUserTablePermission,
+  formatUserTablePermissions,
+  getDefaultUserTableAccess,
+} from "../utils/userTablePermissions";
 import { useSelector } from "react-redux";
 import { selectUser } from "../store/slices/authSlice";
 
@@ -45,6 +50,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
+    password: "",
     permissions: 1, // Default to iskolai_general (level 1)
     tableAccess: [], // Default empty table access
     alapadatokId: null, // Will be set based on user context
@@ -53,6 +59,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
   const [userType, setUserType] = useState("iskolai_general");
   const [selectedTables, setSelectedTables] = useState([]);
   const [tablePermissions, setTablePermissions] = useState({}); // Store permissions for each table
+  const initializedType = useRef(null);
   const availableUserTypes = userPermissions?.getAvailableUserTypes() || [];
 
   // Determine if current user can select schools for new users
@@ -78,11 +85,27 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
   // Fetch available tables
   const { data: tableList = [], isLoading: tablesLoading } =
     useGetTableListQuery();
-  const permissionOptions = getPermissionOptions();
+  const permissionOptions = USER_TABLE_PERMISSION_OPTIONS;
 
   // Fetch available schools for selection
   const { data: schoolsData = [], isLoading: schoolsLoading } =
     useGetAllAlapadatokQuery();
+
+  // Apply defaults once on opening or changing type, after tables arrive.
+  // Background refetches must preserve the user's manual adjustments.
+  useEffect(() => {
+    if (!open) {
+      initializedType.current = null;
+      return;
+    }
+    if (tablesLoading || tableList.length === 0 || initializedType.current === userType) return;
+
+    const defaults = getDefaultUserTableAccess(tableList, userType);
+    initializedType.current = userType;
+    setSelectedTables(defaults.selectedTables);
+    setTablePermissions(defaults.tablePermissions);
+    setNewUser(prev => ({ ...prev, tableAccess: defaults.tableAccess }));
+  }, [open, userType, tableList, tablesLoading]);
 
   // Effect to set default school for Iskolai users
   useEffect(() => {
@@ -112,13 +135,14 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
   const handleTableAccessChange = (tables) => {
     setSelectedTables(tables);
 
-    // Initialize permissions for new tables with READ access by default
+    // Newly selected tables inherit the selected user type's defaults.
     const newTablePermissions = { ...tablePermissions };
+    const defaultPermissions = getDefaultUserTableAccess(tableList, userType).tablePermissions;
 
     // Add default permissions for newly selected tables
     tables.forEach((table) => {
       if (!newTablePermissions[table.id]) {
-        newTablePermissions[table.id] = ["READ"];
+        newTablePermissions[table.id] = defaultPermissions[table.id] || ["READ"];
       }
     });
 
@@ -397,6 +421,11 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
           <Typography variant="h6" gutterBottom>
             Tábla hozzáférések
           </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            A felhasználó típusa alapján minden elérhető táblát előre kiválasztunk:
+            általános típusnál olvasással, admin és privilegizált típusnál olvasással és szerkesztéssel.
+            A beállítások egyedileg módosíthatók. A típus megváltoztatása újra beállítja az alapjogokat.
+          </Typography>
           
           {/* Preset szekcio */}
           <Card variant="outlined" sx={{ mb: 2, bgcolor: 'grey.50' }}>
@@ -440,30 +469,13 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
                       handleTableAccessChange(allTables);
                       const allPermissions = {};
                       allTables.forEach(table => {
-                        allPermissions[table.id] = ['READ', 'WRITE', 'UPDATE'];
-                      });
-                      setTablePermissions(allPermissions);
-                      updateUserTableAccess(allTables, allPermissions);
-                    }}
-                  >
-                    ✏️ Minden tábla szerkesztés
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="warning"
-                    onClick={() => {
-                      const allTables = getAvailableTables(tableList);
-                      handleTableAccessChange(allTables);
-                      const allPermissions = {};
-                      allTables.forEach(table => {
                         allPermissions[table.id] = ['READ', 'WRITE', 'UPDATE', 'DELETE'];
                       });
                       setTablePermissions(allPermissions);
                       updateUserTableAccess(allTables, allPermissions);
                     }}
                   >
-                    🔓 Teljes hozzáférés
+                    ✏️ Minden tábla szerkesztés
                   </Button>
                   <Button
                     size="small"
@@ -518,7 +530,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
                       handleTableAccessChange(selectedImportTables);
                       const permissions = {};
                       selectedImportTables.forEach(table => {
-                        permissions[table.id] = ['READ', 'WRITE', 'UPDATE'];
+                        permissions[table.id] = ['READ', 'WRITE', 'UPDATE', 'DELETE'];
                       });
                       setTablePermissions(permissions);
                       updateUserTableAccess(selectedImportTables, permissions);
@@ -547,7 +559,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
                       handleTableAccessChange(selectedEducationTables);
                       const permissions = {};
                       selectedEducationTables.forEach(table => {
-                        permissions[table.id] = ['READ', 'WRITE', 'UPDATE'];
+                        permissions[table.id] = ['READ', 'WRITE', 'UPDATE', 'DELETE'];
                       });
                       setTablePermissions(permissions);
                       updateUserTableAccess(selectedEducationTables, permissions);
@@ -567,7 +579,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
                       handleTableAccessChange(selectedStudentTables);
                       const permissions = {};
                       selectedStudentTables.forEach(table => {
-                        permissions[table.id] = ['READ', 'WRITE', 'UPDATE'];
+                        permissions[table.id] = ['READ', 'WRITE', 'UPDATE', 'DELETE'];
                       });
                       setTablePermissions(permissions);
                       updateUserTableAccess(selectedStudentTables, permissions);
@@ -676,21 +688,15 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
                               <FormControlLabel
                                 control={
                                   <Checkbox
-                                    checked={(
-                                      tablePermissions[table.id] || []
-                                    ).includes(option.key)}
+                                    {...getPermissionSelection(
+                                      tablePermissions[table.id] || [], option.key
+                                    )}
                                     onChange={(e) => {
-                                      const currentPermissions =
-                                        tablePermissions[table.id] || [];
-                                      const newPermissions = e.target.checked
-                                        ? [...currentPermissions, option.key]
-                                        : currentPermissions.filter(
-                                            (p) => p !== option.key
-                                          );
-                                      handleTablePermissionChange(
-                                        table.id,
-                                        newPermissions
+                                      const currentPermissions = tablePermissions[table.id] || [];
+                                      const newPermissions = toggleUserTablePermission(
+                                        currentPermissions, option.key, e.target.checked
                                       );
+                                      handleTablePermissionChange(table.id, newPermissions);
                                     }}
                                   />
                                 }
@@ -710,7 +716,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
                                 <span>
                                   {" "}
                                   (
-                                  {formatAccessLevel(
+                                  {formatUserTablePermissions(
                                     calculateAccessLevel(
                                       tablePermissions[table.id]
                                     )
@@ -742,7 +748,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Mégse</Button>
-        <Button onClick={handleSave} variant="contained">
+        <Button onClick={handleSave} variant="contained" disabled={tablesLoading}>
           Létrehozás
         </Button>
       </DialogActions>

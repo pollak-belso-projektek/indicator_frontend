@@ -17,6 +17,14 @@ jobs:
       - name: Check out repository code 🛎️
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Test user permission UI logic
+        run: node --test src/utils/userTablePermissions.test.js
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 

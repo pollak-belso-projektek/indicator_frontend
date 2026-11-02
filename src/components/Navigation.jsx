@@ -651,10 +651,9 @@ const SidebarContent = ({ onClose, ...rest }) => {
     };
 
     // Determine if FIXED_GENERAL should be open
-    const isFixedItem = [
-      "/dashboard", "/alapadatok", "/adat-import",
-      "/schools", "/users", "/logs"
-    ].includes(currentPath);
+    const isFixedItem = NavigationCategories.GENERAL.items.some(
+      (item) => item.link === currentPath,
+    );
 
     if (isFixedItem) {
       initialState.FIXED_GENERAL = true;
@@ -746,16 +745,12 @@ const SidebarContent = ({ onClose, ...rest }) => {
   // Initialize recent pages hook
   useRecentPages(NavigationCategories);
 
-  // Separate fixed items (first 5) and scrollable items - memoized to prevent infinite re-renders
+  // Keep only general navigation items in the fixed section.
   const fixedItems = useMemo(() => {
     const items = accessibleNavItems.filter(
-      (item) =>
-        item.link === "/dashboard" ||
-        item.link === "/alapadatok" ||
-        item.link === "/adat-import" ||
-        item.link === "/schools" ||
-        item.link === "/users" ||
-        item.link === "/logs",
+      (item) => NavigationCategories.GENERAL.items.some(
+        (generalItem) => generalItem.link === item.link,
+      ),
     );
 
     return items;
@@ -829,13 +824,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
 
   const scrollableItems = useMemo(() => {
     const items = accessibleNavItems.filter(
-      (item) =>
-        item.link !== "/dashboard" &&
-        item.link !== "/alapadatok" &&
-        item.link !== "/adat-import" &&
-        item.link !== "/schools" &&
-        item.link !== "/users" &&
-        item.link !== "/logs",
+      (item) => !fixedItems.some((fixedItem) => fixedItem.link === item.link),
     );
 
     // Sort scrollable items by page number
@@ -851,7 +840,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
       // If neither has a page number, sort alphabetically
       return a.name.localeCompare(b.name);
     });
-  }, [accessibleNavItems]);
+  }, [accessibleNavItems, fixedItems]);
 
   // Filter scrollable items based on search (search by name or page number)
   const filteredScrollableItems = scrollableItems.filter((item) => {

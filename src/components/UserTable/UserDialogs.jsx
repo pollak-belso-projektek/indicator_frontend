@@ -39,10 +39,14 @@ import {
 import {
   TABLE_ACCESS_LEVELS,
   getAvailableTables,
-  getPermissionOptions,
   calculateAccessLevel,
-  formatAccessLevel,
 } from "../../utils/tableAccessUtils";
+import {
+  USER_TABLE_PERMISSION_OPTIONS,
+  getPermissionSelection,
+  toggleUserTablePermission,
+  formatUserTablePermissions,
+} from "../../utils/userTablePermissions";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../store/slices/authSlice";
 import { getTableDisplayName } from "../../utils/tableValues";
@@ -102,7 +106,7 @@ export const EditUserDialog = ({
   // Fetch available tables
   const { data: tableList = [], isLoading: tablesLoading } =
     useGetTableListQuery();
-  const permissionOptions = getPermissionOptions();
+  const permissionOptions = USER_TABLE_PERMISSION_OPTIONS;
 
   // Fetch available schools for selection
   const { data: schoolsData = [], isLoading: schoolsLoading } =
@@ -591,29 +595,13 @@ export const EditUserDialog = ({
                       handleTableAccessChange(tableOptions);
                       const allPermissions = {};
                       tableOptions.forEach(table => {
-                        allPermissions[table.id || table.name] = ['READ', 'WRITE', 'UPDATE'];
-                      });
-                      setTablePermissions(allPermissions);
-                      updateUserTableAccess(tableOptions, allPermissions);
-                    }}
-                  >
-                    ✏️ Minden tábla szerkesztés
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="warning"
-                    onClick={() => {
-                      handleTableAccessChange(tableOptions);
-                      const allPermissions = {};
-                      tableOptions.forEach(table => {
                         allPermissions[table.id || table.name] = ['READ', 'WRITE', 'UPDATE', 'DELETE'];
                       });
                       setTablePermissions(allPermissions);
                       updateUserTableAccess(tableOptions, allPermissions);
                     }}
                   >
-                    🔓 Teljes hozzáférés
+                    ✏️ Minden tábla szerkesztés
                   </Button>
                   <Button
                     size="small"
@@ -666,7 +654,7 @@ export const EditUserDialog = ({
                       handleTableAccessChange(selectedImportTables);
                       const permissions = {};
                       selectedImportTables.forEach(table => {
-                        permissions[table.id || table.name] = ['READ', 'WRITE', 'UPDATE'];
+                        permissions[table.id || table.name] = ['READ', 'WRITE', 'UPDATE', 'DELETE'];
                       });
                       setTablePermissions(permissions);
                       updateUserTableAccess(selectedImportTables, permissions);
@@ -694,7 +682,7 @@ export const EditUserDialog = ({
                       handleTableAccessChange(selectedEducationTables);
                       const permissions = {};
                       selectedEducationTables.forEach(table => {
-                        permissions[table.id || table.name] = ['READ', 'WRITE', 'UPDATE'];
+                        permissions[table.id || table.name] = ['READ', 'WRITE', 'UPDATE', 'DELETE'];
                       });
                       setTablePermissions(permissions);
                       updateUserTableAccess(selectedEducationTables, permissions);
@@ -713,7 +701,7 @@ export const EditUserDialog = ({
                       handleTableAccessChange(selectedStudentTables);
                       const permissions = {};
                       selectedStudentTables.forEach(table => {
-                        permissions[table.id || table.name] = ['READ', 'WRITE', 'UPDATE'];
+                        permissions[table.id || table.name] = ['READ', 'WRITE', 'UPDATE', 'DELETE'];
                       });
                       setTablePermissions(permissions);
                       updateUserTableAccess(selectedStudentTables, permissions);
@@ -823,21 +811,15 @@ export const EditUserDialog = ({
                                 <FormControlLabel
                                   control={
                                     <Checkbox
-                                      checked={(
-                                        tablePermissions[tableId] || []
-                                      ).includes(option.key)}
+                                      {...getPermissionSelection(
+                                        tablePermissions[tableId] || [], option.key
+                                      )}
                                       onChange={(e) => {
-                                        const currentPermissions =
-                                          tablePermissions[tableId] || [];
-                                        const newPermissions = e.target.checked
-                                          ? [...currentPermissions, option.key]
-                                          : currentPermissions.filter(
-                                              (p) => p !== option.key
-                                            );
-                                        handleTablePermissionChange(
-                                          tableId,
-                                          newPermissions
+                                        const currentPermissions = tablePermissions[tableId] || [];
+                                        const newPermissions = toggleUserTablePermission(
+                                          currentPermissions, option.key, e.target.checked
                                         );
+                                        handleTablePermissionChange(tableId, newPermissions);
                                       }}
                                     />
                                   }
@@ -857,7 +839,7 @@ export const EditUserDialog = ({
                                   <span>
                                     {" "}
                                     (
-                                    {formatAccessLevel(
+                                    {formatUserTablePermissions(
                                       calculateAccessLevel(
                                         tablePermissions[tableId]
                                       )
