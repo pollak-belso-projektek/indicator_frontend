@@ -65,9 +65,11 @@ export const getTableName = (tableKey) => {
 
 export const getTableDisplayName = (option) => {
   if (!option) return "";
-  const name = tableKeyValues[option.name];
-  if (name) return name;
-  return option.alias || option.name || "";
+  // Accept both table list entries and user access entries with nested metadata.
+  const table = option.table || option;
+  const tableName = table.name?.trim() || option.tableName?.trim();
+  const name = tableKeyValues[tableName];
+  return table.alias?.trim() || name || tableName || "Ismeretlen tábla";
 };
 
 export const getAccessableTables = (tableAccess) => {

@@ -3,10 +3,11 @@ import { FiEdit2 } from "react-icons/fi";
 import { TbHandStop } from "react-icons/tb";
 import { MdKeyOff } from "react-icons/md";
 import { formatAccessLevel } from "../../utils/tableAccessUtils";
+import { getTableDisplayName } from "../../utils/tableValues";
 import { Grid, Tooltip, Box, Typography, Stack, Chip, IconButton, alpha } from "@mui/material";
 const columnHelper = createColumnHelper();
 
-export const createUserColumns = (onEdit, onDelete, onDisable2FA) => [
+export const createUserColumns = (onEdit, onDelete, onDisable2FA, tableList = []) => [
   columnHelper.accessor("name", {
     header: "Név",
     cell: (info) => info.getValue(),
@@ -83,12 +84,20 @@ export const createUserColumns = (onEdit, onDelete, onDisable2FA) => [
       const visibleItems = access.slice(0, maxVisible);
       const remainingItems = access.slice(maxVisible);
 
+      const getLabel = (item) =>
+        getTableDisplayName(
+          tableList?.find(
+            (table) =>
+              table.name === item.tableName || table.id === item.tableId
+          ) || item
+        );
+
       return (
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "center" }}>
           {visibleItems.map((item, index) => {
             const permissions = formatAccessLevel(item.access);
             const color = colorMap[index % colorMap.length];
-            const label = item.table?.alias || item.tableName || "Tábla";
+            const label = getLabel(item);
 
             return (
               <Tooltip
@@ -119,7 +128,7 @@ export const createUserColumns = (onEdit, onDelete, onDisable2FA) => [
                   </Typography>
                   {remainingItems.map((item, idx) => {
                     const permissions = formatAccessLevel(item.access);
-                    const label = item.table?.alias || item.tableName || "Tábla";
+                    const label = getLabel(item);
                     return (
                       <Typography
                         key={item.tableName || item.id || idx}

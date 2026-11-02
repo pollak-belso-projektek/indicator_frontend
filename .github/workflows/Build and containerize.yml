@@ -22,8 +22,8 @@ jobs:
         with:
           node-version: 22
 
-      - name: Test user permission UI logic
-        run: node --test src/utils/userTablePermissions.test.js
+      - name: Test frontend utility logic
+        run: node --test src/utils/*.test.js
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2

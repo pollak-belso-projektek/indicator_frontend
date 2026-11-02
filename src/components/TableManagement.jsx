@@ -24,9 +24,11 @@ import {
   Alert,
   CircularProgress,
   Input,
+  Tooltip,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
+import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
 import LockIcon from "@mui/icons-material/Lock";
 import UnlockIcon from "@mui/icons-material/LockOpen";
 import TableSortLabel from "@mui/material/TableSortLabel";
@@ -35,12 +37,14 @@ import {
   useGetTableListQuery,
   useCreateTableMutation,
   useUpdateTableMutation,
+  useUpdateTableAliasMutation,
   useLockTableMutation,
   useUnlockTableMutation,
 } from "../store/api/apiSlice";
 import { useSelector } from "react-redux";
 import { selectUserPermissions } from "../store/slices/authSlice";
 import PageNumbering from "../common/PageNumbering";
+import { getTableDisplayName } from "../utils/tableValues";
 
 // Mapping from table names (as stored in DB) to their route paths
 // This allows us to look up the page number for each table
@@ -86,6 +90,9 @@ const TableManagement = () => {
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
+  const [aliasTable, setAliasTable] = useState(null);
+  const [alias, setAlias] = useState("");
+  const [aliasError, setAliasError] = useState("");
   const [newTable, setNewTable] = useState({ name: "", isAvailable: true });
   const [search, setSearch] = useState("");
   const [orderBy, setOrderBy] = useState("displayAlias");
@@ -115,6 +122,7 @@ const TableManagement = () => {
   const { data: tableList = [], isLoading, error } = useGetTableListQuery();
   const [createTable, { isLoading: isCreating }] = useCreateTableMutation();
   const [updateTable, { isLoading: isUpdating }] = useUpdateTableMutation();
+  const [updateTableAlias, { isLoading: isSavingAlias }] = useUpdateTableAliasMutation();
   const [lockTable, { isLoading: isLocking }] = useLockTableMutation();
   const [unlockTable, { isLoading: isUnlocking }] = useUnlockTableMutation();
 
@@ -142,7 +150,7 @@ const TableManagement = () => {
       })
       .map((table) => {
         const prefix = getTablePageNumber(table.name);
-        const displayName = table.alias || table.name;
+        const displayName = getTableDisplayName(table);
         if (prefix) {
           return {
             ...table,
@@ -216,7 +224,9 @@ const TableManagement = () => {
   const sortedTableList = useMemo(() => {
     return [...enhancedTableList]
       .filter((table) =>
-        (table.displayAlias || "").toLowerCase().includes(search.toLowerCase()),
+        [table.displayAlias, table.name].some(value =>
+          (value || "").toLowerCase().includes(search.toLowerCase()),
+        ),
       )
       .sort(getComparator(order, orderBy));
   }, [enhancedTableList, search, order, orderBy]);
@@ -246,6 +256,25 @@ const TableManagement = () => {
     setSelectedTable(table);
     setEditedTable({ name: table.name, isAvailable: table.isAvailable });
     setOpenEdit(true);
+  };
+
+  const handleEditAlias = (table) => {
+    setAliasTable(table);
+    setAlias(table.alias || "");
+    setAliasError("");
+  };
+
+  const handleSaveAlias = async (event) => {
+    event.preventDefault();
+    if (!aliasTable || isSavingAlias) return;
+    setAliasError("");
+    try {
+      await updateTableAlias({ id: aliasTable.id, alias }).unwrap();
+      setAliasTable(null);
+      showNotification("Alias sikeresen mentve!");
+    } catch (error) {
+      setAliasError(error.data?.error || error.data?.message || "Az alias mentése nem sikerült. Próbálja újra!");
+    }
   };
 
   const handleUpdateTable = async () => {
@@ -337,6 +366,40 @@ const TableManagement = () => {
       <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 3 }}>
         Tábla kezelés
       </Typography>
+
+      <Dialog
+        open={Boolean(aliasTable)}
+        onClose={() => { if (!isSavingAlias) setAliasTable(null); }}
+        maxWidth="sm"
+        fullWidth
+        aria-labelledby="table-alias-title"
+      >
+        <Box component="form" onSubmit={handleSaveAlias}>
+          <DialogTitle id="table-alias-title">Alias szerkesztése</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              Tábla: {aliasTable?.name}
+            </Typography>
+            {aliasError && <Alert severity="error" sx={{ mb: 2 }}>{aliasError}</Alert>}
+            <TextField
+              autoFocus
+              fullWidth
+              margin="normal"
+              label="Alias (megjelenített név)"
+              value={alias}
+              onChange={(event) => setAlias(event.target.value)}
+              disabled={isSavingAlias}
+              helperText="Ez a név jelenik meg a táblaválasztókban és a hozzáférés-badge-eken. Üresen hagyva az alapértelmezett név jelenik meg."
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setAliasTable(null)} disabled={isSavingAlias}>Mégse</Button>
+            <Button type="submit" variant="contained" disabled={isSavingAlias}>
+              {isSavingAlias ? "Mentés..." : "Mentés"}
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
 
       {/* Create Table Dialog */}
       <Dialog
@@ -577,6 +640,9 @@ const TableManagement = () => {
                         <Typography variant="body1" fontWeight="medium">
                           {table.displayAlias}
                         </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {table.name}
+                        </Typography>
                       </TableCell>
                       <TableCell>
                         <Chip
@@ -622,6 +688,19 @@ const TableManagement = () => {
                             justifyContent: "center",
                           }}
                         >
+                          <Tooltip title={table.isLocked ? "Az alias módosításához előbb oldja fel a táblát" : "Alias szerkesztése"}>
+                            <span>
+                              <IconButton
+                                size="small"
+                                aria-label={`Alias szerkesztése: ${table.name}`}
+                                onClick={() => handleEditAlias(table)}
+                                disabled={table.isLocked}
+                                color="primary"
+                              >
+                                <DriveFileRenameOutlineIcon />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
                           <IconButton
                             size="small"
                             onClick={() => handleEditTable(table)}

@@ -13,6 +13,7 @@ import { useUserPermissions } from "./useUserPermissions";
 import { getUserTypeFromLevel } from "../utils/userHierarchy";
 import {
   useGetUsersQuery,
+  useGetTableListQuery,
   useAddUserMutation,
   useUpdateUserMutation,
   useDisable2FAForUserMutation,
@@ -50,6 +51,7 @@ export const useUserManagement = () => {
 
   // API hooks
   const { data: usersData = [], isLoading, refetch } = useGetUsersQuery();
+  const { data: tableList } = useGetTableListQuery();
   const [addUser] = useAddUserMutation();
   const [updateUser] = useUpdateUserMutation();
   const [disable2FAForUser, { isLoading: isDisabling2FA }] = useDisable2FAForUserMutation();
@@ -286,8 +288,8 @@ export const useUserManagement = () => {
   };
 
   const columns = useMemo(
-    () => createUserColumns(handleEdit, handleDeactivate, handleDisable2FA),
-    [handleDeactivate, handleEdit, handleDisable2FA]
+    () => createUserColumns(handleEdit, handleDeactivate, handleDisable2FA, tableList),
+    [handleDeactivate, handleEdit, handleDisable2FA, tableList]
   );
 
   const table = useReactTable({
