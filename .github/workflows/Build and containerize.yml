@@ -22,7 +22,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Test user permission UI logic
+      - name: Test frontend utility logic
         run: node --test src/utils/*.test.js
 
       - name: Set up QEMU

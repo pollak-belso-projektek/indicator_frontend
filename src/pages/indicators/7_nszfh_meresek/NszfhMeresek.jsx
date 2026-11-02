@@ -1,3 +1,4 @@
+import { parseNszfhExcelRows, mergeNszfhImports } from "../../../utils/nszfhExcel";
 import { formatHuNum } from "../../../utils/formatters";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useSelector } from "react-redux";
@@ -248,167 +249,16 @@ export default function NszfhMeresek() {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: "array" });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-        if (rows.length === 0) {
-          setUploadAlert({
-            open: true,
-            message: "Az Excel fájl üres!",
-            severity: "error",
-          });
-          return;
-        }
-        const headers = Object.keys(rows[0]);
-        const columnMap = {};
-        let detectedYear = null;
-        
-        const hasKimeneti = headers.some((h) => /^K\d{2,4}(Matematika|Anyanyelv)$/i.test(h.trim()));
-
-        headers.forEach((h) => {
-          const trimmed = h.trim();
-          const match = trimmed.match(
-            /^([BK])(\d{2,4})(Matematika|Anyanyelv)$/i,
-          );
-          if (match) {
-            const typeStr = match[1].toUpperCase();
-            
-            if (hasKimeneti && typeStr === "B") {
-              return; // Ignore bemeneti if kimeneti is present
-            }
-
-            const type = typeStr === "B" ? "bemeneti" : "kimeneti";
-            let year = parseInt(match[2]);
-            if (year < 100) year += 2000;
-            
-            let academicYearStart = year;
-            if (type === "kimeneti") {
-              academicYearStart -= 1;
-            }
-
-            const subject =
-              match[3].toLowerCase() === "matematika" ? "mat" : "szoveg";
-            const key = `${subject}_${type}`;
-            columnMap[key] = h;
-            detectedYear = academicYearStart;
-          }
-        });
-        if (Object.keys(columnMap).length === 0) {
-          setUploadAlert({
-            open: true,
-            message: "Nem található megfelelő oszlop!",
-            severity: "error",
-          });
-          return;
-        }
-        const getBand = (pct) => {
-          if (pct < 25) return "1";
-          if (pct < 40) return "2";
-          if (pct < 60) return "3";
-          if (pct < 80) return "4";
-          return "5";
-        };
-        const rowBandCounts = {};
-        const rowTotalCounts = {};
-        layoutStructure.forEach((row) => {
-          if (row.isParent) return;
-          rowBandCounts[row.key] = {};
-          rowTotalCounts[row.key] = {};
-          Object.keys(columnMap).forEach((key) => {
-            rowBandCounts[row.key][key] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-            rowTotalCounts[row.key][key] = 0;
-          });
-        });
-        const agazatCol = headers.find((h) =>
-          h.trim().toLowerCase().includes("ágazat"),
-        );
-        const kepzesTipusCol = headers.find((h) =>
-          h.trim().toLowerCase().includes("képzés"),
-        );
-        const matchRow = (excelRow) => {
-          let type = "Technikum";
-          let agazat = "";
-          if (kepzesTipusCol && excelRow[kepzesTipusCol]) {
-            const t = excelRow[kepzesTipusCol].toString().toLowerCase();
-            if (t.includes("szakképző") || t.includes("szakkepzo"))
-              type = "Szakképző";
-          }
-          if (agazatCol && excelRow[agazatCol]) {
-            agazat = excelRow[agazatCol].toString().toLowerCase().trim();
-          }
-          const matchedRow = layoutStructure.find((r) => {
-            if (r.isParent) return false;
-            if (r.kepzes_forma !== type) return false;
-            const szakiranyNev = r.label.toLowerCase().trim();
-            if (
-              agazat &&
-              (agazat.includes(szakiranyNev) || szakiranyNev.includes(agazat))
-            ) {
-              return true;
-            }
-            return false;
-          });
-          return (
-            matchedRow ||
-            layoutStructure.find(
-              (r) =>
-                !r.isParent && r.kepzes_forma === type && r.szakma_id === null,
-            )
-          );
-        };
-        rows.forEach((row) => {
-          const targetRow = matchRow(row);
-          if (!targetRow) return;
-          Object.entries(columnMap).forEach(([key, colName]) => {
-            const rawVal = row[colName];
-            if (rawVal === "" || rawVal === null || rawVal === undefined)
-              return;
-            let pct = parseFloat(rawVal);
-            if (isNaN(pct)) return;
-            if (pct >= 0 && pct <= 1 && pct !== 0) pct = pct * 100;
-            const band = getBand(pct);
-            rowBandCounts[targetRow.key][key][band]++;
-            rowTotalCounts[targetRow.key][key]++;
-          });
-        });
-        const parsedData = {};
-        layoutStructure.forEach((row) => {
-          if (row.isParent) return;
-          const rowData = {};
-          let hasData = false;
-          Object.entries(columnMap).forEach(([key, _]) => {
-            const [subject, measType] = key.split("_");
-            const total = rowTotalCounts[row.key][key];
-            if (total === 0) return;
-            performanceBands.forEach((band) => {
-              const fieldKey = `kat_${band.key}_${subject}_${measType}`;
-              const count = rowBandCounts[row.key][key][band.key];
-              rowData[fieldKey] = count;
-              hasData = true;
-            });
-          });
-          if (hasData) {
-            parsedData[row.key] = rowData;
-          }
-        });
-        if (detectedYear) {
-          setUploadedExcelData((prev) => ({
-            ...prev,
-            [detectedYear]: parsedData,
-          }));
-          setIsModified(true);
-          setSaveSuccess(false);
-          const nextYearDigit = detectedYear + 1;
-          const formattedYearStr = `${detectedYear}/${nextYearDigit.toString().slice(2)}`;
-          const fullYearStr = `${detectedYear}/${nextYearDigit}`;
-          const matchedYear = schoolYears.find(
-            (y) =>
-              y === formattedYearStr ||
-              y === fullYearStr ||
-              y.startsWith(detectedYear.toString()),
-          );
-          if (matchedYear) {
-            setSelectedYear(matchedYear);
-          }
-        }
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", blankrows: false });
+        const importedYears = parseNszfhExcelRows(rows, layoutStructure);
+        setUploadedExcelData((prev) => mergeNszfhImports(prev, importedYears));
+        setIsModified(true);
+        setSaveSuccess(false);
+        const detectedYear = importedYears[currentSchoolYearStart]
+          ? currentSchoolYearStart
+          : Math.max(...Object.keys(importedYears).map(Number));
+        const matchedYear = schoolYears.find(year => Number.parseInt(year, 10) === detectedYear);
+        if (matchedYear) setSelectedYear(matchedYear);
         setUploadAlert({
           open: true,
           message: `Sikeres feltöltés!`,
@@ -440,9 +290,9 @@ export default function NszfhMeresek() {
   };
 
   useEffect(() => {
-    if (apiData && Array.isArray(apiData) && layoutStructure.length > 0) {
+    if (!isNSZFHLoading && layoutStructure.length > 0) {
       const initialData = getEmptyData();
-      apiData.forEach((record) => {
+      (Array.isArray(apiData) ? apiData : []).forEach((record) => {
         if (record.tanev_kezdete !== currentSchoolYearStart) return;
         let formKey = null;
         if (record.kepzes_forma) {
@@ -474,9 +324,6 @@ export default function NszfhMeresek() {
         });
       }
       setTableData(initialData);
-    } else if (!isNSZFHLoading && layoutStructure.length > 0) {
-      const emptyData = getEmptyData();
-      setTableData(emptyData);
     }
   }, [
     apiData,
