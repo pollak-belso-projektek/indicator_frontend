@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useRef } from "react";
 import {
   Box,
   Typography,
@@ -64,42 +64,86 @@ export default function Alapadatok() {
   const theme = useTheme();
   const selectedSchool = useSelector(selectSelectedSchool);
 
-  const { data, error, isLoading } = useGetAlapadatokQuery(
+  const {
+    data: rawAlapadatokData,
+    currentData: currentAlapadatokData,
+    error: alapadatokError,
+    isLoading: isAlapadatokLoading,
+    isFetching: isAlapadatokFetching,
+    refetch: refetchAlapadatok,
+  } = useGetAlapadatokQuery(
     { id: selectedSchool?.id },
     { skip: !selectedSchool?.id }
   );
 
   const {
-    data: studentData,
+    data: rawStudentData,
+    currentData: currentStudentData,
     error: studentError,
     isLoading: isStudentLoading,
+    isFetching: isStudentFetching,
+    refetch: refetchTanuloLetszam,
   } = useGetTanuloLetszamQuery(
     { alapadatok_id: selectedSchool?.id },
     { skip: !selectedSchool?.id }
   );
 
-  const summary = useMemo(() => {
-    if (!studentData || !Array.isArray(studentData)) return null;
+  // Refetch fresh data whenever the selected school changes
+  const isFirstMount = useRef(true);
+  useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
+    if (selectedSchool?.id) {
+      refetchAlapadatok();
+      refetchTanuloLetszam();
+    }
+  }, [selectedSchool?.id, refetchAlapadatok, refetchTanuloLetszam]);
 
+  // Ensure data belongs to currently selected school to prevent stale data display
+  const data = currentAlapadatokData?.id === selectedSchool?.id
+    ? currentAlapadatokData
+    : (rawAlapadatokData?.id === selectedSchool?.id ? rawAlapadatokData : null);
+
+  // Treat 404 as "no data recorded yet", not as an error
+  const isStudent404 = studentError?.status === 404 || studentError?.originalStatus === 404;
+  const isRealStudentError = Boolean(studentError && !isStudent404);
+
+  // Student data for currently selected school (fallback to empty array on 404 or missing)
+  const studentData = useMemo(() => {
+    if (isStudent404) return [];
+    if (Array.isArray(currentStudentData)) return currentStudentData;
+    if (Array.isArray(rawStudentData) && !isStudentFetching && !studentError) return rawStudentData;
+    return [];
+  }, [isStudent404, currentStudentData, rawStudentData, isStudentFetching, studentError]);
+
+  const summary = useMemo(() => {
     const generatedYears = generateSchoolYears().map((year) => parseInt(year.split("/")[0]));
     const yearSummary = {};
+    let totalStudentSum = 0;
 
-    studentData.forEach((item) => {
-      const year = Number(item.tanev_kezdete);
-      const jogvTipus = Number(item.jogv_tipus);
-      const letszam = Number(item.letszam) || 0;
+    if (Array.isArray(studentData) && studentData.length > 0) {
+      studentData.forEach((item) => {
+        const year = Number(item.tanev_kezdete);
+        const jogvTipus = Number(item.jogv_tipus);
+        const letszam = Number(item.letszam) || 0;
 
-      if (!yearSummary[year]) {
-        yearSummary[year] = { total: 0, nappali: 0, esti: 0 };
-      }
+        if (!yearSummary[year]) {
+          yearSummary[year] = { total: 0, nappali: 0, esti: 0 };
+        }
 
-      yearSummary[year].total += letszam;
-      if (jogvTipus === 0) {
-        yearSummary[year].nappali += letszam;
-      } else if (jogvTipus === 1) {
-        yearSummary[year].esti += letszam;
-      }
-    });
+        yearSummary[year].total += letszam;
+        totalStudentSum += letszam;
+        if (jogvTipus === 0) {
+          yearSummary[year].nappali += letszam;
+        } else if (jogvTipus === 1) {
+          yearSummary[year].esti += letszam;
+        }
+      });
+    }
+
+    const hasStudentRecords = totalStudentSum > 0;
 
     const allYears = Array.from(
       new Set([
@@ -123,10 +167,10 @@ export default function Alapadatok() {
     const populatedYears = chartData.filter((d) => d.Összes > 0);
     const latestData = populatedYears.length > 0 
       ? populatedYears[populatedYears.length - 1] 
-      : (chartData.length > 0 ? chartData[chartData.length - 1] : null);
+      : null;
     const totalStudents = latestData ? latestData.Összes : 0;
 
-    return { yearSummary, totalStudents, years: allYears, chartData, latestData };
+    return { yearSummary, totalStudents, years: allYears, chartData, latestData, hasStudentRecords };
   }, [studentData]);
 
   if (!selectedSchool) {
@@ -140,7 +184,11 @@ export default function Alapadatok() {
     );
   }
 
-  if (isLoading || isStudentLoading) {
+  // Show loading skeleton while initial loading or fetching for a newly selected school
+  const isSchoolLoading = isAlapadatokLoading || (isAlapadatokFetching && !data);
+  const isStudentCountLoading = isStudentLoading || (isStudentFetching && !currentStudentData && !studentError);
+
+  if (isSchoolLoading || isStudentCountLoading) {
     return (
       <Box sx={{ p: 3, maxWidth: '1400px', mx: 'auto' }}>
         <Skeleton variant="rounded" height={160} sx={{ mb: 4, borderRadius: 3 }} />
@@ -157,7 +205,7 @@ export default function Alapadatok() {
     );
   }
 
-  if (error) {
+  if (alapadatokError) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "90vh" }}>
         <Typography variant="h5" color="error">Hiba történt az adatok betöltésekor!</Typography>
@@ -261,9 +309,9 @@ export default function Alapadatok() {
                 </Typography>
               </Stack>
               
-              {studentError ? (
+              {isRealStudentError ? (
                 <Typography color="error">Hiba a tanulói adatok betöltésekor</Typography>
-              ) : !summary || summary.chartData.length === 0 ? (
+              ) : !summary || !summary.hasStudentRecords || summary.chartData.length === 0 ? (
                 <Box sx={{ py: 10, textAlign: 'center', flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Typography color="textSecondary">Nincsenek elérhető tanulói létszámadatok</Typography>
                 </Box>
@@ -325,16 +373,23 @@ export default function Alapadatok() {
                 <Typography variant="body1" color="textSecondary" fontWeight="500">
                   Összes tanuló
                 </Typography>
-                {summary?.latestData && (
+                {summary?.hasStudentRecords && summary?.latestData ? (
                   <Chip 
                     label={`${summary.latestData.name} tanév`}
                     size="small"
                     sx={{ mt: 1.5, fontWeight: 500 }}
                   />
+                ) : (
+                  <Chip 
+                    label="Nincs rögzített adat"
+                    size="small"
+                    variant="outlined"
+                    sx={{ mt: 1.5, fontWeight: 500, opacity: 0.7 }}
+                  />
                 )}
               </Box>
 
-              {summary?.latestData && (
+              {summary?.hasStudentRecords && summary?.latestData ? (
                 <Box sx={{ mt: 'auto' }}>
                   <Typography variant="subtitle2" color="textSecondary" fontWeight="bold" textTransform="uppercase" sx={{ mb: 2 }}>
                     Tagozatok szerinti megoszlás
@@ -373,6 +428,12 @@ export default function Alapadatok() {
                       </Box>
                     </Box>
                   </Stack>
+                </Box>
+              ) : (
+                <Box sx={{ mt: 'auto', py: 2, textAlign: 'center' }}>
+                  <Typography variant="body2" color="textSecondary" sx={{ fontStyle: 'italic', opacity: 0.8 }}>
+                    Nincsenek rögzített tagozati adatok
+                  </Typography>
                 </Box>
               )}
             </CardContent>
