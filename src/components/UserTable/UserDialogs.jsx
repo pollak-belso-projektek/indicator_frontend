@@ -564,195 +564,39 @@ export const EditUserDialog = ({
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
                 Válasszon egy presetet a tábla hozzáférések gyors beállításához
               </Typography>
-              
-              {/* Általános presetek */}
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'primary.main', display: 'block', mb: 1 }}>
-                  Általános
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="success"
-                    onClick={() => {
-                      handleTableAccessChange(tableOptions);
-                      const allPermissions = {};
-                      tableOptions.forEach(table => {
-                        allPermissions[table.id || table.name] = ['READ'];
-                      });
-                      setTablePermissions(allPermissions);
-                      updateUserTableAccess(tableOptions, allPermissions);
-                    }}
-                  >
-                    📖 Minden tábla olvasás
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="info"
-                    onClick={() => {
-                      handleTableAccessChange(tableOptions);
-                      const allPermissions = {};
-                      tableOptions.forEach(table => {
-                        allPermissions[table.id || table.name] = ['READ', 'WRITE', 'UPDATE', 'DELETE'];
-                      });
-                      setTablePermissions(allPermissions);
-                      updateUserTableAccess(tableOptions, allPermissions);
-                    }}
-                  >
-                    ✏️ Minden tábla szerkesztés
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="error"
-                    onClick={() => {
-                      handleTableAccessChange([]);
-                      setTablePermissions({});
-                      updateUserTableAccess([], {});
-                    }}
-                  >
-                    🗑️ Összes törlése
-                  </Button>
-                </Box>
-              </Box>
-              
-              {/* Adatkezelési presetek */}
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'primary.main', display: 'block', mb: 1 }}>
-                  Adatkezelés
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => {
-                      const dataTableNames = ['alapadatok', 'user', 'tanugyi_adatok', 'oktato-egyeb-tev'];
-                      const selectedDataTables = tableOptions.filter(t => 
-                        dataTableNames.some(name => (t.name || '').toLowerCase() === name.toLowerCase())
-                      );
-                      handleTableAccessChange(selectedDataTables);
-                      const permissions = {};
-                      selectedDataTables.forEach(table => {
-                        permissions[table.id || table.name] = ['READ', 'WRITE', 'UPDATE', 'DELETE'];
-                      });
-                      setTablePermissions(permissions);
-                      updateUserTableAccess(selectedDataTables, permissions);
-                    }}
-                  >
-                    📊 Alapadatok kezelő
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => {
-                      const importTableNames = ['tanugyi_adatok', 'tanulo_letszam'];
-                      const selectedImportTables = tableOptions.filter(t => 
-                        importTableNames.some(name => (t.name || '').toLowerCase() === name.toLowerCase())
-                      );
-                      handleTableAccessChange(selectedImportTables);
-                      const permissions = {};
-                      selectedImportTables.forEach(table => {
-                        permissions[table.id || table.name] = ['READ', 'WRITE', 'UPDATE', 'DELETE'];
-                      });
-                      setTablePermissions(permissions);
-                      updateUserTableAccess(selectedImportTables, permissions);
-                    }}
-                  >
-                    📥 Adatimport jogosultság
-                  </Button>
-                </Box>
-              </Box>
-              
-              {/* Oktatási presetek */}
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'primary.main', display: 'block', mb: 1 }}>
-                  Oktatási adatok
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => {
-                      const educationTableNames = ['felvettek_szama', 'alkalmazottak_munkaugy', 'dobbanto', 'egy_oktatora_juto_tanulo'];
-                      const selectedEducationTables = tableOptions.filter(t => 
-                        educationTableNames.some(name => (t.name || '').toLowerCase() === name.toLowerCase())
-                      );
-                      handleTableAccessChange(selectedEducationTables);
-                      const permissions = {};
-                      selectedEducationTables.forEach(table => {
-                        permissions[table.id || table.name] = ['READ', 'WRITE', 'UPDATE', 'DELETE'];
-                      });
-                      setTablePermissions(permissions);
-                      updateUserTableAccess(selectedEducationTables, permissions);
-                    }}
-                  >
-                    🎓 Oktatási eredmények
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => {
-                      const studentTableNames = ['tanulo_letszam', 'sajatos_nevelesu_tanulok', 'hh_es_hhh_nevelesu_tanulok', 'szmsz', 'muhelyiskola', 'oktato-egyeb-tev', 'auth'];
-                      const selectedStudentTables = tableOptions.filter(t => 
-                        studentTableNames.some(name => (t.name || '').toLowerCase() === name.toLowerCase())
-                      );
-                      handleTableAccessChange(selectedStudentTables);
-                      const permissions = {};
-                      selectedStudentTables.forEach(table => {
-                        permissions[table.id || table.name] = ['READ', 'WRITE', 'UPDATE', 'DELETE'];
-                      });
-                      setTablePermissions(permissions);
-                      updateUserTableAccess(selectedStudentTables, permissions);
-                    }}
-                  >
-                    👥 Tanulói adatok
-                  </Button>
-                </Box>
-              </Box>
-              
-              {/* Rendszer presetek */}
-              <Box>
-                <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'primary.main', display: 'block', mb: 1 }}>
-                  Rendszer
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => {
-                      const adminTableNames = ['user', 'alapadatok', 'log'];
-                      const selectedAdminTables = tableOptions.filter(t => 
-                        adminTableNames.some(name => (t.name || '').toLowerCase() === name.toLowerCase())
-                      );
-                      handleTableAccessChange(selectedAdminTables);
-                      const permissions = {};
-                      selectedAdminTables.forEach(table => {
-                        permissions[table.id || table.name] = ['READ', 'WRITE', 'UPDATE', 'DELETE'];
-                      });
-                      setTablePermissions(permissions);
-                      updateUserTableAccess(selectedAdminTables, permissions);
-                    }}
-                  >
-                    ⚙️ Adminisztrátor
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => {
-                      handleTableAccessChange(tableOptions);
-                      const permissions = {};
-                      tableOptions.forEach(table => {
-                        permissions[table.id || table.name] = ['READ'];
-                      });
-                      setTablePermissions(permissions);
-                      updateUserTableAccess(tableOptions, permissions);
-                    }}
-                  >
-                    👁️ Csak megtekintés
-                  </Button>
-                </Box>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="success"
+                  onClick={() => {
+                    handleTableAccessChange(tableOptions);
+                    const allPermissions = {};
+                    tableOptions.forEach(table => {
+                      allPermissions[table.id || table.name] = ['READ'];
+                    });
+                    setTablePermissions(allPermissions);
+                    updateUserTableAccess(tableOptions, allPermissions);
+                  }}
+                >
+                  📖 Minden tábla olvasás
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="info"
+                  onClick={() => {
+                    handleTableAccessChange(tableOptions);
+                    const allPermissions = {};
+                    tableOptions.forEach(table => {
+                      allPermissions[table.id || table.name] = ['READ', 'WRITE', 'UPDATE', 'DELETE'];
+                    });
+                    setTablePermissions(allPermissions);
+                    updateUserTableAccess(tableOptions, allPermissions);
+                  }}
+                >
+                  ✏️ Minden tábla szerkesztés
+                </Button>
               </Box>
             </CardContent>
           </Card>
