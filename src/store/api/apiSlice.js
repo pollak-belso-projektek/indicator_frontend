@@ -569,6 +569,14 @@ export const indicatorApi = createApi({
       }),
       invalidatesTags: ["TableList"],
     }),
+    updateTableAlias: build.mutation({
+      query: ({ id, alias }) => ({
+        url: `tablelist/${id}/alias`,
+        method: "PUT",
+        body: { alias: alias.trim() || null },
+      }),
+      invalidatesTags: ["TableList"],
+    }),
     // Lock/unlock table mutations
     lockTable: build.mutation({
       query: (tableId) => ({
@@ -1934,6 +1942,7 @@ export const {
   useGetTableListQuery,
   useCreateTableMutation,
   useUpdateTableMutation,
+  useUpdateTableAliasMutation,
   useLockTableMutation,
   useUnlockTableMutation,
   useAddTanuloAdatszolgaltatasMutation,

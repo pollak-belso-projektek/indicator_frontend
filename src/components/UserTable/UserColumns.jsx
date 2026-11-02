@@ -3,10 +3,11 @@ import { FiEdit2 } from "react-icons/fi";
 import { TbHandStop } from "react-icons/tb";
 import { MdKeyOff } from "react-icons/md";
 import { formatAccessLevel } from "../../utils/tableAccessUtils";
+import { getTableDisplayName } from "../../utils/tableValues";
 import { Grid, Tooltip, Box, Typography, Stack, Chip, IconButton, alpha } from "@mui/material";
 const columnHelper = createColumnHelper();
 
-export const createUserColumns = (onEdit, onDelete, onDisable2FA) => [
+export const createUserColumns = (onEdit, onDelete, onDisable2FA, tableList = []) => [
   columnHelper.accessor("name", {
     header: "Név",
     cell: (info) => info.getValue(),
@@ -91,7 +92,9 @@ export const createUserColumns = (onEdit, onDelete, onDisable2FA) => [
                   <Tooltip title={permissions.join(", ")}>
                     <Chip
                       size="small"
-                      label={item.table.alias}
+                      label={getTableDisplayName(tableList.find(table =>
+                        table.name === item.tableName || table.id === item.tableId
+                      ) || item)}
                       color={color}
                       variant="outlined"
                       sx={{ fontWeight: 600, fontSize: "0.75rem" }}
