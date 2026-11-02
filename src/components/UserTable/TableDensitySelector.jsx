@@ -35,16 +35,15 @@ export const TableDensitySelector = ({
   onDensityChange,
 }) => {
   return (
-    <FormControl size="medium" sx={{ minWidth: 140 }}>
+    <FormControl size="small" sx={{ minWidth: 140 }}>
       <InputLabel>Sor méret</InputLabel>
       <Select
         value={density}
         label="Sor méret"
         onChange={(e) => onDensityChange(e.target.value)}
         sx={{
-          "& .MuiOutlinedInput-root": {
-            backgroundColor: "#f8f9fa",
-          },
+          height: 40,
+          backgroundColor: "#f8f9fa",
         }}
         renderValue={(value) => {
           const option = densityOptions.find((opt) => opt.value === value);

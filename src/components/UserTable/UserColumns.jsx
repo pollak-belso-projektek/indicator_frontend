@@ -70,38 +70,85 @@ export const createUserColumns = (onEdit, onDelete, onDisable2FA) => [
     cell: (info) => {
       const access = info.getValue();
 
-      if (!access || access.length === 0) return "Nincs hozzáférés";
+      if (!access || access.length === 0) {
+        return (
+          <Typography variant="body2" color="text.secondary">
+            Nincs hozzáférés
+          </Typography>
+        );
+      }
+
+      const colorMap = ["primary", "success", "secondary", "info", "warning"];
+      const maxVisible = 2;
+      const visibleItems = access.slice(0, maxVisible);
+      const remainingItems = access.slice(maxVisible);
 
       return (
-        <Grid
-          container
-          spacing={1}
-          alignItems="flex-start"
-          maxHeight="150px"
-          overflow="auto"
-        >
-          {access.map((item, index) => {
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "center" }}>
+          {visibleItems.map((item, index) => {
             const permissions = formatAccessLevel(item.access);
-            const colorMap = ["primary", "success", "secondary", "info", "warning"];
             const color = colorMap[index % colorMap.length];
+            const label = item.table?.alias || item.tableName || "Tábla";
 
             return (
-              <Stack key={item.tableName || item.id} direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-                {permissions.length > 0 && (
-                  <Tooltip title={permissions.join(", ")}>
-                    <Chip
-                      size="small"
-                      label={item.table.alias}
-                      color={color}
-                      variant="outlined"
-                      sx={{ fontWeight: 600, fontSize: "0.75rem" }}
-                    />
-                  </Tooltip>
-                )}
-              </Stack>
+              <Tooltip
+                key={item.tableName || item.id || index}
+                title={`${label}: ${permissions.join(", ")}`}
+                arrow
+              >
+                <Chip
+                  size="small"
+                  label={label}
+                  color={color}
+                  variant="outlined"
+                  sx={{ fontWeight: 600, fontSize: "0.75rem" }}
+                />
+              </Tooltip>
             );
           })}
-        </Grid>
+          {remainingItems.length > 0 && (
+            <Tooltip
+              arrow
+              title={
+                <Box sx={{ p: 0.5, maxWidth: 300 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ fontWeight: 700, display: "block", mb: 0.5 }}
+                  >
+                    További hozzáférések ({remainingItems.length}):
+                  </Typography>
+                  {remainingItems.map((item, idx) => {
+                    const permissions = formatAccessLevel(item.access);
+                    const label = item.table?.alias || item.tableName || "Tábla";
+                    return (
+                      <Typography
+                        key={item.tableName || item.id || idx}
+                        variant="caption"
+                        sx={{ display: "block" }}
+                      >
+                        • <strong>{label}</strong>: {permissions.join(", ")}
+                      </Typography>
+                    );
+                  })}
+                </Box>
+              }
+            >
+              <Chip
+                size="small"
+                label={`+${remainingItems.length} további`}
+                variant="filled"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: "0.725rem",
+                  cursor: "pointer",
+                  bgcolor: alpha("#1976d2", 0.12),
+                  color: "#1976d2",
+                  "&:hover": { bgcolor: alpha("#1976d2", 0.22) },
+                }}
+              />
+            </Tooltip>
+          )}
+        </Box>
       );
     },
     size: 200,

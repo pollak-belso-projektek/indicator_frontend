@@ -22,7 +22,12 @@ import {
   Card,
   CardContent,
   Grid,
+  InputAdornment,
+  IconButton,
+  CircularProgress,
 } from "@mui/material";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import NotificationSnackbar from "./shared/NotificationSnackbar";
 import { getHierarchyLevel, getUserTypeLabel } from "../utils/userHierarchy";
 import {
@@ -56,6 +61,10 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
     alapadatokId: null, // Will be set based on user context
     isActive: true,
   });
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [userType, setUserType] = useState("iskolai_general");
   const [selectedTables, setSelectedTables] = useState([]);
   const [tablePermissions, setTablePermissions] = useState({}); // Store permissions for each table
@@ -188,9 +197,31 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
     }));
   };
 
-  const handleSave = () => {
-    if (!newUser.name || !newUser.email || !newUser.password) {
+  const handleSave = async () => {
+    const trimmedName = newUser.name?.trim();
+    const trimmedEmail = newUser.email?.trim();
+
+    if (!trimmedName || !trimmedEmail || !newUser.password) {
       showNotification("Kérjük töltse ki az összes kötelező mezőt!", "error");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      showNotification("Kérjük adjon meg érvényes email címet!", "error");
+      return;
+    }
+
+    if (newUser.password.length < 6) {
+      showNotification(
+        "A jelszónak legalább 6 karakter hosszúnak kell lennie!",
+        "error"
+      );
+      return;
+    }
+
+    if (newUser.password !== passwordConfirm) {
+      showNotification("A megadott jelszavak nem egyeznek meg!", "error");
       return;
     }
 
@@ -202,7 +233,7 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
       return;
     }
 
-    // For Iskolai users, ensure they can only create users in their own school
+    // For Iskolai users created by school admin, ensure school is assigned
     if (
       !canSelectSchoolForUsers &&
       (!newUser.alapadatokId || !currentUser?.school)
@@ -214,8 +245,40 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
       return;
     }
 
-    onSave(newUser);
-    handleClose();
+    // For Iskolai users created by Superadmin/HSZC, require school selection
+    if (
+      canSelectSchoolForUsers &&
+      userType.startsWith("iskolai_") &&
+      !newUser.alapadatokId
+    ) {
+      showNotification(
+        "Iskolai felhasználó esetén kötelező iskolát választani!",
+        "error"
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        ...newUser,
+        name: trimmedName,
+        email: trimmedEmail.toLowerCase(),
+      };
+      const result = await onSave(payload);
+      if (result?.error) {
+        showNotification(result.error, "error");
+        return;
+      }
+      handleClose();
+    } catch (err) {
+      showNotification(
+        err?.message || "Hiba történt a felhasználó mentése során!",
+        "error"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -228,6 +291,10 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
       alapadatokId: null,
       isActive: true,
     });
+    setPasswordConfirm("");
+    setShowPassword(false);
+    setShowPasswordConfirm(false);
+    setIsSubmitting(false);
     setUserType("iskolai_general");
     setSelectedTables([]);
     setTablePermissions({});
@@ -237,8 +304,8 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle>Új felhasználó létrehozása</DialogTitle>
-      <DialogContent>
-        <Box sx={{ mt: 2 }}>
+      <DialogContent dividers sx={{ maxHeight: "75vh" }}>
+        <Box sx={{ mt: 1 }}>
           <TextField
             fullWidth
             label="Név"
@@ -257,15 +324,76 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
             margin="normal"
             required
           />
-          <TextField
-            fullWidth
-            label="Jelszó"
-            type="password"
-            value={newUser.password}
-            onChange={(e) => handleInputChange("password", e.target.value)}
-            margin="normal"
-            required
-          />
+          <Grid container spacing={2} sx={{ mt: 0.5, mb: 1 }}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Jelszó"
+                type={showPassword ? "text" : "password"}
+                value={newUser.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                required
+                error={Boolean(newUser.password && newUser.password.length < 6)}
+                helperText={
+                  newUser.password && newUser.password.length < 6
+                    ? "Legalább 6 karakter szükséges"
+                    : ""
+                }
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? (
+                          <VisibilityOff fontSize="small" />
+                        ) : (
+                          <Visibility fontSize="small" />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Jelszó megerősítése"
+                type={showPasswordConfirm ? "text" : "password"}
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                required
+                error={Boolean(passwordConfirm && newUser.password !== passwordConfirm)}
+                helperText={
+                  passwordConfirm && newUser.password !== passwordConfirm
+                    ? "A megadott jelszavak nem egyeznek"
+                    : ""
+                }
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          setShowPasswordConfirm(!showPasswordConfirm)
+                        }
+                        edge="end"
+                      >
+                        {showPasswordConfirm ? (
+                          <VisibilityOff fontSize="small" />
+                        ) : (
+                          <Visibility fontSize="small" />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+          </Grid>
           <Divider sx={{ my: 3 }} />
           {/* School Assignment Section - Only show for users who can select schools */}
           {canSelectSchoolForUsers ? (
@@ -413,7 +541,6 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
                 }
               />
             }
-            disabled
             label="Aktív felhasználó"
             sx={{ mt: 2 }}
           />
@@ -470,6 +597,18 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
                   }}
                 >
                   ✏️ Minden tábla szerkesztés
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="error"
+                  onClick={() => {
+                    handleTableAccessChange([]);
+                    setTablePermissions({});
+                    updateUserTableAccess([], {});
+                  }}
+                >
+                  🗑️ Minden eltávolítása
                 </Button>
               </Box>
             </CardContent>
@@ -584,10 +723,21 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
           </Box>
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>Mégse</Button>
-        <Button onClick={handleSave} variant="contained" disabled={tablesLoading}>
-          Létrehozás
+      <DialogActions sx={{ px: 3, py: 2 }}>
+        <Button onClick={handleClose} disabled={isSubmitting}>
+          Mégse
+        </Button>
+        <Button
+          onClick={handleSave}
+          variant="contained"
+          disabled={tablesLoading || isSubmitting}
+          startIcon={
+            isSubmitting ? (
+              <CircularProgress size={18} color="inherit" />
+            ) : null
+          }
+        >
+          {isSubmitting ? "Létrehozás..." : "Létrehozás"}
         </Button>
       </DialogActions>
       <NotificationSnackbar

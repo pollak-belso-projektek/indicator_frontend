@@ -20,6 +20,17 @@ export function useStickyTableHeaders() {
 
       const containers = document.querySelectorAll(".MuiTableContainer-root");
       containers.forEach((container) => {
+        const noStickyScroll =
+          container.getAttribute("data-no-sticky-scroll") === "true" ||
+          container.classList.contains("no-sticky-scroll");
+
+        if (noStickyScroll) {
+          if (container.style.maxHeight) {
+            container.style.maxHeight = "";
+          }
+          return;
+        }
+
         // Ensure container scrolls vertically within the viewport
         if (!container.style.maxHeight) {
           container.style.maxHeight = "calc(100vh - 210px)";

@@ -11,54 +11,49 @@ export const ColumnVisibilitySelector = ({
   table,
   setHiddenColumns,
 }) => (
-  <div>
-    <FormControl sx={{ m: 1, minWidth: 120 }}>
-      <InputLabel id="column-visibility-label">Oszlopok</InputLabel>
-      <Select
-        labelId="column-visibility-label"
-        id="column-visibility-select"
-        multiple
-        value={table
-          .getAllColumns()
-          .filter((column) => column.getIsVisible())
-          .map((column) => column.id)}
-        onChange={(event) => {
-          if (event.target.value.length === 0) {
-            return;
-          }
+  <FormControl size="small" sx={{ minWidth: 140 }}>
+    <InputLabel id="column-visibility-label">Oszlopok</InputLabel>
+    <Select
+      labelId="column-visibility-label"
+      id="column-visibility-select"
+      multiple
+      value={table
+        .getAllColumns()
+        .filter((column) => column.getIsVisible())
+        .map((column) => column.id)}
+      onChange={(event) => {
+        if (event.target.value.length === 0) {
+          return;
+        }
 
-          const value = event.target.value;
-          setHiddenColumns(value);
-          table.setColumnVisibility((old) => ({
-            ...old,
-            ...table.getAllColumns().reduce((acc, column) => {
-              acc[column.id] = value.includes(column.id);
-              return acc;
-            }, {}),
-          }));
-        }}
-        input={<OutlinedInput label="Columns" />}
-        renderValue={(selected) => {
-          if (!selected?.length) {
-            return "Nincs kiválasztva";
-          }
-
-          const visibleColumns = table
-            .getAllColumns()
-            .filter((column) => column.getIsVisible())
-            .map((column) => column.columnDef.header);
-          return visibleColumns.length === 0
-            ? "Nincs kiválasztva"
-            : `Kiválasztott oszlopok: ${selected.length}`;
-        }}
-      >
-        {table.getAllColumns().map((column) => (
-          <MenuItem key={column.id} value={column.id}>
-            <Checkbox checked={column.getIsVisible()} />
-            <ListItemText primary={column.columnDef.header} />
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
-  </div>
+        const value = event.target.value;
+        setHiddenColumns(value);
+        table.setColumnVisibility((old) => ({
+          ...old,
+          ...table.getAllColumns().reduce((acc, column) => {
+            acc[column.id] = value.includes(column.id);
+            return acc;
+          }, {}),
+        }));
+      }}
+      input={<OutlinedInput label="Oszlopok" />}
+      renderValue={(selected) => {
+        if (!selected?.length) {
+          return "Nincs";
+        }
+        return `Oszlopok (${selected.length})`;
+      }}
+      sx={{
+        height: 40,
+        backgroundColor: "#f8f9fa",
+      }}
+    >
+      {table.getAllColumns().map((column) => (
+        <MenuItem key={column.id} value={column.id} sx={{ py: 0.5 }}>
+          <Checkbox size="small" checked={column.getIsVisible()} />
+          <ListItemText primary={column.columnDef.header} />
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
 );

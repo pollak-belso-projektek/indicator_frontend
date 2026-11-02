@@ -8,9 +8,11 @@ import {
   CircularProgress,
   Stack,
   Container,
+  InputAdornment,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import GroupIcon from "@mui/icons-material/Group";
+import SearchIcon from "@mui/icons-material/Search";
 import { useState } from "react";
 import NotificationSnackbar from "../components/shared/NotificationSnackbar";
 import { useUserManagement } from "../hooks/useUserManagement";
@@ -87,6 +89,7 @@ const Users = () => {
     } else if (result.success) {
       showNotification(result.message || "Felhasználó sikeresen létrehozva!");
     }
+    return result;
   };
 
   const handleModifyWithNotification = async (modifiedUser) => {
@@ -136,165 +139,204 @@ const Users = () => {
     );
   }
   return (
-    <Box sx={{ borderRadius: "16px 16px 0 0", pb: 8, bgcolor: "background.default", minHeight: "100vh" }}>
-      {/* Premium Header */}
+    <Box sx={{ pb: 3 }}>
+      {/* Sleek, Modern Header */}
       <Box
         sx={{
           background: "linear-gradient(135deg, #1976d2 0%, #1565c0 100%)",
-          pt: { xs: 8, md: 10 },
-          pb: { xs: 8, md: 12 },
-          px: 2,
+          py: { xs: 2.5, md: 3 },
+          px: { xs: 2.5, md: 3 },
           position: "relative",
           overflow: "hidden",
-          borderRadius: "16px 16px 0 0",
+          borderRadius: 3,
+          boxShadow: "0 4px 20px rgba(25, 118, 210, 0.15)",
+          mb: 2.5,
         }}
       >
-        <Box sx={{
-          position: "absolute", top: -50, right: -50, width: 300, height: 300,
-          borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%)"
-        }} />
-        <Container maxWidth="xl">
-          <Box sx={{ display: "flex", alignItems: "center", gap: 3, position: "relative", zIndex: 1, color: "white" }}>
-            <Box sx={{ p: 2, bgcolor: "rgba(255,255,255,0.15)", borderRadius: 3, backdropFilter: "blur(10px)" }}>
-              <GroupIcon sx={{ fontSize: 40 }} />
-            </Box>
-            <Box>
-              <Typography variant="h4" fontWeight="700" gutterBottom>
-                Felhasználók Kezelése
-              </Typography>
-              <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
-                Kezeld a rendszerhez tartozó felhasználói fiókokat és jogosultságokat
-              </Typography>
-            </Box>
+        <Box
+          sx={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%)",
+          }}
+        />
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            position: "relative",
+            zIndex: 1,
+            color: "white",
+          }}
+        >
+          <Box
+            sx={{
+              p: 1.25,
+              bgcolor: "rgba(255,255,255,0.18)",
+              borderRadius: 2,
+              backdropFilter: "blur(8px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <GroupIcon sx={{ fontSize: 30 }} />
           </Box>
-        </Container>
+          <Box>
+            <Typography variant="h5" fontWeight="700" sx={{ letterSpacing: "-0.01em" }}>
+              Felhasználók Kezelése
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.25 }}>
+              Kezeld a rendszerhez tartozó felhasználói fiókokat és jogosultságokat
+            </Typography>
+          </Box>
+        </Box>
       </Box>
 
-      <Container maxWidth="xl" sx={{ mt: { xs: -4, md: -6 }, position: "relative", zIndex: 2 }}>
+      <CreateUserDialog
+        open={openCreate}
+        onClose={() => setOpenCreate(false)}
+        onSave={handleCreateUserWithNotification}
+        userPermissions={userPermissions}
+      />
 
-        <CreateUserDialog
-          open={openCreate}
-          onClose={() => setOpenCreate(false)}
-          onSave={handleCreateUserWithNotification}
-          userPermissions={userPermissions}
-        />
+      <EditUserDialog
+        open={openModify}
+        onClose={() => setOpenModify(false)}
+        user={selectedUser}
+        onSave={handleModifyWithNotification}
+        fullScreen={fullScreen}
+        userPermissions={userPermissions}
+      />
 
-        <EditUserDialog
-          open={openModify}
-          onClose={() => setOpenModify(false)}
-          user={selectedUser}
-          onSave={handleModifyWithNotification}
-          fullScreen={fullScreen}
-          userPermissions={userPermissions}
-        />
+      <DeleteUserDialog
+        open={open}
+        onClose={handleClose}
+        user={selectedUser}
+        onDelete={handleDeactivateConfirmWithNotification}
+        isDeactivation={true}
+      />
 
-        <DeleteUserDialog
-          open={open}
-          onClose={handleClose}
-          user={selectedUser}
-          onDelete={handleDeactivateConfirmWithNotification}
-          isDeactivation={true}
-        />
+      <Disable2FADialog
+        open={openDisable2FA}
+        onClose={() => setOpenDisable2FA(false)}
+        user={selectedUserFor2FA}
+        onDisable2FA={handleDisable2FAConfirmWithNotification}
+        isLoading={isDisabling2FA}
+      />
 
-        <Disable2FADialog
-          open={openDisable2FA}
-          onClose={() => setOpenDisable2FA(false)}
-          user={selectedUserFor2FA}
-          onDisable2FA={handleDisable2FAConfirmWithNotification}
-          isLoading={isDisabling2FA}
-        />
-
-        {/* Main Content Card */}
-        <Card sx={{ boxShadow: "0 4px 20px rgba(0,0,0,0.05)", borderRadius: 4, overflow: "visible" }}>
-          <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-            {/* Header with Search and Actions */}
-
-            <Stack
-              direction={{ xs: "column", lg: "row" }}
-              spacing={3}
-              justifyContent="space-between"
-              alignItems={{ xs: "stretch", lg: "center" }}
-              sx={{ mb: 4 }}
+      {/* Main Content Card */}
+      <Card
+        sx={{
+          boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+          borderRadius: 3,
+          border: "1px solid #e0e0e0",
+        }}
+      >
+        <CardContent
+          sx={{
+            p: { xs: 2, sm: 2.5, md: 3 },
+            "&:last-child": { pb: { xs: 2, sm: 2.5, md: 3 } },
+          }}
+        >
+          {/* Header with Search and Actions */}
+          <Stack
+            direction={{ xs: "column", lg: "row" }}
+            spacing={2}
+            justifyContent="space-between"
+            alignItems={{ xs: "stretch", lg: "center" }}
+            sx={{ mb: 2.5 }}
+          >
+            {/* Left Side: Column Visibility, Density, Width Reset */}
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 1.5,
+              }}
             >
-              {/* Left Side: Column Visibility, Density, Width */}
-              <Box
-                sx={{
-                  display: "flex",
-                  flexWrap: { xs: "wrap", md: "nowrap" },
-                  alignItems: "center",
-                  gap: 2,
-                  flexGrow: 1,
-                  mb: { xs: 1, md: 0 },
-                }}
-              >
-                {" "}
-                <ColumnVisibilitySelector
-                  table={table}
-                  hiddenColumns={hiddenColumns}
-                  setHiddenColumns={setHiddenColumns}
-                />
-                <TableDensitySelector
-                  density={density}
-                  onDensityChange={setDensity}
-                />
-                <TableResizeControls
-                  table={table}
-                  onResetColumnSizing={handleResetColumnSizing}
-                />
-              </Box>
-
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: 2,
-                  flexWrap: "wrap",
-                  flexGrow: 1,
-                  justifyContent: "flex-end",
-                }}
-              >
-                <TextField
-                  variant="outlined"
-                  size="medium"
-                  placeholder="Keresés a lekérdezett adatok között"
-                  value={globalFilter ?? ""}
-                  onChange={(e) => setGlobalFilter(e.target.value)}
-                  sx={{
-                    minWidth: { xs: "100%", sm: "300px" },
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "#f8f9fa",
-                    },
-                  }}
-                />
-                {userPermissions.getAvailableUserTypes().length > 0 && (
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={handleCreateWithNotification}
-                    sx={{
-                      minWidth: "160px",
-                      height: "56px",
-                      fontWeight: "bold",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    Új felhasználó
-                  </Button>
-                )}
-              </Box>
-            </Stack>
-
-            {/* Table Card */}
-            <Card variant="outlined" sx={{ mb: 3 }}>
-              <UserTable table={table} density={density} />
-            </Card>
-
-            {/* Pagination */}
-            <Box sx={{ display: "flex", justifyContent: "center" }}>
-              <TablePagination table={table} />
+              <ColumnVisibilitySelector
+                table={table}
+                hiddenColumns={hiddenColumns}
+                setHiddenColumns={setHiddenColumns}
+              />
+              <TableDensitySelector
+                density={density}
+                onDensityChange={setDensity}
+              />
+              <TableResizeControls
+                table={table}
+                onResetColumnSizing={handleResetColumnSizing}
+              />
             </Box>
-          </CardContent>
-        </Card>
-      </Container>
+
+            {/* Right Side: Search & Create Button */}
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1.5,
+                flexWrap: { xs: "wrap", sm: "nowrap" },
+                alignItems: "center",
+                justifyContent: { xs: "stretch", lg: "flex-end" },
+              }}
+            >
+              <TextField
+                variant="outlined"
+                size="small"
+                placeholder="Keresés a felhasználók között..."
+                value={globalFilter ?? ""}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" sx={{ color: "text.secondary" }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  minWidth: { xs: "100%", sm: "280px" },
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#f8f9fa",
+                    height: 40,
+                  },
+                }}
+              />
+              {userPermissions.getAvailableUserTypes().length > 0 && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleCreateWithNotification}
+                  sx={{
+                    height: 40,
+                    fontWeight: 600,
+                    textTransform: "none",
+                    whiteSpace: "nowrap",
+                    px: 2.5,
+                    boxShadow: "none",
+                    "&:hover": { boxShadow: "0 2px 8px rgba(25,118,210,0.3)" },
+                  }}
+                >
+                  Új felhasználó
+                </Button>
+              )}
+            </Box>
+          </Stack>
+
+          {/* Table Container */}
+          <UserTable table={table} density={density} />
+
+          {/* Pagination */}
+          <TablePagination table={table} />
+        </CardContent>
+      </Card>
+
       <NotificationSnackbar
         open={notification.open}
         message={notification.message}

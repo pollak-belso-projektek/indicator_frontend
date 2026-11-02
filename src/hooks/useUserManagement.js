@@ -227,7 +227,12 @@ export const useUserManagement = () => {
       return { success: true, message: "Felhasználó sikeresen létrehozva!" };
     } catch (error) {
       console.error("Error creating user:", error);
-      return { error: "Hiba történt a felhasználó létrehozása során!" };
+      const errorMessage =
+        error?.data?.message ||
+        error?.data?.error ||
+        error?.message ||
+        "Hiba történt a felhasználó létrehozása során!";
+      return { error: errorMessage };
     }
   };
   const handleDeactivateConfirm = async () => {

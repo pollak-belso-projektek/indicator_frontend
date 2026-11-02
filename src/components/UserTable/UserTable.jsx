@@ -43,10 +43,15 @@ export const UserTable = ({ table, density = "normal" }) => {
   return (
     <TableContainer
       component={Paper}
+      data-no-sticky-scroll="true"
+      className="no-sticky-scroll"
+      elevation={0}
       sx={{
-        borderRadius: 0,
+        borderRadius: 2,
+        border: "1px solid #e0e0e0",
         margin: "0 auto",
-        overflow: "auto",
+        overflowX: "auto",
+        overflowY: "visible",
       }}
     >
       <Table
@@ -166,7 +171,6 @@ export const UserTable = ({ table, density = "normal" }) => {
           ))}
         </TableHead>
         <TableBody>
-          {console.log("Table rows:", table.getRowModel().rows)}
           {table.getRowModel().rows.map((row) => (
             <TableRow
               key={row.id}
@@ -192,7 +196,13 @@ export const UserTable = ({ table, density = "normal" }) => {
                     width: cell.column.getSize(),
                     overflow: "hidden",
                     textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
+                    whiteSpace: [
+                      "tableAccess",
+                      "permissionsDetails",
+                      "alapadatokId",
+                    ].includes(cell.column.id)
+                      ? "normal"
+                      : "nowrap",
                   }}
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}

@@ -4,7 +4,7 @@ import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 export const TablePagination = ({ table }) => (
   <Box
     sx={{
-      mt: 4,
+      mt: 2.5,
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",

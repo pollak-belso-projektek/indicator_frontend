@@ -15,10 +15,13 @@ export const TableResizeControls = ({ table, onResetColumnSizing }) => {
           onClick={onResetColumnSizing}
           disabled={!hasCustomSizing}
           sx={{
+            height: 40,
             minWidth: "auto",
-            fontSize: "0.75rem",
-            py: 0.5,
-            px: 1,
+            fontSize: "0.8125rem",
+            px: 1.5,
+            textTransform: "none",
+            borderColor: "#dcdfe4",
+            color: hasCustomSizing ? "primary.main" : "text.secondary",
           }}
         >
           Alaphelyzet
