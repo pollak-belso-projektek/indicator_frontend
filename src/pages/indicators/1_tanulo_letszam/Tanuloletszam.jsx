@@ -1,3 +1,4 @@
+import { applyTanugyiFallback } from "../../../utils/tanuloLetszamFallback";
 import { formatHuNum } from "../../../utils/formatters";
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
@@ -858,77 +859,18 @@ export default function TanuloLetszam() {
         }
       });
 
-      // Apply TanugyiAdatok fallback for zero values if TanugyiAdatok is available
+      // Keep the reset snapshot equal to what is actually persisted.
+      setSavedData(structuredClone(initialTableData));
       if (hasTanugyiData) {
-        // Use TanugyiAdatok calculation as fallback
-        const calculatedData = calculateFromTanugyiData();
-
-        // Merge calculated data with initialTableData, preferring non-zero calculated values for zero cells
-        Object.keys(calculatedData).forEach((programType) => {
-          Object.keys(calculatedData[programType]).forEach((year) => {
-            const calculatedValues = calculatedData[programType][year];
-
-            if (!initialTableData[programType]) {
-              initialTableData[programType] = {};
-            }
-            if (!initialTableData[programType][year]) {
-              initialTableData[programType][year] = {
-                tanuloi_jogviszony: 0,
-                felnottkepzesi_jogviszony: 0,
-              };
-            }
-
-            const existingValues = initialTableData[programType][year];
-
-            // Use calculated values if existing values are zero and calculated values are greater than zero
-            if (
-              Number(existingValues.tanuloi_jogviszony) === 0 &&
-              calculatedValues.tanuloi_jogviszony > 0
-            ) {
-              initialTableData[programType][year].tanuloi_jogviszony =
-                calculatedValues.tanuloi_jogviszony;
-            }
-            if (
-              Number(existingValues.felnottkepzesi_jogviszony) === 0 &&
-              calculatedValues.felnottkepzesi_jogviszony > 0
-            ) {
-              initialTableData[programType][year].felnottkepzesi_jogviszony =
-                calculatedValues.felnottkepzesi_jogviszony;
-            }
-          });
-        });
-
-        // Check if any fallback data was actually applied
-        const hasAppliedFallback = Object.keys(calculatedData).some(
-          (programType) =>
-            Object.keys(calculatedData[programType]).some((year) => {
-              const calculatedValues = calculatedData[programType][year];
-              const currentValues = initialTableData[programType]?.[year];
-
-              // Check if any calculated value was actually used (i.e., current value matches calculated and is > 0)
-              return (
-                (currentValues?.tanuloi_jogviszony ===
-                  calculatedValues.tanuloi_jogviszony &&
-                  calculatedValues.tanuloi_jogviszony > 0) ||
-                (currentValues?.felnottkepzesi_jogviszony ===
-                  calculatedValues.felnottkepzesi_jogviszony &&
-                  calculatedValues.felnottkepzesi_jogviszony > 0)
-              );
-            }),
-        );
-
-        if (hasAppliedFallback) {
-          setDataSource("TanuloLetszam + TanugyiAdatok ");
-          setIsModified(true);
-        } else {
-          setDataSource("TanuloLetszam");
-        }
+        const fallback = applyTanugyiFallback(initialTableData, calculateFromTanugyiData());
+        setTableData(fallback.tableData);
+        setIsModified(fallback.isModified);
+        setDataSource(fallback.isModified ? "TanuloLetszam + TanugyiAdatok" : "TanuloLetszam");
       } else {
+        setTableData(initialTableData);
+        setIsModified(false);
         setDataSource("TanuloLetszam");
       }
-
-      setTableData(initialTableData);
-      setSavedData(JSON.parse(JSON.stringify(initialTableData)));
     } else if (hasTanugyiData) {
       const calculatedData = calculateFromTanugyiData();
 
