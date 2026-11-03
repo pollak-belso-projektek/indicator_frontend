@@ -1,3 +1,4 @@
+import { getNszfhStudentCounts } from "../../../utils/nszfhStudentCounts";
 import { parseNszfhExcelRows, mergeNszfhImports } from "../../../utils/nszfhExcel";
 import { formatHuNum } from "../../../utils/formatters";
 import React, { useState, useEffect, useMemo, useRef } from "react";
@@ -40,6 +41,7 @@ import {
   useUpdateNSZFHMutation,
   useGetAlapadatokQuery,
   useGetFelvettekSzamaByAlapadatokIdAndYearQuery,
+  useGetTanugyiAdatokQuery,
 } from "../../../store/api/apiSlice";
 import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
@@ -65,7 +67,7 @@ export default function NszfhMeresek() {
       { skip: !selectedSchool?.id },
     );
 
-  const { data: felvettekAdatok, isLoading: isFelvettekLoading } =
+  const { currentData: felvettekAdatok, isFetching: isFelvettekLoading } =
     useGetFelvettekSzamaByAlapadatokIdAndYearQuery(
       {
         alapadatokId: selectedSchool?.id,
@@ -74,73 +76,10 @@ export default function NszfhMeresek() {
       { skip: !selectedSchool?.id || !currentSchoolYearStart },
     );
 
-  const studentCountsPerSzakirany = useMemo(() => {
-    const counts = { total: 0 };
-    if (!felvettekAdatok || !Array.isArray(felvettekAdatok)) return counts;
-
-    // Deduplicate records by specialization and profession to avoid summing database multiples
-    const uniqueRecords = {};
-    felvettekAdatok.forEach((record) => {
-      if (
-        record.tanev_kezdete &&
-        parseInt(record.tanev_kezdete) !== currentSchoolYearStart
-      ) {
-        return;
-      }
-
-      const szakiranyKey = record.szakirany?.nev || "Nincs meghatározva";
-      const szakmaKey = record.szakma?.nev || "";
-      const dedupKey = `${szakiranyKey}_${szakmaKey}`;
-
-      // Always take the latest one (matches behavior of Indicator 2)
-      uniqueRecords[dedupKey] = record;
-    });
-
-    Object.values(uniqueRecords).forEach((record) => {
-      const felvetelCount = parseInt(record.felvett_letszam) || 0;
-      if (felvetelCount <= 0) return;
-
-      counts.total += felvetelCount;
-
-      const { szakirany, szakma } = record;
-      const rawSzakiranyNev = szakirany?.nev || "Nincs meghatározva";
-      const rawSzakmaNev = szakma?.nev || "";
-
-      let kf = "";
-      const lowerSzakirany = rawSzakiranyNev.toLowerCase();
-      const lowerSzakma = rawSzakmaNev.toLowerCase();
-
-      if (
-        lowerSzakirany.includes("technikum") ||
-        lowerSzakma.includes("technikum")
-      ) {
-        kf = "Technikum";
-      } else if (
-        lowerSzakirany.includes("szakképző") ||
-        lowerSzakma.includes("szakképző") ||
-        lowerSzakirany.includes("szki") ||
-        lowerSzakma.includes("szki")
-      ) {
-        kf = "Szakképző iskola";
-      }
-
-      let normalizedSzakiranyNev = rawSzakiranyNev;
-      if (normalizedSzakiranyNev && normalizedSzakiranyNev.includes(" - ")) {
-        normalizedSzakiranyNev = normalizedSzakiranyNev.split(" - ")[0].trim();
-      }
-
-      if (kf) {
-        counts[kf] = (counts[kf] || 0) + felvetelCount;
-      }
-      if (normalizedSzakiranyNev) {
-        counts[normalizedSzakiranyNev] =
-          (counts[normalizedSzakiranyNev] || 0) + felvetelCount;
-      }
-    });
-
-    console.log("NSZFH Deduped studentCounts:", counts);
-    return counts;
-  }, [felvettekAdatok, currentSchoolYearStart]);
+  const { currentData: tanugyiAdatok, isFetching: isTanugyiLoading } = useGetTanugyiAdatokQuery(
+    { alapadatok_id: selectedSchool?.id, ev: currentSchoolYearStart },
+    { skip: !selectedSchool?.id || !currentSchoolYearStart },
+  );
 
   const szakiranyok = useMemo(() => {
     const items = [];
@@ -172,6 +111,10 @@ export default function NszfhMeresek() {
       return "Szakképző";
     return tipus;
   }, [selectedSchool]);
+
+  const studentCountsPerSzakirany = useMemo(() => getNszfhStudentCounts(
+    felvettekAdatok, tanugyiAdatok, currentSchoolYearStart, kepzesForma,
+  ), [felvettekAdatok, tanugyiAdatok, currentSchoolYearStart, kepzesForma]);
 
   const layoutStructure = useMemo(() => {
     let rows = [];
@@ -465,7 +408,7 @@ export default function NszfhMeresek() {
     setUploadedExcelData(null);
   };
 
-  if (isNSZFHLoading || isAlapadatokLoading || isFelvettekLoading) {
+  if (isNSZFHLoading || isAlapadatokLoading || isFelvettekLoading || isTanugyiLoading) {
     return <PageLoadingOverlay isLoading={true} />;
   }
 
