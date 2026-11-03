@@ -12,6 +12,7 @@ import {
 } from "../../../store/api/apiSlice";
 import {
   Box,
+  TextField,
   Typography,
   Table,
   TableBody,
@@ -974,15 +975,15 @@ export default function SzakmaiEredmenyek() {
                   ))}
                 </Select>
               </FormControl>
-              <ZeroHidingTextField
+              <TextField
                 fullWidth
                 label="Verseny neve"
-                value={newCompetition.name || 0}
+                value={newCompetition.name}
                 onChange={(e) =>
                   setNewCompetition({ ...newCompetition, name: e.target.value })
                 }
                 placeholder="pl. Új verseny neve"
-                placeholder="0" />
+              />
             </Stack>
           </DialogContent>
           <DialogActions>

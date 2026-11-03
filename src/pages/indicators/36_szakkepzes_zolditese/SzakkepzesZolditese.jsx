@@ -10,6 +10,7 @@ import {
 } from "../../../store/api/apiSlice";
 import {
   Box,
+  TextField,
   Typography,
   Table,
   TableBody,
@@ -653,14 +654,14 @@ export default function SzakkepzesZolditese() {
                 </Select>
               </FormControl>
 
-              <ZeroHidingTextField
+              <TextField
                 fullWidth
                 label="Tevékenység megnevezése"
-                value={newActivityName || 0}
+                value={newActivityName}
                 onChange={(e) => setNewActivityName(e.target.value)}
                 placeholder="Pl. városi szemétgyűjtési akció"
                 multiline
-                placeholder="0" />
+              />
             </Box>
           </DialogContent>
           <DialogActions sx={{ p: 2, pt: 0 }}>

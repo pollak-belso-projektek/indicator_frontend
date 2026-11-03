@@ -10,6 +10,7 @@ import {
 } from "../../../store/api/apiSlice";
 import {
   Box,
+  TextField,
   Typography,
   Table,
   TableBody,
@@ -575,15 +576,15 @@ export default function InnovaciosTevekenysegek() {
             <Box
               sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
             >
-              <ZeroHidingTextField
+              <TextField
                 fullWidth
                 label="Innovációs tevékenység megnevezése"
-                value={newActivityName || 0}
+                value={newActivityName}
                 onChange={(e) => setNewActivityName(e.target.value)}
                 placeholder="Pl. Online időpontfoglaló rendszer..."
                 autoFocus
                 multiline
-                placeholder="0" />
+              />
             </Box>
           </DialogContent>
           <DialogActions sx={{ p: 2, pt: 0 }}>

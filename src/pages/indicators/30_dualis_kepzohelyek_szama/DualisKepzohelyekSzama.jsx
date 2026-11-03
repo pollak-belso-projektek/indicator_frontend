@@ -10,6 +10,7 @@ import {
 } from "../../../store/api/apiSlice";
 import {
   Box,
+  TextField,
   Typography,
   Table,
   TableBody,
@@ -730,14 +731,14 @@ export default function DualisKepzohelyekSzama() {
             <Box
               sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
             >
-              <ZeroHidingTextField
+              <TextField
                 fullWidth
                 label="Duális képzőhely megnevezése"
-                value={newActivityName || 0}
+                value={newActivityName}
                 onChange={(e) => setNewActivityName(e.target.value)}
                 placeholder="Pl. metALCOM Távközlési..."
                 autoFocus
-                placeholder="0" />
+              />
             </Box>
           </DialogContent>
           <DialogActions sx={{ p: 2, pt: 0 }}>

@@ -10,6 +10,7 @@ import {
 } from "../../../store/api/apiSlice";
 import {
   Box,
+  TextField,
   Typography,
   Table,
   TableBody,
@@ -1125,12 +1126,12 @@ export default function Palyazatok() {
                 )}
 
               {newPalyazatCategory && newPalyazatSelectionType === "custom" && (
-                <ZeroHidingTextField
+                <TextField
                   fullWidth
                   label="Egyéni pályázat megnevezése"
-                  value={customPalyazatName || 0}
+                  value={customPalyazatName}
                   onChange={(e) => setCustomPalyazatName(e.target.value)}
-                  placeholder="0" />
+                />
               )}
             </Box>
           </DialogContent>
