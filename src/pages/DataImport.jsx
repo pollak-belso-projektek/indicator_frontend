@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { getTanugyiRecordsForYear } from "../utils/tanugyiImportSummary";
 import { fields } from "../tableData/tanuloTanugyiData";
 import { mapEmployeeData } from "../tableData/alkalmazottMunkaugyiData";
 import { mapTanuloAdatszolgaltatasData } from "../tableData/tanuloAdatszolgaltatasData";
@@ -79,6 +80,11 @@ export default function DataImport() {
     alapadatok_id: selectedSchool?.id,
     ev: currentYearStart,
   });
+
+  const currentYearTanugyiData = useMemo(
+    () => getTanugyiRecordsForYear(tanugyiDataFromAPI, currentYearStart),
+    [tanugyiDataFromAPI, currentYearStart],
+  );
 
   // Alkalmazott adatok API hooks
   const [addAlkalmazottAdatok] = useAddAlkalmazottAdatokMutation();
@@ -411,18 +417,14 @@ export default function DataImport() {
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="body1" color="text.secondary">
                     <strong>Tárgyévi betöltött adatok:</strong>{" "}
-                    {getLatestLoadedDate(tanugyiDataFromAPI)}
+                    {getLatestLoadedDate(currentYearTanugyiData)}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
                     <strong>
                       Rendszerben lévő összes adat száma erre a tanévre:
                     </strong>{" "}
                     <Chip
-                      label={
-                        tanugyiDataFromAPI && Array.isArray(tanugyiDataFromAPI)
-                          ? tanugyiDataFromAPI.length
-                          : 0
-                      }
+                      label={currentYearTanugyiData.length}
                       color="primary"
                       size="small"
                     />
