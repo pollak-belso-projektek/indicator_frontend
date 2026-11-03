@@ -61,6 +61,7 @@ export default function DataImport() {
   const currentUser = useSelector(selectUser);
   const selectedSchool = useSelector(selectSelectedSchool);
   const [tanugyiSaveSuccess, setTanugyiSaveSuccess] = useState(false);
+  const [tanugyiSyncWarnings, setTanugyiSyncWarnings] = useState([]);
 
   // Always use the current school year start
   const currentYearStart =
@@ -114,6 +115,7 @@ export default function DataImport() {
   useEffect(() => {
     if (tanugyiData && !tanugyiValidationError) {
       setTanugyiSaveSuccess(false);
+      setTanugyiSyncWarnings([]);
       tanugyiData.forEach((item) => {
         if (!item.uj_Szkt_agazat_tipusa || !item.uj_szkt_szakma_tipusa) {
           setTanugyiValidationError("Tanügyi adatok validáció hiba");
@@ -127,7 +129,8 @@ export default function DataImport() {
         userId: currentUser?.id,
       })
         .unwrap()
-        .then(() => {
+        .then((result) => {
+          setTanugyiSyncWarnings(result?.syncWarnings || []);
           setTanugyiSaveSuccess(true);
         })
         .catch((err) => {
@@ -482,12 +485,15 @@ export default function DataImport() {
                       {isTanugyiSaving ? (
                         <Alert severity="info" icon={<CircularProgress size={20} />}>
                           <AlertTitle>Mentés és szinkronizálás folyamatban...</AlertTitle>
-                          Tanügyi adatok mentése és a tanulólétszám automatikus kiszámítása...
+                          Tanügyi adatok mentése, a tanulólétszám és a felvettek számának automatikus mentése...
                         </Alert>
                       ) : tanugyiSaveSuccess ? (
-                        <Alert severity="success">
-                          <AlertTitle>Sikeresen mentve és szinkronizálva!</AlertTitle>
-                          {tanugyiData.length} tanügyi adat feltöltve. A tanulólétszám adatok automatikusan kiszámításra és mentésre kerültek a háttérben.
+                        <Alert severity={tanugyiSyncWarnings.length ? "warning" : "success"}>
+                          <AlertTitle>{tanugyiSyncWarnings.length ? "Tanügyi adatok mentve, a szinkronizálás nem teljes!" : "Sikeresen mentve és szinkronizálva!"}</AlertTitle>
+                          {tanugyiData.length} tanügyi adat feltöltve.{" "}
+                          {tanugyiSyncWarnings.length
+                            ? tanugyiSyncWarnings.join(" ") + " Az automatikus mentés az import megismétlésével próbálható újra."
+                            : "A tanulólétszám és a felvettek száma automatikusan kiszámításra és mentésre került."}
                           <Box sx={{ mt: 2 }}>
                             <Button
                               variant="contained"

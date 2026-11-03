@@ -429,6 +429,7 @@ export const indicatorApi = createApi({
         },
         "TanugyiAdatok",
         "TanuloLetszam", // Also invalidate related student data
+        "FelvettekSzama",
       ],
       // Force refetch after successful mutation
       async onQueryStarted(params, { dispatch, queryFulfilled }) {
@@ -439,6 +440,7 @@ export const indicatorApi = createApi({
             indicatorApi.util.invalidateTags([
               "TanugyiAdatok",
               "TanuloLetszam",
+              "FelvettekSzama",
             ]),
           );
         } catch (e) {
