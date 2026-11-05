@@ -33,9 +33,10 @@ import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
 import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
+import { useSchoolClasses } from "../../../hooks/useSchoolClasses";
 
-// Fixed class list
-const FIXED_CLASSES = [
+// Default class list fallback
+const DEFAULT_CLASSES = [
   "9.A",
   "9.B",
   "10.A",
@@ -78,6 +79,20 @@ export default function NyelvvizsgakSzama() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queries.map((q) => q.fulfilledTimeStamp).join(","), selectedSchool?.id]);
 
+  const existingDbClasses = useMemo(() => {
+    if (!Array.isArray(dbData)) return [];
+    return Array.from(new Set(dbData.map((d) => d.osztaly).filter(Boolean)));
+  }, [dbData]);
+
+  const latestYear = schoolYears.length > 0 ? schoolYears[schoolYears.length - 1] : new Date().getFullYear();
+  const { classes } = useSchoolClasses({
+    schoolId: selectedSchool?.id,
+    year: latestYear,
+    daytimeOnly: true,
+    fallbackClasses: DEFAULT_CLASSES,
+    existingDbClasses,
+  });
+
   const isLoading = useMemo(
     () => queries.some((q) => q.isLoading),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -110,12 +125,12 @@ export default function NyelvvizsgakSzama() {
   });
 
   useEffect(() => {
-    if (dbData && !isFetching) {
-      // Initialize all fixed classes with empty data
+    if (dbData && !isFetching && classes.length > 0) {
+      // Initialize all dynamic classes with empty data
       const newData = {};
       const origData = {};
 
-      FIXED_CLASSES.forEach((cls) => {
+      classes.forEach((cls) => {
         newData[cls] = {};
         origData[cls] = {};
         schoolYears.forEach((year) => {
@@ -128,7 +143,7 @@ export default function NyelvvizsgakSzama() {
       if (Array.isArray(dbData)) {
         dbData.forEach((item) => {
           const name = item.osztaly;
-          if (!name || !FIXED_CLASSES.includes(name)) return;
+          if (!name || !classes.includes(name)) return;
           const yearRange = `${item.tanev_kezdete}/${item.tanev_kezdete + 1}`;
           if (!schoolYears.includes(yearRange)) return;
 
@@ -151,7 +166,7 @@ export default function NyelvvizsgakSzama() {
       setOriginalData(origData);
       setIsModified(false);
     }
-  }, [dbData, isFetching, schoolYears]);
+  }, [dbData, isFetching, schoolYears, classes]);
 
   const handleDataChange = useCallback((name, year, field, value) => {
     setTableData((prev) => ({
@@ -199,14 +214,14 @@ export default function NyelvvizsgakSzama() {
   };
 
   const calculateColumnTotal = (year, field) => {
-    return FIXED_CLASSES.reduce(
+    return classes.reduce(
       (sum, cls) => sum + getNumericValue(cls, year, field),
       0,
     );
   };
 
   const calculateYearGrandTotal = (year) => {
-    return FIXED_CLASSES.reduce(
+    return classes.reduce(
       (sum, cls) => sum + calculateRowTotal(cls, year),
       0,
     );
@@ -221,7 +236,7 @@ export default function NyelvvizsgakSzama() {
     try {
       const promises = [];
 
-      FIXED_CLASSES.forEach((name) => {
+      classes.forEach((name) => {
         schoolYears.forEach((year) => {
           const isNew = !originalData[name]?.[year]?.id;
           let shouldSave = false;
@@ -501,7 +516,7 @@ export default function NyelvvizsgakSzama() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {FIXED_CLASSES.map((cls) => (
+                  {classes.map((cls) => (
                     <TableRow key={cls} hover>
                       <TableCell
                         sx={{

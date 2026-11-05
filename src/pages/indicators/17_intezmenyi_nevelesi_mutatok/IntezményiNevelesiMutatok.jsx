@@ -39,7 +39,13 @@ import {
   useGetIntezmenyiNeveltsegiMutatokByYearQuery,
   useGetTanugyiAdatokQuery,
   useBulkSaveIntezmenyiNeveltsegMutation,
+  useGetOsztalyAdatszolgaltatasQuery,
 } from "../../../store/api/apiSlice";
+import {
+  extractNappaliClasses,
+  getOsztalyDataLocally,
+  isNappaliClass,
+} from "../../../utils/classUtils";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
 import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
@@ -312,12 +318,22 @@ export default function IntezményiNevelesiMutatok() {
     ev: currentSchoolYearStart,
   });
 
+  const {
+    data: osztalyData,
+    isLoading: isLoadingOsztaly,
+  } = useGetOsztalyAdatszolgaltatasQuery(
+    {
+      alapadatok_id: selectedSchool?.id,
+      tanev_kezdete: currentSchoolYearStart,
+    },
+    { skip: !selectedSchool?.id }
+  );
+
   const [classes, setClasses] = useState([]);
   const [classRows, setClassRows] = useState({});
   const [savedData, setSavedData] = useState(null);
   const [isModified, setIsModified] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
-
 
   const hasHydratedRows =
     classes.length === 0 || Object.keys(classRows).length === classes.length;
@@ -325,22 +341,51 @@ export default function IntezményiNevelesiMutatok() {
     Boolean(selectedSchool?.id) &&
     !isSaving &&
     (isLoadingTanugyi ||
+      isLoadingOsztaly ||
       isLoadingNeveltsegi ||
       isFetchingTanugyi ||
       isRefreshing ||
       !hasHydratedRows);
 
   useEffect(() => {
-    const classList = new Set();
-    if (tanugyiData) {
+    // 1. Try to get daytime classes from OSAP osztaly adatszolgaltatas (API or local cache)
+    const localOsztalyRecords = getOsztalyDataLocally(selectedSchool?.id, currentSchoolYearStart);
+    const osapRecords = (Array.isArray(osztalyData) && osztalyData.length > 0)
+      ? osztalyData
+      : localOsztalyRecords;
+
+    let dynamicClasses = [];
+    if (Array.isArray(osapRecords) && osapRecords.length > 0) {
+      dynamicClasses = extractNappaliClasses(osapRecords);
+    }
+
+    // 2. Fallback to tanugyiData if no OSAP records, filtering for nappali
+    if (dynamicClasses.length === 0 && tanugyiData) {
+      const classSet = new Set();
       tanugyiData.forEach((item) => {
         if (item.osztaly) {
-          classList.add(normalizeClassLabel(item.osztaly));
+          const isDaytime = !item.munkarend || item.munkarend.toLowerCase().includes("nappali");
+          if (isDaytime) {
+            classSet.add(normalizeClassLabel(item.osztaly));
+          }
         }
       });
-      setClasses(Array.from(classList).sort(compareClasses));
+      dynamicClasses = Array.from(classSet).sort(compareClasses);
     }
-  }, [tanugyiData]);
+
+    // 3. Always preserve classes from existing saved neveltsegi records
+    const apiRows = Array.isArray(intezmenyiNeveltsegiMutatokData) ? intezmenyiNeveltsegiMutatokData : [];
+    if (apiRows.length > 0) {
+      const classSet = new Set(dynamicClasses);
+      apiRows.forEach((r) => {
+        const cls = getRecordClassLabel(r);
+        if (cls) classSet.add(cls);
+      });
+      dynamicClasses = Array.from(classSet).sort(compareClasses);
+    }
+
+    setClasses(dynamicClasses);
+  }, [osztalyData, tanugyiData, intezmenyiNeveltsegiMutatokData, selectedSchool?.id, currentSchoolYearStart]);
 
   useEffect(() => {
     if (!classes.length) {

@@ -214,6 +214,23 @@ const OKTATO_ADATSZOLGALTATAS_REQUIRED_COLUMNS = [
   "oktató tantervi jellemző szerint",
 ];
 
+/**
+ * Osztály adatszolgáltatás (OSAP) jellemző oszlopai
+ */
+const OSZTALY_ADATSZOLGALTATAS_REQUIRED_COLUMNS = [
+  "osztaly neve",
+  "osztály neve",
+  "intezmeny om azonosito",
+  "intézmény om azonosító",
+  "osztaly tantervi jellemzo",
+  "osztály tantervi jellemző",
+  "munkarend",
+  "evfolyam",
+  "évfolyam",
+  "osztaly letszam kategoria",
+  "osztály létszám kategória",
+];
+
 export function validateTanuloAdatszolgaltatasFile(headers) {
   if (!headers || !Array.isArray(headers)) {
     return {
@@ -275,6 +292,36 @@ export function validateOktatoAdatszolgaltatasFile(headers) {
   };
 }
 
+export function validateOsztalyAdatszolgaltatasFile(headers) {
+  if (!headers || !Array.isArray(headers)) {
+    return {
+      isValid: false,
+      error: "Nem sikerült beolvasni a fájl fejléceit",
+    };
+  }
+
+  const matches = countMatchingColumns(
+    headers,
+    OSZTALY_ADATSZOLGALTATAS_REQUIRED_COLUMNS
+  );
+
+  if (matches < 2) {
+    return {
+      isValid: false,
+      error:
+        "A fájl nem tartalmazza a szükséges osztály adatszolgáltatás oszlopait. Keresett oszlopok pl.: Osztály neve, Intézmény OM azonosító, Munkarend, Évfolyam...",
+      fileType: "unknown",
+      details: `Nem található elegendő oszlop a fájlban`,
+    };
+  }
+
+  return {
+    isValid: true,
+    fileType: "osztaly_adatszolgaltatas",
+    matchedColumns: matches,
+  };
+}
+
 export function validateFileHeaders(headers, expectedType = "auto") {
   if (expectedType === "tanugyi") {
     return validateTanugyiFile(headers);
@@ -284,6 +331,8 @@ export function validateFileHeaders(headers, expectedType = "auto") {
     return validateTanuloAdatszolgaltatasFile(headers);
   } else if (expectedType === "oktato_adatszolgaltatas") {
     return validateOktatoAdatszolgaltatasFile(headers);
+  } else if (expectedType === "osztaly_adatszolgaltatas") {
+    return validateOsztalyAdatszolgaltatasFile(headers);
   }
 
   // Auto-detect
@@ -291,8 +340,11 @@ export function validateFileHeaders(headers, expectedType = "auto") {
   const alkalmazottMatches = countMatchingColumns(headers, ALKALMAZOTT_REQUIRED_COLUMNS);
   const tanuloAdatszolgaltatasMatches = countMatchingColumns(headers, TANULO_ADATSZOLGALTATAS_REQUIRED_COLUMNS);
   const oktatoAdatszolgaltatasMatches = countMatchingColumns(headers, OKTATO_ADATSZOLGALTATAS_REQUIRED_COLUMNS);
+  const osztalyAdatszolgaltatasMatches = countMatchingColumns(headers, OSZTALY_ADATSZOLGALTATAS_REQUIRED_COLUMNS);
 
-  if (tanuloAdatszolgaltatasMatches >= 2 && tanuloAdatszolgaltatasMatches > tanugyiMatches) {
+  if (osztalyAdatszolgaltatasMatches >= 2 && osztalyAdatszolgaltatasMatches > tanugyiMatches) {
+    return validateOsztalyAdatszolgaltatasFile(headers);
+  } else if (tanuloAdatszolgaltatasMatches >= 2 && tanuloAdatszolgaltatasMatches > tanugyiMatches) {
     return validateTanuloAdatszolgaltatasFile(headers);
   } else if (oktatoAdatszolgaltatasMatches >= 1 && oktatoAdatszolgaltatasMatches > tanugyiMatches) {
     return validateOktatoAdatszolgaltatasFile(headers);

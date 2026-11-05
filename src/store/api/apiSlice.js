@@ -46,6 +46,7 @@ export const indicatorApi = createApi({
     "Szakma",
     "TanuloAdatszolgaltatas",
     "OktatoAdatszolgaltatas",
+    "OsztalyAdatszolgaltatas",
     "Changelog",
     "Hianyzas",
     "SzakmaiTovabbkepzesek",
@@ -549,6 +550,33 @@ export const indicatorApi = createApi({
         },
       }),
       invalidatesTags: ["OktatoAdatszolgaltatas"],
+    }),
+    getOsztalyAdatszolgaltatas: build.query({
+      query: (params) =>
+        `osztaly_adatszolgaltatas/${params.alapadatok_id}/${params.tanev_kezdete}`,
+      providesTags: (result, error, params) => [
+        {
+          type: "OsztalyAdatszolgaltatas",
+          id: `${params.alapadatok_id}_${params.tanev_kezdete}`,
+        },
+        "OsztalyAdatszolgaltatas",
+      ],
+    }),
+    addOsztalyAdatszolgaltatas: build.mutation({
+      query: (params) => ({
+        url: "osztaly_adatszolgaltatas/",
+        method: "POST",
+        body: {
+          alapadatok_id: params.alapadatok_id,
+          tanev_kezdete: params.tanev_kezdete,
+          osztaly_adatszolgaltatas: params.osztaly_adatszolgaltatas,
+        },
+      }),
+      invalidatesTags: [
+        "OsztalyAdatszolgaltatas",
+        "Nyelvvizsgak",
+        "IntezmenyiNeveltsegiMutatok",
+      ],
     }),
     // Table management endpoints
     getTableList: build.query({
@@ -1951,6 +1979,8 @@ export const {
   useGetTanuloAdatszolgaltatasQuery,
   useAddOktatoAdatszolgaltatasMutation,
   useGetOktatoAdatszolgaltatasQuery,
+  useAddOsztalyAdatszolgaltatasMutation,
+  useGetOsztalyAdatszolgaltatasQuery,
   // Educational Indicators hooks
   useGetElhelyezkedesByYearQuery,
   useGetElhelyezkedesBySchoolAndYearQuery,
