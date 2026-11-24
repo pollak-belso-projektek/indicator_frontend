@@ -37,14 +37,12 @@ import { selectSelectedSchool } from "../../../store/slices/authSlice";
 import ExportDOMTableToExcel from "../../../components/ExportDOMTableToExcel";
 import {
   useGetIntezmenyiNeveltsegiMutatokByYearQuery,
-  useGetTanugyiAdatokQuery,
   useBulkSaveIntezmenyiNeveltsegMutation,
   useGetOsztalyAdatszolgaltatasQuery,
 } from "../../../store/api/apiSlice";
 import {
   extractNappaliClasses,
   getOsztalyDataLocally,
-  isNappaliClass,
 } from "../../../utils/classUtils";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
@@ -292,7 +290,7 @@ export default function IntezményiNevelesiMutatok() {
   );
 
   const {
-    data: intezmenyiNeveltsegiMutatokData,
+    currentData: intezmenyiNeveltsegiMutatokData,
     refetch,
     isLoading: isLoadingNeveltsegi,
     isFetching: isRefreshing,
@@ -310,16 +308,7 @@ export default function IntezményiNevelesiMutatok() {
     useBulkSaveIntezmenyiNeveltsegMutation();
 
   const {
-    data: tanugyiData,
-    isLoading: isLoadingTanugyi,
-    isFetching: isFetchingTanugyi,
-  } = useGetTanugyiAdatokQuery({
-    alapadatok_id: selectedSchool?.id,
-    ev: currentSchoolYearStart,
-  });
-
-  const {
-    data: osztalyData,
+    currentData: osztalyData,
     isLoading: isLoadingOsztaly,
   } = useGetOsztalyAdatszolgaltatasQuery(
     {
@@ -340,10 +329,8 @@ export default function IntezményiNevelesiMutatok() {
   const isInitialLoading =
     Boolean(selectedSchool?.id) &&
     !isSaving &&
-    (isLoadingTanugyi ||
-      isLoadingOsztaly ||
+    (isLoadingOsztaly ||
       isLoadingNeveltsegi ||
-      isFetchingTanugyi ||
       isRefreshing ||
       !hasHydratedRows);
 
@@ -359,22 +346,12 @@ export default function IntezményiNevelesiMutatok() {
       dynamicClasses = extractNappaliClasses(osapRecords);
     }
 
-    // 2. Fallback to tanugyiData if no OSAP records, filtering for nappali
-    if (dynamicClasses.length === 0 && tanugyiData) {
-      const classSet = new Set();
-      tanugyiData.forEach((item) => {
-        if (item.osztaly) {
-          const isDaytime = !item.munkarend || item.munkarend.toLowerCase().includes("nappali");
-          if (isDaytime) {
-            classSet.add(normalizeClassLabel(item.osztaly));
-          }
-        }
-      });
-      dynamicClasses = Array.from(classSet).sort(compareClasses);
-    }
-
-    // 3. Always preserve classes from existing saved neveltsegi records
-    const apiRows = Array.isArray(intezmenyiNeveltsegiMutatokData) ? intezmenyiNeveltsegiMutatokData : [];
+    // Preserve saved classes only for the selected school year.
+    const apiRows = Array.isArray(intezmenyiNeveltsegiMutatokData)
+      ? intezmenyiNeveltsegiMutatokData.filter(record =>
+          Number(record.tanev_kezdete ?? record.tanev) === currentSchoolYearStart,
+        )
+      : [];
     if (apiRows.length > 0) {
       const classSet = new Set(dynamicClasses);
       apiRows.forEach((r) => {
@@ -385,7 +362,7 @@ export default function IntezményiNevelesiMutatok() {
     }
 
     setClasses(dynamicClasses);
-  }, [osztalyData, tanugyiData, intezmenyiNeveltsegiMutatokData, selectedSchool?.id, currentSchoolYearStart]);
+  }, [osztalyData, intezmenyiNeveltsegiMutatokData, selectedSchool?.id, currentSchoolYearStart]);
 
   useEffect(() => {
     if (!classes.length) {
@@ -411,7 +388,7 @@ export default function IntezményiNevelesiMutatok() {
     setClassRows(nextRows);
     setSavedData(JSON.parse(JSON.stringify(nextRows)));
     setIsModified(false);
-  }, [classes, intezmenyiNeveltsegiMutatokData]);
+  }, [classes, intezmenyiNeveltsegiMutatokData, currentSchoolYearStart]);
 
   const summaryData = useMemo(() => {
     const summary = createEmptyRow();
@@ -592,7 +569,7 @@ export default function IntezményiNevelesiMutatok() {
     >
       <Box>
         <LockStatusIndicator tableName="intezmenyi_nevelesi_mutatok" />
-        <PageLoadingOverlay isLoading={isRefreshing || isFetchingTanugyi} />
+        <PageLoadingOverlay isLoading={isRefreshing} />
 
         {isInitialLoading && (
           <Card sx={{ mt: 2, mb: 3 }}>
@@ -638,7 +615,7 @@ export default function IntezményiNevelesiMutatok() {
                 Az adatok sikeresen mentve!
               </Alert>
             )}
-            <Card sx={{ position: "sticky", top: 0, zIndex: 20, backgroundColor: "rgba(255, 255, 255, 0.98)", backdropFilter: "blur(8px)", width: "100%", p: 2, borderBottom: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 20px -2px rgba(0,0,0,0.05)", borderRadius: "8px 8px 8px 8px", mb: 3, p: 2 }}>
+            <Card sx={{ position: "sticky", top: 0, zIndex: 20, backgroundColor: "rgba(255, 255, 255, 0.98)", backdropFilter: "blur(8px)", width: "100%", p: 2, borderBottom: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 20px -2px rgba(0,0,0,0.05)", borderRadius: "8px 8px 8px 8px", mb: 3 }}>
               <ExportDOMTableToExcel
                 tableId=".MuiTable-root"
                 fileName="export_adatok"
