@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   Paper,
-  Grid,
   Chip,
   Alert,
   Button,
@@ -439,8 +438,14 @@ export default function Logs() {
           borderColor: "divider",
         }}
       >
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={5}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "5fr 7fr" },
+            gap: 3,
+          }}
+        >
+          <Box sx={{ minWidth: 0 }}>
             <Typography
               variant="subtitle1"
               gutterBottom
@@ -572,9 +577,9 @@ export default function Logs() {
               )}
               {log.message && <DetailItem label="Üzenet" value={log.message} />}
             </Box>
-          </Grid>
+          </Box>
 
-          <Grid item xs={12} md={7}>
+          <Box sx={{ minWidth: 0 }}>
             <Typography
               variant="subtitle1"
               gutterBottom
@@ -637,8 +642,8 @@ export default function Logs() {
                 <CodeBlock title="Raw JSON" data={log} color="#d4d4d4" />
               </Box>
             </details>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Box>
     );
   };
@@ -810,73 +815,79 @@ export default function Logs() {
       </Box>
 
       {/* Interactive 30-day Stats Cards */}
-      <Grid container spacing={2} sx={{ mb: 2.5 }}>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, 1fr)" },
+          gap: 2,
+          mb: 2.5,
+        }}
+      >
         {kpiCards.map((card) => {
           const isSelected = filters.level === card.level;
           return (
-            <Grid item xs={6} sm={3} key={card.level}>
-              <Card
-                onClick={() => handleFilterChange("level", card.level)}
+            <Card
+              key={card.level}
+              onClick={() => handleFilterChange("level", card.level)}
+              sx={{
+                cursor: "pointer",
+                borderRadius: 2.5,
+                border: "1.5px solid",
+                borderColor: isSelected ? card.color : "rgba(0,0,0,0.08)",
+                boxShadow: isSelected
+                  ? `0 4px 14px ${alpha(card.color, 0.2)}`
+                  : "0 2px 8px rgba(0,0,0,0.04)",
+                transition: "all 0.15s ease",
+                "&:hover": {
+                  borderColor: card.color,
+                  transform: "translateY(-1px)",
+                },
+              }}
+            >
+              <CardContent
                 sx={{
-                  cursor: "pointer",
-                  borderRadius: 2.5,
-                  border: "1.5px solid",
-                  borderColor: isSelected ? card.color : "rgba(0,0,0,0.08)",
-                  boxShadow: isSelected
-                    ? `0 4px 14px ${alpha(card.color, 0.2)}`
-                    : "0 2px 8px rgba(0,0,0,0.04)",
-                  transition: "all 0.15s ease",
-                  "&:hover": {
-                    borderColor: card.color,
-                    transform: "translateY(-1px)",
-                  },
+                  p: 2,
+                  "&:last-child": { pb: 2 },
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 1.5,
                 }}
               >
-                <CardContent
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight={600}
+                    noWrap
+                    display="block"
+                  >
+                    {card.label}
+                  </Typography>
+                  <Typography
+                    variant="h5"
+                    fontWeight={800}
+                    sx={{ color: card.color, mt: 0.25 }}
+                  >
+                    {Number(card.value).toLocaleString("hu-HU")}
+                  </Typography>
+                </Box>
+                <Box
                   sx={{
-                    p: 2,
-                    "&:last-child": { pb: 2 },
+                    p: 1,
+                    borderRadius: 2,
+                    bgcolor: card.bg,
+                    color: card.color,
                     display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 1.5,
                   }}
                 >
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      fontWeight={600}
-                      noWrap
-                      display="block"
-                    >
-                      {card.label}
-                    </Typography>
-                    <Typography
-                      variant="h5"
-                      fontWeight={800}
-                      sx={{ color: card.color, mt: 0.25 }}
-                    >
-                      {Number(card.value).toLocaleString("hu-HU")}
-                    </Typography>
-                  </Box>
-                  <Box
-                    sx={{
-                      p: 1,
-                      borderRadius: 2,
-                      bgcolor: card.bg,
-                      color: card.color,
-                      display: "flex",
-                    }}
-                  >
-                    {card.icon}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+                  {card.icon}
+                </Box>
+              </CardContent>
+            </Card>
           );
         })}
-      </Grid>
+      </Box>
 
       {/* Main Table Card with Integrated Filters */}
       <Paper
@@ -889,106 +900,111 @@ export default function Logs() {
       >
         {/* Filter Toolbar */}
         <Box sx={{ p: { xs: 2, md: 2.5 }, borderBottom: "1px solid", borderColor: "divider" }}>
-          <Grid container spacing={1.5} alignItems="center">
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Keresés útvonal alapján (pl. /api/v1/users)..."
-                value={pathInput}
-                onChange={(e) => setPathInput(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon fontSize="small" color="action" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: pathInput ? (
-                    <InputAdornment position="end">
-                      <IconButton
-                        size="small"
-                        onClick={() => setPathInput("")}
-                        aria-label="Keresés törlése"
-                      >
-                        <ClearIcon fontSize="small" />
-                      </IconButton>
-                    </InputAdornment>
-                  ) : null,
-                }}
-              />
-            </Grid>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "1fr 1fr",
+                md: "minmax(240px, 2fr) minmax(130px, 1fr) minmax(130px, 1fr) auto",
+              },
+              gap: 1.5,
+              alignItems: "center",
+            }}
+          >
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Keresés útvonal alapján (pl. /api/v1/users)..."
+              value={pathInput}
+              onChange={(e) => setPathInput(e.target.value)}
+              sx={{ gridColumn: { sm: "1 / -1", md: "auto" } }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" color="action" />
+                  </InputAdornment>
+                ),
+                endAdornment: pathInput ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={() => setPathInput("")}
+                      aria-label="Keresés törlése"
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ) : null,
+              }}
+            />
 
-            <Grid item xs={6} sm={4} md={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Szint</InputLabel>
-                <Select
-                  value={filters.level}
-                  onChange={(e) => handleFilterChange("level", e.target.value)}
-                  label="Szint"
-                >
-                  <MenuItem value="Összes">Összes</MenuItem>
-                  <MenuItem value="ERROR">ERROR</MenuItem>
-                  <MenuItem value="WARN">WARN</MenuItem>
-                  <MenuItem value="INFO">INFO</MenuItem>
-                  <MenuItem value="DEBUG">DEBUG</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={6} sm={4} md={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Metódus</InputLabel>
-                <Select
-                  value={filters.method}
-                  onChange={(e) => handleFilterChange("method", e.target.value)}
-                  label="Metódus"
-                >
-                  <MenuItem value="Összes">Összes</MenuItem>
-                  <MenuItem value="GET">GET</MenuItem>
-                  <MenuItem value="POST">POST</MenuItem>
-                  <MenuItem value="PUT">PUT</MenuItem>
-                  <MenuItem value="DELETE">DELETE</MenuItem>
-                  <MenuItem value="PATCH">PATCH</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={4} md={4}>
-              <Stack
-                direction="row"
-                spacing={1}
-                justifyContent={{ xs: "flex-start", md: "flex-end" }}
+            <FormControl fullWidth size="small">
+              <InputLabel>Szint</InputLabel>
+              <Select
+                value={filters.level}
+                onChange={(e) => handleFilterChange("level", e.target.value)}
+                label="Szint"
               >
-                <Badge
-                  badgeContent={activeAdvancedFilterCount}
-                  color="primary"
-                >
-                  <Button
-                    startIcon={<FilterListIcon />}
-                    onClick={() => setShowAdvancedFilters((prev) => !prev)}
-                    variant={showAdvancedFilters ? "contained" : "outlined"}
-                    size="small"
-                    sx={{ textTransform: "none", fontWeight: 600, height: 40 }}
-                  >
-                    További szűrők
-                  </Button>
-                </Badge>
+                <MenuItem value="Összes">Összes</MenuItem>
+                <MenuItem value="ERROR">ERROR</MenuItem>
+                <MenuItem value="WARN">WARN</MenuItem>
+                <MenuItem value="INFO">INFO</MenuItem>
+                <MenuItem value="DEBUG">DEBUG</MenuItem>
+              </Select>
+            </FormControl>
 
-                {hasActiveFilters && (
-                  <Button
-                    startIcon={<ClearIcon />}
-                    onClick={clearFilters}
-                    variant="text"
-                    color="inherit"
-                    size="small"
-                    sx={{ textTransform: "none", fontWeight: 600, height: 40 }}
-                  >
-                    Törlés
-                  </Button>
-                )}
-              </Stack>
-            </Grid>
-          </Grid>
+            <FormControl fullWidth size="small">
+              <InputLabel>Metódus</InputLabel>
+              <Select
+                value={filters.method}
+                onChange={(e) => handleFilterChange("method", e.target.value)}
+                label="Metódus"
+              >
+                <MenuItem value="Összes">Összes</MenuItem>
+                <MenuItem value="GET">GET</MenuItem>
+                <MenuItem value="POST">POST</MenuItem>
+                <MenuItem value="PUT">PUT</MenuItem>
+                <MenuItem value="DELETE">DELETE</MenuItem>
+                <MenuItem value="PATCH">PATCH</MenuItem>
+              </Select>
+            </FormControl>
+
+            <Stack
+              direction="row"
+              spacing={1}
+              justifyContent={{ xs: "flex-start", md: "flex-end" }}
+              sx={{ gridColumn: { sm: "1 / -1", md: "auto" } }}
+            >
+              <Badge
+                badgeContent={activeAdvancedFilterCount}
+                color="primary"
+              >
+                <Button
+                  startIcon={<FilterListIcon />}
+                  onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                  variant={showAdvancedFilters ? "contained" : "outlined"}
+                  size="small"
+                  sx={{ textTransform: "none", fontWeight: 600, height: 40, whiteSpace: "nowrap" }}
+                >
+                  További szűrők
+                </Button>
+              </Badge>
+
+              {hasActiveFilters && (
+                <Button
+                  startIcon={<ClearIcon />}
+                  onClick={clearFilters}
+                  variant="text"
+                  color="inherit"
+                  size="small"
+                  sx={{ textTransform: "none", fontWeight: 600, height: 40, whiteSpace: "nowrap" }}
+                >
+                  Törlés
+                </Button>
+              )}
+            </Stack>
+          </Box>
 
           {/* Advanced Filters Collapse */}
           <Collapse in={showAdvancedFilters}>
@@ -998,106 +1014,134 @@ export default function Logs() {
                 pt: 2,
                 borderTop: "1px dashed",
                 borderColor: "divider",
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
               }}
             >
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} md={4}>
-                  <Autocomplete
-                    size="small"
-                    options={users}
-                    value={selectedUserObj}
-                    onChange={(event, newValue) =>
-                      handleFilterChange("userId", newValue ? newValue.id : "")
-                    }
-                    getOptionLabel={(option) =>
-                      option.name
-                        ? `${option.name} (${option.email})`
-                        : option.email || ""
-                    }
-                    isOptionEqualToValue={(option, value) =>
-                      option.id === value.id
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Felhasználó"
-                        placeholder="Keresés név vagy e-mail alapján..."
-                      />
-                    )}
-                  />
-                </Grid>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "1fr",
+                    md: "minmax(260px, 1.4fr) minmax(200px, 1fr) minmax(200px, 1fr)",
+                  },
+                  gap: 2,
+                  alignItems: "center",
+                }}
+              >
+                <Autocomplete
+                  fullWidth
+                  size="small"
+                  options={users}
+                  value={selectedUserObj}
+                  onChange={(event, newValue) =>
+                    handleFilterChange("userId", newValue ? newValue.id : "")
+                  }
+                  getOptionLabel={(option) =>
+                    option.name
+                      ? `${option.name} (${option.email})`
+                      : option.email || ""
+                  }
+                  isOptionEqualToValue={(option, value) =>
+                    option.id === value.id
+                  }
+                  noOptionsText="Nincs találat"
+                  renderOption={(props, option) => {
+                    const { key, ...rest } = props;
+                    return (
+                      <Box component="li" key={option.id || key} {...rest}>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography variant="body2" fontWeight={600} noWrap>
+                            {option.name || "Névtelen"}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            noWrap
+                            display="block"
+                          >
+                            {option.email}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    );
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      label="Felhasználó"
+                      placeholder="Keresés név vagy e-mail alapján..."
+                    />
+                  )}
+                />
 
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Kezdő dátum"
-                    type="datetime-local"
-                    value={filters.startDate}
-                    onChange={(e) =>
-                      handleFilterChange("startDate", e.target.value)
-                    }
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Kezdő dátum"
+                  type="datetime-local"
+                  value={filters.startDate}
+                  onChange={(e) =>
+                    handleFilterChange("startDate", e.target.value)
+                  }
+                  InputLabelProps={{ shrink: true }}
+                />
 
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Befejező dátum"
-                    type="datetime-local"
-                    value={filters.endDate}
-                    onChange={(e) =>
-                      handleFilterChange("endDate", e.target.value)
-                    }
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Befejező dátum"
+                  type="datetime-local"
+                  value={filters.endDate}
+                  onChange={(e) =>
+                    handleFilterChange("endDate", e.target.value)
+                  }
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Box>
 
-                <Grid item xs={12}>
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    flexWrap="wrap"
-                    useFlexGap
-                  >
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: "flex", alignItems: "center", gap: 0.5, fontWeight: 600 }}
-                    >
-                      <ScheduleIcon sx={{ fontSize: 15 }} />
-                      Gyors időszak:
-                    </Typography>
-                    <Chip
-                      label="Utolsó 1 óra"
-                      size="small"
-                      variant="outlined"
-                      onClick={() => applyDatePreset(subHours(new Date(), 1))}
-                    />
-                    <Chip
-                      label="Ma"
-                      size="small"
-                      variant="outlined"
-                      onClick={() => applyDatePreset(startOfDay(new Date()))}
-                    />
-                    <Chip
-                      label="Utolsó 24 óra"
-                      size="small"
-                      variant="outlined"
-                      onClick={() => applyDatePreset(subHours(new Date(), 24))}
-                    />
-                    <Chip
-                      label="Utolsó 7 nap"
-                      size="small"
-                      variant="outlined"
-                      onClick={() => applyDatePreset(subDays(new Date(), 7))}
-                    />
-                  </Stack>
-                </Grid>
-              </Grid>
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                flexWrap="wrap"
+                useFlexGap
+              >
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: "flex", alignItems: "center", gap: 0.5, fontWeight: 600 }}
+                >
+                  <ScheduleIcon sx={{ fontSize: 15 }} />
+                  Gyors időszak:
+                </Typography>
+                <Chip
+                  label="Utolsó 1 óra"
+                  size="small"
+                  variant="outlined"
+                  onClick={() => applyDatePreset(subHours(new Date(), 1))}
+                />
+                <Chip
+                  label="Ma"
+                  size="small"
+                  variant="outlined"
+                  onClick={() => applyDatePreset(startOfDay(new Date()))}
+                />
+                <Chip
+                  label="Utolsó 24 óra"
+                  size="small"
+                  variant="outlined"
+                  onClick={() => applyDatePreset(subHours(new Date(), 24))}
+                />
+                <Chip
+                  label="Utolsó 7 nap"
+                  size="small"
+                  variant="outlined"
+                  onClick={() => applyDatePreset(subDays(new Date(), 7))}
+                />
+              </Stack>
             </Box>
           </Collapse>
         </Box>
@@ -1465,45 +1509,47 @@ export default function Logs() {
               InputLabelProps={{ shrink: true }}
             />
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Szint</InputLabel>
-                  <Select
-                    value={deleteFilters.level}
-                    label="Szint"
-                    onChange={(e) =>
-                      handleDeleteFilterChange("level", e.target.value)
-                    }
-                  >
-                    <MenuItem value="">Összes</MenuItem>
-                    <MenuItem value="ERROR">ERROR</MenuItem>
-                    <MenuItem value="WARN">WARN</MenuItem>
-                    <MenuItem value="INFO">INFO</MenuItem>
-                    <MenuItem value="DEBUG">DEBUG</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Metódus</InputLabel>
-                  <Select
-                    value={deleteFilters.method}
-                    label="Metódus"
-                    onChange={(e) =>
-                      handleDeleteFilterChange("method", e.target.value)
-                    }
-                  >
-                    <MenuItem value="">Összes</MenuItem>
-                    <MenuItem value="GET">GET</MenuItem>
-                    <MenuItem value="POST">POST</MenuItem>
-                    <MenuItem value="PUT">PUT</MenuItem>
-                    <MenuItem value="DELETE">DELETE</MenuItem>
-                    <MenuItem value="PATCH">PATCH</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                gap: 2,
+              }}
+            >
+              <FormControl fullWidth size="small">
+                <InputLabel>Szint</InputLabel>
+                <Select
+                  value={deleteFilters.level}
+                  label="Szint"
+                  onChange={(e) =>
+                    handleDeleteFilterChange("level", e.target.value)
+                  }
+                >
+                  <MenuItem value="">Összes</MenuItem>
+                  <MenuItem value="ERROR">ERROR</MenuItem>
+                  <MenuItem value="WARN">WARN</MenuItem>
+                  <MenuItem value="INFO">INFO</MenuItem>
+                  <MenuItem value="DEBUG">DEBUG</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl fullWidth size="small">
+                <InputLabel>Metódus</InputLabel>
+                <Select
+                  value={deleteFilters.method}
+                  label="Metódus"
+                  onChange={(e) =>
+                    handleDeleteFilterChange("method", e.target.value)
+                  }
+                >
+                  <MenuItem value="">Összes</MenuItem>
+                  <MenuItem value="GET">GET</MenuItem>
+                  <MenuItem value="POST">POST</MenuItem>
+                  <MenuItem value="PUT">PUT</MenuItem>
+                  <MenuItem value="DELETE">DELETE</MenuItem>
+                  <MenuItem value="PATCH">PATCH</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2 }}>
