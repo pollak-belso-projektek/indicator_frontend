@@ -1348,6 +1348,7 @@ export const indicatorApi = createApi({
         level,
         method,
         userId,
+        path,
         startDate,
         endDate,
       } = {}) => {
@@ -1358,6 +1359,7 @@ export const indicatorApi = createApi({
         if (level) params.append("level", level);
         if (method) params.append("method", method);
         if (userId) params.append("userId", userId);
+        if (path) params.append("path", path);
         if (startDate) params.append("startDate", startDate);
         if (endDate) params.append("endDate", endDate);
 
@@ -1367,6 +1369,10 @@ export const indicatorApi = createApi({
         { type: "Logs", id: `page-${params?.page || 1}` },
         "Logs",
       ],
+    }),
+    getLogStats: build.query({
+      query: (days = 30) => `logs/stats?days=${days}`,
+      providesTags: ["Logs"],
     }),
     getLogById: build.query({
       query: (id) => `logs/${id}`,
@@ -2048,6 +2054,7 @@ export const {
   useBulkSaveIntezmenyiNeveltsegMutation,
   // Logs hooks
   useGetLogsQuery,
+  useGetLogStatsQuery,
   useGetLogByIdQuery,
   useDeleteLogsMutation,
   // Dobbanto hooks

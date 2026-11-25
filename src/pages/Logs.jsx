@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Typography,
@@ -28,26 +28,42 @@ import {
   Tooltip,
   Card,
   CardContent,
+  Stack,
+  InputAdornment,
+  Autocomplete,
+  LinearProgress,
+  CircularProgress,
+  Badge,
+  alpha,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ClearIcon from "@mui/icons-material/Clear";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import SearchIcon from "@mui/icons-material/Search";
+import ArticleIcon from "@mui/icons-material/Article";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
+import ScheduleIcon from "@mui/icons-material/Schedule";
 import { useSelector } from "react-redux";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, subDays, subHours, startOfDay } from "date-fns";
 import { hu } from "date-fns/locale";
 import {
   useGetLogsQuery,
+  useGetLogStatsQuery,
   useGetLogByIdQuery,
   useDeleteLogsMutation,
-  useGetFilteredUsersQuery,
   useGetUsersQuery,
 } from "../store/api/apiSlice";
 import { selectUserPermissions } from "../store/slices/authSlice";
 import toast from "react-hot-toast";
 
-// Log level colors
 const LOG_LEVEL_COLORS = {
   ERROR: "error",
   WARN: "warning",
@@ -55,7 +71,6 @@ const LOG_LEVEL_COLORS = {
   DEBUG: "default",
 };
 
-// HTTP method colors
 const HTTP_METHOD_COLORS = {
   GET: "success",
   POST: "primary",
@@ -64,18 +79,145 @@ const HTTP_METHOD_COLORS = {
   PATCH: "info",
 };
 
+const INITIAL_FILTERS = {
+  level: "Összes",
+  method: "Összes",
+  userId: "",
+  path: "",
+  startDate: "",
+  endDate: "",
+};
+
+const toDatetimeLocal = (date) => format(date, "yyyy-MM-dd'T'HH:mm");
+
+const getStatusColor = (statusCode) => {
+  if (!statusCode) return "default";
+  if (statusCode >= 500) return "error";
+  if (statusCode >= 400) return "warning";
+  if (statusCode >= 300) return "info";
+  return "success";
+};
+
+const getDurationColor = (duration) => {
+  if (duration == null) return "default";
+  if (duration > 1000) return "error";
+  if (duration > 300) return "warning";
+  return "success";
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  try {
+    return format(parseISO(dateString), "yyyy.MM.dd HH:mm:ss", {
+      locale: hu,
+    });
+  } catch {
+    return dateString;
+  }
+};
+
+const copyToClipboard = async (text, label = "Vágólapra másolva") => {
+  try {
+    await navigator.clipboard.writeText(
+      typeof text === "string" ? text : JSON.stringify(text, null, 2)
+    );
+    toast.success(label, { duration: 2000 });
+  } catch {
+    toast.error("Nem sikerült a másolás");
+  }
+};
+
+const CodeBlock = ({ title, data, color = "#d4d4d4", isError = false }) => (
+  <Box mb={2.5}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        mb: 0.75,
+      }}
+    >
+      <Typography
+        variant="subtitle2"
+        sx={{
+          fontWeight: 700,
+          color: isError ? "error.main" : "text.primary",
+        }}
+      >
+        {title}
+      </Typography>
+      <Tooltip title="Másolás">
+        <IconButton
+          size="small"
+          onClick={() => copyToClipboard(data, `${title} másolva`)}
+        >
+          <ContentCopyIcon sx={{ fontSize: 16 }} />
+        </IconButton>
+      </Tooltip>
+    </Box>
+    <Box
+      sx={{
+        backgroundColor: isError ? "#fff0f0" : "#1e1e1e",
+        color: isError ? "#d32f2f" : color,
+        p: 2,
+        borderRadius: 2,
+        overflowX: "auto",
+        maxHeight: "280px",
+        boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)",
+        fontFamily: "monospace",
+        fontSize: "0.8rem",
+        "&::-webkit-scrollbar": { height: 8, width: 8 },
+        "&::-webkit-scrollbar-thumb": {
+          backgroundColor: isError ? "#ffb3b3" : "#555",
+          borderRadius: 4,
+        },
+        "&::-webkit-scrollbar-track": {
+          backgroundColor: isError ? "#ffe6e6" : "#2d2d2d",
+          borderRadius: 4,
+        },
+      }}
+    >
+      <pre style={{ margin: 0 }}>
+        {typeof data === "string" ? data : JSON.stringify(data, null, 2)}
+      </pre>
+    </Box>
+  </Box>
+);
+
+const DetailItem = ({ label, value }) => (
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "flex-start",
+      gap: 1.5,
+      py: 1.25,
+      borderBottom: "1px dashed rgba(0,0,0,0.08)",
+      "&:last-child": { borderBottom: "none" },
+    }}
+  >
+    <Typography
+      variant="body2"
+      sx={{ fontWeight: 600, minWidth: 120, color: "text.secondary" }}
+    >
+      {label}
+    </Typography>
+    <Box sx={{ flex: 1, minWidth: 0, wordBreak: "break-word" }}>
+      {typeof value === "string" ? (
+        <Typography variant="body2">{value}</Typography>
+      ) : (
+        value
+      )}
+    </Box>
+  </Box>
+);
+
 export default function Logs() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(50);
-  const [filters, setFilters] = useState({
-    level: "Összes",
-    method: "Összes",
-    userId: "",
-    path: "",
-    startDate: "",
-    endDate: "",
-  });
-  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState(INITIAL_FILTERS);
+  const [pathInput, setPathInput] = useState("");
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(false);
   const [selectedLogId, setSelectedLogId] = useState(null);
   const [expandedRows, setExpandedRows] = useState({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -85,54 +227,100 @@ export default function Logs() {
     method: "",
   });
 
-  const { data: userData } = useGetFilteredUsersQuery();
-
-  const { data: users } = useGetUsersQuery();
-
-  useEffect(() => {
-    console.log("User Data:", userData);
-  }, [userData]);
-
   const userPermissions = useSelector(selectUserPermissions);
-
-  // Check admin permissions
   const isAdmin = userPermissions?.isAdmin || userPermissions?.isSuperadmin;
 
-  // Query for logs with filters and pagination
+  // Debounce path search so typing doesn't spam API requests
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) => {
+        if (prev.path === pathInput.trim()) return prev;
+        setPage(0);
+        return { ...prev, path: pathInput.trim() };
+      });
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [pathInput]);
+
+  const { data: users = [] } = useGetUsersQuery(undefined, {
+    skip: !isAdmin,
+  });
+
+  const queryParams = useMemo(
+    () => ({
+      page: page + 1,
+      limit: rowsPerPage,
+      ...(filters.level &&
+        filters.level !== "Összes" && { level: filters.level }),
+      ...(filters.method &&
+        filters.method !== "Összes" && { method: filters.method }),
+      ...(filters.userId && { userId: filters.userId }),
+      ...(filters.path && { path: filters.path }),
+      ...(filters.startDate && { startDate: filters.startDate }),
+      ...(filters.endDate && { endDate: filters.endDate }),
+    }),
+    [page, rowsPerPage, filters]
+  );
+
   const {
     data: logsData,
     isLoading,
+    isFetching,
     error,
     refetch,
-  } = useGetLogsQuery({
-    page: page + 1, // API expects 1-based page
-    limit: rowsPerPage,
-    // Only include filters that are not "Összes" or empty
-    ...(filters.level &&
-      filters.level !== "Összes" && { level: filters.level }),
-    ...(filters.method &&
-      filters.method !== "Összes" && { method: filters.method }),
-    ...(filters.userId && { userId: filters.userId }),
-    ...(filters.path && { path: filters.path }),
-    ...(filters.startDate && { startDate: filters.startDate }),
-    ...(filters.endDate && { endDate: filters.endDate }),
+  } = useGetLogsQuery(queryParams, {
+    skip: !isAdmin,
+    pollingInterval: autoRefresh ? 15000 : 0,
   });
 
-  // Query for individual log details
-  const { data: selectedLog, isLoading: logDetailsLoading } =
+  const {
+    data: statsResponse,
+    refetch: refetchStats,
+  } = useGetLogStatsQuery(30, {
+    skip: !isAdmin,
+    pollingInterval: autoRefresh ? 30000 : 0,
+  });
+
+  const stats = statsResponse?.data || null;
+
+  const { data: selectedLogResponse, isLoading: logDetailsLoading } =
     useGetLogByIdQuery(selectedLogId, {
       skip: !selectedLogId,
     });
 
-  // Delete logs mutation
+  const selectedLog = selectedLogResponse?.data || selectedLogResponse || null;
+
   const [deleteLogsMutation, { isLoading: isDeleting }] =
     useDeleteLogsMutation();
 
-  // Check if user has admin access
+  const activeAdvancedFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.userId) count++;
+    if (filters.startDate) count++;
+    if (filters.endDate) count++;
+    return count;
+  }, [filters.userId, filters.startDate, filters.endDate]);
+
+  const hasActiveFilters = useMemo(
+    () =>
+      filters.level !== "Összes" ||
+      filters.method !== "Összes" ||
+      Boolean(filters.userId) ||
+      Boolean(filters.path) ||
+      Boolean(filters.startDate) ||
+      Boolean(filters.endDate),
+    [filters]
+  );
+
+  const selectedUserObj = useMemo(
+    () => users.find((u) => u.id === filters.userId) || null,
+    [users, filters.userId]
+  );
+
   if (!isAdmin) {
     return (
       <Box p={4}>
-        <Alert severity="error">
+        <Alert severity="error" sx={{ borderRadius: 2 }}>
           <Typography variant="h6">Nincs jogosultság</Typography>
           <Typography>
             Csak adminisztrátori jogosultságokkal rendelkező felhasználók
@@ -145,11 +333,13 @@ export default function Logs() {
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
+    setExpandedRows({});
   };
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+    setExpandedRows({});
   };
 
   const handleFilterChange = (field, value) => {
@@ -157,19 +347,27 @@ export default function Logs() {
       ...prev,
       [field]: value,
     }));
-    setPage(0); // Reset to first page when filters change
+    setPage(0);
+  };
+
+  const applyDatePreset = (startDate) => {
+    setFilters((prev) => ({
+      ...prev,
+      startDate: toDatetimeLocal(startDate),
+      endDate: "",
+    }));
+    setPage(0);
   };
 
   const clearFilters = () => {
-    setFilters({
-      level: "",
-      method: "",
-      userId: "",
-      path: "",
-      startDate: "",
-      endDate: "",
-    });
+    setPathInput("");
+    setFilters(INITIAL_FILTERS);
     setPage(0);
+  };
+
+  const handleRefresh = () => {
+    refetch();
+    refetchStats();
   };
 
   const handleDeleteFilterChange = (field, value) => {
@@ -187,50 +385,42 @@ export default function Logs() {
   };
 
   const hasDeleteCriteria =
-    !!deleteFilters.before ||
-    !!deleteFilters.level ||
-    !!deleteFilters.method;
+    Boolean(deleteFilters.before) ||
+    Boolean(deleteFilters.level) ||
+    Boolean(deleteFilters.method);
 
   const handleDeleteLogs = async () => {
     try {
-      await deleteLogsMutation(deleteFilters).unwrap();
-
-      toast.success("Sikeres törlés\nA naplók sikeresen törölve lettek.", {
-        duration: 3000,
-      });
-
+      const result = await deleteLogsMutation(deleteFilters).unwrap();
+      const count = result?.deletedCount;
+      toast.success(
+        count != null
+          ? `${count} naplóbejegyzés sikeresen törölve.`
+          : "A naplók sikeresen törölve lettek.",
+        { duration: 3500 }
+      );
       setDeleteDialogOpen(false);
       setDeleteFilters({ before: "", level: "", method: "" });
       refetch();
-    } catch (error) {
-      toast.error(`Hiba a törlés során\n${error?.data?.message || "Váratlan hiba történt a naplók törlésekor."}`, {
-        duration: 5000,
-      });
-    }
-  };
-
-  const formatDate = (dateString) => {
-    try {
-      return format(parseISO(dateString), "yyyy.MM.dd HH:mm:ss", {
-        locale: hu,
-      });
-    } catch {
-      return dateString;
+      refetchStats();
+    } catch (err) {
+      toast.error(
+        err?.data?.message || "Váratlan hiba történt a naplók törlésekor.",
+        { duration: 5000 }
+      );
     }
   };
 
   const renderLogDetails = (log) => {
-    // Extract IP from various possible locations
     const getIpAddress = () => {
       if (log.ip) return log.ip;
       if (log.headers?.host) {
         const host = log.headers.host.split(":")[0];
         if (host !== "localhost") return host;
       }
-      return "localhost";
+      return "N/A";
     };
 
-    // Extract User Agent from headers
     const getUserAgent = () => {
       if (log.userAgent) return log.userAgent;
       if (log.user_agent) return log.user_agent;
@@ -238,118 +428,212 @@ export default function Logs() {
       return "N/A";
     };
 
-    const CodeBlock = ({ title, data, color = "#d4d4d4", isError = false }) => (
-      <Box mb={3}>
-        <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', color: isError ? 'error.main' : 'text.primary', display: 'flex', alignItems: 'center', gap: 1 }}>
-          {title}
-        </Typography>
-        <Box
-          sx={{
-            backgroundColor: isError ? "#fff0f0" : "#1e1e1e",
-            color: isError ? "#d32f2f" : color,
-            p: 2,
-            borderRadius: 2,
-            overflowX: "auto",
-            maxHeight: "300px",
-            boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)",
-            fontFamily: "monospace",
-            fontSize: "0.8rem",
-            '&::-webkit-scrollbar': { height: 8, width: 8 },
-            '&::-webkit-scrollbar-thumb': { backgroundColor: isError ? '#ffb3b3' : '#555', borderRadius: 4 },
-            '&::-webkit-scrollbar-track': { backgroundColor: isError ? '#ffe6e6' : '#2d2d2d', borderRadius: 4 },
-          }}
-        >
-          <pre style={{ margin: 0 }}>
-            {typeof data === "string" ? data : JSON.stringify(data, null, 2)}
-          </pre>
-        </Box>
-      </Box>
-    );
-
-    const DetailItem = ({ label, value }) => (
-      <Box sx={{ display: 'flex', py: 1.5, borderBottom: '1px dashed rgba(0,0,0,0.08)', '&:last-child': { borderBottom: 'none' } }}>
-        <Typography variant="body2" sx={{ fontWeight: 600, minWidth: '140px', color: 'text.secondary' }}>
-          {label}
-        </Typography>
-        <Box sx={{ flex: 1, wordBreak: 'break-word' }}>
-          {typeof value === 'string' ? (
-            <Typography variant="body2">{value}</Typography>
-          ) : (
-            value
-          )}
-        </Box>
-      </Box>
-    );
-
     return (
-      <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: "#fafafa", borderRadius: 3, m: 2, boxShadow: "inset 0 2px 10px rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.05)" }}>
-        <Grid container spacing={4}>
+      <Box
+        sx={{
+          p: { xs: 2, md: 3 },
+          bgcolor: "#f8fafc",
+          borderRadius: 2.5,
+          m: { xs: 1, md: 2 },
+          border: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Grid container spacing={3}>
           <Grid item xs={12} md={5}>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 3, color: 'primary.main' }}>
-               Általános információk
+            <Typography
+              variant="subtitle1"
+              gutterBottom
+              sx={{ fontWeight: 700, mb: 2, color: "primary.main" }}
+            >
+              Általános információk
             </Typography>
-            
-            <Box sx={{ bgcolor: 'white', p: 2.5, borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.04)' }}>
-              <DetailItem label="Útvonal" value={<Chip size="small" label={log.path || "N/A"} sx={{ fontFamily: 'monospace' }} />} />
+
+            <Box
+              sx={{
+                bgcolor: "white",
+                p: 2,
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <DetailItem
+                label="Időpont"
+                value={formatDate(log.createdAt)}
+              />
+              <DetailItem
+                label="Útvonal"
+                value={
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
+                    <Chip
+                      size="small"
+                      label={log.path || "N/A"}
+                      sx={{ fontFamily: "monospace", maxWidth: "100%" }}
+                    />
+                    {log.path && (
+                      <Tooltip title="Útvonal másolása">
+                        <IconButton
+                          size="small"
+                          onClick={() => copyToClipboard(log.path, "Útvonal másolva")}
+                        >
+                          <ContentCopyIcon sx={{ fontSize: 14 }} />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </Box>
+                }
+              />
               <DetailItem label="IP cím" value={getIpAddress()} />
               <DetailItem label="User Agent" value={getUserAgent()} />
-              <DetailItem label="Host" value={log.headers?.host || "N/A"} />
-              
-              {log.headers?.referer && <DetailItem label="Referer" value={log.headers.referer} />}
-              {log.headers?.origin && <DetailItem label="Origin" value={log.headers.origin} />}
-              
+              {log.headers?.host && (
+                <DetailItem label="Host" value={log.headers.host} />
+              )}
+              {log.headers?.referer && (
+                <DetailItem label="Referer" value={log.headers.referer} />
+              )}
+              {log.headers?.origin && (
+                <DetailItem label="Origin" value={log.headers.origin} />
+              )}
+
               {log.user && (
-                <DetailItem label="Felhasználó" value={
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{log.user.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">{log.user.email}</Typography>
-                  </Box>
-                } />
+                <DetailItem
+                  label="Felhasználó"
+                  value={
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {log.user.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {log.user.email}
+                      </Typography>
+                    </Box>
+                  }
+                />
               )}
-              
-              {log.duration && (
-                <DetailItem label="Időtartam" value={
-                  <Chip size="small" label={`${log.duration} ms`} color={log.duration > 1000 ? "warning" : "success"} variant={log.duration > 1000 ? "filled" : "outlined"} />
-                } />
+
+              {log.duration != null && (
+                <DetailItem
+                  label="Időtartam"
+                  value={
+                    <Chip
+                      size="small"
+                      label={`${log.duration} ms`}
+                      color={getDurationColor(log.duration)}
+                      variant={log.duration > 1000 ? "filled" : "outlined"}
+                    />
+                  }
+                />
               )}
-              
-              {log.statusCode && (
-                <DetailItem label="Státusz kód" value={
-                  <Chip size="small" label={log.statusCode} color={log.statusCode >= 400 ? "error" : "success"} />
-                } />
+
+              {log.statusCode != null && (
+                <DetailItem
+                  label="Státusz kód"
+                  value={
+                    <Chip
+                      size="small"
+                      label={log.statusCode}
+                      color={getStatusColor(log.statusCode)}
+                    />
+                  }
+                />
               )}
-              
-              {log.correlationId && <DetailItem label="Korrelációs ID" value={<Typography variant="caption" sx={{ fontFamily: 'monospace', bgcolor: 'rgba(0,0,0,0.05)', p: 0.5, borderRadius: 1 }}>{log.correlationId}</Typography>} />}
+
+              {log.correlationId && (
+                <DetailItem
+                  label="Korrelációs ID"
+                  value={
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontFamily: "monospace",
+                          bgcolor: "rgba(0,0,0,0.05)",
+                          px: 0.75,
+                          py: 0.25,
+                          borderRadius: 1,
+                        }}
+                      >
+                        {log.correlationId}
+                      </Typography>
+                      <Tooltip title="ID másolása">
+                        <IconButton
+                          size="small"
+                          onClick={() =>
+                            copyToClipboard(log.correlationId, "Korrelációs ID másolva")
+                          }
+                        >
+                          <ContentCopyIcon sx={{ fontSize: 14 }} />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  }
+                />
+              )}
               {log.message && <DetailItem label="Üzenet" value={log.message} />}
             </Box>
           </Grid>
-          
+
           <Grid item xs={12} md={7}>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 3, color: 'primary.main' }}>
-               Adatok & Fejlécek
+            <Typography
+              variant="subtitle1"
+              gutterBottom
+              sx={{ fontWeight: 700, mb: 2, color: "primary.main" }}
+            >
+              Adatok & Fejlécek
             </Typography>
-            
-            {log.query && typeof log.query === "object" && Object.keys(log.query).length > 0 && (
-              <CodeBlock title="Query paraméterek" data={log.query} color="#9cdcfe" />
-            )}
-            
-            {log.body && typeof log.body === "object" && Object.keys(log.body).length > 0 && (
-              <CodeBlock title="Kérés törzs (Body)" data={log.body} color="#ce9178" />
-            )}
-            
-            {log.headers && typeof log.headers === "object" && Object.keys(log.headers).length > 0 && (
-              <CodeBlock title="Fejlécek (Headers)" data={log.headers} color="#4ec9b0" />
-            )}
-            
+
+            {log.query &&
+              typeof log.query === "object" &&
+              Object.keys(log.query).length > 0 && (
+                <CodeBlock
+                  title="Query paraméterek"
+                  data={log.query}
+                  color="#9cdcfe"
+                />
+              )}
+
+            {log.body &&
+              typeof log.body === "object" &&
+              Object.keys(log.body).length > 0 && (
+                <CodeBlock
+                  title="Kérés törzs (Body)"
+                  data={log.body}
+                  color="#ce9178"
+                />
+              )}
+
+            {log.headers &&
+              typeof log.headers === "object" &&
+              Object.keys(log.headers).length > 0 && (
+                <CodeBlock
+                  title="Fejlécek (Headers)"
+                  data={log.headers}
+                  color="#4ec9b0"
+                />
+              )}
+
             {log.error && (
-              <CodeBlock title="Hiba részletei" data={log.error} isError={true} />
+              <CodeBlock
+                title="Hiba részletei"
+                data={log.error}
+                isError={true}
+              />
             )}
-            
-            <details style={{ marginTop: '24px', cursor: 'pointer' }}>
-              <summary style={{ fontWeight: 'bold', color: '#666', marginBottom: '12px', outline: 'none' }}>
-                Fejlesztői nézet (Összes elérhető adat)
+
+            <details style={{ marginTop: "16px", cursor: "pointer" }}>
+              <summary
+                style={{
+                  fontWeight: 600,
+                  color: "#555",
+                  marginBottom: "8px",
+                  outline: "none",
+                  fontSize: "0.875rem",
+                }}
+              >
+                Fejlesztői nézet (Raw JSON)
               </summary>
-              <Box mt={2}>
+              <Box mt={1.5}>
                 <CodeBlock title="Raw JSON" data={log} color="#d4d4d4" />
               </Box>
             </details>
@@ -359,191 +643,830 @@ export default function Logs() {
     );
   };
 
+  const kpiCards = [
+    {
+      label: "Összes (30 nap)",
+      value: stats?.totalLogs ?? logsData?.pagination?.total ?? 0,
+      level: "Összes",
+      color: "#1976d2",
+      bg: alpha("#1976d2", 0.08),
+      icon: <ArticleIcon />,
+    },
+    {
+      label: "Hibák (ERROR)",
+      value: stats?.logsByLevel?.ERROR ?? 0,
+      level: "ERROR",
+      color: "#d32f2f",
+      bg: alpha("#d32f2f", 0.08),
+      icon: <ErrorOutlineIcon />,
+    },
+    {
+      label: "Figyelmeztetés (WARN)",
+      value: stats?.logsByLevel?.WARN ?? 0,
+      level: "WARN",
+      color: "#ed6c02",
+      bg: alpha("#ed6c02", 0.08),
+      icon: <WarningAmberIcon />,
+    },
+    {
+      label: "Információ (INFO)",
+      value: stats?.logsByLevel?.INFO ?? 0,
+      level: "INFO",
+      color: "#0288d1",
+      bg: alpha("#0288d1", 0.08),
+      icon: <InfoOutlinedIcon />,
+    },
+  ];
+
   return (
-    <Box sx={{ p: { xs: 2, md: 4 } }}>
-      <Typography 
-        variant="h4" 
-        gutterBottom
+    <Box sx={{ pb: 4 }}>
+      {/* Header Banner */}
+      <Box
         sx={{
-          fontWeight: 800,
-          background: "linear-gradient(45deg, #1976d2, #9c27b0)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          mb: 1
+          background: "linear-gradient(135deg, #1976d2 0%, #1565c0 100%)",
+          py: { xs: 2.5, md: 3 },
+          px: { xs: 2.5, md: 3 },
+          position: "relative",
+          overflow: "hidden",
+          borderRadius: 3,
+          boxShadow: "0 4px 20px rgba(25, 118, 210, 0.15)",
+          mb: 2.5,
         }}
       >
-        Rendszer Naplók
-      </Typography>
-
-      <Typography variant="body1" color="textSecondary" paragraph>
-        Ez az oldal a rendszer összes API hívásának naplóját tartalmazza. Csak
-        adminisztrátori jogosultságokkal rendelkező felhasználók férhetnek
-        hozzá.
-      </Typography>
-
-      {/* Filter Section */}
-      <Card sx={{ mb: 4, borderRadius: 3, boxShadow: "0 4px 20px 0 rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.08)" }}>
-        <CardContent>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={2}
-          >
-            <Typography variant="h6">Szűrők</Typography>
+        <Box
+          sx={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%)",
+          }}
+        />
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            alignItems: { xs: "flex-start", md: "center" },
+            justifyContent: "space-between",
+            gap: 2,
+            position: "relative",
+            zIndex: 1,
+            color: "white",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Box
+              sx={{
+                p: 1.25,
+                bgcolor: "rgba(255,255,255,0.18)",
+                borderRadius: 2,
+                backdropFilter: "blur(8px)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ArticleIcon sx={{ fontSize: 30 }} />
+            </Box>
             <Box>
-              <Button
-                startIcon={<FilterListIcon />}
-                onClick={() => setShowFilters(!showFilters)}
-                variant="outlined"
-                sx={{ mr: 1 }}
+              <Typography
+                variant="h5"
+                fontWeight="700"
+                sx={{ letterSpacing: "-0.01em" }}
               >
-                {showFilters ? "Szűrők elrejtése" : "Szűrők megjelenítése"}
-              </Button>
-              <Button
-                startIcon={<ClearIcon />}
-                onClick={clearFilters}
-                variant="outlined"
-                sx={{ mr: 1 }}
-              >
-                Szűrők törlése
-              </Button>
+                Rendszer Naplók
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.25 }}>
+                API hívások, hibák és rendszeresemények valós idejű áttekintése
+              </Typography>
             </Box>
           </Box>
 
-          <Collapse in={showFilters}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={2}>
-                <FormControl size="small">
-                  <InputLabel>Szint</InputLabel>
-                  <Select
-                    value={filters.level}
-                    onChange={(e) =>
-                      handleFilterChange("level", e.target.value)
-                    }
-                    label="Szint"
-                    defaultValue="Összes"
-                  >
-                    <MenuItem value="Összes">Összes</MenuItem>
-                    <MenuItem value="ERROR">ERROR</MenuItem>
-                    <MenuItem value="WARN">WARN</MenuItem>
-                    <MenuItem value="INFO">INFO</MenuItem>
-                    <MenuItem value="DEBUG">DEBUG</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6} md={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Metódus</InputLabel>
-                  <Select
-                    value={filters.method}
-                    onChange={(e) =>
-                      handleFilterChange("method", e.target.value)
-                    }
-                    label="Metódus"
-                    defaultValue="Összes"
-                  >
-                    <MenuItem value="Összes">Összes</MenuItem>
-                    <MenuItem value="GET">GET</MenuItem>
-                    <MenuItem value="POST">POST</MenuItem>
-                    <MenuItem value="PUT">PUT</MenuItem>
-                    <MenuItem value="DELETE">DELETE</MenuItem>
-                    <MenuItem value="PATCH">PATCH</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6} md={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel id="user-select-label">Felhasználó</InputLabel>
-                  <Select
-                    labelId="user-select-label"
-                    id="user-select"
-                    value={filters.userId}
-                    placeholder="Válasszon felhasználót"
-                    onChange={(e) =>
-                      handleFilterChange("userId", e.target.value)
-                    }
-                    sx={{ minWidth: "250px" }}
-                  >
-                    {users?.map((user) => (
-                      <MenuItem key={user.id} value={user.id}>
-                        {user.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6} md={2}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Útvonal"
-                  value={filters.path}
-                  onChange={(e) => handleFilterChange("path", e.target.value)}
-                  placeholder="pl. /api/v1/users"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={2}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Kezdő dátum"
-                  type="datetime-local"
-                  value={filters.startDate}
-                  onChange={(e) =>
-                    handleFilterChange("startDate", e.target.value)
-                  }
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={2}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Befejező dátum"
-                  type="datetime-local"
-                  value={filters.endDate}
-                  onChange={(e) =>
-                    handleFilterChange("endDate", e.target.value)
-                  }
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-            </Grid>
-          </Collapse>
-        </CardContent>
-      </Card>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Tooltip title="Automatikus frissítés 15 másodpercenként">
+              <Button
+                variant={autoRefresh ? "contained" : "outlined"}
+                size="small"
+                startIcon={<AutorenewIcon />}
+                onClick={() => setAutoRefresh((prev) => !prev)}
+                sx={{
+                  color: autoRefresh ? "#1565c0" : "white",
+                  bgcolor: autoRefresh ? "white" : "rgba(255,255,255,0.1)",
+                  borderColor: "rgba(255,255,255,0.4)",
+                  fontWeight: 600,
+                  textTransform: "none",
+                  "&:hover": {
+                    bgcolor: autoRefresh
+                      ? "rgba(255,255,255,0.9)"
+                      : "rgba(255,255,255,0.2)",
+                    borderColor: "white",
+                  },
+                }}
+              >
+                {autoRefresh ? "Élő frissítés: BE" : "Élő frissítés"}
+              </Button>
+            </Tooltip>
 
-        {/* Log Deletion Section */}
-        <Card sx={{ mb: 4, borderRadius: 3, boxShadow: "0 4px 20px 0 rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.08)" }}>
-          <CardContent>
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              mb={2}
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<RefreshIcon />}
+              onClick={handleRefresh}
+              disabled={isFetching}
+              sx={{
+                color: "white",
+                borderColor: "rgba(255,255,255,0.4)",
+                bgcolor: "rgba(255,255,255,0.1)",
+                fontWeight: 600,
+                textTransform: "none",
+                "&:hover": {
+                  bgcolor: "rgba(255,255,255,0.2)",
+                  borderColor: "white",
+                },
+              }}
             >
-              <Typography variant="h6">Naplók törlése</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Csak a megadott feltételeknek megfelelő rekordok kerülnek
-                törlésre.
-              </Typography>
-            </Box>
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} sm={4} md={3}>
-                <TextField
-                  fullWidth
-                  label="Törlés a megadott dátum előtt"
-                  type="datetime-local"
-                  size="small"
-                  value={deleteFilters.before}
-                  onChange={(e) =>
-                    handleDeleteFilterChange("before", e.target.value)
-                  }
-                  InputLabelProps={{ shrink: true }}
-                />
+              Frissítés
+            </Button>
+
+            <Button
+              variant="contained"
+              color="error"
+              size="small"
+              startIcon={<DeleteSweepIcon />}
+              onClick={() => setDeleteDialogOpen(true)}
+              sx={{
+                fontWeight: 600,
+                textTransform: "none",
+                boxShadow: "none",
+              }}
+            >
+              Naplók törlése
+            </Button>
+          </Stack>
+        </Box>
+      </Box>
+
+      {/* Interactive 30-day Stats Cards */}
+      <Grid container spacing={2} sx={{ mb: 2.5 }}>
+        {kpiCards.map((card) => {
+          const isSelected = filters.level === card.level;
+          return (
+            <Grid item xs={6} sm={3} key={card.level}>
+              <Card
+                onClick={() => handleFilterChange("level", card.level)}
+                sx={{
+                  cursor: "pointer",
+                  borderRadius: 2.5,
+                  border: "1.5px solid",
+                  borderColor: isSelected ? card.color : "rgba(0,0,0,0.08)",
+                  boxShadow: isSelected
+                    ? `0 4px 14px ${alpha(card.color, 0.2)}`
+                    : "0 2px 8px rgba(0,0,0,0.04)",
+                  transition: "all 0.15s ease",
+                  "&:hover": {
+                    borderColor: card.color,
+                    transform: "translateY(-1px)",
+                  },
+                }}
+              >
+                <CardContent
+                  sx={{
+                    p: 2,
+                    "&:last-child": { pb: 2 },
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 1.5,
+                  }}
+                >
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={600}
+                      noWrap
+                      display="block"
+                    >
+                      {card.label}
+                    </Typography>
+                    <Typography
+                      variant="h5"
+                      fontWeight={800}
+                      sx={{ color: card.color, mt: 0.25 }}
+                    >
+                      {Number(card.value).toLocaleString("hu-HU")}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      p: 1,
+                      borderRadius: 2,
+                      bgcolor: card.bg,
+                      color: card.color,
+                      display: "flex",
+                    }}
+                  >
+                    {card.icon}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          );
+        })}
+      </Grid>
+
+      {/* Main Table Card with Integrated Filters */}
+      <Paper
+        sx={{
+          borderRadius: 3,
+          boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+          overflow: "hidden",
+          border: "1px solid #e0e0e0",
+        }}
+      >
+        {/* Filter Toolbar */}
+        <Box sx={{ p: { xs: 2, md: 2.5 }, borderBottom: "1px solid", borderColor: "divider" }}>
+          <Grid container spacing={1.5} alignItems="center">
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Keresés útvonal alapján (pl. /api/v1/users)..."
+                value={pathInput}
+                onChange={(e) => setPathInput(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" color="action" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: pathInput ? (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => setPathInput("")}
+                        aria-label="Keresés törlése"
+                      >
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ) : null,
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={6} sm={4} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Szint</InputLabel>
+                <Select
+                  value={filters.level}
+                  onChange={(e) => handleFilterChange("level", e.target.value)}
+                  label="Szint"
+                >
+                  <MenuItem value="Összes">Összes</MenuItem>
+                  <MenuItem value="ERROR">ERROR</MenuItem>
+                  <MenuItem value="WARN">WARN</MenuItem>
+                  <MenuItem value="INFO">INFO</MenuItem>
+                  <MenuItem value="DEBUG">DEBUG</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={6} sm={4} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Metódus</InputLabel>
+                <Select
+                  value={filters.method}
+                  onChange={(e) => handleFilterChange("method", e.target.value)}
+                  label="Metódus"
+                >
+                  <MenuItem value="Összes">Összes</MenuItem>
+                  <MenuItem value="GET">GET</MenuItem>
+                  <MenuItem value="POST">POST</MenuItem>
+                  <MenuItem value="PUT">PUT</MenuItem>
+                  <MenuItem value="DELETE">DELETE</MenuItem>
+                  <MenuItem value="PATCH">PATCH</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={4} md={4}>
+              <Stack
+                direction="row"
+                spacing={1}
+                justifyContent={{ xs: "flex-start", md: "flex-end" }}
+              >
+                <Badge
+                  badgeContent={activeAdvancedFilterCount}
+                  color="primary"
+                >
+                  <Button
+                    startIcon={<FilterListIcon />}
+                    onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                    variant={showAdvancedFilters ? "contained" : "outlined"}
+                    size="small"
+                    sx={{ textTransform: "none", fontWeight: 600, height: 40 }}
+                  >
+                    További szűrők
+                  </Button>
+                </Badge>
+
+                {hasActiveFilters && (
+                  <Button
+                    startIcon={<ClearIcon />}
+                    onClick={clearFilters}
+                    variant="text"
+                    color="inherit"
+                    size="small"
+                    sx={{ textTransform: "none", fontWeight: 600, height: 40 }}
+                  >
+                    Törlés
+                  </Button>
+                )}
+              </Stack>
+            </Grid>
+          </Grid>
+
+          {/* Advanced Filters Collapse */}
+          <Collapse in={showAdvancedFilters}>
+            <Box
+              sx={{
+                mt: 2,
+                pt: 2,
+                borderTop: "1px dashed",
+                borderColor: "divider",
+              }}
+            >
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={12} md={4}>
+                  <Autocomplete
+                    size="small"
+                    options={users}
+                    value={selectedUserObj}
+                    onChange={(event, newValue) =>
+                      handleFilterChange("userId", newValue ? newValue.id : "")
+                    }
+                    getOptionLabel={(option) =>
+                      option.name
+                        ? `${option.name} (${option.email})`
+                        : option.email || ""
+                    }
+                    isOptionEqualToValue={(option, value) =>
+                      option.id === value.id
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Felhasználó"
+                        placeholder="Keresés név vagy e-mail alapján..."
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Kezdő dátum"
+                    type="datetime-local"
+                    value={filters.startDate}
+                    onChange={(e) =>
+                      handleFilterChange("startDate", e.target.value)
+                    }
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Befejező dátum"
+                    type="datetime-local"
+                    value={filters.endDate}
+                    onChange={(e) =>
+                      handleFilterChange("endDate", e.target.value)
+                    }
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                    flexWrap="wrap"
+                    useFlexGap
+                  >
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: "flex", alignItems: "center", gap: 0.5, fontWeight: 600 }}
+                    >
+                      <ScheduleIcon sx={{ fontSize: 15 }} />
+                      Gyors időszak:
+                    </Typography>
+                    <Chip
+                      label="Utolsó 1 óra"
+                      size="small"
+                      variant="outlined"
+                      onClick={() => applyDatePreset(subHours(new Date(), 1))}
+                    />
+                    <Chip
+                      label="Ma"
+                      size="small"
+                      variant="outlined"
+                      onClick={() => applyDatePreset(startOfDay(new Date()))}
+                    />
+                    <Chip
+                      label="Utolsó 24 óra"
+                      size="small"
+                      variant="outlined"
+                      onClick={() => applyDatePreset(subHours(new Date(), 24))}
+                    />
+                    <Chip
+                      label="Utolsó 7 nap"
+                      size="small"
+                      variant="outlined"
+                      onClick={() => applyDatePreset(subDays(new Date(), 7))}
+                    />
+                  </Stack>
+                </Grid>
               </Grid>
-              <Grid item xs={12} sm={4} md={3}>
+            </Box>
+          </Collapse>
+        </Box>
+
+        {/* Loading indicator */}
+        <Box sx={{ height: 3 }}>
+          {isFetching && <LinearProgress sx={{ height: 3 }} />}
+        </Box>
+
+        {error && (
+          <Alert severity="error" sx={{ m: 2, borderRadius: 2 }}>
+            Hiba történt a naplók betöltése során:{" "}
+            {error?.data?.message || error?.message || "Ismeretlen hiba"}
+          </Alert>
+        )}
+
+        <TableContainer>
+          <Table size="small">
+            <TableHead sx={{ backgroundColor: "#f8fafc" }}>
+              <TableRow>
+                <TableCell sx={{ width: 42 }} />
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>
+                  Időpont
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Szint</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Metódus</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Útvonal</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Felhasználó</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>IP</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Státusz</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>
+                  Időtartam
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700 }} align="right">
+                  Részletek
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
+                    <CircularProgress size={32} />
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 1.5 }}
+                    >
+                      Naplók betöltése...
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : logsData?.data?.length > 0 ? (
+                logsData.data.map((log) => {
+                  const isErrorRow = log.level === "ERROR";
+                  const isWarnRow = log.level === "WARN";
+                  const isExpanded = Boolean(expandedRows[log.id]);
+
+                  return (
+                    <React.Fragment key={log.id}>
+                      <TableRow
+                        hover
+                        onClick={() => toggleRowExpansion(log.id)}
+                        sx={{
+                          cursor: "pointer",
+                          bgcolor: isErrorRow
+                            ? alpha("#d32f2f", 0.04)
+                            : isWarnRow
+                            ? alpha("#ed6c02", 0.03)
+                            : "inherit",
+                          "& td:first-of-type": {
+                            borderLeft: isErrorRow
+                              ? "3px solid #d32f2f"
+                              : isWarnRow
+                              ? "3px solid #ed6c02"
+                              : "3px solid transparent",
+                          },
+                        }}
+                      >
+                        <TableCell>
+                          <IconButton
+                            size="small"
+                            aria-label="Sor kibontása"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleRowExpansion(log.id);
+                            }}
+                          >
+                            {isExpanded ? (
+                              <ExpandLessIcon fontSize="small" />
+                            ) : (
+                              <ExpandMoreIcon fontSize="small" />
+                            )}
+                          </IconButton>
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            whiteSpace: "nowrap",
+                            fontFamily: "monospace",
+                            fontSize: "0.8rem",
+                            color: "text.secondary",
+                          }}
+                        >
+                          {formatDate(log.createdAt)}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={log.level || "UNKNOWN"}
+                            color={LOG_LEVEL_COLORS[log.level] || "default"}
+                            size="small"
+                            sx={{ fontWeight: 700, fontSize: "0.7rem" }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={log.method || "N/A"}
+                            color={HTTP_METHOD_COLORS[log.method] || "default"}
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                              fontWeight: 700,
+                              fontFamily: "monospace",
+                              fontSize: "0.72rem",
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell sx={{ maxWidth: 280 }}>
+                          <Tooltip title={log.path || "N/A"} placement="top-start">
+                            <Typography
+                              variant="body2"
+                              noWrap
+                              sx={{
+                                fontFamily: "monospace",
+                                fontSize: "0.8rem",
+                              }}
+                            >
+                              {log.path || "N/A"}
+                            </Typography>
+                          </Tooltip>
+                        </TableCell>
+                        <TableCell>
+                          {log.user ? (
+                            <Box>
+                              <Typography
+                                variant="body2"
+                                fontWeight={600}
+                                noWrap
+                                sx={{ maxWidth: 180 }}
+                              >
+                                {log.user.name}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                noWrap
+                                display="block"
+                                sx={{ maxWidth: 180 }}
+                              >
+                                {log.user.email}
+                              </Typography>
+                            </Box>
+                          ) : (
+                            <Typography
+                              variant="caption"
+                              color="text.disabled"
+                              sx={{ fontFamily: "monospace" }}
+                            >
+                              {log.userId || "Vendég / Rendszer"}
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            fontFamily: "monospace",
+                            fontSize: "0.78rem",
+                            color: "text.secondary",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {log.ip || "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          {log.statusCode != null ? (
+                            <Chip
+                              label={log.statusCode}
+                              color={getStatusColor(log.statusCode)}
+                              size="small"
+                              sx={{
+                                fontWeight: 700,
+                                fontFamily: "monospace",
+                                fontSize: "0.75rem",
+                              }}
+                            />
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap" }}>
+                          {log.duration != null ? (
+                            <Chip
+                              label={`${log.duration} ms`}
+                              color={getDurationColor(log.duration)}
+                              variant="outlined"
+                              size="small"
+                              sx={{
+                                fontFamily: "monospace",
+                                fontSize: "0.72rem",
+                              }}
+                            />
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                        <TableCell align="right">
+                          <Tooltip title="Részletek megnyitása ablakban">
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedLogId(log.id);
+                              }}
+                            >
+                              <VisibilityIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell
+                          colSpan={10}
+                          sx={{ py: 0, borderBottom: isExpanded ? undefined : 0 }}
+                        >
+                          <Collapse
+                            in={isExpanded}
+                            timeout="auto"
+                            unmountOnExit
+                          >
+                            {renderLogDetails(log)}
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    </React.Fragment>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
+                    <ArticleIcon
+                      sx={{ fontSize: 44, color: "text.disabled", mb: 1 }}
+                    />
+                    <Typography variant="subtitle1" color="text.secondary">
+                      Nincs találat a megadott szűrőkkel
+                    </Typography>
+                    {hasActiveFilters && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<ClearIcon />}
+                        onClick={clearFilters}
+                        sx={{ mt: 1.5, textTransform: "none" }}
+                      >
+                        Szűrők törlése
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        <TablePagination
+          component="div"
+          count={logsData?.pagination?.total || 0}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[25, 50, 100, 200]}
+          labelRowsPerPage="Sorok száma:"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}–${to} / ${
+              count !== -1
+                ? count.toLocaleString("hu-HU")
+                : `több mint ${to}`
+            }`
+          }
+        />
+      </Paper>
+
+      {/* Delete Logs Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => !isDeleting && setDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700, color: "error.main" }}>
+          Naplók tömeges törlése
+        </DialogTitle>
+        <DialogContent dividers>
+          <Alert severity="warning" sx={{ mb: 2.5, borderRadius: 2 }}>
+            Csak a megadott feltételeknek megfelelő rekordok kerülnek törlésre.
+            A művelet <strong>nem visszavonható</strong>.
+          </Alert>
+
+          <Stack spacing={2}>
+            <Box>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight={600}
+                display="block"
+                sx={{ mb: 1 }}
+              >
+                Gyors megőrzési időszak kiválasztása:
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Chip
+                  label="7 napnál régebbiek"
+                  size="small"
+                  variant="outlined"
+                  onClick={() =>
+                    handleDeleteFilterChange(
+                      "before",
+                      toDatetimeLocal(subDays(new Date(), 7))
+                    )
+                  }
+                />
+                <Chip
+                  label="30 napnál régebbiek"
+                  size="small"
+                  variant="outlined"
+                  onClick={() =>
+                    handleDeleteFilterChange(
+                      "before",
+                      toDatetimeLocal(subDays(new Date(), 30))
+                    )
+                  }
+                />
+                <Chip
+                  label="90 napnál régebbiek"
+                  size="small"
+                  variant="outlined"
+                  onClick={() =>
+                    handleDeleteFilterChange(
+                      "before",
+                      toDatetimeLocal(subDays(new Date(), 90))
+                    )
+                  }
+                />
+              </Stack>
+            </Box>
+
+            <TextField
+              fullWidth
+              label="Törlés a megadott dátum előtt"
+              type="datetime-local"
+              size="small"
+              value={deleteFilters.before}
+              onChange={(e) =>
+                handleDeleteFilterChange("before", e.target.value)
+              }
+              InputLabelProps={{ shrink: true }}
+            />
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Szint</InputLabel>
                   <Select
@@ -561,12 +1484,12 @@ export default function Logs() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={4} md={3}>
+              <Grid item xs={12} sm={6}>
                 <FormControl fullWidth size="small">
-                  <InputLabel>Módszer</InputLabel>
+                  <InputLabel>Metódus</InputLabel>
                   <Select
                     value={deleteFilters.method}
-                    label="Módszer"
+                    label="Metódus"
                     onChange={(e) =>
                       handleDeleteFilterChange("method", e.target.value)
                     }
@@ -580,197 +1503,28 @@ export default function Logs() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={12} md={3}>
-                <Button
-                  variant="contained"
-                  color="error"
-                  fullWidth
-                  disabled={!hasDeleteCriteria || isDeleting}
-                  onClick={() => setDeleteDialogOpen(true)}
-                >
-                  {isDeleting
-                    ? "Törlés folyamatban..."
-                    : "Kiválasztott naplók törlése"}
-                </Button>
-              </Grid>
             </Grid>
-          </CardContent>
-        </Card>
-
-      {/* Logs Table */}
-      <Paper sx={{ borderRadius: 3, boxShadow: "0 4px 20px 0 rgba(0,0,0,0.05)", overflow: "hidden", border: "1px solid rgba(0,0,0,0.08)" }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            Hiba történt a naplók betöltése során:{" "}
-            {error?.data?.message || error.message}
-          </Alert>
-        )}
-
-        <TableContainer>
-          <Table>
-            <TableHead sx={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
-              <TableRow>
-                <TableCell />
-                <TableCell>Időpont</TableCell>
-                <TableCell>Szint</TableCell>
-                <TableCell>Metódus</TableCell>
-                <TableCell>Útvonal</TableCell>
-                <TableCell>Felhasználó</TableCell>
-                <TableCell>IP</TableCell>
-                <TableCell>Státusz</TableCell>
-                <TableCell>Időtartam</TableCell>
-                <TableCell>Műveletek</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={10} align="center">
-                    Betöltés...
-                  </TableCell>
-                </TableRow>
-              ) : logsData?.data?.length > 0 ? (
-                logsData.data.map((log) => (
-                  <React.Fragment key={log.id}>
-                    <TableRow>
-                      <TableCell>
-                        <IconButton
-                          size="small"
-                          onClick={() => toggleRowExpansion(log.id)}
-                        >
-                          {expandedRows[log.id] ? (
-                            <ExpandLessIcon />
-                          ) : (
-                            <ExpandMoreIcon />
-                          )}
-                        </IconButton>
-                      </TableCell>
-                      <TableCell>{formatDate(log.createdAt)}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={log.level || "UNKNOWN"}
-                          color={LOG_LEVEL_COLORS[log.level] || "default"}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={log.method || "N/A"}
-                          color={HTTP_METHOD_COLORS[log.method] || "default"}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>{log.path || "N/A"}</TableCell>
-                      <TableCell>
-                        {log.user ? (
-                          <div>
-                            <div style={{ fontWeight: "medium" }}>
-                              {log.user.name}
-                            </div>
-                            <div style={{ fontSize: "0.75rem", color: "#666" }}>
-                              {log.user.email}
-                            </div>
-                          </div>
-                        ) : (
-                          log.userId || "N/A"
-                        )}
-                      </TableCell>
-                      <TableCell>{log.ip || "N/A"}</TableCell>
-                      <TableCell>
-                        {log.statusCode && (
-                          <Chip
-                            label={log.statusCode}
-                            color={log.statusCode >= 400 ? "error" : "success"}
-                            size="small"
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {log.duration ? `${log.duration}ms` : "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        <Tooltip title="Részletek megtekintése">
-                          <IconButton
-                            size="small"
-                            onClick={() => setSelectedLogId(log.id)}
-                          >
-                            <VisibilityIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell
-                        colSpan={10}
-                        style={{ paddingBottom: 0, paddingTop: 0 }}
-                      >
-                        <Collapse
-                          in={expandedRows[log.id]}
-                          timeout="auto"
-                          unmountOnExit
-                        >
-                          {renderLogDetails(log)}
-                        </Collapse>
-                      </TableCell>
-                    </TableRow>
-                  </React.Fragment>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={10} align="center">
-                    Nincs találat a megadott szűrőkkel
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        <TablePagination
-          component="div"
-          count={logsData?.pagination?.total || 0}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[25, 50, 100, 200]}
-          labelRowsPerPage="Sorok száma oldalanként:"
-          labelDisplayedRows={({ from, to, count }) =>
-            `${from}-${to} / ${count !== -1 ? count : `több mint ${to}`}`
-          }
-        />
-      </Paper>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Naplók törlése</DialogTitle>
-        <DialogContent dividers>
-          <Typography gutterBottom>
-            Biztosan törli a megadott feltételeknek megfelelő naplókat?
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Feltételek:
-          </Typography>
-          <ul style={{ marginTop: 8, paddingLeft: 20 }}>
-            <li>
-              Dátum: {deleteFilters.before ? formatDate(deleteFilters.before) : "Bármikor"}
-            </li>
-            <li>Szint: {deleteFilters.level || "Összes"}</li>
-            <li>Módszer: {deleteFilters.method || "Összes"}</li>
-          </ul>
-          <Typography variant="caption" color="text.secondary">
-            A művelet nem visszavonható.
-          </Typography>
+          </Stack>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Mégsem</Button>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            disabled={isDeleting}
+          >
+            Mégse
+          </Button>
           <Button
             onClick={handleDeleteLogs}
             color="error"
-            disabled={isDeleting}
+            variant="contained"
+            disabled={!hasDeleteCriteria || isDeleting}
+            startIcon={
+              isDeleting ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <DeleteSweepIcon />
+              )
+            }
           >
             {isDeleting ? "Törlés..." : "Törlés megerősítése"}
           </Button>
@@ -779,23 +1533,92 @@ export default function Logs() {
 
       {/* Log Details Dialog */}
       <Dialog
-        open={!!selectedLogId}
+        open={Boolean(selectedLogId)}
         onClose={() => setSelectedLogId(null)}
-        maxWidth="md"
+        maxWidth="lg"
         fullWidth
       >
-        <DialogTitle>Napló részletei</DialogTitle>
-        <DialogContent>
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            fontWeight: 700,
+          }}
+        >
+          <span>Napló részletei</span>
+          {selectedLog && (
+            <Stack direction="row" spacing={1}>
+              {selectedLog.level && (
+                <Chip
+                  label={selectedLog.level}
+                  color={LOG_LEVEL_COLORS[selectedLog.level] || "default"}
+                  size="small"
+                />
+              )}
+              {selectedLog.method && (
+                <Chip
+                  label={selectedLog.method}
+                  color={HTTP_METHOD_COLORS[selectedLog.method] || "default"}
+                  variant="outlined"
+                  size="small"
+                />
+              )}
+              {selectedLog.statusCode != null && (
+                <Chip
+                  label={selectedLog.statusCode}
+                  color={getStatusColor(selectedLog.statusCode)}
+                  size="small"
+                />
+              )}
+            </Stack>
+          )}
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 0 }}>
           {logDetailsLoading ? (
-            <Typography>Betöltés...</Typography>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                py: 6,
+                gap: 2,
+              }}
+            >
+              <CircularProgress size={28} />
+              <Typography color="text.secondary">
+                Részletek betöltése...
+              </Typography>
+            </Box>
           ) : selectedLog ? (
             renderLogDetails(selectedLog)
           ) : (
-            <Typography>Nem található napló</Typography>
+            <Box sx={{ p: 4, textAlign: "center" }}>
+              <Typography color="text.secondary">
+                Nem található naplóbejegyzés.
+              </Typography>
+            </Box>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSelectedLogId(null)}>Bezárás</Button>
+        <DialogActions sx={{ px: 3, py: 1.5 }}>
+          {selectedLog && (
+            <Button
+              startIcon={<ContentCopyIcon />}
+              onClick={() =>
+                copyToClipboard(selectedLog, "Teljes napló JSON másolva")
+              }
+              sx={{ mr: "auto", textTransform: "none" }}
+            >
+              JSON másolása
+            </Button>
+          )}
+          <Button
+            onClick={() => setSelectedLogId(null)}
+            variant="contained"
+            sx={{ textTransform: "none" }}
+          >
+            Bezárás
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
