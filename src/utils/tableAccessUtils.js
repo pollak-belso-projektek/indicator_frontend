@@ -178,12 +178,16 @@ export const parseApiError = (error) => {
     // RTK Query error structure
     if (error.status && error.data) {
       switch (error.status) {
+        case 400:
+          return error.data?.message || "Hibás adatok. Kérjük, ellenőrizd a bevitt információkat.";
         case 401:
           return error.data?.message || "Nincs jogosultság a művelet végrehajtásához. Kérjük, jelentkezz be újra.";
         case 403:
           return error.data?.message || "Hozzáférés megtagadva. Nincs megfelelő jogosultságod.";
         case 404:
           return error.data?.message || "A keresett erőforrás nem található.";
+        case 409:
+          return error.data?.message || "A megadott adatokkal már létezik bejegyzés.";
         case 422:
           return error.data?.message || "Hibás adatok. Kérjük, ellenőrizd a bevitt információkat.";
         case 500:

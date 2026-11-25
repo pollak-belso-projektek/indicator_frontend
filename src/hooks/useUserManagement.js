@@ -11,6 +11,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { createUserColumns } from "../components/UserTable";
 import { useUserPermissions } from "./useUserPermissions";
 import { getUserTypeFromLevel } from "../utils/userHierarchy";
+import { parseApiError } from "../utils/tableAccessUtils";
 import {
   useGetUsersQuery,
   useGetTableListQuery,
@@ -209,7 +210,15 @@ export const useUserManagement = () => {
       return { success: true, message: "Felhasználó sikeresen módosítva!" };
     } catch (error) {
       console.error("Error modifying user:", error);
-      return { error: "Hiba történt a felhasználó módosítása során!" };
+      const isDuplicateEmail =
+        error?.status === 409 || error?.data?.code === "EMAIL_ALREADY_EXISTS";
+      const errorMessage = isDuplicateEmail
+        ? error?.data?.message || "Ezzel az e-mail címmel már létezik felhasználó!"
+        : parseApiError(error) || "Hiba történt a felhasználó módosítása során!";
+      return {
+        error: errorMessage,
+        field: error?.data?.field || (isDuplicateEmail ? "email" : null),
+      };
     }
   };
   const handleCreateUser = async (newUser) => {
@@ -229,12 +238,16 @@ export const useUserManagement = () => {
       return { success: true, message: "Felhasználó sikeresen létrehozva!" };
     } catch (error) {
       console.error("Error creating user:", error);
-      const errorMessage =
-        error?.data?.message ||
-        error?.data?.error ||
-        error?.message ||
-        "Hiba történt a felhasználó létrehozása során!";
-      return { error: errorMessage };
+      const isDuplicateEmail =
+        error?.status === 409 || error?.data?.code === "EMAIL_ALREADY_EXISTS";
+      const errorMessage = isDuplicateEmail
+        ? error?.data?.message || "Ezzel az e-mail címmel már létezik felhasználó!"
+        : parseApiError(error) || "Hiba történt a felhasználó létrehozása során!";
+      return {
+        error: errorMessage,
+        field: error?.data?.field || (isDuplicateEmail ? "email" : null),
+        code: error?.data?.code || (isDuplicateEmail ? "EMAIL_ALREADY_EXISTS" : null),
+      };
     }
   };
   const handleDeactivateConfirm = async () => {

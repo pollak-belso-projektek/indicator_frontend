@@ -25,6 +25,7 @@ import {
   InputAdornment,
   IconButton,
   CircularProgress,
+  Alert,
 } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
@@ -65,6 +66,9 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+  const dialogContentRef = useRef(null);
   const [userType, setUserType] = useState("iskolai_general");
   const [selectedTables, setSelectedTables] = useState([]);
   const [tablePermissions, setTablePermissions] = useState({}); // Store permissions for each table
@@ -190,46 +194,81 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
     }));
   };
 
+  const scrollToTop = () => {
+    dialogContentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const handleInputChange = (field, value) => {
     setNewUser((prev) => ({
       ...prev,
       [field]: value,
     }));
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+    if (submitError) {
+      setSubmitError("");
+    }
   };
 
   const handleSave = async () => {
+    setSubmitError("");
+    setFieldErrors({});
+
     const trimmedName = newUser.name?.trim();
     const trimmedEmail = newUser.email?.trim();
 
-    if (!trimmedName || !trimmedEmail || !newUser.password) {
-      showNotification("Kérjük töltse ki az összes kötelező mezőt!", "error");
+    const errors = {};
+    if (!trimmedName) errors.name = "A név megadása kötelező!";
+    if (!trimmedEmail) errors.email = "Az e-mail cím megadása kötelező!";
+    if (!newUser.password) errors.password = "A jelszó megadása kötelező!";
+
+    if (Object.keys(errors).length > 0) {
+      const msg = "Kérjük töltse ki az összes kötelező mezőt!";
+      setFieldErrors(errors);
+      setSubmitError(msg);
+      showNotification(msg, "error");
+      scrollToTop();
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(trimmedEmail)) {
-      showNotification("Kérjük adjon meg érvényes email címet!", "error");
+      const msg = "Kérjük adjon meg érvényes e-mail címet!";
+      setFieldErrors({ email: msg });
+      setSubmitError(msg);
+      showNotification(msg, "error");
+      scrollToTop();
       return;
     }
 
     if (newUser.password.length < 6) {
-      showNotification(
-        "A jelszónak legalább 6 karakter hosszúnak kell lennie!",
-        "error"
-      );
+      const msg = "A jelszónak legalább 6 karakter hosszúnak kell lennie!";
+      setFieldErrors({ password: msg });
+      setSubmitError(msg);
+      showNotification(msg, "error");
+      scrollToTop();
       return;
     }
 
     if (newUser.password !== passwordConfirm) {
-      showNotification("A megadott jelszavak nem egyeznek meg!", "error");
+      const msg = "A megadott jelszavak nem egyeznek meg!";
+      setFieldErrors({ passwordConfirm: msg });
+      setSubmitError(msg);
+      showNotification(msg, "error");
+      scrollToTop();
       return;
     }
 
     if (!userPermissions.canCreateUser(userType)) {
-      showNotification(
-        "Nincs jogosultsága ilyen típusú felhasználó létrehozásához!",
-        "error"
-      );
+      const msg = "Nincs jogosultsága ilyen típusú felhasználó létrehozásához!";
+      setSubmitError(msg);
+      showNotification(msg, "error");
+      scrollToTop();
       return;
     }
 
@@ -238,10 +277,10 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
       !canSelectSchoolForUsers &&
       (!newUser.alapadatokId || !currentUser?.school)
     ) {
-      showNotification(
-        "Hiba történt az iskolaválasztással. Kérjük próbálja újra!",
-        "error"
-      );
+      const msg = "Hiba történt az iskolaválasztással. Kérjük próbálja újra!";
+      setSubmitError(msg);
+      showNotification(msg, "error");
+      scrollToTop();
       return;
     }
 
@@ -251,10 +290,10 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
       userType.startsWith("iskolai_") &&
       !newUser.alapadatokId
     ) {
-      showNotification(
-        "Iskolai felhasználó esetén kötelező iskolát választani!",
-        "error"
-      );
+      const msg = "Iskolai felhasználó esetén kötelező iskolát választani!";
+      setSubmitError(msg);
+      showNotification(msg, "error");
+      scrollToTop();
       return;
     }
 
@@ -267,15 +306,19 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
       };
       const result = await onSave(payload);
       if (result?.error) {
-        showNotification(result.error, "error");
+        setSubmitError(result.error);
+        if (result.field) {
+          setFieldErrors({ [result.field]: result.error });
+        }
+        scrollToTop();
         return;
       }
       handleClose();
     } catch (err) {
-      showNotification(
-        err?.message || "Hiba történt a felhasználó mentése során!",
-        "error"
-      );
+      const msg = err?.message || "Hiba történt a felhasználó mentése során!";
+      setSubmitError(msg);
+      showNotification(msg, "error");
+      scrollToTop();
     } finally {
       setIsSubmitting(false);
     }
@@ -295,6 +338,8 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
     setShowPassword(false);
     setShowPasswordConfirm(false);
     setIsSubmitting(false);
+    setSubmitError("");
+    setFieldErrors({});
     setUserType("iskolai_general");
     setSelectedTables([]);
     setTablePermissions({});
@@ -304,8 +349,17 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle>Új felhasználó létrehozása</DialogTitle>
-      <DialogContent dividers sx={{ maxHeight: "75vh" }}>
+      <DialogContent ref={dialogContentRef} dividers sx={{ maxHeight: "75vh" }}>
         <Box sx={{ mt: 1 }}>
+          {submitError && (
+            <Alert
+              severity="error"
+              onClose={() => setSubmitError("")}
+              sx={{ mb: 2, borderRadius: 2 }}
+            >
+              {submitError}
+            </Alert>
+          )}
           <TextField
             fullWidth
             label="Név"
@@ -313,6 +367,8 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
             onChange={(e) => handleInputChange("name", e.target.value)}
             margin="normal"
             required
+            error={Boolean(fieldErrors.name)}
+            helperText={fieldErrors.name || ""}
           />
           <TextField
             fullWidth
@@ -323,6 +379,8 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
             onChange={(e) => handleInputChange("email", e.target.value)}
             margin="normal"
             required
+            error={Boolean(fieldErrors.email)}
+            helperText={fieldErrors.email || ""}
           />
           <Grid container spacing={2} sx={{ mt: 0.5, mb: 1 }}>
             <Grid item xs={12} sm={6}>
@@ -333,11 +391,15 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
                 value={newUser.password}
                 onChange={(e) => handleInputChange("password", e.target.value)}
                 required
-                error={Boolean(newUser.password && newUser.password.length < 6)}
+                error={Boolean(
+                  fieldErrors.password ||
+                    (newUser.password && newUser.password.length < 6)
+                )}
                 helperText={
-                  newUser.password && newUser.password.length < 6
+                  fieldErrors.password ||
+                  (newUser.password && newUser.password.length < 6
                     ? "Legalább 6 karakter szükséges"
-                    : ""
+                    : "")
                 }
                 InputProps={{
                   endAdornment: (
@@ -364,13 +426,27 @@ const CreateUserDialog = ({ open, onClose, onSave, userPermissions }) => {
                 label="Jelszó megerősítése"
                 type={showPasswordConfirm ? "text" : "password"}
                 value={passwordConfirm}
-                onChange={(e) => setPasswordConfirm(e.target.value)}
+                onChange={(e) => {
+                  setPasswordConfirm(e.target.value);
+                  if (fieldErrors.passwordConfirm) {
+                    setFieldErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.passwordConfirm;
+                      return next;
+                    });
+                  }
+                  if (submitError) setSubmitError("");
+                }}
                 required
-                error={Boolean(passwordConfirm && newUser.password !== passwordConfirm)}
+                error={Boolean(
+                  fieldErrors.passwordConfirm ||
+                    (passwordConfirm && newUser.password !== passwordConfirm)
+                )}
                 helperText={
-                  passwordConfirm && newUser.password !== passwordConfirm
+                  fieldErrors.passwordConfirm ||
+                  (passwordConfirm && newUser.password !== passwordConfirm
                     ? "A megadott jelszavak nem egyeznek"
-                    : ""
+                    : "")
                 }
                 InputProps={{
                   endAdornment: (

@@ -72,8 +72,8 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [twoFactorCode, setTwoFactorCode] = useState("");
-  const [otp, setOtp] = useState(new Array(6).fill(""));
-  const otpRefs = useRef([]);
+  const [isOtpFocused, setIsOtpFocused] = useState(false);
+  const otpInputRef = useRef(null);
   const [trustDevice, setTrustDevice] = useState(false);
   const [requires2FA, setRequires2FA] = useState(false);
   const [isGoogleLoginAttempt, setIsGoogleLoginAttempt] = useState(false);
@@ -88,41 +88,26 @@ export default function Login() {
   const mustChangePassword = useSelector(selectMustChangePassword);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const handleOtpChange = (e, index) => {
-    const value = e.target.value;
-    if (isNaN(value)) return;
-    const newOtp = [...otp];
-    newOtp[index] = value.substring(value.length - 1);
-    setOtp(newOtp);
-    setTwoFactorCode(newOtp.join(""));
+  const sanitizeOtp = (value) => String(value || "").replace(/\D/g, "").slice(0, 6);
 
-    if (value && index < 5 && otpRefs.current[index + 1]) {
-      otpRefs.current[index + 1].focus();
-    }
-  };
-
-  const handleOtpKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0 && otpRefs.current[index - 1]) {
-      otpRefs.current[index - 1].focus();
-    }
+  const handleOtpChange = (e) => {
+    setTwoFactorCode(sanitizeOtp(e.target.value));
   };
 
   const handleOtpPaste = (e) => {
-    e.preventDefault();
-    const pasteData = e.clipboardData.getData("text").slice(0, 6).split("");
-    if (pasteData.some(char => isNaN(char))) return;
-    const newOtp = [...otp];
-    pasteData.forEach((char, i) => {
-      if (i < 6) newOtp[i] = char;
-    });
-    setOtp(newOtp);
-    setTwoFactorCode(newOtp.join(""));
-
-    const lastIndex = Math.min(pasteData.length, 5);
-    if (otpRefs.current[lastIndex]) {
-      otpRefs.current[lastIndex].focus();
+    const pasted = e.clipboardData?.getData("text") || "";
+    const digits = sanitizeOtp(pasted);
+    if (digits) {
+      e.preventDefault();
+      setTwoFactorCode(digits);
     }
   };
+
+  useEffect(() => {
+    if (requires2FA) {
+      otpInputRef.current?.focus();
+    }
+  }, [requires2FA]);
 
   useEffect(() => {
     dispatch(clearError());
@@ -166,8 +151,14 @@ export default function Login() {
       return;
     }
 
-    if (requires2FA && !twoFactorCode) {
-      dispatch(loginFailure("Kétlépcsős kód megadása kötelező"));
+    if (requires2FA && twoFactorCode.length !== 6) {
+      dispatch(
+        loginFailure(
+          twoFactorCode
+            ? "A kétlépcsős kódnak 6 számjegyűnek kell lennie"
+            : "Kétlépcsős kód megadása kötelező"
+        )
+      );
       return;
     }
 
@@ -203,6 +194,7 @@ export default function Login() {
       }
 
       if (result.requires2FA) {
+        setTwoFactorCode("");
         setRequires2FA(true);
         if (result.isGoogleLogin) {
           setIsGoogleLoginAttempt(true);
@@ -253,6 +245,7 @@ export default function Login() {
       const result = await googleLoginMutation(payload).unwrap();
 
       if (result.requires2FA) {
+        setTwoFactorCode("");
         setRequires2FA(true);
         setIsGoogleLoginAttempt(true);
         setGoogleIdToken(result.idToken);
@@ -372,26 +365,88 @@ export default function Login() {
                       <Typography variant="body2" textAlign="center" color="primary.main" fontWeight="500">
                         Kétlépcsős azonosítás (2FA) szükséges a bejelentkezéshez.
                       </Typography>
-                      <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 2 }}>
-                        {otp.map((data, index) => (
-                          <StyledTextField
-                            key={index}
-                            inputRef={(el) => (otpRefs.current[index] = el)}
-                            type="text"
-                            value={data}
-                            onChange={(e) => handleOtpChange(e, index)}
-                            onKeyDown={(e) => handleOtpKeyDown(e, index)}
-                            onPaste={handleOtpPaste}
-                            variant="outlined"
-                            inputProps={{
-                              maxLength: 2,
-                              style: { textAlign: "center", fontSize: "1.2rem", fontWeight: 700, padding: "10px" }
-                            }}
-                            sx={{ width: 45 }}
-                            autoFocus={index === 0}
-                          />
-                        ))}
-                      </Stack>
+                      <Box
+                        sx={{
+                          position: "relative",
+                          display: "flex",
+                          justifyContent: "center",
+                          gap: 1,
+                          mt: 2,
+                        }}
+                        onClick={() => otpInputRef.current?.focus()}
+                      >
+                        <Box
+                          component="input"
+                          ref={otpInputRef}
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          autoComplete="one-time-code"
+                          enterKeyHint="done"
+                          aria-label="Hat számjegyű kétlépcsős azonosító kód"
+                          value={twoFactorCode}
+                          onChange={handleOtpChange}
+                          onPaste={handleOtpPaste}
+                          onFocus={() => setIsOtpFocused(true)}
+                          onBlur={() => setIsOtpFocused(false)}
+                          sx={{
+                            position: "absolute",
+                            inset: 0,
+                            width: "100%",
+                            height: "100%",
+                            border: 0,
+                            outline: "none",
+                            background: "transparent",
+                            color: "transparent",
+                            caretColor: "transparent",
+                            fontSize: "16px",
+                            zIndex: 1,
+                            cursor: "text",
+                          }}
+                        />
+                        {Array.from({ length: 6 }).map((_, index) => {
+                          const char = twoFactorCode[index] || "";
+                          const isActive =
+                            isOtpFocused &&
+                            index === Math.min(twoFactorCode.length, 5);
+                          return (
+                            <Box
+                              key={index}
+                              aria-hidden="true"
+                              sx={(theme) => ({
+                                width: { xs: 42, sm: 48 },
+                                height: 54,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                borderRadius: "12px",
+                                fontSize: "1.35rem",
+                                fontWeight: 700,
+                                color: theme.palette.text.primary,
+                                backgroundColor: isActive
+                                  ? theme.palette.background.paper
+                                  : alpha(theme.palette.background.paper, 0.7),
+                                border: "1.5px solid",
+                                borderColor: isActive
+                                  ? theme.palette.primary.main
+                                  : char
+                                  ? alpha(theme.palette.primary.main, 0.45)
+                                  : alpha(theme.palette.text.primary, 0.23),
+                                boxShadow: isActive
+                                  ? `0 0 0 3px ${alpha(theme.palette.primary.main, 0.18)}`
+                                  : "none",
+                                transition: "all 0.15s ease-in-out",
+                                userSelect: "none",
+                              })}
+                            >
+                              {char}
+                            </Box>
+                          );
+                        })}
+                      </Box>
+                      <Typography variant="caption" textAlign="center" color="text.secondary">
+                        Írd be vagy illeszd be a 6 számjegyű kódot
+                      </Typography>
                       <FormControlLabel
                         control={
                           <Checkbox
@@ -447,7 +502,6 @@ export default function Login() {
                         setIsGoogleLoginAttempt(false);
                         setGoogleIdToken("");
                         setTwoFactorCode("");
-                        setOtp(new Array(6).fill(""));
                       }}
                       sx={{ textTransform: "none", borderRadius: "12px", fontWeight: 600 }}
                     >

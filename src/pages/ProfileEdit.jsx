@@ -509,10 +509,19 @@ function ProfileEdit() {
                             <TextField
                               label="6 számjegyű kód"
                               value={twoFactorCode}
-                              onChange={(e) => setTwoFactorCode(e.target.value)}
+                              onChange={(e) =>
+                                setTwoFactorCode(
+                                  e.target.value.replace(/\D/g, "").slice(0, 6)
+                                )
+                              }
                               required
                               fullWidth
                               variant="outlined"
+                              inputProps={{
+                                inputMode: "numeric",
+                                pattern: "[0-9]*",
+                                autoComplete: "one-time-code",
+                              }}
                               InputProps={{ sx: { borderRadius: 2 } }}
                             />
                             <Button
