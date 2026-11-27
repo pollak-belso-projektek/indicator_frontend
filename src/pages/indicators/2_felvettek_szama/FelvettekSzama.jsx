@@ -40,6 +40,7 @@ import LockedTableWrapper from "../../../components/LockedTableWrapper";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
 import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
+import { toConfiguredKepzesName, toConfiguredAgazatName } from "../../../utils/kepzesName";
 
 const evszamok = generateSchoolYears();
 
@@ -103,6 +104,20 @@ const FelvettekSzama = () => {
 
     const calculatedData = {};
 
+    // Names configured for the selected school (the table rows). KRÉTA names are
+    // normalized and mapped to these spellings, otherwise the students would not
+    // appear in the table (new export format: "Cukrász (4 1013 23 01)").
+    const configuredSchools = (schoolsData || []).filter(
+      (school) => !selectedSchool || school.id === selectedSchool.id,
+    );
+    const configuredSectors = configuredSchools.flatMap((school) =>
+      (school.alapadatok_szakirany || []).map((rel) => rel.szakirany).filter(Boolean),
+    );
+    const configuredSzakiranyok = configuredSectors.map((sector) => sector.nev);
+    const configuredSzakmak = configuredSectors.flatMap((sector) =>
+      (sector.szakma || []).map((rel) => rel.szakma?.nev).filter(Boolean),
+    );
+
     let evfolyamStats = {};
 
     // Process tanugyi data by szakirany and szakma
@@ -133,17 +148,15 @@ const FelvettekSzama = () => {
         return;
       }
 
-      // Extract szakma name from uj_szkt_szakma_tipusa
-      let szakmaNev = student.uj_szkt_szakma_tipusa;
-      if (szakmaNev && szakmaNev.includes(" - ")) {
-        szakmaNev = szakmaNev.split(" - ")[0].trim();
-      }
-
-      // Extract szakirany name from uj_Szkt_agazat_tipusa
-      let szakiranyNev = student.uj_Szkt_agazat_tipusa;
-      if (szakiranyNev && szakiranyNev.includes(" - ")) {
-        szakiranyNev = szakiranyNev.split(" - ")[0].trim();
-      }
+      const szakmaNev = toConfiguredKepzesName(student.uj_szkt_szakma_tipusa, configuredSzakmak);
+      const configuredSzakirany = toConfiguredAgazatName(
+        student.uj_Szkt_agazat_tipusa,
+        configuredSzakiranyok,
+      );
+      // Same spelling as the "Nincs meghatározva (...)" rows built in programTypes.
+      const szakiranyNev = configuredSzakirany
+        ? configuredSzakirany.trim().replace(/\s+/g, " ")
+        : null;
 
       // Determine the category name based on szakma availability
       let categoryName;
@@ -182,7 +195,7 @@ const FelvettekSzama = () => {
     });
 
     return calculatedData;
-  }, [tanugyiData]);
+  }, [tanugyiData, schoolsData, selectedSchool]);
 
   // Utility function to normalize szakirány names (trim whitespace, normalize special chars)
   const normalizeSzakiranyName = (name) => {

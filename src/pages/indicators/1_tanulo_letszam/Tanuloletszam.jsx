@@ -46,6 +46,11 @@ import PageLoadingOverlay from "../../../components/shared/PageLoadingOverlay";
 import HistoryDialog from "../../../components/HistoryDialog";
 import HistoryIcon from "@mui/icons-material/History";
 import ZeroHidingTextField from "../../../components/shared/ZeroHidingTextField";
+import {
+  toConfiguredKepzesName,
+  toConfiguredAgazatName,
+  NINCS_MEGHATAROZVA,
+} from "../../../utils/kepzesName";
 
 const evszamok = generateSchoolYears();
 
@@ -676,7 +681,8 @@ export default function TanuloLetszam() {
       setSnackbarMessage(
         res?.message || "Tanulólétszám sikeresen szinkronizálva a tanügyi adatokból!",
       );
-      setSnackbarSeverity("success");
+      // Indicator 1 is saved even if recomputing admissions (indicator 2) failed.
+      setSnackbarSeverity(res?.syncWarnings?.length ? "warning" : "success");
       setSnackbarOpen(true);
       await refetchTanuloLetszam();
     } catch (err) {
@@ -704,41 +710,27 @@ export default function TanuloLetszam() {
 
     const calculatedData = {};
 
+    // Names configured for the school (the table rows). KRÉTA names are normalized
+    // ("Cukrász (4 1013 23 01)" / "Cukrász - 4 1013 23 01 (2020)" -> "Cukrász") and
+    // mapped to these spellings, otherwise the students would not appear in the table.
+    const configuredSzakmak = programTypes
+      .filter((category) => category.isSzakirany)
+      .flatMap((category) => category.subTypes)
+      .filter((name) => !name.startsWith(`${NINCS_MEGHATAROZVA} (`));
+    const configuredSzakiranyok = programTypes
+      .filter((category) => category.isSzakirany)
+      .map((category) => category.szakiranyName);
+
     // Process tanugyi data by szakirany and szakma
     tanugyiData.forEach((student) => {
-      // Extract relevant fields from student data - using correct field names from tanugyi data
-      let szakmaNev =
-        student.uj_szkt_szakma_tipusa ||
-        student.szakma_nev ||
-        student.szakkepzes_nev ||
-        "Nincs meghatározva";
-
-      // Clean up szakma name - remove code suffix like "- 5 0613 12 03 (2020)"
-      if (szakmaNev && szakmaNev !== "Nincs meghatározva") {
-        szakmaNev = szakmaNev.split(" - ")[0].trim();
-      }
-
-      // Handle "Na" as "Nincs meghatározva"
-      if (szakmaNev === "Na" || szakmaNev === "NA" || szakmaNev === "na") {
-        szakmaNev = "Nincs meghatározva";
-      }
-
-      // Extract szakirány information
-      let szakiranyName = student.uj_Szkt_agazat_tipusa || "Nincs meghatározva";
-
-      // Clean up szakirany name - remove code suffix like "- 12 (2020)"
-      if (szakiranyName && szakiranyName !== "Nincs meghatározva") {
-        szakiranyName = szakiranyName.split(" - ")[0].trim();
-      }
-
-      // Handle "Na" as "Nincs meghatározva"
-      if (
-        szakiranyName === "Na" ||
-        szakiranyName === "NA" ||
-        szakiranyName === "na"
-      ) {
-        szakiranyName = "Nincs meghatározva";
-      }
+      const szakmaNev =
+        toConfiguredKepzesName(
+          student.uj_szkt_szakma_tipusa || student.szakma_nev || student.szakkepzes_nev,
+          configuredSzakmak,
+        ) || NINCS_MEGHATAROZVA;
+      const szakiranyName =
+        toConfiguredAgazatName(student.uj_Szkt_agazat_tipusa, configuredSzakiranyok) ||
+        NINCS_MEGHATAROZVA;
 
       const evfolyam = student.evfolyam || "";
       const currentAcademicYear =
@@ -794,7 +786,7 @@ export default function TanuloLetszam() {
     });
 
     return calculatedData;
-  }, [tanugyiData]);
+  }, [tanugyiData, programTypes]);
 
   // Refetch data when selected school changes
   useEffect(() => {

@@ -1,4 +1,7 @@
-const sectorName = name => String(name || 'Nincs meghatározva').split(' - ')[0].trim();
+import { normalizeAgazatName, NINCS_MEGHATAROZVA } from './kepzesName.js';
+
+// Old and new KRÉTA formats ("X - 23 (2020)", "X (4 1013 23 01)") map to the same sector.
+const sectorName = name => normalizeAgazatName(name) || NINCS_MEGHATAROZVA;
 const trainingType = (name, fallback) => {
   const text = name.toLowerCase();
   if (text.includes('technikum')) return 'Technikum';
