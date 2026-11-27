@@ -210,6 +210,19 @@ export default function TanuloLetszam() {
       }
     });
 
+    // Students without a sector/profession in KRÉTA (or with one the school has not
+    // configured) are counted here, so nobody is left out of the totals.
+    if (relevantSchools.length > 0) {
+      categories.push({
+        category: NINCS_MEGHATAROZVA,
+        subcategory: "ebből: ágazat / szakma nélkül",
+        subTypes: [NINCS_MEGHATAROZVA],
+        szakiranyName: NINCS_MEGHATAROZVA,
+        isSzakirany: true,
+        isUnassigned: true,
+      });
+    }
+
     return categories;
   }, [schoolsData, selectedSchool]);
 
@@ -268,6 +281,8 @@ export default function TanuloLetszam() {
         let programType;
         if (item.szakma?.nev) {
           programType = item.szakma.nev;
+        } else if (item.szakirany?.nev === NINCS_MEGHATAROZVA) {
+          programType = NINCS_MEGHATAROZVA;
         } else if (item.szakirany?.nev) {
           programType = `Nincs meghatározva (${item.szakirany.nev})`;
         } else {
@@ -391,6 +406,10 @@ export default function TanuloLetszam() {
         });
       }
     });
+    // The "Nincs meghatározva" row belongs to the selected school as well.
+    if (relevantSchools.length > 0) {
+      szakiranyNamesInInstType.add(NINCS_MEGHATAROZVA);
+    }
 
     // Sum up all szakirány totals and individual szakma entries for this institution type
     programTypes.forEach((category) => {
@@ -714,11 +733,11 @@ export default function TanuloLetszam() {
     // ("Cukrász (4 1013 23 01)" / "Cukrász - 4 1013 23 01 (2020)" -> "Cukrász") and
     // mapped to these spellings, otherwise the students would not appear in the table.
     const configuredSzakmak = programTypes
-      .filter((category) => category.isSzakirany)
+      .filter((category) => category.isSzakirany && !category.isUnassigned)
       .flatMap((category) => category.subTypes)
       .filter((name) => !name.startsWith(`${NINCS_MEGHATAROZVA} (`));
     const configuredSzakiranyok = programTypes
-      .filter((category) => category.isSzakirany)
+      .filter((category) => category.isSzakirany && !category.isUnassigned)
       .map((category) => category.szakiranyName);
 
     // Process tanugyi data by szakirany and szakma
@@ -755,13 +774,16 @@ export default function TanuloLetszam() {
         evfolyam.toLowerCase().includes("esti") ||
         student.kepzes_forma?.toLowerCase().includes("felnőtt");
 
-      // Use szakma name as program type, but for "Nincs meghatározva" include szakirány
+      // Same rule as the backend (tanulo_letszam.service): configured profession ->
+      // its row; else configured sector -> "Nincs meghatározva (<sector>)"; else the
+      // separate "Nincs meghatározva" row.
       let programType;
-      if (szakmaNev === "Nincs meghatározva") {
-        // Create a unique key for "Nincs meghatározva" entries by szakirány
-        programType = `Nincs meghatározva (${szakiranyName})`;
-      } else {
+      if (configuredSzakmak.includes(szakmaNev)) {
         programType = szakmaNev;
+      } else if (configuredSzakiranyok.includes(szakiranyName)) {
+        programType = `${NINCS_MEGHATAROZVA} (${szakiranyName})`;
+      } else {
+        programType = NINCS_MEGHATAROZVA;
       }
 
       // Include students in technikum, szakképző, or any evfolyam with numbers (more inclusive)
@@ -821,6 +843,9 @@ export default function TanuloLetszam() {
         if (record.szakma?.nev) {
           // If szakma exists, use szakma name
           programType = record.szakma.nev;
+        } else if (record.szakirany?.nev === NINCS_MEGHATAROZVA) {
+          // Students without (configured) sector/profession: separate bottom row
+          programType = NINCS_MEGHATAROZVA;
         } else if (record.szakirany?.nev) {
           // If no szakma but szakirany exists, use "Nincs meghatározva (szakiranyName)"
           programType = `Nincs meghatározva (${record.szakirany.nev})`;
