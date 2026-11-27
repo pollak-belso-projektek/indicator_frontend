@@ -299,7 +299,7 @@ export default function EgyOktatoraJutoOsszDiak() {
               }}
             >
 
-              <LockedTableWrapper tableName="engedelyezettOratomeg">
+              <LockedTableWrapper tableName="egy_oktatora_juto_ossz_diak">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}

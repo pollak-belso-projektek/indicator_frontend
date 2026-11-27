@@ -478,7 +478,7 @@ export default function IntézményiElismeresek() {
     >
       <PageLoadingOverlay isLoading={_shouldShowOverlay} />
       <Box>
-        <LockStatusIndicator tableName="intezmenyi_nevelesi_mutatok" />
+        <LockStatusIndicator tableName="intezmenyi_elismeresek" />
 
         {!selectedSchool && (
           <Alert severity="info" sx={{ mb: 3 }}>
@@ -508,7 +508,7 @@ export default function IntézményiElismeresek() {
                 Intézmény által elnyert díjak, elismerések
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ position: "sticky", top: 0, zIndex: 20, backgroundColor: "rgba(255, 255, 255, 0.98)", backdropFilter: "blur(8px)", width: "100%", p: 2, borderBottom: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 20px -2px rgba(0,0,0,0.05)", borderRadius: "8px 8px 8px 8px", }}>
-                <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
+                <LockedTableWrapper tableName="intezmenyi_elismeresek">
                   <Button
                     variant="outlined"
                     startIcon={<AddIcon />}
@@ -737,7 +737,7 @@ export default function IntézményiElismeresek() {
                             );
                           })}
                           <TableCell align="center">
-                            <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
+                            <LockedTableWrapper tableName="intezmenyi_elismeresek">
                               <Tooltip title="Díj törlése">
                                 <IconButton
                                   size="small"
@@ -781,7 +781,7 @@ export default function IntézményiElismeresek() {
                 való felterjesztések
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ position: "sticky", top: 0, zIndex: 20, backgroundColor: "rgba(255, 255, 255, 0.98)", backdropFilter: "blur(8px)", width: "100%", p: 2, borderBottom: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 20px -2px rgba(0,0,0,0.05)", borderRadius: "8px 8px 8px 8px", }}>
-                <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
+                <LockedTableWrapper tableName="intezmenyi_elismeresek">
                   <Button
                     variant="contained"
                     startIcon={<SaveIcon />}

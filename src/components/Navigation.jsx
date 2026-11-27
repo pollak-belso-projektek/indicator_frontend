@@ -128,7 +128,7 @@ const NavigationCategories = {
         name: "HH tanulók aránya",
         icon: MdAccessible,
         link: "/hatranyos-helyezu-tanulok-aranya",
-        tableName: "hh_es_hhh_nevelesu_tanulok",
+        tableName: "hh_es_hhh",
       },
       {
         name: "Kompetencia",
@@ -171,13 +171,13 @@ const NavigationCategories = {
         name: "Intézményi elismerések",
         icon: MdStar,
         link: "/intezmenyi-elismeresek",
-        tableName: "intezmenyi_nevelesi_mutatok",
+        tableName: "intezmenyi_elismeresek",
       },
       {
         name: "Szakmai bemutatók, konferenciák",
         icon: MdEvent,
         link: "/szakmai-bemutatok-konferenciak",
-        tableName: "oktato_egyeb_tev",
+        tableName: "szakmai_rendezvenyek",
       },
       {
         name: "Lemorzsolódás",
@@ -231,7 +231,7 @@ const NavigationCategories = {
         name: "Intézményi nevelési mutatók",
         icon: MdGavel,
         link: "/intezmenyi-nevelesi-mutatok",
-        tableName: "intezmenyi_nevelesi_mutatok",
+        tableName: "intezmenyi_neveltsegi_mutatok",
       },
       {
         name: "Egy oktatóra jutó diákok",
@@ -279,7 +279,7 @@ const NavigationCategories = {
         name: "Pályaorientáció",
         icon: MdStar,
         link: "/palyaorientacio",
-        tableName: "palya_orientacio",
+        tableName: "palyaorientacio",
       },
       {
         name: "Szakképzés zöldítése",

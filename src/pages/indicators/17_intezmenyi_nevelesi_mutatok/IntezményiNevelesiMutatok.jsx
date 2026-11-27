@@ -568,7 +568,7 @@ export default function IntezményiNevelesiMutatok() {
       infoContent={<InfoIntezményiNevelesiMutatok />}
     >
       <Box>
-        <LockStatusIndicator tableName="intezmenyi_nevelesi_mutatok" />
+        <LockStatusIndicator tableName="intezmenyi_neveltsegi_mutatok" />
         <PageLoadingOverlay isLoading={isRefreshing} />
 
         {isInitialLoading && (
@@ -620,7 +620,7 @@ export default function IntezményiNevelesiMutatok() {
                 tableId=".MuiTable-root"
                 fileName="export_adatok"
               />
-              <LockedTableWrapper tableName="intezmenyi_nevelesi_mutatok">
+              <LockedTableWrapper tableName="intezmenyi_neveltsegi_mutatok">
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}

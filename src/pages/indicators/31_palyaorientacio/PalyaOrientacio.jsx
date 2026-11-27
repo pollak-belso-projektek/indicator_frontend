@@ -385,7 +385,7 @@ export default function PalyaOrientacio() {
       infoContent={<InfoPalyaorientacio />}
     >
       <Box>
-        <LockStatusIndicator tableName="palya_orientacio" />
+        <LockStatusIndicator tableName="palyaorientacio" />
 
         {!selectedSchool && (
           <Alert severity="info" sx={{ mb: 3 }}>
@@ -395,7 +395,7 @@ export default function PalyaOrientacio() {
         )}
 
         <Stack direction="row" spacing={2} sx={{ position: "sticky", top: 0, zIndex: 20, backgroundColor: "rgba(255, 255, 255, 0.98)", backdropFilter: "blur(8px)", width: "100%", p: 2, borderBottom: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 20px -2px rgba(0,0,0,0.05)", borderRadius: "8px 8px 8px 8px", mb: 3 }}>
-          <LockedTableWrapper tableName="palya_orientacio">
+          <LockedTableWrapper tableName="palyaorientacio">
             <Button
               variant="outlined"
               startIcon={<AddIcon />}

@@ -389,7 +389,7 @@ export default function SzakmaiTovabbkepzesek() {
       isLoading={isDataLoading}
     >
       <Box sx={{ mb: 3 }}>
-        <LockStatusIndicator tableName="szakmai_tovabbkepzes" />
+        <LockStatusIndicator tableName="szakmai_tovabbkepzesek" />
         <PageLoadingOverlay isLoading={isFetching} />
 
         {!selectedSchool && (
@@ -405,7 +405,7 @@ export default function SzakmaiTovabbkepzesek() {
           sx={{ position: "sticky", top: 0, zIndex: 20, backgroundColor: "rgba(255, 255, 255, 0.98)", backdropFilter: "blur(8px)", width: "100%", p: 2, borderBottom: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 20px -2px rgba(0,0,0,0.05)", borderRadius: "8px 8px 8px 8px", mb: 2 }}
           flexWrap="wrap"
         >
-          <LockedTableWrapper tableName="szakmai_tovabbkepzes">
+          <LockedTableWrapper tableName="szakmai_tovabbkepzesek">
             <Button
               variant="contained"
               startIcon={<SaveIcon />}

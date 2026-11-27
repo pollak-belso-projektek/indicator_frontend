@@ -613,7 +613,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
       >
         <Fade in={true} timeout={800}>
           <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
-            <LockStatusIndicator tableName="hh_es_hhh_nevelesu_tanulok" />
+            <LockStatusIndicator tableName="hh_es_hhh" />
 
             {/* Loading State */}
             <PageLoadingOverlay isLoading={isFetching || isHhFetching} />
@@ -678,7 +678,7 @@ export default function HatanyosHelyzetuTanulokAranya() {
                         tableId=".MuiTable-root"
                         fileName="export_adatok"
                       />
-                      <LockedTableWrapper tableName="hh_es_hhh_nevelesu_tanulok">
+                      <LockedTableWrapper tableName="hh_es_hhh">
                         <Button
                           variant="contained"
                           startIcon={<SaveIcon />}

@@ -285,7 +285,7 @@ export default function SzakmaiBemutatokKonferenciak() {
       infoContent={<InfoSzakmaiBemutatokKonferenciak />}
     >
       <Box>
-        <LockStatusIndicator tableName="szakmai_bemutatok_konferenciak" />
+        <LockStatusIndicator tableName="szakmai_rendezvenyek" />
         <PageLoadingOverlay
           isLoading={
             query1?.isFetching ||
@@ -302,7 +302,7 @@ export default function SzakmaiBemutatokKonferenciak() {
             tableId=".MuiTable-root"
             fileName="export_adatok"
           />
-          <LockedTableWrapper tableName="szakmai_bemutatok_konferenciak">
+          <LockedTableWrapper tableName="szakmai_rendezvenyek">
             <Button
               variant="contained"
               startIcon={<SaveIcon />}

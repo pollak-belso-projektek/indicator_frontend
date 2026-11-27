@@ -395,7 +395,7 @@ export default function SajatosNevelesiIgenyuTanulokAranya() {
       >
         <Fade in={true} timeout={800}>
           <Box sx={{ minHeight: "calc(100vh - 120px)" }}>
-            <LockStatusIndicator tableName="sajatos_nevelesi_igenyu" />
+            <LockStatusIndicator tableName="sajatos_nevelesu_tanulok" />
 
             {/* Loading State */}
             <PageLoadingOverlay isLoading={isFetching} />

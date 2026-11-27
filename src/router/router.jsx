@@ -676,7 +676,7 @@ export default function Router() {
               <Route
                 path="/palyaorientacio"
                 element={
-                  <TableProtectedRoute tableName="palya_orientacio">
+                  <TableProtectedRoute tableName="palyaorientacio">
                     <NavigationWithLoading>
                       {withSchoolRequired(
                         <PalyaOrientacioPage />,
