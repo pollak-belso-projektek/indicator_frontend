@@ -758,10 +758,6 @@ export default function TanuloLetszam() {
           : new Date().getFullYear() - 1;
       const year = student.tanev_kezdete || currentAcademicYear;
 
-      // Determine institution type from evfolyam - be more inclusive
-      const isTechnikum = evfolyam.toLowerCase().includes("technikum");
-      const isSzakkepzo = evfolyam.toLowerCase().includes("szakképző");
-      const hasEvfolyamNumber = /\d+/.test(evfolyam); // Any evfolyam with numbers (9, 10, 11, 12, 13, etc.)
 
       // Determine jogviszony type based on student data
       const isFelnottkepzesi =
@@ -786,8 +782,9 @@ export default function TanuloLetszam() {
         programType = NINCS_MEGHATAROZVA;
       }
 
-      // Include students in technikum, szakképző, or any evfolyam with numbers (more inclusive)
-      if (isTechnikum || isSzakkepzo || hasEvfolyamNumber) {
+      // Every student counts, whatever the grade is called (same as the backend):
+      // "Dobbantó előkészítő" / "Műhelyiskola osztály" have no grade number.
+      {
         if (!calculatedData[programType]) {
           calculatedData[programType] = {};
         }
